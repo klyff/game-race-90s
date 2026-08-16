@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Rock'n 90s — music bench</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0a0a12;
+        color: #f2f2f2;
+        font-family: monospace;
+        text-align: center;
+      }
+      button {
+        font: inherit;
+        font-size: 20px;
+        padding: 18px 34px;
+        color: #1a0e05;
+        background: #ffd85c;
+        border: 0;
+        cursor: pointer;
+      }
+      p { color: #8b90a0; max-width: 34em; line-height: 1.5; }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>TitleMusic bench</h1>
+      <p>
+        A listening bench for <code>src/adapters/audio/TitleMusic.ts</code>. It exists because the
+        music has no home in the game yet — the splash screen (T-018) is what will play it. Every
+        browser keeps an AudioContext suspended until a real user gesture, which is why this needs a
+        button and cannot simply autoplay.
+      </p>
+      <button id="play" type="button">PLAY</button>
+      <p id="status">stopped</p>
+    </div>
+
+    <script type="module">
+      import { NoiseSource } from './src/adapters/audio/NoiseSource.ts';
+      import { TitleMusic } from './src/adapters/audio/TitleMusic.ts';
+
+      const status = document.getElementById('status');
+      const button = document.getElementById('play');
+
+      let context = null;
+      let music = null;
+
+      button.addEventListener('click', async () => {
+        if (music !== null && music.isPlaying) {
+          music.stop();
+          status.textContent = 'stopped';
+          button.textContent = 'PLAY';
+          return;
+        }
+
+        if (context === null) {
+          context = new AudioContext();
+          const noise = new NoiseSource(context);
+          noise.start();
+          music = new TitleMusic(context, noise, context.destination);
+        }
+
+        // Resuming inside the click handler is the whole point: a resume that does not
+        // come from a user gesture is silently ignored by the browser.
+        await context.resume();
+        music.start();
+        status.textContent = `playing — context ${context.state}`;
+        button.textContent = 'STOP';
+      });
+    </script>
+  </body>
+</html>

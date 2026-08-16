@@ -130,8 +130,22 @@ export class TyreMarks {
   private readonly gripUsageThreshold: number;
 
   private readonly segments: Segment[] = [];
-  private readonly leftWheel: WheelTrail = { previousPoint: null };
-  private readonly rightWheel: WheelTrail = { previousPoint: null };
+
+  /**
+   * Wheel trails PER CAR, keyed by the caller's car index.
+   *
+   * These were once a single pair of trails, which was correct while the game had
+   * exactly one car and silently broke the moment it had five. Three things went
+   * wrong at once, and the third is the one that stopped marks appearing at all:
+   * the ageing ran once per car instead of once per frame, so marks faded five
+   * times too fast; the shared "previous point" ping-ponged between different cars,
+   * so a segment could be drawn from one car's wheel to another's, right across the
+   * track; and any car that was NOT sliding reset the shared trail, which wiped the
+   * trail of every car that was. With five cars at least one is almost always
+   * gripping, so after the first corner the trail was cleared every single frame
+   * and nothing was ever drawn again.
+   */
+  private readonly trails = new Map<number, { left: WheelTrail; right: WheelTrail }>();
 
   constructor(scene: Phaser.Scene, projection: IsoProjection, options: TyreMarksOptions = {}) {
     this.projection = projection;
@@ -143,31 +157,53 @@ export class TyreMarks {
     this.graphics.setDepth(ROAD_DEPTH + 1);
   }
 
-  /** Call once per rendered frame, after the simulation has stepped. */
-  record(state: VehicleState, telemetry: VehicleTelemetry, deltaSeconds: number): void {
+  /**
+   * Ages every mark and redraws. Call ONCE per rendered frame, whatever the number
+   * of cars — ageing is a property of time passing, not of how many cars reported in.
+   */
+  update(deltaSeconds: number): void {
     this.ageAndEvictSegments(deltaSeconds);
+    this.redraw();
+  }
+
+  /**
+   * Records one car's marks for this frame. Call once per car, then `update` once.
+   *
+   * `carIndex` exists so each car keeps its own wheel trails; passing the same index
+   * for two different cars would join them with a streak across the track.
+   */
+  record(carIndex: number, state: VehicleState, telemetry: VehicleTelemetry): void {
+    const trail = this.trailFor(carIndex);
 
     const isBreakingAway = telemetry.isSliding || telemetry.gripUsage >= this.gripUsageThreshold;
     if (!isBreakingAway) {
       // Emission stopped: forget where the wheels were, so the next mark
       // starts fresh instead of drawing a streak from wherever the car
       // last slid, possibly across the whole track.
-      this.leftWheel.previousPoint = null;
-      this.rightWheel.previousPoint = null;
+      trail.left.previousPoint = null;
+      trail.right.previousPoint = null;
     } else {
       const alpha = freshAlphaFor(slideIntensity(telemetry));
       const [leftPoint, rightPoint] = this.rearWheelPositions(state);
-      this.extendTrail(this.leftWheel, leftPoint, alpha);
-      this.extendTrail(this.rightWheel, rightPoint, alpha);
+      this.extendTrail(trail.left, leftPoint, alpha);
+      this.extendTrail(trail.right, rightPoint, alpha);
     }
+  }
 
-    this.redraw();
+  /** The trails belonging to one car, created on first sight of that index. */
+  private trailFor(carIndex: number): { left: WheelTrail; right: WheelTrail } {
+    const existing = this.trails.get(carIndex);
+    if (existing !== undefined) {
+      return existing;
+    }
+    const created = { left: { previousPoint: null }, right: { previousPoint: null } };
+    this.trails.set(carIndex, created);
+    return created;
   }
 
   clear(): void {
     this.segments.length = 0;
-    this.leftWheel.previousPoint = null;
-    this.rightWheel.previousPoint = null;
+    this.trails.clear();
     this.graphics.clear();
   }
 

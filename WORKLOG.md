@@ -574,6 +574,7 @@ Plan phases map 1:1 onto these IDs. Status values: `todo`, `in_progress`, `block
 | T-034 | Ten planets / areas as commissioned art | `review` | user (art) + main | — | **The user generated all ten images from the briefs in `docs/art-briefs/planets.md` and they are in `src/assets/planets/Planet-1..10.png`.** Planet-1 was reviewed and is exactly right: Thunder Basin as red mesas under a violet lightning storm, with the left third kept calm for UI, which is what the brief asked for. These are **Prompt A output — area-select illustrations, not iso ground planes**, so the next steps are: (a) move them to `public/assets/ui/planets/<slug>.png` and rename from `Planet-N` to the planet slug, because assets are served from `public/` and never imported (a 1 MB+ `import` gets inlined into the bundle); (b) build the area-select screen that shows them; (c) pull each image's palette into a `theme` on `TrackDefinition` (road, shoulder, wall, line colours) so the procedurally drawn road agrees with the art instead of fighting it. **Do NOT try to use these as the track surface** — `TrackRenderer` derives the road from the spline every frame, which is what lets a circuit be authored from control points alone. A seamless iso ground tile (Prompt B in the briefs) is the separate, still-ungenerated deliverable for that. |
 | T-035 | Save progress in a browser cookie, **three slots per player, like a 90s memory card** | `in_progress` | save-slots | — | **New scope from the owner, 2026-08-15.** Pure model in `src/domain/progress/SaveSlots.ts` (3 slots, 3-letter arcade name, chosen car, tracks won, best lap per track), plus a cookie adapter. **The hard constraint is that a cookie holds ~4 KB TOTAL**, so the encoding is compact short keys + `encodeURIComponent`, with a `SAVE_BYTE_BUDGET` and a `fitsInCookie` guard so an oversized save is REFUSED rather than silently lost. `parseSave` must be paranoid — a cookie is user-editable text and can be truncated or left over from an older build, so corruption costs the player their progress and never their ability to load the game. `Date.now()` stays forbidden: every mutating function takes `nowMillis`. **Remaining after the domain lands: the cookie adapter (`src/adapters/storage/CookieStore.ts`), a slot-select screen, and deciding WHEN a race writes a slot.** |
 | T-036 | Per-planet look: `theme` on `TrackDefinition`, and the area-select screen | `todo` | — | T-034 | Split out of T-034 now that the art exists. `TrackRenderer` currently holds the road, shoulder, wall and line colours as constants, so every planet would look identical. Give `TrackDefinition` a `theme` (those four colours + an optional ground tile key), read it in the renderer, and pull each planet's palette out of its illustration so the procedural road agrees with the art. Then the area-select screen that shows the illustrations. |
+| T-039 | Tyre marks stopped being drawn after the first corner | `review` | main | — | **Reported by the owner at the wheel with a screenshot, 2026-08-15, and this was a real regression I introduced when T-013 wired five cars in.** Root cause found by reading the code, not guessed: `TyreMarks` held state for exactly ONE car — a single pair of wheel trails — and `RaceScene` began calling `record()` for all five on one instance. Three things broke at once. (1) `ageAndEvictSegments` ran once PER CAR instead of once per frame, so marks aged five times too fast and faded in about 1.2 s instead of 6. (2) The shared "previous point" ping-ponged between different cars, so a segment could be drawn from one car's wheel to another car's wheel, straight across the track. (3) **The one that actually stopped all drawing:** a car that is NOT sliding resets the trail to `null`, and that reset hit the SHARED trail — so it wiped the trail of every car that *was* sliding. With five cars at least one is almost always gripping, so from the first corner onward the trail was cleared every single frame and `previousPoint === null` short-circuited every segment. **Fix:** trails are now a `Map` keyed by car index (`record(carIndex, state, telemetry)`), and ageing moved into a separate `update(deltaSeconds)` that `RaceScene` calls exactly once per frame. Typecheck, 640 tests and the build are clean, and a mark is visible on screen again in `/tmp/tyre_fixed.png`. **Still wants the owner's eye over a full lap** — that is what closes this. **Lesson worth more than the fix: an adapter that holds per-entity state is a landmine the day the entity count goes from one to many, and nothing about the single-car API said "one".** |
 | T-037 | **Every car gets one signature advantage** — a felt mechanic, not a stat delta | `todo` | — | — | **Owner's call, 2026-08-15: "cada um deve ter uma vantagem, hoje está muito fácil para o jogador."** A player cannot feel `grip: 30` vs `grip: 35` while driving, but they can feel a mechanic. One perk per car, each falling out of the identity the art and stats already promise: `marauder` **Bulldozer** (wins contact — extra push, further cut to the aggressor damage it already takes); `dirt-devil` **Off-road Ace** (much smaller off-road penalty, so it can cut where nobody else can); `havac` **Anvil** (barely moved by contact, shrugs off wall damage); `air-blade` **Slipstream** (a real draft bonus sitting behind another car — the one thing a fragile fast car can safely do); `battle-trak` **Arsenal** (3× ammo already, plus a faster reload once T-016 exists). Author the perk as DATA in `tools/spritegen/cars/*.car.ts` so it flows into `cars.json` like every other stat, and keep the rules as pure functions applied inside `RaceField`'s existing step order. **No perk may write velocity directly** — the same rule that keeps the AI honest. Every perk needs a test that measures it changes the OUTCOME, not that a flag is set. |
 | T-038 | **Make the NPCs race instead of commute** — racing line, overtaking, defending | `todo` | — | T-014, T-037 | **This is why the player wins easily, and it is measured rather than guessed:** `PaceDriver` follows the CENTRELINE at a grip-limited speed and never drifts, so the tuning harness laps Thunder Basin in 33 s while deliberately staying inside the grip limit — any human who drifts beats it. Upgrade it into T-014's `AIDriver`: (a) **a racing line, not the centreline** — offset the aim point by curvature, outside on entry, apex, outside on exit, which alone makes them faster and less predictable; (b) **overtaking and defending** — pick a gap when the car ahead is slower, hold the inside line when being caught; `RaceField` already has every racer's position, so no new plumbing; (c) **let them use the grip they have**, and let T-032's rival run slightly past it; (d) **bounded rubber-banding**, a few percent of engine force, so the pack stays on screen without the cheating being visible. **Gate: the owner races and does NOT win on the first attempt.** Difficulty is the deliverable, and a human at the wheel is the only honest test of it. |
 | T-033 | Wall impacts almost never cross the damage threshold, so the explosion the user asked for would never fire | `todo` | — | T-030 | **Measured, not suspected** — this is the risk flagged on T-030's row, now confirmed with `tools/measure-impacts.ts` over the real pipeline: driving the marauder flat out for 20–30 s produced `contacts=716 over12=1 max=13.0` ploughing into the first corner, `contacts=1598 over12=1 max=42.5` on a drifting line, and integrity only fell 1.00 → 0.90 in the worst case. **Zero explosions in any run.** The cause is the one predicted: `resolveWallContact` reports `impactSpeed` as the NORMAL component into the wall, and normal driving glances off walls tangentially, so the 12 u/s threshold is crossed once or twice a lap at most and the quadratic curve then makes those hits nearly free. Options: lower `IMPACT_DAMAGE_THRESHOLD`, raise the damage per hit, or feed damage from total speed change over the step rather than the normal component (probably the truthful fix — a car that loses 40 u/s in one step has crashed, whatever the geometry). Do NOT tune this blind: re-run the measurement tool after each change. |
@@ -1219,3 +1220,50 @@ commits on `main`, and everything is PUSHED to `https://github.com/klyff/game-ra
   verify the numbers yourself.
 - **`Date.now()`, `new Date()` and `Math.random()` are forbidden** ��� pass time and seeds in.
 - **Assets live under `public/` and are loaded by key, never `import`ed** — Vite inlines them.
+
+---
+
+### Context cleanup — 2026-08-15 23:55 — the owner stopped implementation and asked for a save point
+
+**The owner's instruction this turn: do NOT start implementing; record the items and stop, because the
+context is heavy.** T-018 was begun and then deliberately **halted mid-flight** — read the next
+section before touching it.
+
+**Verified state: 640 tests across 26 files, typecheck clean, build clean, everything pushed to
+`https://github.com/klyff/game-race-90s`.**
+
+#### T-018 was started and stopped — what is on disk
+
+The `splash-scene` agent was killed part-way. It left exactly ONE finished file:
+**`src/adapters/render/BlinkClock.ts` — kept, because it is pure, self-contained and correct in
+intent**, but **it has NO TEST FILE yet** and is imported by nothing. `SplashScene.ts` was never
+written; `BootScene`, `sceneKeys.ts` and `main.ts` were never touched, so the game still boots
+straight into `RaceScene`. **Nothing is half-wired — the repo is consistent.** Whoever resumes T-018
+should write `tests/adapters/BlinkClock.test.ts` first, then the scene.
+
+#### Delivered this turn
+
+| Item | State |
+| --- | --- |
+| **T-039 tyre marks** | **Diagnosed and fixed.** See its task row for the three-part root cause. The owner still needs to confirm it over a full lap. |
+| `music.html` | **A listening bench for `TitleMusic`, at the project root.** The owner asked how to hear the music; the answer was that there was no way at all, because nothing plays it. `npm run dev` then http://localhost:5173/music.html gives a PLAY button. It exists only until the splash screen has a home for the music. |
+| T-039 row, T-037/T-038 rows | Written into this ledger and the plan. |
+
+#### Next steps, in order
+
+1. **T-018 `SplashScene`** — the brief is in its task row and in the plan. `BlinkClock.ts` is already
+   there; give it tests. **Draw NO title (the logo is painted into the art), and the blink is a HARD
+   on/off cut via `setVisible`, never an alpha tween.** Music must start on the first KEY PRESS, not
+   in `create()`, or the browser silently never sounds it — and it must be stopped on scene SHUTDOWN
+   or it plays over the race.
+2. **T-037 + T-038 together** — the difficulty. Ship both or neither; T-038's gate is the owner
+   losing a race.
+3. T-035's `CookieStore` + slot screen; then T-036 (`theme` on `TrackDefinition`).
+
+#### The trap that produced T-039, stated plainly because it will happen again
+
+**An adapter that holds per-entity state becomes a landmine the day the entity count goes from one to
+many, and nothing in its API says "one".** `TyreMarks.record(state, telemetry, dt)` looked perfectly
+reusable. Auditing the other adapters for the same shape is worth doing: `RaceAudio` is deliberately
+player-only, but check anything that caches a "previous" value.
+

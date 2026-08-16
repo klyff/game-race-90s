@@ -194,7 +194,10 @@ export class RaceScene extends Phaser.Scene {
     this.command = this.driver.read(deltaSeconds, this.forwardSpeed());
     this.loop.advance(deltaSeconds, stepSeconds => this.stepSimulation(stepSeconds));
 
-    this.syncViews(deltaSeconds);
+    this.syncViews();
+    // Once per frame, whatever the number of cars: ageing marks is a property of time
+    // passing. Calling it per car aged them five times too fast.
+    this.tyreMarks.update(deltaSeconds);
     this.presentExplosions();
     this.updatePlayerAudio();
     this.explosions.update(deltaSeconds);
@@ -265,7 +268,7 @@ export class RaceScene extends Phaser.Scene {
   }
 
   /** Draws every car, and lays tyre marks for all of them, not just the player's. */
-  private syncViews(deltaSeconds: number): void {
+  private syncViews(): void {
     this.field.racers.forEach((racer, index) => {
       const view = this.views[index];
       if (view === undefined) {
@@ -282,7 +285,9 @@ export class RaceScene extends Phaser.Scene {
 
       view.sync(racer.state);
       if (racer.telemetry !== null) {
-        this.tyreMarks.record(racer.state, racer.telemetry, deltaSeconds);
+        // Per-car index: `TyreMarks` keeps a wheel trail per car, and sharing one
+        // would join two cars' wheels with a streak across the track.
+        this.tyreMarks.record(index, racer.state, racer.telemetry);
       }
     });
   }
