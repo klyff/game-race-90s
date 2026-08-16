@@ -3,6 +3,7 @@ import { add, scale } from '../../domain/math/Vec2.ts';
 import type { TrackDefinition } from '../../domain/track/TrackDefinition.ts';
 import type { TrackFrame } from '../../domain/track/TrackSpline.ts';
 import { TrackSpline } from '../../domain/track/TrackSpline.ts';
+import { DEFAULT_THEME, type PlanetTheme } from '../../data/tracks/planetThemes.ts';
 import { IsoProjection } from './IsoProjection.ts';
 import type { ScreenPoint } from './IsoProjection.ts';
 
@@ -76,26 +77,10 @@ const BOUNDS_PADDING_PX = 48;
  */
 export const ROAD_DEPTH = -1000;
 
-/** Pale concrete: the outermost boundary, the brightest surface on the circuit so the drivable area reads as visually bounded. */
-const WALL_COLOR = 0xaca898;
-
-/** Warm dirt: the off-road shoulder, distinct in hue (not just brightness) from both wall and tarmac. */
-const SHOULDER_COLOR = 0x6b4a2e;
-
-/** Dark asphalt: the racing surface, the darkest of the three bands so every marking painted on it stands out. */
-const TARMAC_COLOR = 0x2a2a2e;
-
-/** Hazard yellow: the kerb strip, chosen for maximum contrast against both the tarmac and the shoulder it borders. */
-const KERB_COLOR = 0xe0c21a;
-
-/** Near-white: centreline dashes and the light chequer squares. */
-const MARKING_WHITE = 0xf2f2f2;
-
-/** Near-black: the dark chequer squares, distinct from tarmac so the chequered pattern reads as a pattern rather than a smudge. */
-const CHEQUER_DARK = 0x101010;
-
 export interface TrackRendererOptions {
   readonly sampleSpacing?: number;
+  /** Per-planet palette and optional ground tile. Defaults to Thunder Basin. */
+  readonly theme?: PlanetTheme;
 }
 
 /** Screen-space bounding box, e.g. for camera bounds. */
@@ -165,7 +150,10 @@ function computeBounds(
 export class TrackRenderer {
   readonly bounds: ScreenBounds;
   private readonly graphics: Phaser.GameObjects.Graphics;
+  private readonly groundFill: Phaser.GameObjects.Rectangle;
+  private readonly groundTile: Phaser.GameObjects.TileSprite | null;
   private readonly projection: IsoProjection;
+  private readonly theme: PlanetTheme;
 
   constructor(
     scene: Phaser.Scene,
@@ -175,38 +163,66 @@ export class TrackRenderer {
     options: TrackRendererOptions = {},
   ) {
     this.projection = projection;
+    this.theme = options.theme ?? DEFAULT_THEME;
     const spacing = options.sampleSpacing ?? DEFAULT_SAMPLE_SPACING_UNITS;
     const frames = sampleCenterline(spline, spacing);
-
-    this.graphics = scene.add.graphics();
-    this.graphics.setDepth(ROAD_DEPTH);
 
     const shoulderOuter = track.halfWidth + track.shoulderWidth;
     const wallOuter = shoulderOuter + WALL_THICKNESS_UNITS;
     const kerbHalf = KERB_WIDTH_UNITS / 2;
 
+    this.bounds = computeBounds(frames, wallOuter, projection, BOUNDS_PADDING_PX);
+
+    // Ground first, under the road. The tile is a flat top-down swatch; a 2:1
+    // squash puts it on the dimetric plane the cars already drive on.
+    this.groundFill = scene.add
+      .rectangle(
+        this.bounds.x,
+        this.bounds.y,
+        this.bounds.width,
+        this.bounds.height,
+        this.theme.ground,
+      )
+      .setOrigin(0, 0)
+      .setDepth(ROAD_DEPTH - 2);
+    this.groundTile = scene.textures.exists(this.theme.groundKey)
+      ? scene.add
+          .tileSprite(
+            this.bounds.x,
+            this.bounds.y,
+            this.bounds.width,
+            this.bounds.height * 2,
+            this.theme.groundKey,
+          )
+          .setOrigin(0, 0)
+          .setScale(1, 0.5)
+          .setDepth(ROAD_DEPTH - 1)
+          .setAlpha(0.92)
+      : null;
+
+    this.graphics = scene.add.graphics();
+    this.graphics.setDepth(ROAD_DEPTH);
+
     // Back to front: wall, shoulder, tarmac, kerb, centreline, start line.
-    // Each later band is painted on top of everything before it, which is
-    // what lets the kerb straddle the tarmac/shoulder boundary without a seam.
-    this.fillBand(frames, wallOuter, shoulderOuter, WALL_COLOR);
-    this.fillBand(frames, -shoulderOuter, -wallOuter, WALL_COLOR);
+    this.fillBand(frames, wallOuter, shoulderOuter, this.theme.wall);
+    this.fillBand(frames, -shoulderOuter, -wallOuter, this.theme.wall);
 
-    this.fillBand(frames, shoulderOuter, track.halfWidth, SHOULDER_COLOR);
-    this.fillBand(frames, -track.halfWidth, -shoulderOuter, SHOULDER_COLOR);
+    this.fillBand(frames, shoulderOuter, track.halfWidth, this.theme.shoulder);
+    this.fillBand(frames, -track.halfWidth, -shoulderOuter, this.theme.shoulder);
 
-    this.fillBand(frames, track.halfWidth, -track.halfWidth, TARMAC_COLOR);
+    this.fillBand(frames, track.halfWidth, -track.halfWidth, this.theme.tarmac);
 
-    this.fillBand(frames, track.halfWidth + kerbHalf, track.halfWidth - kerbHalf, KERB_COLOR);
-    this.fillBand(frames, -(track.halfWidth - kerbHalf), -(track.halfWidth + kerbHalf), KERB_COLOR);
+    this.fillBand(frames, track.halfWidth + kerbHalf, track.halfWidth - kerbHalf, this.theme.kerb);
+    this.fillBand(frames, -(track.halfWidth - kerbHalf), -(track.halfWidth + kerbHalf), this.theme.kerb);
 
     this.drawCenterline(frames, spacing);
     this.drawStartLine(track, spline);
-
-    this.bounds = computeBounds(frames, wallOuter, projection, BOUNDS_PADDING_PX);
   }
 
   destroy(): void {
     this.graphics.destroy();
+    this.groundFill.destroy();
+    this.groundTile?.destroy();
   }
 
   /** Projects a point offset laterally from a frame's centreline position. */
@@ -254,7 +270,7 @@ export class TrackRenderer {
    * geometry of clipping quads at exact dash edges on a track drawn once.
    */
   private drawCenterline(frames: readonly TrackFrame[], spacing: number): void {
-    this.graphics.fillStyle(MARKING_WHITE, 1);
+    this.graphics.fillStyle(this.theme.marking, 1);
     const halfWidth = CENTERLINE_WIDTH_UNITS / 2;
     const count = frames.length;
     for (let i = 0; i < count; i += 1) {
@@ -292,7 +308,7 @@ export class TrackRenderer {
     for (let column = 0; column < columns; column += 1) {
       const outer = track.halfWidth - column * cellWidth;
       const inner = outer - cellWidth;
-      const color = column % 2 === 0 ? MARKING_WHITE : CHEQUER_DARK;
+      const color = column % 2 === 0 ? this.theme.marking : this.theme.chequerDark;
       this.graphics.fillStyle(color, 1);
       const quad: ScreenPoint[] = [
         this.edgeScreen(backFrame, outer),

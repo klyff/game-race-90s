@@ -15,7 +15,9 @@ import { findCarSheet, frameIndexForHeading } from '../data/cars/CarManifest.ts'
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
+import { themeForTrackId } from '../data/tracks/planetThemes.ts';
 import { findTrack } from '../data/tracks/registry.ts';
+import { CEREMONY_HOLD_SECONDS } from '../domain/race/Coast.ts';
 import { loadWallet } from '../adapters/progress/ProgressStore.ts';
 import { weaponHitEarnings } from '../domain/progress/Wallet.ts';
 import { SIMULATION_STEP_SECONDS } from '../domain/constants.ts';
@@ -169,6 +171,8 @@ export class RaceScene extends Phaser.Scene {
   private hazardSprites: Phaser.GameObjects.Sprite[] = [];
   /** True once the player has finished and the results screen has been handed off to. */
   private resultsShown = false;
+  /** Seconds the field has been coasting since the player took the flag. */
+  private finishHoldSeconds = 0;
   /** Purse at race start; live HUD adds hit bounties on top. */
   private startingCash = 0;
   /** 1-based campaign planet, for hit-bounty scaling. */
@@ -197,7 +201,9 @@ export class RaceScene extends Phaser.Scene {
     // would make the cars quietly the wrong size relative to the track.
     this.projection = new IsoProjection(this.manifest.pixelsPerUnit);
 
-    this.trackRenderer = new TrackRenderer(this, this.track, this.spline, this.projection);
+    this.trackRenderer = new TrackRenderer(this, this.track, this.spline, this.projection, {
+      theme: themeForTrackId(this.track.id),
+    });
     this.tyreMarks = new TyreMarks(this, this.projection);
     this.explosions = new ExplosionEffect(this, this.projection);
     this.chaseCamera = new ChaseCamera(this.cameras.main, this.projection);
@@ -255,22 +261,25 @@ export class RaceScene extends Phaser.Scene {
     this.chaseCamera.follow(this.player.state, deltaSeconds, this.targetZoom());
     this.refreshOverlay();
 
-    this.maybeFinishRace();
+    this.maybeFinishRace(deltaSeconds);
   }
 
   /**
-   * The race ends for the player the moment THEY cross the line for the last time —
-   * not when the whole field has finished. The remaining cars are ranked by their
-   * live progress, which is exactly what `standings` already does, so the results
-   * screen shows a sensible order even with NPCs still on track.
+   * After the player takes the flag the field coasts to a stop (finished cars
+   * lift and brake). The ceremony waits until everyone is nearly stopped, or
+   * a short hold expires so a stuck NPC cannot freeze the results.
    */
-  private maybeFinishRace(): void {
+  private maybeFinishRace(deltaSeconds: number): void {
     if (this.resultsShown) {
       return;
     }
     const race = this.field.race;
     const playerRaceState = race.racers.find(racer => racer.carId === this.carId);
     if (playerRaceState === undefined || !playerRaceState.progress.finished) {
+      return;
+    }
+    this.finishHoldSeconds += deltaSeconds;
+    if (!this.field.allNearlyStopped && this.finishHoldSeconds < CEREMONY_HOLD_SECONDS) {
       return;
     }
     this.resultsShown = true;

@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { findCarSheet } from '../data/cars/CarManifest.ts';
 import { PLANETS } from '../data/tracks/planets.ts';
+import { themeForPlanetId } from '../data/tracks/planetThemes.ts';
 import { isPlanetUnlocked } from '../data/tracks/campaign.ts';
 import { loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
+import { coverRect } from '../adapters/render/SplashLayout.ts';
 import type { PlanetSelectData } from './selectData.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
@@ -21,6 +23,8 @@ export class PlanetSelectScene extends Phaser.Scene {
   private selectedIndex = 0;
 
   private backdrop!: Phaser.GameObjects.Rectangle;
+  private art!: Phaser.GameObjects.Image;
+  private dim!: Phaser.GameObjects.Rectangle;
   private titleText!: Phaser.GameObjects.Text;
   private walletText!: Phaser.GameObjects.Text;
   private rows: Phaser.GameObjects.Text[] = [];
@@ -42,7 +46,9 @@ export class PlanetSelectScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.92).setOrigin(0, 0);
+    this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 1).setOrigin(0, 0);
+    this.art = this.add.image(0, 0, '').setOrigin(0, 0).setVisible(false);
+    this.dim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.55).setOrigin(0, 0);
     this.titleText = this.add.text(0, 0, 'SELECT PLANET', this.titleStyle()).setOrigin(0.5, 0.5);
     this.walletText = this.add
       .text(0, 0, `BANK ${formatCash(loadWallet())}`, this.walletStyle())
@@ -97,6 +103,7 @@ export class PlanetSelectScene extends Phaser.Scene {
   }
 
   private refresh(): void {
+    this.applyArt();
     PLANETS.forEach((planet, index) => {
       const row = this.rows[index];
       if (row === undefined) {
@@ -119,6 +126,31 @@ export class PlanetSelectScene extends Phaser.Scene {
     return selected ? '#ffd85c' : '#d8dae2';
   }
 
+  private applyArt(): void {
+    const planet = PLANETS[this.selectedIndex];
+    if (planet === undefined) {
+      return;
+    }
+    const theme = themeForPlanetId(planet.id);
+    if (!this.textures.exists(theme.artKey)) {
+      this.art.setVisible(false);
+      this.backdrop.setFillStyle(theme.ground, 1);
+      return;
+    }
+    this.art.setTexture(theme.artKey).setVisible(true);
+    this.layoutArt();
+  }
+
+  private layoutArt(): void {
+    if (!this.art.visible) {
+      return;
+    }
+    const viewport = { width: this.scale.width, height: this.scale.height };
+    const image = { width: this.art.width, height: this.art.height };
+    const rect = coverRect(viewport, image);
+    this.art.setPosition(rect.x, rect.y).setDisplaySize(rect.width, rect.height);
+  }
+
   private carName(carId: string): string {
     try {
       return findCarSheet(this.payload.manifest, carId).displayName.toUpperCase();
@@ -133,6 +165,8 @@ export class PlanetSelectScene extends Phaser.Scene {
     const centreX = width / 2;
 
     this.backdrop.setSize(width, height);
+    this.dim.setSize(width, height);
+    this.layoutArt();
     this.titleText.setPosition(centreX, height * 0.08);
     this.walletText.setPosition(centreX, height * 0.145);
     this.rows.forEach((row, index) => {

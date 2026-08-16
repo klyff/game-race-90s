@@ -35,6 +35,12 @@ export const CAR_ASSET_DIRECTORY = 'assets/cars';
 /** Where the authored (non-generated) interface art lives, relative to the served root. */
 export const UI_ASSET_DIRECTORY = 'assets/ui';
 
+/** Per-planet area-select illustrations, relative to the served root. */
+export const PLANET_ART_DIRECTORY = 'assets/ui/planets';
+
+/** Seamless off-road ground tiles, relative to the served root. */
+export const GROUND_ASSET_DIRECTORY = 'assets/ground';
+
 /** Where owner-provided weapon art (missile / oil / mine) lives, relative to the served root. */
 export const WEAPON_ASSET_DIRECTORY = 'assets/weapons';
 

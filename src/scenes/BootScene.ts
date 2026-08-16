@@ -1,14 +1,17 @@
 import Phaser from 'phaser';
 import { parseCarSetManifest } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
+import { PLANET_THEMES } from '../data/tracks/planetThemes.ts';
 import { parseTrackLinesManifest } from '../data/tracks/TrackLines.ts';
 import { TRACKS } from '../data/tracks/registry.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import {
   CAR_ASSET_DIRECTORY,
   CAR_MANIFEST_KEY,
+  GROUND_ASSET_DIRECTORY,
   linesCacheKey,
   LINES_ASSET_DIRECTORY,
+  PLANET_ART_DIRECTORY,
   SCENE_KEY,
   SPLASH_ART_FILE,
   SPLASH_ART_KEY,
@@ -47,7 +50,11 @@ export class BootScene extends Phaser.Scene {
     // A missing weapon sprite is not fatal — those assets are optional and the race
     // falls back to primitives — so weapon keys are filtered out of the error path.
     // Any OTHER load failure is fatal and reported on screen.
-    const optionalKeys = new Set<string>(WEAPON_SPRITES.map(sprite => sprite.key));
+    const optionalKeys = new Set<string>([
+      ...WEAPON_SPRITES.map(sprite => sprite.key),
+      ...PLANET_THEMES.map(theme => theme.artKey),
+      ...PLANET_THEMES.map(theme => theme.groundKey),
+    ]);
     this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
       if (optionalKeys.has(file.key)) {
         return;
@@ -87,6 +94,11 @@ export class BootScene extends Phaser.Scene {
     }
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
+
+    for (const theme of PLANET_THEMES) {
+      this.load.image(theme.artKey, `${PLANET_ART_DIRECTORY}/${theme.artFile}`);
+      this.load.image(theme.groundKey, `${GROUND_ASSET_DIRECTORY}/${theme.groundFile}`);
+    }
 
     // Optional weapon art: 32-frame contact sheets, same layout as the cars.
     // Missing files are swallowed by the filtered error handler above.

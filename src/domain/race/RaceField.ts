@@ -68,6 +68,7 @@ import type { RaceState, RacerStep } from './RaceSimulation.ts';
 import type { RacerStanding } from './PositionRanker.ts';
 import { buildStartingGrid } from './StartingGrid.ts';
 import { stepVehicleOnTrack } from './OnTrackStep.ts';
+import { coastInput, isNearlyStopped } from './Coast.ts';
 
 /** What the caller has to say about a car before the race starts. */
 export interface RacerEntry {
@@ -299,6 +300,15 @@ export class RaceField {
     return this.playerHits;
   }
 
+  /** True once every car is wrecked or rolling slower than the coast stop speed. */
+  get allNearlyStopped(): boolean {
+    return this.racers.every(
+      racer =>
+        racer.integrity.condition === CAR_CONDITION.DESTROYED ||
+        isNearlyStopped(length(racer.state.velocity)),
+    );
+  }
+
   /** Laps completed by one car, for the HUD. */
   standingOf(carId: string): RacerStanding | undefined {
     return this.raceState.standings.find(standing => standing.carId === carId);
@@ -379,7 +389,12 @@ export class RaceField {
       }
 
       const speedBefore = length(racer.state.velocity);
-      const command = frozen ? IDLE_INPUT : this.commandFor(racer, playerCommand, stepSeconds);
+      const finished = this.standingOf(racer.carId)?.finished === true;
+      const command = frozen
+        ? IDLE_INPUT
+        : finished
+          ? coastInput(speedBefore)
+          : this.commandFor(racer, playerCommand, stepSeconds);
 
       if (!frozen) {
         this.resolveWeaponCommand(racer, command);

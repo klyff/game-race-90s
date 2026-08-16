@@ -9,6 +9,7 @@ import {
   EMPTY_WEAPON_HITS,
   formatCash,
   podiumPrize,
+  prizeTable,
   weaponHitEarnings,
   type WeaponHits,
 } from '../domain/progress/Wallet.ts';
@@ -65,6 +66,7 @@ export class ResultsScene extends Phaser.Scene {
 
   private backdrop!: Phaser.GameObjects.Rectangle;
   private headerText!: Phaser.GameObjects.Text;
+  private winnerText!: Phaser.GameObjects.Text;
   private trackText!: Phaser.GameObjects.Text;
   private standingsText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
@@ -105,8 +107,16 @@ export class ResultsScene extends Phaser.Scene {
     });
     this.balance = creditWallet(this.prize + this.hitBonus);
 
-    this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.86).setOrigin(0, 0);
-    this.headerText = this.add.text(0, 0, this.headerLine(), this.headerStyle()).setOrigin(0.5, 0.5);
+    this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.88).setOrigin(0, 0);
+    this.headerText = this.add
+      .text(0, 0, 'WINNER IS', this.headerStyle())
+      .setOrigin(0.5, 0.5)
+      .setScale(2.6)
+      .setAlpha(0);
+    this.winnerText = this.add
+      .text(0, 0, this.winnerName(), this.winnerStyle())
+      .setOrigin(0.5, 0.5)
+      .setAlpha(0);
     this.trackText = this.add.text(0, 0, this.trackLine(), this.subStyle()).setOrigin(0.5, 0.5);
     this.standingsText = this.add
       .text(0, 0, this.standingsBlock(), this.listStyle())
@@ -116,14 +126,35 @@ export class ResultsScene extends Phaser.Scene {
     this.promptText = this.add.text(0, 0, this.promptLine(), this.promptStyle()).setOrigin(0.5, 0.5);
 
     this.layout();
+    this.playCeremony();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
   }
 
-  private headerLine(): string {
-    return this.payload.playerPosition === 1
-      ? 'YOU WIN'
-      : `FINISHED ${ordinal(this.payload.playerPosition)}`;
+  private winnerName(): string {
+    const winner = this.payload.standings.find(entry => entry.position === 1);
+    return (winner?.name ?? '???').toUpperCase();
+  }
+
+  /** 90s cabinet snap-in: the line slams on, the name blinks, then the podium settles. */
+  private playCeremony(): void {
+    this.tweens.add({
+      targets: this.headerText,
+      alpha: 1,
+      scale: 1,
+      duration: 280,
+      ease: Phaser.Math.Easing.Back.Out,
+    });
+    this.time.delayedCall(320, () => {
+      this.winnerText.setAlpha(1);
+      this.tweens.add({
+        targets: this.winnerText,
+        alpha: { from: 1, to: 0.15 },
+        duration: 90,
+        yoyo: true,
+        repeat: 5,
+      });
+    });
   }
 
   private trackLine(): string {
@@ -134,10 +165,28 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   private standingsBlock(): string {
+    const slot = campaignSlotForTrackId(this.payload.trackId);
+    const planetIndex = slot?.planetIndex ?? 1;
+    const trackN = slot?.trackN ?? 1;
+    const purses = prizeTable(planetIndex, trackN);
+    const purseFor = (position: number): number => {
+      if (position === 1) return purses.first;
+      if (position === 2) return purses.second;
+      if (position === 3) return purses.third;
+      return 0;
+    };
     return this.payload.standings
+      .filter(entry => entry.position <= 3)
       .map(entry => {
         const marker = entry.isPlayer ? '>' : ' ';
-        return `${marker} ${entry.position}. ${entry.name.toUpperCase()}`;
+        const score = computeRaceScore({
+          position: entry.position,
+          totalRacers: this.payload.totalRacers,
+          finishSeconds: this.payload.finishSeconds,
+          parSeconds: this.payload.parSeconds,
+        });
+        const prize = formatCash(purseFor(entry.position));
+        return `${marker} ${entry.position}. ${entry.name.toUpperCase()}   ${prize}   ${score}`;
       })
       .join('\n');
   }
@@ -209,9 +258,10 @@ export class ResultsScene extends Phaser.Scene {
     const centreX = width / 2;
 
     this.backdrop.setSize(width, height);
-    this.headerText.setPosition(centreX, height * 0.16);
-    this.trackText.setPosition(centreX, height * 0.27);
-    this.standingsText.setPosition(centreX, height * 0.36);
+    this.headerText.setPosition(centreX, height * 0.14);
+    this.winnerText.setPosition(centreX, height * 0.24);
+    this.trackText.setPosition(centreX, height * 0.34);
+    this.standingsText.setPosition(centreX, height * 0.42);
     this.scoreText.setPosition(centreX, height * 0.72);
     this.purseText.setPosition(centreX, height * 0.8);
     this.promptText.setPosition(centreX, height * 0.91);
@@ -220,10 +270,20 @@ export class ResultsScene extends Phaser.Scene {
   private headerStyle(): Phaser.Types.GameObjects.Text.TextStyle {
     return {
       fontFamily: 'monospace',
-      fontSize: '48px',
-      color: this.payload.playerPosition === 1 ? '#ffd85c' : '#e6e8ef',
+      fontSize: '36px',
+      color: '#ffe066',
       stroke: '#1a0e05',
       strokeThickness: 8,
+    };
+  }
+
+  private winnerStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '56px',
+      color: '#ffd85c',
+      stroke: '#3a0d05',
+      strokeThickness: 10,
     };
   }
 

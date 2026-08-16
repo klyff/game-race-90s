@@ -14,15 +14,13 @@ reverses, marks the tarmac, sounds like an engine, and the camera breathes with 
 
 ## Next step
 
-**Wallet is in.** Podium (1st / 50% / 25%) grows per planet and track; weapon hits pay a
-bounty; purse persists in `rockn90s.wallet`. HUD shows live cash; results credit the bank;
-select screens show BANK and 1st-place purse.
+**Read `docs/CLAUDE_HANDOFF.md` first.** Wallet, coast-to-stop, WINNER IS ceremony, and
+per-planet palettes + stand-in ground tiles are in. Claude team: drop real Prompt A/B
+art into `public/assets/ui/planets/<slug>.png` and `public/assets/ground/<slug>.png`,
+then place Prompt C props. Only Thunder Basin has a real select illustration today.
 
-**Still only the owner can close:** play a race, take a podium, confirm BANK rises, then
-land a missile/oil/mine and see the hit bonus. Run `npm run dev` → http://localhost:5173
-(or 5174 if 5173 is busy).
-
-Deferred: two-missile special, per-car surface grip, save-slot select.
+**Owner close:** race Thunder Basin, watch cars coast after the flag, confirm
+WINNER IS + 2nd/3rd purse. Then open another planet and check the ground colour changed.
 
 ## Constraints
 
