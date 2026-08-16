@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.ts';
 import { HudScene } from './scenes/HudScene.ts';
+import { PauseScene } from './scenes/PauseScene.ts';
+import { PlanetSelectScene } from './scenes/PlanetSelectScene.ts';
 import { RaceScene } from './scenes/RaceScene.ts';
+import { ResultsScene } from './scenes/ResultsScene.ts';
 import { SplashScene } from './scenes/SplashScene.ts';
+import { TrackSelectScene } from './scenes/TrackSelectScene.ts';
 
 /**
  * Browser entry point. Everything interesting happens in the scenes; this file
@@ -24,10 +28,19 @@ const game = new Phaser.Game({
     height: '100%',
   },
   // Order here is registration, not sequence: `BootScene` is first so it auto-starts,
-  // and each scene names the next one itself (boot -> splash -> race). `HudScene`
-  // declares `active: false` and is launched by `RaceScene` once there is a race to
-  // report on.
-  scene: [BootScene, SplashScene, RaceScene, HudScene],
+  // and each scene names the next one itself (boot -> splash -> planet -> track ->
+  // race). `HudScene` declares `active: false` and is launched by `RaceScene` once
+  // there is a race to report on.
+  scene: [
+    BootScene,
+    SplashScene,
+    PlanetSelectScene,
+    TrackSelectScene,
+    RaceScene,
+    HudScene,
+    ResultsScene,
+    PauseScene,
+  ],
 });
 
 /**

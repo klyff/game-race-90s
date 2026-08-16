@@ -9,19 +9,49 @@
 export const SCENE_KEY = {
   BOOT: 'boot',
   SPLASH: 'splash',
+  PLANET_SELECT: 'planet-select',
+  TRACK_SELECT: 'track-select',
   RACE: 'race',
   HUD: 'hud',
+  RESULTS: 'results',
+  PAUSE: 'pause',
 } as const;
 export type SceneKey = (typeof SCENE_KEY)[keyof typeof SCENE_KEY];
 
 /** Cache key of the generated car manifest. */
 export const CAR_MANIFEST_KEY = 'cars-manifest';
 
+/** Cache key of a track's offline racing-line search, one per circuit. */
+export function linesCacheKey(trackId: string): string {
+  return `track-lines:${trackId}`;
+}
+
+/** Where `npm run gen:lines` writes its output, relative to the served root. */
+export const LINES_ASSET_DIRECTORY = 'assets/lines';
+
 /** Where `npm run gen:sprites` writes its output, relative to the served root. */
 export const CAR_ASSET_DIRECTORY = 'assets/cars';
 
 /** Where the authored (non-generated) interface art lives, relative to the served root. */
 export const UI_ASSET_DIRECTORY = 'assets/ui';
+
+/** Where owner-provided weapon art (missile / oil / mine) lives, relative to the served root. */
+export const WEAPON_ASSET_DIRECTORY = 'assets/weapons';
+
+/**
+ * Texture keys and filenames for the weapon sprites. These are OPTIONAL: the game
+ * boots and plays with geometric fallbacks when the files are absent, and swaps in
+ * the art automatically once the owner drops it into `WEAPON_ASSET_DIRECTORY`.
+ */
+export const WEAPON_SPRITES = [
+  { key: 'weapon-missile', file: 'missile.png' },
+  { key: 'weapon-oil', file: 'oil.png' },
+  { key: 'weapon-mine', file: 'mine.png' },
+] as const;
+
+export const MISSILE_SPRITE_KEY = 'weapon-missile';
+export const OIL_SPRITE_KEY = 'weapon-oil';
+export const MINE_SPRITE_KEY = 'weapon-mine';
 
 /** Texture key of the splash artwork. */
 export const SPLASH_ART_KEY = 'splash-art';

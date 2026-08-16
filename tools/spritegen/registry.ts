@@ -1,8 +1,13 @@
 import { airBlade } from './cars/air-blade.car.ts';
+import { airBoat } from './cars/air-boat.car.ts';
 import { battleTrak } from './cars/battle-trak.car.ts';
+import { delorean } from './cars/delorean.car.ts';
 import { dirtDevil } from './cars/dirt-devil.car.ts';
 import { havac } from './cars/havac.car.ts';
+import { magmaRex } from './cars/magma-rex.car.ts';
 import { marauder } from './cars/marauder.car.ts';
+import { neonRonin } from './cars/neon-ronin.car.ts';
+import { snowCar } from './cars/snow-car.car.ts';
 import type { CarModelDef } from './schema.ts';
 
 /**
@@ -17,6 +22,11 @@ export const CAR_MODELS: readonly CarModelDef[] = [
   havac,
   airBlade,
   battleTrak,
+  delorean,
+  airBoat,
+  snowCar,
+  magmaRex,
+  neonRonin,
 ];
 
 export function findCarModel(id: string): CarModelDef {

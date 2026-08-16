@@ -1,13 +1,20 @@
 import Phaser from 'phaser';
 import { parseCarSetManifest } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
+import { parseTrackLinesManifest } from '../data/tracks/TrackLines.ts';
+import { TRACKS } from '../data/tracks/registry.ts';
+import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import {
   CAR_ASSET_DIRECTORY,
   CAR_MANIFEST_KEY,
+  linesCacheKey,
+  LINES_ASSET_DIRECTORY,
   SCENE_KEY,
   SPLASH_ART_FILE,
   SPLASH_ART_KEY,
   UI_ASSET_DIRECTORY,
+  WEAPON_ASSET_DIRECTORY,
+  WEAPON_SPRITES,
 } from './sceneKeys.ts';
 
 /**
@@ -30,15 +37,41 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     this.load.json(CAR_MANIFEST_KEY, `${CAR_ASSET_DIRECTORY}/cars.json`);
-    this.load.once(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
+    // Every circuit's offline racing lines: the campaign spans all registered tracks,
+    // and RaceScene needs the lines for whichever one the player picks. One key per
+    // track keeps the lookup a plain map rather than a re-fetch on every race.
+    for (const track of TRACKS) {
+      this.load.json(linesCacheKey(track.id), `${LINES_ASSET_DIRECTORY}/${track.id}.json`);
+    }
+    // A missing weapon sprite is not fatal — those assets are optional and the race
+    // falls back to primitives — so weapon keys are filtered out of the error path.
+    // Any OTHER load failure is fatal and reported on screen.
+    const optionalKeys = new Set<string>(WEAPON_SPRITES.map(sprite => sprite.key));
+    this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
+      if (optionalKeys.has(file.key)) {
+        return;
+      }
       this.showFatalError(`Failed to load ${file.src}`);
     });
   }
 
   create(): void {
     let manifest: CarSetManifest;
+    let linesByTrack: Record<string, TrackLinesManifest>;
     try {
       manifest = parseCarSetManifest(this.cache.json.get(CAR_MANIFEST_KEY));
+    } catch (error) {
+      this.showFatalError(error instanceof Error ? error.message : String(error));
+      return;
+    }
+
+    try {
+      linesByTrack = {};
+      for (const track of TRACKS) {
+        linesByTrack[track.id] = parseTrackLinesManifest(
+          this.cache.json.get(linesCacheKey(track.id)),
+        );
+      }
     } catch (error) {
       this.showFatalError(error instanceof Error ? error.message : String(error));
       return;
@@ -54,8 +87,15 @@ export class BootScene extends Phaser.Scene {
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
 
+    // Optional weapon art: queued best-effort. Missing files are swallowed by the
+    // filtered error handler above, and `RaceScene` checks `textures.exists` before
+    // using them, so a partial or absent set never breaks the game.
+    for (const sprite of WEAPON_SPRITES) {
+      this.load.image(sprite.key, `${WEAPON_ASSET_DIRECTORY}/${sprite.file}`);
+    }
+
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
-      this.scene.start(SCENE_KEY.SPLASH, { manifest });
+      this.scene.start(SCENE_KEY.SPLASH, { manifest, linesByTrack });
     });
     this.load.start();
   }

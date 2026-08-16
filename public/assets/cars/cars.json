@@ -27,7 +27,8 @@
         "steerSpeedFalloff": 0.45,
         "armor": 0.4,
         "ammoCapacity": 5,
-        "collisionRadius": 1.7
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5
       },
       "perk": "bulldozer"
     },
@@ -50,7 +51,8 @@
         "steerSpeedFalloff": 0.35,
         "armor": 0.25,
         "ammoCapacity": 4,
-        "collisionRadius": 1.55
+        "collisionRadius": 1.55,
+        "aimRadius": 3
       },
       "perk": "off-road-ace"
     },
@@ -73,7 +75,8 @@
         "steerSpeedFalloff": 0.65,
         "armor": 0.6,
         "ammoCapacity": 5,
-        "collisionRadius": 1.85
+        "collisionRadius": 1.85,
+        "aimRadius": 2.5
       },
       "perk": "anvil"
     },
@@ -96,7 +99,8 @@
         "steerSpeedFalloff": 0.68,
         "armor": 0.15,
         "ammoCapacity": 4,
-        "collisionRadius": 1.8
+        "collisionRadius": 1.8,
+        "aimRadius": 3.2
       },
       "perk": "slipstream"
     },
@@ -119,9 +123,130 @@
         "steerSpeedFalloff": 0.45,
         "armor": 0.42,
         "ammoCapacity": 15,
-        "collisionRadius": 1.85
+        "collisionRadius": 1.85,
+        "aimRadius": 5
+      },
+      "perk": "arsenal"
+    },
+    {
+      "id": "delorean",
+      "displayName": "Delorean",
+      "archetype": "Steel wedge — flat-out pace, fragile shell",
+      "image": "delorean.png",
+      "shadow": {
+        "width": 46,
+        "height": 23
+      },
+      "stats": {
+        "mass": 900,
+        "enginePower": 42,
+        "brakeForce": 44,
+        "maxSpeed": 92,
+        "grip": 24,
+        "steerRate": 2.8,
+        "steerSpeedFalloff": 0.5,
+        "armor": 0.18,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.75,
+        "aimRadius": 3
+      },
+      "perk": "slipstream"
+    },
+    {
+      "id": "air-boat",
+      "displayName": "Air Boat",
+      "archetype": "Marsh-runner — glides where others slide",
+      "image": "air-boat.png",
+      "shadow": {
+        "width": 44,
+        "height": 22
+      },
+      "stats": {
+        "mass": 720,
+        "enginePower": 30,
+        "brakeForce": 42,
+        "maxSpeed": 70,
+        "grip": 34,
+        "steerRate": 3,
+        "steerSpeedFalloff": 0.4,
+        "armor": 0.3,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.7,
+        "aimRadius": 3
+      },
+      "perk": "off-road-ace"
+    },
+    {
+      "id": "snow-car",
+      "displayName": "Snow Car",
+      "archetype": "Ice-crawler — grips and stops where others skate",
+      "image": "snow-car.png",
+      "shadow": {
+        "width": 44,
+        "height": 22
+      },
+      "stats": {
+        "mass": 980,
+        "enginePower": 32,
+        "brakeForce": 48,
+        "maxSpeed": 68,
+        "grip": 38,
+        "steerRate": 2.6,
+        "steerSpeedFalloff": 0.42,
+        "armor": 0.45,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.8,
+        "aimRadius": 3
       },
       "perk": "trench-grip"
+    },
+    {
+      "id": "magma-rex",
+      "displayName": "Magma Rex",
+      "archetype": "Siege tank — unmovable through fire and rubble",
+      "image": "magma-rex.png",
+      "shadow": {
+        "width": 49,
+        "height": 25
+      },
+      "stats": {
+        "mass": 1250,
+        "enginePower": 41,
+        "brakeForce": 40,
+        "maxSpeed": 70,
+        "grip": 20,
+        "steerRate": 1.9,
+        "steerSpeedFalloff": 0.6,
+        "armor": 0.62,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.9,
+        "aimRadius": 2.6
+      },
+      "perk": "anvil"
+    },
+    {
+      "id": "neon-ronin",
+      "displayName": "Neon Ronin",
+      "archetype": "Street-tuner — razor turn-in on tight circuits",
+      "image": "neon-ronin.png",
+      "shadow": {
+        "width": 46,
+        "height": 23
+      },
+      "stats": {
+        "mass": 780,
+        "enginePower": 35,
+        "brakeForce": 44,
+        "maxSpeed": 80,
+        "grip": 32,
+        "steerRate": 3.3,
+        "steerSpeedFalloff": 0.5,
+        "armor": 0.28,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.65,
+        "aimRadius": 3.4
+      },
+      "perk": "bulldozer"
     }
   ]
 }

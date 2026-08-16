@@ -286,6 +286,16 @@ describe('PaceDriver', () => {
       expect(command.dropMine).toBe(false);
     });
 
+    it('dropOil is always false', () => {
+      const projection = spline.project({ x: -60, y: -162 });
+      const heading = angleOf(projection.tangent);
+      const state = createVehicleState(projection.position, heading);
+
+      const command = driver.command(state, projection, marauderStats, spline);
+
+      expect(command.dropOil).toBe(false);
+    });
+
     it('reverse is always 0', () => {
       const projection = spline.project({ x: -60, y: -162 });
       const heading = angleOf(projection.tangent);

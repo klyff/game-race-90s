@@ -5,6 +5,7 @@ import { statBars } from '../adapters/render/CarStatBars.ts';
 import type { StatBar } from '../adapters/render/CarStatBars.ts';
 import { coverRect, promptAnchor, voidRect } from '../adapters/render/SplashLayout.ts';
 import type { CarSetManifest, CarSheetManifest } from '../data/cars/CarManifest.ts';
+import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { PLAYER_CAR_ID, SCENE_KEY, SPLASH_ART_KEY } from './sceneKeys.ts';
 
 /** The prompt's blink period, seconds. Slow, the way a cabinet attract screen blinked. */
@@ -23,9 +24,10 @@ const BAR_LABEL_GUTTER = 64;
 const COLOUR_BAR_FILL = 0xffd85c;
 const COLOUR_BAR_TRACK = 0x000000;
 
-/** What `BootScene` hands over, and what this scene passes on to the race. */
+/** What `BootScene` hands over, and what this scene passes on to the select flow. */
 interface SplashSceneData {
   readonly manifest: CarSetManifest;
+  readonly linesByTrack: Record<string, TrackLinesManifest>;
 }
 
 /**
@@ -56,6 +58,7 @@ interface SplashSceneData {
  */
 export class SplashScene extends Phaser.Scene {
   private manifest!: CarSetManifest;
+  private linesByTrack!: Record<string, TrackLinesManifest>;
   private selectedIndex = 0;
 
   private art!: Phaser.GameObjects.Image;
@@ -78,6 +81,7 @@ export class SplashScene extends Phaser.Scene {
 
   init(data: SplashSceneData): void {
     this.manifest = data.manifest;
+    this.linesByTrack = data.linesByTrack;
     const preferred = this.manifest.cars.findIndex(car => car.id === PLAYER_CAR_ID);
     this.selectedIndex = preferred >= 0 ? preferred : 0;
   }
@@ -225,7 +229,12 @@ export class SplashScene extends Phaser.Scene {
   }
 
   private startRace(): void {
-    this.scene.start(SCENE_KEY.RACE, { manifest: this.manifest, carId: this.selectedCar().id });
+    // Car chosen here; the planet and track are chosen on the select screens next.
+    this.scene.start(SCENE_KEY.PLANET_SELECT, {
+      manifest: this.manifest,
+      linesByTrack: this.linesByTrack,
+      carId: this.selectedCar().id,
+    });
   }
 
   private nameStyle(): Phaser.Types.GameObjects.Text.TextStyle {

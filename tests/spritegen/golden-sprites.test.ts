@@ -114,7 +114,7 @@ describe('sprite generation', () => {
       ids.add(car.id);
     }
 
-    // Must have exactly 5 cars.
-    expect(CAR_MODELS.length).toBe(5);
+    // The full roster is 10 cars.
+    expect(CAR_MODELS.length).toBe(10);
   });
 });

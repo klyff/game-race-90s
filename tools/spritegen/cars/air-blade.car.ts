@@ -139,6 +139,7 @@ export const airBlade: CarModelDef = {
     armor: 0.15,
     ammoCapacity: 4,
     collisionRadius: 1.8,
+    aimRadius: 3.2, // Decent aim to go with the speed.
   },
   // Gets a speed boost drafting close behind another car.
   perk: CAR_PERK.SLIPSTREAM,

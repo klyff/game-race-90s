@@ -1664,3 +1664,96 @@ wheel.** An agent cannot hear, and the headless browser has no audio device. Ask
 - **Check `git status` for a subagent's scratch files before staging.** One leaked
   `tools/tmp-speedo-table.ts` into a commit this session and broke typecheck; "touch nothing else" does
   not stop a temp file.
+
+---
+
+### Final handoff — 2026-08-16 ~01:40 — Cursor session (Grok) picked up from the 01:05 Claude handoff
+
+**This is the block to resume from.** Verified by running the commands: **865 tests across 33 files**,
+`npm run typecheck` clean, `npm run build` clean. Working tree has uncommitted T-046/T-043/T-038 work
+(not pushed). No agent is mid-flight.
+
+#### Shipped this Cursor session
+
+| Task | Outcome |
+| --- | --- |
+| **T-046 weapons** | DONE. Missiles / oil / mines as pure domain rules inside `RaceField`'s five-stage order. Keys `1`/`2`/`3` (edge-triggered). Start: 3 missiles / 2 oil / 2 mines. Refill at finish line to `ammoCapacity` (Arsenal raises ceiling via `reloadMultiplier`). Oil → `yawSpin`. Mines destroy. NPC aim cone prioritises the player. `battle-trak` perk is now `ARSENAL` (was trench-grip stand-in). Arsenal inert test replaced with live consumers. |
+| **T-043 gen:lines** | DONE. `npm run gen:lines` → `public/assets/lines/thunder-basin.json`. Five candidates evaluated through the real pipeline; **centreline currently wins for every car** (offset profiles are slower — tune later, infrastructure is real). |
+| **T-047 parTime** | DONE as a side-effect: `parTime=34.13s` from battle-trak (median winner) in the lines JSON. |
+| **T-038 AIDriver** | DONE skeleton. `PursuitSteering` + `CornerSpeed` extracted from `PaceDriver`; `AIDriver` follows the searched line and uses LIVE stage-1 rival distances. Wired through Boot → Splash → RaceField. |
+
+#### Start here next session, in this order
+
+1. **Tune the racing-line candidates** so a non-centreline profile can beat centreline (today every
+   winner is centreline — the search works, the profiles need sharper outside-apex-outside).
+2. **Playtest gate for T-038 / "muito fácil"**: owner runs `npm run dev`, races, should NOT win first
+   try now that weapons + AI lines are live. Feel the five perks; hear `TitleMusic`.
+3. **T-044** three cars (AirBoat, SnowCar, Delorean). Still open: Delorean weakness; `assignNpcCars`
+   at 8 cars / 5-grid.
+4. **T-041** results → **T-042** scoring (uses `parTime` from lines JSON) → T-035 → T-036.
+
+#### Two questions still open (unchanged)
+
+- Delorean weakness (recommended: fragile armour).
+- `assignNpcCars` with roster 8 on a 5-car grid — re-read T-031.
+
+#### Owner gates still open
+
+Nobody has heard `TitleMusic` in-game; the five perks need a human at the wheel. Run
+`npm run dev` → http://localhost:5173. Weapons: keys **1** missile, **2** oil, **3** mine.
+
+#### Tooling / files added
+
+- `src/domain/weapons/*` — constants, inventory, missile, hazard, aim
+- `src/domain/vehicle/{AIDriver,PursuitSteering,CornerSpeed}.ts`
+- `src/domain/race/RacingLine.ts`, `src/data/tracks/TrackLines.ts`
+- `tools/linegen/generate.ts`, `public/assets/lines/thunder-basin.json`
+- `npm run gen:lines`
+- Keyboard: digits 1/2/3 replace Space/Ctrl for weapons
+
+---
+
+### Final handoff — 2026-08-16 ~03:35 — Cursor session (Opus) — Competitive NPCs / Aim / Race Flow / 30 Tracks
+
+**This is the block to resume from.** Verified by running the commands: **887 tests across 35 files**,
+`npm run typecheck` clean, `npm run build` clean. Working tree has uncommitted work (not pushed). No
+agent is mid-flight. The whole attached plan (`Competitive NPCs, Aim, Tracks`) is now DONE.
+
+#### Shipped this session
+
+| Task | Outcome |
+| --- | --- |
+| **Phase A — aim reticle + precision** | `aimRadius` on `VehicleStats` + all 10 cars. `WeaponAim` replaced the cone with a forward CAPTURE CORRIDOR (nose → reticle at `2.5 * carLength`, disk radius = `aimRadius`; bigger = more forgiving). `RaceScene.drawAim()` draws the green line + ground-plane ellipse for the player. |
+| **Phase A — weapon sprites** | `BootScene` loads OPTIONAL `assets/weapons/{missile,oil,mine}.png` (missing files are swallowed, never fatal). `RaceScene.drawWeapons()` uses pooled `Image`s when the texture exists, else the old primitives. **Owner still needs to drop the three PNGs in `public/assets/weapons/`.** |
+| **Phase B — aggressive NPCs** | `AIDriver` `aggression` knob (default 0.9): later braking, higher corner-safety, keeps throttle while closing. NPCs now drop oil/mines at a rival close behind (player prioritised). |
+| **Phase C1 — finish/results** | Race ends on PLAYER finish; `ResultsScene` shows winner/standings/score (70% position + 30% time-vs-par). |
+| **Phase C2 — progression** | `src/data/tracks/campaign.ts` (pure, tested): top-3 CLEARS a track (unlocks next), winning a planet's last track unlocks the next planet. Persisted via `SaveSlots.tracksWon` (1st) + a `rockn90s.cleared` set in `ProgressStore`. Results ENTER routes to the next campaign track. |
+| **Phase D — 10 cars** | Roster at 10 (delorean/air-boat/snow-car/magma-rex/neon-ronin added), each with `aimRadius` + a perk. |
+| **Phase E — 30 tracks + select** | 10 planets in `planets.ts` (each with `bestCarId` + terrain bias + `surfaceGrip`). `npm run gen:tracks` → `src/data/tracks/generated-tracks.ts` (29 procedural + authored thunder-basin = 30), registry re-exports them. `npm run gen:lines` now iterates ALL 30 (par times written, applies `surfaceGrip` via `tools/shared/lapSim.ts`). New `PlanetSelectScene` / `TrackSelectScene`; `RaceScene` takes `trackId` (no hardcoded default). Flow: Boot → Splash → PlanetSelect → TrackSelect → Race → Results. |
+| **Phase F — pause menu** | Esc → `PauseScene` (Return / Save / Main Menu). |
+
+#### Known balance finding (honest, not a bug)
+
+`surfaceGrip` scales EVERY car's grip by the same factor, so it changes absolute pace but not the grip
+RANKING — and lap time in this model is grip-dominated, so `snow-car` (grip 38) is the literal fastest
+on almost any track with corners. `gen:lines` reports `fastest=… featured=… [MATCH|miss]`: only a few
+planets' featured car is the literal fastest. **`bestCarId` is therefore the planet's FEATURED /
+recommended car (used on the select screen), not a guaranteed lap-time winner.** To make it literal
+would need per-car surface multipliers (e.g. ice punishes low-grip more), which is a deliberate
+follow-up, not done here.
+
+#### Start here next session
+
+1. **Owner: drop `public/assets/weapons/{missile,oil,mine}.png`** — rendering path already switches to
+   them automatically; until then primitives draw.
+2. **Owner playtest gate** (`npm run dev` → http://localhost:5173): confirm NPCs feel competitive, the
+   aim reticle reads right, and the planet/track select + progression flow feels good.
+3. Optional: per-car surface grip so the featured car is the literal fastest per planet.
+4. Optional: reduce the 1.6 MB bundle via code-split, and add real save-slot select (today: one auto slot).
+
+#### Tooling / files added this session
+
+- `src/data/tracks/{planets,campaign,generated-tracks}.ts`, `tools/{trackgen/generate,shared/lapSim}.ts`, `npm run gen:tracks`
+- `src/scenes/{PlanetSelectScene,TrackSelectScene,selectData}.ts`; `linesCacheKey()` + weapon-sprite keys in `sceneKeys.ts`
+- `ProgressStore`: `recordProgress` / `loadCleared` / `loadWonTracks` (replaces `recordResult`)
+- Tests: `tests/data/Campaign.test.ts`

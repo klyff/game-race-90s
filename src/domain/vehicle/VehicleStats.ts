@@ -31,4 +31,12 @@ export interface VehicleStats {
   readonly ammoCapacity: number;
   /** Collision circle radius, world units. */
   readonly collisionRadius: number;
+  /**
+   * Radius of the aim reticle (the green circle) that sits ~2.5 car-lengths ahead
+   * of the nose, world units. It is the missile-lock capture zone: a target inside
+   * the corridor from the nose to that circle can be locked, so a LARGER circle
+   * means a more forgiving, "more precise" shot ("quanto maior, mais preciso").
+   * Authored per car.
+   */
+  readonly aimRadius: number;
 }

@@ -13,6 +13,7 @@ import { TyreMarks } from '../adapters/render/TyreMarks.ts';
 import { VehicleView } from '../adapters/render/VehicleView.ts';
 import { findCarSheet } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
+import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { findTrack } from '../data/tracks/registry.ts';
 import { SIMULATION_STEP_SECONDS } from '../domain/constants.ts';
 import type { InputCommand } from '../domain/input/InputCommand.ts';
@@ -25,7 +26,19 @@ import type { RacerEntry, RacerRuntime } from '../domain/race/RaceField.ts';
 import type { TrackDefinition } from '../domain/track/TrackDefinition.ts';
 import { TrackSpline } from '../domain/track/TrackSpline.ts';
 import { CAR_CONDITION } from '../domain/vehicle/CarIntegrity.ts';
-import { DEFAULT_TRACK_ID, PLAYER_CAR_ID, SCENE_KEY } from './sceneKeys.ts';
+import { missileCapacity } from '../domain/weapons/WeaponInventory.ts';
+import { HAZARD_KIND } from '../domain/weapons/Hazard.ts';
+import { aimReticleCenter } from '../domain/weapons/WeaponAim.ts';
+import type { ResultsEntry, ResultsSceneData } from './ResultsScene.ts';
+import type { PauseSceneData } from './PauseScene.ts';
+import {
+  DEFAULT_TRACK_ID,
+  MINE_SPRITE_KEY,
+  MISSILE_SPRITE_KEY,
+  OIL_SPRITE_KEY,
+  PLAYER_CAR_ID,
+  SCENE_KEY,
+} from './sceneKeys.ts';
 
 /** Milliseconds → seconds, for Phaser's `update` delta. */
 const MILLISECONDS_PER_SECOND = 1000;
@@ -87,11 +100,15 @@ const DEBUG_RESPAWN_SECONDS = 2;
 
 interface RaceSceneData {
   readonly manifest: CarSetManifest;
+  /** Every track's offline lines, keyed by track id; the scene reads its own track's. */
+  readonly linesByTrack?: Record<string, TrackLinesManifest>;
   /**
    * Which car the player drives. Absent on the first entry from `BootScene`; set when
-   * the scene restarts itself to swap cars, and eventually by the car select (T-018).
+   * the scene restarts itself to swap cars, and by the car select.
    */
   readonly carId?: string;
+  /** Which circuit to race. Defaults to the anchor track when omitted. */
+  readonly trackId?: string;
 }
 
 /** One explosion waiting to be presented, queued inside a simulation step. */
@@ -116,7 +133,10 @@ interface PendingExplosion {
  */
 export class RaceScene extends Phaser.Scene {
   private manifest!: CarSetManifest;
+  private linesByTrack: Record<string, TrackLinesManifest> = {};
+  private trackLines: TrackLinesManifest | undefined;
   private carId: string = PLAYER_CAR_ID;
+  private trackId: string = DEFAULT_TRACK_ID;
   private track!: TrackDefinition;
   private spline!: TrackSpline;
   private projection!: IsoProjection;
@@ -134,6 +154,17 @@ export class RaceScene extends Phaser.Scene {
   private views: VehicleView[] = [];
   private command: InputCommand = IDLE_INPUT;
   private pendingExplosions: PendingExplosion[] = [];
+  /** Drawn every frame from live domain state — missiles, oil, mines. */
+  private weaponLayer!: Phaser.GameObjects.Graphics;
+  /**
+   * Reused sprite pools for weapon art, grown on demand and hidden when idle.
+   * Empty and unused until the owner's optional textures are present; the layer
+   * above draws geometric fallbacks in that case.
+   */
+  private missileSprites: Phaser.GameObjects.Image[] = [];
+  private hazardSprites: Phaser.GameObjects.Image[] = [];
+  /** True once the player has finished and the results screen has been handed off to. */
+  private resultsShown = false;
 
   constructor() {
     super(SCENE_KEY.RACE);
@@ -141,11 +172,14 @@ export class RaceScene extends Phaser.Scene {
 
   init(data: RaceSceneData): void {
     this.manifest = data.manifest;
+    this.linesByTrack = data.linesByTrack ?? {};
     this.carId = data.carId ?? PLAYER_CAR_ID;
+    this.trackId = data.trackId ?? DEFAULT_TRACK_ID;
+    this.trackLines = this.linesByTrack[this.trackId];
   }
 
   create(): void {
-    this.track = findTrack(DEFAULT_TRACK_ID);
+    this.track = findTrack(this.trackId);
     this.spline = new TrackSpline(this.track.controlPoints);
 
     // One number ties sprites and road together (locked decision 3): the scale the
@@ -162,10 +196,13 @@ export class RaceScene extends Phaser.Scene {
     this.loop = new FixedStepLoop(SIMULATION_STEP_SECONDS);
     this.audio = new RaceAudio(this.playerSheetStats());
 
-    this.field = new RaceField(this.buildEntries(), this.track, this.spline);
+    this.field = new RaceField(this.buildEntries(), this.track, this.spline, {
+      trackLines: this.trackLines,
+    });
     this.views = this.field.racers.map(racer =>
       new VehicleView(this, this.manifest, findCarSheet(this.manifest, racer.carId), this.projection),
     );
+    this.weaponLayer = this.add.graphics().setDepth(40);
 
     const bounds = this.trackRenderer.bounds;
     this.cameras.main.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
@@ -184,6 +221,9 @@ export class RaceScene extends Phaser.Scene {
   }
 
   update(_time: number, deltaMilliseconds: number): void {
+    if (this.resultsShown) {
+      return;
+    }
     const deltaSeconds = deltaMilliseconds / MILLISECONDS_PER_SECOND;
 
     // The command is read once per rendered frame rather than per simulation step:
@@ -195,6 +235,7 @@ export class RaceScene extends Phaser.Scene {
     this.loop.advance(deltaSeconds, stepSeconds => this.stepSimulation(stepSeconds));
 
     this.syncViews();
+    this.drawWeapons();
     // Once per frame, whatever the number of cars: ageing marks is a property of time
     // passing. Calling it per car aged them five times too fast.
     this.tyreMarks.update(deltaSeconds);
@@ -203,6 +244,60 @@ export class RaceScene extends Phaser.Scene {
     this.explosions.update(deltaSeconds);
     this.chaseCamera.follow(this.player.state, deltaSeconds, this.targetZoom());
     this.refreshOverlay();
+
+    this.maybeFinishRace();
+  }
+
+  /**
+   * The race ends for the player the moment THEY cross the line for the last time —
+   * not when the whole field has finished. The remaining cars are ranked by their
+   * live progress, which is exactly what `standings` already does, so the results
+   * screen shows a sensible order even with NPCs still on track.
+   */
+  private maybeFinishRace(): void {
+    if (this.resultsShown) {
+      return;
+    }
+    const race = this.field.race;
+    const playerRaceState = race.racers.find(racer => racer.carId === this.carId);
+    if (playerRaceState === undefined || !playerRaceState.progress.finished) {
+      return;
+    }
+    this.resultsShown = true;
+    this.showResults(playerRaceState.finishedAtSeconds ?? race.elapsedSeconds);
+  }
+
+  private showResults(finishSeconds: number): void {
+    const standings: ResultsEntry[] = this.field.race.standings.map(entry => ({
+      position: entry.position,
+      carId: entry.carId,
+      name: findCarSheet(this.manifest, entry.carId).displayName,
+      isPlayer: entry.carId === this.carId,
+    }));
+    const playerPosition =
+      this.field.standingOf(this.carId)?.position ?? this.field.racers.length;
+    const parSeconds =
+      this.trackLines?.parTime !== undefined
+        ? this.trackLines.parTime * this.track.laps
+        : undefined;
+
+    // The HUD is its own scene launched over the race; it must be stopped explicitly
+    // or it would keep drawing on top of the results.
+    this.scene.stop(SCENE_KEY.HUD);
+    this.scene.start(SCENE_KEY.RESULTS, {
+      manifest: this.manifest,
+      linesByTrack: this.linesByTrack,
+      trackLines: this.trackLines,
+      carId: this.carId,
+      trackId: this.track.id,
+      trackName: this.track.displayName,
+      laps: this.track.laps,
+      standings,
+      playerPosition,
+      totalRacers: this.field.racers.length,
+      finishSeconds,
+      parSeconds,
+    } satisfies ResultsSceneData);
   }
 
   /**
@@ -227,11 +322,9 @@ export class RaceScene extends Phaser.Scene {
       // clamps it to `totalLaps`, so a finished car reads 3/3 rather than 4/3.
       lap: (standing?.lapsCompleted ?? 0) + 1,
       totalLaps: this.track.laps,
-      // Ammo is full until the weapon system exists (T-016). Reporting the capacity
-      // rather than a hard-coded number means the HUD is already correct per car —
-      // battle-trak carries 15 rounds where air-blade carries 4.
-      ammo: player.stats.ammoCapacity,
-      ammoCapacity: player.stats.ammoCapacity,
+      // Live missile count; capacity is the (Arsenal-boosted) refill ceiling.
+      ammo: player.inventory.missiles,
+      ammoCapacity: missileCapacity(player.stats, player.perk),
       integrity: player.integrity.integrity,
       standings: race.standings.map(entry => ({
         carId: entry.carId,
@@ -292,6 +385,129 @@ export class RaceScene extends Phaser.Scene {
         this.tyreMarks.record(index, racer.state, racer.telemetry);
       }
     });
+  }
+
+  /**
+   * Simple projected markers for live weapons so a screenshot can prove they exist.
+   * Not art — geometry only, rebuilt from domain state every frame.
+   */
+  private drawWeapons(): void {
+    this.weaponLayer.clear();
+    const px = this.manifest.pixelsPerUnit;
+
+    const hasMissileArt = this.textures.exists(MISSILE_SPRITE_KEY);
+    let missileSlot = 0;
+    for (const missile of this.field.activeMissiles) {
+      const screen = this.projection.toScreen(missile.position);
+      if (hasMissileArt) {
+        const image = this.missileImage(missileSlot);
+        missileSlot += 1;
+        image.setVisible(true).setPosition(screen.x, screen.y);
+        this.scaleToWorldDiameter(image, missile.radius * 2 * px);
+        image.setRotation(0);
+      } else {
+        const radius = Math.max(2, missile.radius * px * 0.35);
+        this.weaponLayer.fillStyle(0xffe066, 1);
+        this.weaponLayer.fillCircle(screen.x, screen.y, radius);
+      }
+    }
+    this.hideFrom(this.missileSprites, missileSlot);
+
+    let hazardSlot = 0;
+    for (const hazard of this.field.activeHazards) {
+      const screen = this.projection.toScreen(hazard.position);
+      const isOil = hazard.kind === HAZARD_KIND.OIL;
+      const artKey = isOil ? OIL_SPRITE_KEY : MINE_SPRITE_KEY;
+      if (this.textures.exists(artKey)) {
+        const image = this.hazardImage(hazardSlot, artKey);
+        hazardSlot += 1;
+        image.setVisible(true).setPosition(screen.x, screen.y);
+        // Oil reads as a ground stain: squash it to the 2:1 iso ground plane. A mine
+        // is an object sitting on the road, so it keeps its aspect.
+        const diameter = hazard.radius * 2 * px;
+        this.scaleToWorldDiameter(image, diameter);
+        if (isOil) {
+          image.scaleY *= 0.5;
+        }
+      } else {
+        const radius = Math.max(3, hazard.radius * px * 0.5);
+        if (isOil) {
+          this.weaponLayer.fillStyle(0x1a1208, 0.85);
+          this.weaponLayer.fillEllipse(screen.x, screen.y, radius * 2, radius);
+        } else {
+          this.weaponLayer.fillStyle(0xff3344, 1);
+          this.weaponLayer.fillCircle(screen.x, screen.y, radius);
+        }
+      }
+    }
+    this.hideFrom(this.hazardSprites, hazardSlot);
+
+    this.drawAim();
+  }
+
+  /** Fetch (or lazily create) the pooled missile image at `index`. */
+  private missileImage(index: number): Phaser.GameObjects.Image {
+    let image = this.missileSprites[index];
+    if (image === undefined) {
+      image = this.add.image(0, 0, MISSILE_SPRITE_KEY).setDepth(41);
+      this.missileSprites[index] = image;
+    }
+    return image;
+  }
+
+  /** Fetch (or lazily create) the pooled hazard image at `index`, set to `textureKey`. */
+  private hazardImage(index: number, textureKey: string): Phaser.GameObjects.Image {
+    let image = this.hazardSprites[index];
+    if (image === undefined) {
+      image = this.add.image(0, 0, textureKey).setDepth(39);
+      this.hazardSprites[index] = image;
+    } else {
+      image.setTexture(textureKey);
+    }
+    return image;
+  }
+
+  /** Scale a unit-origin sprite so its widest side spans `diameter` screen pixels. */
+  private scaleToWorldDiameter(image: Phaser.GameObjects.Image, diameter: number): void {
+    const source = Math.max(image.width, image.height, 1);
+    const scale = Math.max(diameter, 1) / source;
+    image.setScale(scale);
+  }
+
+  /** Hide every pooled image from `start` onward (last frame drew fewer than this). */
+  private hideFrom(pool: readonly Phaser.GameObjects.Image[], start: number): void {
+    for (let index = start; index < pool.length; index += 1) {
+      pool[index]?.setVisible(false);
+    }
+  }
+
+  /**
+   * The player's aim: a green line from the car to a reticle ~2.5 car-lengths ahead,
+   * ending in a circle whose radius is the car's `aimRadius`. That circle is the
+   * missile-lock capture zone, so a wider circle is a car that shoots "more precisely"
+   * (a target inside it can be locked). Drawn as a ground-plane ellipse so it sits on
+   * the track in the isometric view rather than floating.
+   */
+  private drawAim(): void {
+    const player = this.player;
+    if (player.integrity.condition === CAR_CONDITION.DESTROYED) {
+      return;
+    }
+    const px = this.manifest.pixelsPerUnit;
+    const start = this.projection.toScreen(player.state.position);
+    const reticleWorld = aimReticleCenter(
+      player.state.position,
+      player.state.heading,
+      player.stats.collisionRadius,
+    );
+    const reticle = this.projection.toScreen(reticleWorld);
+    const circleWidth = player.stats.aimRadius * px * 2;
+    // 2:1 isometric squish on the ground plane, matching the oil-slick ellipse.
+    const circleHeight = player.stats.aimRadius * px;
+
+    this.weaponLayer.lineStyle(2, 0x33ff66, 0.9);
+    this.weaponLayer.lineBetween(start.x, start.y, reticle.x, reticle.y);
+    this.weaponLayer.strokeEllipse(reticle.x, reticle.y, circleWidth, circleHeight);
   }
 
   private presentExplosions(): void {
@@ -414,6 +630,9 @@ export class RaceScene extends Phaser.Scene {
     // T hides the overlay, for looking at the game rather than at the numbers.
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T).on('down', () => this.overlay.toggle());
 
+    // Esc pauses the race and raises the pause menu (Return / Save / Main Menu).
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.pauseGame());
+
     // C cycles the player's car. Driving all five back to back is the only way to judge
     // whether the stat sets actually feel different, which is T-012's gate.
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C).on('down', () => this.cycleCar());
@@ -428,6 +647,20 @@ export class RaceScene extends Phaser.Scene {
     // comes from a real user gesture, so the first key press is the earliest the
     // engine can be heard. `resume()` is a no-op once it has taken.
     keyboard.on('keydown', () => this.audio.resume());
+  }
+
+  /** Freezes the race and HUD and raises the pause menu over them. */
+  private pauseGame(): void {
+    if (this.resultsShown || this.scene.isPaused(SCENE_KEY.RACE)) {
+      return;
+    }
+    this.scene.launch(SCENE_KEY.PAUSE, {
+      manifest: this.manifest,
+      linesByTrack: this.linesByTrack,
+      carId: this.carId,
+    } satisfies PauseSceneData);
+    this.scene.pause(SCENE_KEY.HUD);
+    this.scene.pause();
   }
 
   /** Debug: destroys the player's car so the wreck, explosion and respawn can be watched. */
@@ -475,7 +708,13 @@ export class RaceScene extends Phaser.Scene {
     if (next === undefined) {
       return;
     }
-    this.scene.restart({ manifest: this.manifest, carId: next.id } satisfies RaceSceneData);
+    this.scene.restart({
+      manifest: this.manifest,
+      linesByTrack: this.linesByTrack,
+      carId: next.id,
+      trackId: this.trackId,
+    } satisfies RaceSceneData);
+
   }
 
   private refreshOverlay(): void {
@@ -522,6 +761,15 @@ export class RaceScene extends Phaser.Scene {
       view.destroy();
     }
     this.views = [];
+    this.weaponLayer.destroy();
+    for (const image of this.missileSprites) {
+      image.destroy();
+    }
+    this.missileSprites = [];
+    for (const image of this.hazardSprites) {
+      image.destroy();
+    }
+    this.hazardSprites = [];
     this.tyreMarks.destroy();
     this.explosions.destroy();
     this.trackRenderer.destroy();

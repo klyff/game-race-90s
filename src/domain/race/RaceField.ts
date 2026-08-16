@@ -8,6 +8,7 @@ import type { TrackSpline } from '../track/TrackSpline.ts';
 import { resolveCarContact } from '../vehicle/CarCollision.ts';
 import {
   applyImpactDamage,
+  applyWeaponDamage,
   CAR_CONDITION,
   createCarIntegrity,
   DAMAGE_ROLE,
@@ -24,9 +25,42 @@ import {
 import type { CarPerkProfile } from '../vehicle/CarPerk.ts';
 import type { CarPerkId } from '../constants.ts';
 import { PaceDriver } from '../vehicle/PaceDriver.ts';
+import { AIDriver } from '../vehicle/AIDriver.ts';
+import type { RivalView } from '../vehicle/AIDriver.ts';
+import { findLineForCar } from './RacingLine.ts';
+import type { TrackLinesManifest } from './RacingLine.ts';
 import { createVehicleState } from '../vehicle/Vehicle.ts';
 import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
+import { decideMissileAim } from '../weapons/WeaponAim.ts';
+import {
+  MISSILE_RAW_DAMAGE,
+  NPC_MINE_DROP_GAP_UNITS,
+  NPC_OIL_DROP_GAP_UNITS,
+  NPC_WEAPON_COOLDOWN_SECONDS,
+  OIL_LAP_REFERENCE_SPEED,
+  OIL_LIFETIME_LAPS,
+} from '../weapons/WeaponConstants.ts';
+import {
+  ageHazards,
+  dropMine,
+  dropOil,
+  findHazardHits,
+  HAZARD_KIND,
+  oilYawSpinForArmor,
+} from '../weapons/Hazard.ts';
+import type { TrackHazard } from '../weapons/Hazard.ts';
+import { findMissileHit, launchMissile, stepMissile } from '../weapons/Missile.ts';
+import type { Missile } from '../weapons/Missile.ts';
+import {
+  consumeMine,
+  consumeMissile,
+  consumeOil,
+  createWeaponInventory,
+  npcWeaponCooldownSeconds,
+  refillWeaponInventory,
+} from '../weapons/WeaponInventory.ts';
+import type { WeaponInventory } from '../weapons/WeaponInventory.ts';
 import { slipstreamFactor } from './Slipstream.ts';
 import type { DraftCandidate } from './Slipstream.ts';
 import { advanceRace, createRaceState } from './RaceSimulation.ts';
@@ -79,6 +113,8 @@ export interface RacerRuntime {
   /** Signed distance from the centreline, positive left. */
   lateralOffset: number;
   integrity: CarIntegrity;
+  /** Missiles, oil and mines this car is carrying (T-046). */
+  inventory: WeaponInventory;
   /**
    * Hardest contact seen since the presentation layer last read it, world units/s.
    * The scene drains this to trigger the impact sound; the damage rules have
@@ -89,6 +125,11 @@ export interface RacerRuntime {
   explodedThisStep: boolean;
   /** True for the one step in which this car came back from a wreck. */
   respawnedThisStep: boolean;
+  /**
+   * Seconds until this NPC may take another weapon decision. Unused for the player
+   * (keyboard is already edge-triggered). Arsenal shortens it via reloadMultiplier.
+   */
+  weaponCooldownRemaining: number;
 }
 
 export interface RaceFieldOptions {
@@ -100,6 +141,14 @@ export interface RaceFieldOptions {
   readonly gridSetbackUnits?: number;
   /** Injectable so a test can pin the NPC driver's tuning. */
   readonly paceDriver?: PaceDriver;
+  /**
+   * When false, NPCs never fire or drop weapons. Player input is unchanged.
+   * Default true. Tests that assert a clean contact-free lap turn this off so
+   * missile exchanges on the packed grid do not count as "a dirty lap".
+   */
+  readonly npcWeapons?: boolean;
+  /** Searched racing lines (T-043). When present, NPCs use `AIDriver` + the line. */
+  readonly trackLines?: TrackLinesManifest;
 }
 
 const DEFAULT_COUNTDOWN_SECONDS = 3;
@@ -117,18 +166,22 @@ const DEFAULT_GRID_SETBACK_UNITS = 14;
  * The step order is the reason this is a class rather than five loose calls in the
  * scene, and it is not interchangeable:
  *
- *  1. every car integrates INDEPENDENTLY (`stepVehicleOnTrack`, walls included);
+ *  1. every car integrates INDEPENDENTLY (`stepVehicleOnTrack`, walls included)
+ *     and may launch weapons from its command; missiles then advance and hit-test;
  *  2. only THEN is car-to-car contact resolved, pair by pair;
  *  3. any car a contact moved is re-checked against the wall;
- *  4. damage is applied from the hardest contact of the step;
- *  5. lap progress and standings advance last, from the final positions.
+ *  4. damage is applied from the hardest contact of the step, then weapon hits
+ *     and hazard overlaps resolve (oil → yawSpin, mine → destroy, missile → 50%);
+ *  5. lap progress and standings advance last; a finish-line crossing refills ammo.
  *
  * Steps 1 and 2 must not interleave. Resolving contact inside the per-car loop
  * would let the first car in the list collide with cars that had already moved this
  * step and cars that had not, which makes the result depend on array order — the
  * same pair of cars would exchange a different impulse depending on who was listed
  * first. Step 3 exists because a contact impulse is free to shove a car sideways
- * through a wall that had already been resolved in step 1.
+ * through a wall that had already been resolved in step 1. Weapons live INSIDE this
+ * order (T-046) rather than beside it, so a missile cannot resolve against a car
+ * that has not yet integrated this step.
  */
 export class RaceField {
   readonly racers: readonly RacerRuntime[];
@@ -136,10 +189,19 @@ export class RaceField {
   private readonly track: TrackDefinition;
   private readonly spline: TrackSpline;
   private readonly pace: PaceDriver;
+  private readonly ai: AIDriver;
+  private readonly trackLines: TrackLinesManifest | undefined;
   private readonly countdownSeconds: number;
   private readonly projectionWindow: number;
   private readonly gridSetbackUnits: number;
+  private readonly oilLifetimeSeconds: number;
+  private readonly npcWeapons: boolean;
   private raceState: RaceState;
+  private missiles: Missile[] = [];
+  private hazards: TrackHazard[] = [];
+  /** Hazard ids spawned this step — their dropper is immune until the next step. */
+  private readonly freshHazardIds = new Set<number>();
+
 
   constructor(
     entries: readonly RacerEntry[],
@@ -154,22 +216,38 @@ export class RaceField {
     this.track = track;
     this.spline = spline;
     this.pace = options.paceDriver ?? new PaceDriver();
+    this.ai = new AIDriver(this.pace.options);
+    this.trackLines = options.trackLines;
     this.countdownSeconds = options.countdownSeconds ?? DEFAULT_COUNTDOWN_SECONDS;
     this.projectionWindow = options.projectionWindow ?? DEFAULT_PROJECTION_WINDOW;
     this.gridSetbackUnits = options.gridSetbackUnits ?? DEFAULT_GRID_SETBACK_UNITS;
+    // Oil lifetime is derived per track: 1.6 × an estimated lap, never a constant.
+    this.oilLifetimeSeconds =
+      OIL_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED);
+    this.npcWeapons = options.npcWeapons ?? true;
 
     // Grid slots follow entry order, so the caller decides where the player starts by
     // where it puts the player in the list. The scene puts them at the back.
     const grid = buildStartingGrid(entries.length, track, spline, this.gridSetbackUnits);
+
+    // A slippery (or extra-grippy) planet scales every car's grip for this track.
+    // Baking it into the stored stats means both the physics step and the AI's
+    // corner-speed see the same reduced grip without threading a surface value
+    // through every signature.
+    const surfaceGrip = track.surfaceGrip ?? 1;
 
     this.racers = entries.map((entry, index) => {
       const slot = grid[index];
       if (slot === undefined) {
         throw new Error(`starting grid produced no slot for racer ${index}`);
       }
+      const stats =
+        surfaceGrip === 1
+          ? entry.stats
+          : { ...entry.stats, grip: entry.stats.grip * surfaceGrip };
       return {
         carId: entry.carId,
-        stats: entry.stats,
+        stats,
         isPlayer: entry.isPlayer,
         perk: perkProfile(entry.perk),
         gridIndex: slot.index,
@@ -178,9 +256,11 @@ export class RaceField {
         distance: slot.distance,
         lateralOffset: slot.lateralOffset,
         integrity: createCarIntegrity(),
+        inventory: createWeaponInventory(),
         pendingImpactSpeed: 0,
         explodedThisStep: false,
         respawnedThisStep: false,
+        weaponCooldownRemaining: 0,
       };
     });
 
@@ -202,6 +282,16 @@ export class RaceField {
     return this.raceState.standings;
   }
 
+  /** Live missiles, for the presentation layer. */
+  get activeMissiles(): readonly Missile[] {
+    return this.missiles;
+  }
+
+  /** Live oil slicks and mines, for the presentation layer. */
+  get activeHazards(): readonly TrackHazard[] {
+    return this.hazards;
+  }
+
   /** Laps completed by one car, for the HUD. */
   standingOf(carId: string): RacerStanding | undefined {
     return this.raceState.standings.find(standing => standing.carId === carId);
@@ -221,11 +311,16 @@ export class RaceField {
       racer.distance = slot.distance;
       racer.lateralOffset = slot.lateralOffset;
       racer.integrity = createCarIntegrity();
+      racer.inventory = createWeaponInventory();
       racer.pendingImpactSpeed = 0;
       racer.explodedThisStep = false;
       racer.respawnedThisStep = false;
+      racer.weaponCooldownRemaining = 0;
     });
 
+    this.missiles = [];
+    this.hazards = [];
+    this.freshHazardIds.clear();
     this.raceState = this.freshRaceState();
   }
 
@@ -236,6 +331,7 @@ export class RaceField {
   step(playerCommand: InputCommand, stepSeconds: number): void {
     const frozen = this.raceState.phase === RACE_PHASE.COUNTDOWN;
     const previousDistances = this.racers.map(racer => racer.distance);
+    const previousLaps = this.racers.map(racer => this.standingOf(racer.carId)?.lapsCompleted ?? 0);
     const impacts = this.racers.map(() => 0);
     /**
      * Who is to blame for each car's HARDEST contact this step.
@@ -249,6 +345,9 @@ export class RaceField {
     /** Cars a contact impulse moved, which therefore need a second wall check. */
     const nudged = this.racers.map(() => false);
     const stepped: RacerStep[] = [];
+    /** Missile hits queued during stage 1, applied in stage 4 with contact damage. */
+    const missileHits: { targetIndex: number; ownerCarId: string }[] = [];
+    this.freshHazardIds.clear();
 
     const recordImpact = (index: number, speed: number, role: DamageRole): void => {
       if (speed <= (impacts[index] ?? 0)) {
@@ -258,10 +357,13 @@ export class RaceField {
       roles[index] = role;
     };
 
-    // 1. Every car integrates on its own, against the track only.
+    // 1. Every car integrates on its own, against the track only — and may fire.
     this.racers.forEach((racer, index) => {
       racer.explodedThisStep = false;
       racer.respawnedThisStep = false;
+      if (racer.weaponCooldownRemaining > 0) {
+        racer.weaponCooldownRemaining = Math.max(0, racer.weaponCooldownRemaining - stepSeconds);
+      }
 
       if (racer.integrity.condition === CAR_CONDITION.DESTROYED) {
         this.sitOutWreck(racer, stepSeconds);
@@ -269,7 +371,11 @@ export class RaceField {
       }
 
       const speedBefore = length(racer.state.velocity);
-      const command = frozen ? IDLE_INPUT : this.commandFor(racer, playerCommand);
+      const command = frozen ? IDLE_INPUT : this.commandFor(racer, playerCommand, stepSeconds);
+
+      if (!frozen) {
+        this.resolveWeaponCommand(racer, command);
+      }
 
       // Perks enter as DERIVED values, never as a special case inside the physics: the
       // stats this one step is driven with, and an adjustment to whatever surface the
@@ -317,6 +423,36 @@ export class RaceField {
         });
       }
     });
+
+    // 1b. Missiles fly in a straight line and hit-test against the just-moved field.
+    if (!frozen) {
+      const targets = this.racers
+        .filter(racer => this.canCollide(racer))
+        .map(racer => ({
+          carId: racer.carId,
+          position: racer.state.position,
+          radius: racer.stats.collisionRadius,
+        }));
+
+      const surviving: Missile[] = [];
+      for (const missile of this.missiles) {
+        const advanced = stepMissile(missile, stepSeconds);
+        if (advanced === null) {
+          continue;
+        }
+        const hit = findMissileHit(advanced, targets);
+        if (hit === null) {
+          surviving.push(advanced);
+          continue;
+        }
+        const targetIndex = this.racers.findIndex(racer => racer.carId === hit.targetCarId);
+        if (targetIndex >= 0) {
+          missileHits.push({ targetIndex, ownerCarId: hit.ownerCarId });
+        }
+        // Missile is consumed on hit — if the target dies, both "explode" (stage 4).
+      }
+      this.missiles = surviving;
+    }
 
     // 2. Car-to-car contact, every unordered pair, after all of them have moved.
     for (let i = 0; i < this.racers.length; i += 1) {
@@ -371,7 +507,7 @@ export class RaceField {
       }
     });
 
-    // 4. Damage from the hardest contact of the step, once per car.
+    // 4. Damage from the hardest contact of the step, once per car — then weapons.
     this.racers.forEach((racer, index) => {
       const impact = impacts[index] ?? 0;
       if (impact <= 0) {
@@ -399,8 +535,147 @@ export class RaceField {
       }
     });
 
+    for (const hit of missileHits) {
+      const racer = this.racers[hit.targetIndex];
+      if (racer === undefined || !this.canCollide(racer)) {
+        continue;
+      }
+      const before = racer.integrity;
+      racer.integrity = applyWeaponDamage(before, MISSILE_RAW_DAMAGE, racer.stats);
+      if (
+        before.condition !== CAR_CONDITION.DESTROYED &&
+        racer.integrity.condition === CAR_CONDITION.DESTROYED
+      ) {
+        racer.explodedThisStep = true;
+        racer.state = { ...racer.state, velocity: VEC2_ZERO, yawSpin: 0 };
+      }
+    }
+
+    if (!frozen) {
+      this.resolveHazardOverlaps();
+      this.hazards = ageHazards(this.hazards, stepSeconds);
+    }
+
     // 5. Lap progress and standings, from the final positions of the step.
     this.raceState = advanceRace(this.raceState, stepped, this.track, this.spline, stepSeconds);
+
+    // Finish-line refill: missiles up to (Arsenal-boosted) ammoCapacity; oil/mines to start.
+    this.racers.forEach((racer, index) => {
+      const before = previousLaps[index] ?? 0;
+      const after = this.standingOf(racer.carId)?.lapsCompleted ?? 0;
+      if (after > before) {
+        racer.inventory = refillWeaponInventory(racer.inventory, racer.stats, racer.perk);
+      }
+    });
+  }
+
+  /** Launch from a just-read command. Edge-triggering is the adapter's job. */
+  private resolveWeaponCommand(racer: RacerRuntime, command: InputCommand): void {
+    if (command.fire) {
+      const next = consumeMissile(racer.inventory);
+      if (next !== null) {
+        racer.inventory = next;
+        this.missiles.push(
+          launchMissile(
+            racer.carId,
+            racer.state.position,
+            racer.state.heading,
+            racer.stats.maxSpeed,
+            racer.stats.collisionRadius,
+          ),
+        );
+      }
+    }
+
+    if (command.dropOil) {
+      const next = consumeOil(racer.inventory);
+      if (next !== null) {
+        racer.inventory = next;
+        const hazard = dropOil(
+          racer.carId,
+          racer.state.position,
+          racer.state.heading,
+          racer.stats.collisionRadius,
+          racer.distance,
+          this.oilLifetimeSeconds,
+        );
+        this.hazards.push(hazard);
+        this.freshHazardIds.add(hazard.id);
+      }
+    }
+
+    if (command.dropMine) {
+      const next = consumeMine(racer.inventory);
+      if (next !== null) {
+        racer.inventory = next;
+        const hazard = dropMine(
+          racer.carId,
+          racer.state.position,
+          racer.state.heading,
+          racer.stats.collisionRadius,
+          racer.distance,
+        );
+        this.hazards.push(hazard);
+        this.freshHazardIds.add(hazard.id);
+      }
+    }
+  }
+
+  /**
+   * Oil → yawSpin (decision 19); mine → instant destroy. A hazard is consumed on
+   * contact. The dropper is immune to a hazard on the step it was spawned.
+   */
+  private resolveHazardOverlaps(): void {
+    const targets = this.racers
+      .filter(racer => this.canCollide(racer))
+      .map(racer => ({
+        carId: racer.carId,
+        position: racer.state.position,
+        radius: racer.stats.collisionRadius,
+      }));
+
+    const hits = findHazardHits(this.hazards, targets);
+    if (hits.length === 0) {
+      return;
+    }
+
+    const consumed = new Set<number>();
+    for (const hit of hits) {
+      if (this.freshHazardIds.has(hit.hazardId)) {
+        const hazard = this.hazards.find(entry => entry.id === hit.hazardId);
+        if (hazard !== undefined && hazard.ownerCarId === hit.targetCarId) {
+          continue;
+        }
+      }
+      const racer = this.racers.find(entry => entry.carId === hit.targetCarId);
+      if (racer === undefined || !this.canCollide(racer)) {
+        continue;
+      }
+      consumed.add(hit.hazardId);
+
+      if (hit.kind === HAZARD_KIND.OIL) {
+        racer.state = {
+          ...racer.state,
+          yawSpin: racer.state.yawSpin + oilYawSpinForArmor(racer.stats.armor),
+        };
+        continue;
+      }
+
+      // Landmine: destroy outright.
+      const before = racer.integrity;
+      racer.integrity = applyWeaponDamage(before, 1, { ...racer.stats, armor: 0 });
+      if (
+        before.condition !== CAR_CONDITION.DESTROYED &&
+        racer.integrity.condition === CAR_CONDITION.DESTROYED
+      ) {
+        racer.explodedThisStep = true;
+        racer.state = { ...racer.state, velocity: VEC2_ZERO, yawSpin: 0 };
+      }
+    }
+
+    if (consumed.size > 0) {
+      this.hazards = this.hazards.filter(hazard => !consumed.has(hazard.id));
+    }
   }
 
   /** Reads and clears the impact the presentation layer owes a sound. */
@@ -465,7 +740,8 @@ export class RaceField {
   /**
    * The player's command comes from the keyboard; an NPC's comes from `PaceDriver`,
    * through the exact same `InputCommand` contract (decision 12), so an NPC has no
-   * way to cheat the physics.
+   * way to cheat the physics. Weapon intent is composed HERE from the aim cone so
+   * PaceDriver stays a pure centreline follower.
    *
    * The extra `projectNear` here is deliberate. `stepVehicleOnTrack` projects
    * internally and does not hand the projection back, and the pace driver needs one
@@ -473,12 +749,111 @@ export class RaceField {
    * bounded search over a hinted window and far cheaper than restructuring the step
    * to thread a projection out of it.
    */
-  private commandFor(racer: RacerRuntime, playerCommand: InputCommand): InputCommand {
+  private commandFor(
+    racer: RacerRuntime,
+    playerCommand: InputCommand,
+    _stepSeconds: number,
+  ): InputCommand {
     if (racer.isPlayer) {
       return playerCommand;
     }
     const projection = this.spline.projectNear(racer.state.position, racer.distance, this.projectionWindow);
-    return this.pace.command(racer.state, projection, racer.stats, this.spline);
+    const rivals: RivalView[] = this.racers
+      .filter(other => other !== racer && this.canCollide(other))
+      .map(other => ({
+        carId: other.carId,
+        // LIVE stage-1 distance — never stage-5 standings (one step stale).
+        distance: other.distance,
+        isPlayer: other.isPlayer,
+      }));
+
+    const line = this.trackLines === undefined
+      ? undefined
+      : findLineForCar(this.trackLines, racer.carId);
+
+    const drive = line !== undefined
+      ? this.ai.command(racer.state, projection, racer.stats, this.spline, line, rivals)
+      : this.pace.command(racer.state, projection, racer.stats, this.spline);
+
+    if (!this.npcWeapons || racer.weaponCooldownRemaining > 0) {
+      return drive;
+    }
+
+    // 1) Offence: fire a missile when a target sits in the aim corridor.
+    if (racer.inventory.missiles > 0) {
+      const aim = decideMissileAim(
+        racer.state.position,
+        racer.state.heading,
+        racer.stats.collisionRadius,
+        racer.stats.aimRadius,
+        this.racers
+          .filter(other => other !== racer && this.canCollide(other))
+          .map(other => ({
+            carId: other.carId,
+            position: other.state.position,
+            isPlayer: other.isPlayer,
+          })),
+      );
+      if (aim.shouldFire) {
+        this.armWeaponCooldown(racer);
+        return { ...drive, fire: true };
+      }
+    }
+
+    // 2) Defence: drop a hazard in the path of a rival close behind (the player
+    //    is prioritised). A mine is spent only when the chaser is right on the
+    //    tail; oil goes down over a looser gap.
+    const behind = this.closestRivalBehind(racer);
+    if (behind !== null) {
+      if (racer.inventory.mines > 0 && behind.gap < NPC_MINE_DROP_GAP_UNITS) {
+        this.armWeaponCooldown(racer);
+        return { ...drive, dropMine: true };
+      }
+      if (racer.inventory.oil > 0 && behind.gap < NPC_OIL_DROP_GAP_UNITS) {
+        this.armWeaponCooldown(racer);
+        return { ...drive, dropOil: true };
+      }
+    }
+
+    return drive;
+  }
+
+  private armWeaponCooldown(racer: RacerRuntime): void {
+    racer.weaponCooldownRemaining = npcWeaponCooldownSeconds(
+      NPC_WEAPON_COOLDOWN_SECONDS,
+      racer.perk,
+    );
+  }
+
+  /**
+   * The nearest rival tailing `racer`, by live arc-length gap. The player is
+   * preferred over an NPC at similar range so hazards are spent on the human.
+   */
+  private closestRivalBehind(
+    racer: RacerRuntime,
+  ): { carId: string; gap: number } | null {
+    const total = this.spline.totalLength;
+    let bestPlayer: { carId: string; gap: number } | null = null;
+    let bestOther: { carId: string; gap: number } | null = null;
+
+    for (const other of this.racers) {
+      if (other === racer || !this.canCollide(other)) {
+        continue;
+      }
+      let gap = racer.distance - other.distance;
+      if (gap <= 0) gap += total;
+      if (gap <= 0 || gap > total * 0.5) {
+        continue;
+      }
+      const pick = { carId: other.carId, gap };
+      if (other.isPlayer) {
+        if (bestPlayer === null || pick.gap < bestPlayer.gap) bestPlayer = pick;
+      } else if (bestOther === null || pick.gap < bestOther.gap) {
+        bestOther = pick;
+      }
+    }
+
+    return bestPlayer ?? bestOther;
   }
 
   private freshRaceState(): RaceState {

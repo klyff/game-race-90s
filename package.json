@@ -13,7 +13,9 @@
     "typecheck": "tsc --noEmit",
     "gen:sprites": "node tools/spritegen/generate.ts",
     "gen:preview": "node tools/spritegen/preview.ts",
-    "gen:track": "node tools/trackgen/preview.ts"
+    "gen:track": "node tools/trackgen/preview.ts",
+    "gen:tracks": "node tools/trackgen/generate.ts",
+    "gen:lines": "node tools/linegen/generate.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"

@@ -5,6 +5,9 @@
  * emit it: NPCs and the human are then indistinguishable to the physics, which
  * is what keeps the AI honest. An NPC cannot cheat by writing velocity directly
  * because it has no way to express that.
+ *
+ * Weapon keys (T-046): missile `1`, oil `2`, landmine `3`. Adapters edge-trigger
+ * these so holding a key cannot dump the whole inventory in one frame.
  */
 export interface InputCommand {
   /** 0..1 */
@@ -15,7 +18,11 @@ export interface InputCommand {
   readonly reverse: number;
   /** -1 (full right) .. +1 (full left), matching the left-positive convention. */
   readonly steer: number;
+  /** Fire a missile. */
   readonly fire: boolean;
+  /** Drop an oil slick. */
+  readonly dropOil: boolean;
+  /** Drop a landmine. */
   readonly dropMine: boolean;
 }
 
@@ -25,6 +32,7 @@ export const IDLE_INPUT: InputCommand = {
   reverse: 0,
   steer: 0,
   fire: false,
+  dropOil: false,
   dropMine: false,
 };
 
@@ -44,6 +52,7 @@ export function sanitizeInput(command: InputCommand): InputCommand {
     reverse: clampUnit(command.reverse),
     steer: clampSigned(command.steer),
     fire: command.fire,
+    dropOil: command.dropOil,
     dropMine: command.dropMine,
   };
 }

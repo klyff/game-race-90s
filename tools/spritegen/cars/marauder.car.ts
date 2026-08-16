@@ -145,6 +145,7 @@ export const marauder: CarModelDef = {
     armor: 0.4,
     ammoCapacity: 5,
     collisionRadius: 1.7,
+    aimRadius: 3.5, // Balanced reticle, like everything else on this car.
   },
   // Shoves lighter cars aside on contact instead of bouncing off them.
   perk: CAR_PERK.BULLDOZER,

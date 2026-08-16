@@ -37,6 +37,19 @@ export interface TrackDefinition {
   readonly gridLateralOffsets: readonly number[];
   /** Gap between grid rows along the track, world units. */
   readonly gridRowSpacing: number;
+  /**
+   * Grip multiplier for the whole racing surface, 1 = normal tarmac. Below 1 is a
+   * slippery planet (ice, swamp) where cornering grip is scarce and only high-grip
+   * cars stay planted; above 1 is extra-grippy rubberised tarmac. It scales every
+   * car's `grip` for this track, so the physics and the AI's corner-speed agree.
+   * Optional; absent means 1 (unchanged tarmac).
+   */
+  readonly surfaceGrip?: number;
+}
+
+/** The track's surface grip multiplier, defaulting to 1 when unset. */
+export function trackSurfaceGrip(track: TrackDefinition): number {
+  return track.surfaceGrip ?? 1;
 }
 
 /** Total width from wall to wall. */

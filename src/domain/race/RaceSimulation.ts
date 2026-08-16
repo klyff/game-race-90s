@@ -64,7 +64,7 @@ export function createRaceState(
   }));
 
   return {
-    phase: RACE_PHASE.COUNTDOWN,
+    phase: countdownSeconds > 0 ? RACE_PHASE.COUNTDOWN : RACE_PHASE.RACING,
     countdownRemaining: countdownSeconds,
     elapsedSeconds: 0,
     racers,

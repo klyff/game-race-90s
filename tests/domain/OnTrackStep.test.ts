@@ -113,6 +113,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: 0,
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 
@@ -152,6 +153,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: 0,
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 
@@ -200,6 +202,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: 1, // Full left
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 
@@ -241,6 +244,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: 1,
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 
@@ -288,6 +292,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: 0,
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 
@@ -330,6 +335,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: -1, // Full right
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 
@@ -380,6 +386,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: 0,
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 
@@ -438,6 +445,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: 0,
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 
@@ -486,6 +494,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         reverse: 0,
         steer: 0,
         fire: false,
+        dropOil: false,
         dropMine: false,
       };
 

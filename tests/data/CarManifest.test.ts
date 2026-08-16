@@ -106,10 +106,10 @@ describe('parseCarSetManifest', () => {
     expect(manifest).toBeDefined();
   });
 
-  it('real manifest has exactly 5 cars', () => {
+  it('real manifest has the full 10-car roster', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    expect(manifest.cars.length).toBe(5);
+    expect(manifest.cars.length).toBe(10);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -387,11 +387,11 @@ describe('parseCarSetManifest', () => {
     expect(() => parseCarSetManifest(invalid)).toThrow(CarManifestError);
   });
 
-  it('real manifest gives every one of the five cars a perk that is a member of CAR_PERK', () => {
+  it('real manifest gives every one of the ten cars a perk that is a member of CAR_PERK', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(5);
+    expect(manifest.cars.length).toBe(10);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);

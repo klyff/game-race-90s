@@ -355,40 +355,21 @@ describe('CarPerk — Trench Grip changes when the car lets go', () => {
   });
 });
 
-describe('CarPerk — Arsenal is inert, deliberately, until T-016', () => {
-  // Arsenal must change NOTHING today: no weapon system exists yet to spend a
-  // reload-rate multiplier on. This test is a reminder for whoever implements
-  // T-016's reloading, not an obstacle — once weapons exist, `reloadMultiplier`
-  // gets a real consumer and this test's premise (that Arsenal is a no-op)
-  // should be revisited alongside it.
+describe('CarPerk — Arsenal is live through the weapon system (T-046)', () => {
+  // Until T-046, Arsenal changed nothing and a test pinned that. Now it raises the
+  // missile refill ceiling and shortens the NPC fire cooldown via reloadMultiplier.
 
-  it('contactStats is unchanged', () => {
+  it('contactStats / perkSurface / drivingStats stay no-ops (Arsenal is a weapons perk)', () => {
     expect(contactStats(marauderStats, ARSENAL_PROFILE)).toEqual(contactStats(marauderStats, NEUTRAL_PERK));
-    expect(contactStats(marauderStats, ARSENAL_PROFILE)).toBe(marauderStats);
-  });
-
-  it('perkSurface is unchanged', () => {
     expect(perkSurface(OFFROAD, ARSENAL_PROFILE)).toEqual(perkSurface(OFFROAD, NEUTRAL_PERK));
-    expect(perkSurface(OFFROAD, ARSENAL_PROFILE)).toBe(OFFROAD);
-  });
-
-  it('perkDamageMultiplier is unchanged, for both roles', () => {
-    expect(perkDamageMultiplier(ARSENAL_PROFILE, DAMAGE_ROLE.VICTIM)).toBe(
-      perkDamageMultiplier(NEUTRAL_PERK, DAMAGE_ROLE.VICTIM),
-    );
-    expect(perkDamageMultiplier(ARSENAL_PROFILE, DAMAGE_ROLE.AGGRESSOR)).toBe(
-      perkDamageMultiplier(NEUTRAL_PERK, DAMAGE_ROLE.AGGRESSOR),
-    );
-  });
-
-  it('drivingStats is unchanged, whether braking or drafting', () => {
     expect(drivingStats(marauderStats, ARSENAL_PROFILE, true, 0)).toEqual(
       drivingStats(marauderStats, NEUTRAL_PERK, true, 0),
     );
-    expect(drivingStats(marauderStats, ARSENAL_PROFILE, false, 1)).toEqual(
-      drivingStats(marauderStats, NEUTRAL_PERK, false, 1),
-    );
-    expect(drivingStats(marauderStats, ARSENAL_PROFILE, false, 0)).toBe(marauderStats);
+  });
+
+  it('reloadMultiplier is 3, so the ceiling and cooldown consumers can feel it', () => {
+    expect(ARSENAL_PROFILE.reloadMultiplier).toBe(3);
+    expect(NEUTRAL_PERK.reloadMultiplier).toBe(1);
   });
 });
 

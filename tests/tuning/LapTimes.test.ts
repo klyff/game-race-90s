@@ -154,11 +154,16 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     // battle-trak  LAP  34.15s  top 71.3  slide 0.0%  walls 0  maxLat 9.00
 
     const bands: Record<string, { min: number; max: number }> = {
-      'marauder': { min: 24.92, max: 41.54 },      // 33.23 ± 25%
-      'dirt-devil': { min: 25.19, max: 41.98 },    // 33.58 ± 25%
-      'havac': { min: 30.66, max: 51.10 },         // 40.88 ± 25%
-      'air-blade': { min: 29.36, max: 48.94 },     // 39.15 ± 25%
-      'battle-trak': { min: 25.61, max: 42.69 },   // 34.15 ± 25%
+      'marauder': { min: 24.91, max: 41.52 },      // 33.22 ± 25%
+      'dirt-devil': { min: 25.17, max: 41.96 },    // 33.57 ± 25%
+      'havac': { min: 30.65, max: 51.08 },         // 40.87 ± 25%
+      'air-blade': { min: 29.35, max: 48.92 },     // 39.13 ± 25%
+      'battle-trak': { min: 25.60, max: 42.67 },   // 34.13 ± 25%
+      'delorean': { min: 25.98, max: 43.29 },      // 34.63 ± 25%
+      'air-boat': { min: 24.77, max: 41.29 },      // 33.03 ± 25%
+      'snow-car': { min: 24.01, max: 40.02 },      // 32.02 ± 25%
+      'magma-rex': { min: 29.11, max: 48.52 },     // 38.82 ± 25%
+      'neon-ronin': { min: 24.22, max: 40.38 },    // 32.30 ± 25%
     };
 
     const results: Array<{ id: string; lapSeconds: number }> = [];

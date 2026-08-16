@@ -26,6 +26,7 @@ const BASE_STATS: VehicleStats = {
   armor: 0.3,
   ammoCapacity: 5,
   collisionRadius: 1.7,
+  aimRadius: 3.0,
 };
 
 function makeCar(id: string, statsOverride: Partial<VehicleStats>): CarSheetManifest {
@@ -74,23 +75,23 @@ describe('CarStatBars — real roster', () => {
     }
   });
 
-  it('dirt-devil has the highest GRIP fraction', () => {
-    const dirtDevilGrip = statBars(manifest, 'dirt-devil').find(b => b.label === 'GRIP')!.fraction;
+  it('snow-car has the highest GRIP fraction (the roster grip king)', () => {
+    const snowGrip = statBars(manifest, 'snow-car').find(b => b.label === 'GRIP')!.fraction;
 
     for (const carId of carIds) {
-      if (carId === 'dirt-devil') continue;
+      if (carId === 'snow-car') continue;
       const otherGrip = statBars(manifest, carId).find(b => b.label === 'GRIP')!.fraction;
-      expect(dirtDevilGrip).toBeGreaterThan(otherGrip);
+      expect(snowGrip).toBeGreaterThan(otherGrip);
     }
   });
 
-  it('havac has the highest ARMOR fraction', () => {
-    const havacArmor = statBars(manifest, 'havac').find(b => b.label === 'ARMOR')!.fraction;
+  it('magma-rex has the highest ARMOR fraction (the roster armor king)', () => {
+    const magmaArmor = statBars(manifest, 'magma-rex').find(b => b.label === 'ARMOR')!.fraction;
 
     for (const carId of carIds) {
-      if (carId === 'havac') continue;
+      if (carId === 'magma-rex') continue;
       const otherArmor = statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction;
-      expect(havacArmor).toBeGreaterThan(otherArmor);
+      expect(magmaArmor).toBeGreaterThan(otherArmor);
     }
   });
 

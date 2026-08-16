@@ -190,12 +190,10 @@ export const battleTrak: CarModelDef = {
     armor: 0.42,          // Mid-table; comparable to marauder
     ammoCapacity: 15,     // DEFINING STAT: 3× marauder's 5
     collisionRadius: 1.85, // Sized to match actual footprint with side pods
+    aimRadius: 5.0,       // DEFINING STAT: the widest reticle — the gunner's car.
   },
-  // Tracks bite under braking, so it can brake later into a corner than anything else.
-  //
-  // NOT `ARSENAL`, which is what this car's identity really promises: there is no weapon,
-  // no ammo consumption and no reload anywhere in the simulation until T-016, so an
-  // Arsenal perk would be a flag that changes nothing a driver can feel. `ARSENAL` stays
-  // defined and inert for that day; this car needs an advantage it can use today.
-  perk: CAR_PERK.TRENCH_GRIP,
+  // Tracks bite under braking was a stand-in while weapons did not exist. Now that
+  // T-046 is live, Arsenal is the identity this car always promised: huge ammo
+  // capacity that actually refills and a faster NPC fire cadence.
+  perk: CAR_PERK.ARSENAL,
 };

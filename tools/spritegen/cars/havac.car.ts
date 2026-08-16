@@ -175,6 +175,7 @@ export const havac: CarModelDef = {
     armor: 0.6,           // Highest — well-armoured
     ammoCapacity: 5,      // Mid
     collisionRadius: 1.85, // Matches ~half-length
+    aimRadius: 2.5,       // Worst aim: a brawler that would rather ram than shoot.
   },
   // Barely flinches from collisions and weapon hits that would stagger others.
   perk: CAR_PERK.ANVIL,

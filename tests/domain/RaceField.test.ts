@@ -26,9 +26,14 @@ function freshSpline(): TrackSpline {
   return new TrackSpline(track.controlPoints);
 }
 
-/** The real five-car field, player last on the grid, exactly as `RaceScene` builds it. */
+/**
+ * The real five-car field, player last on the grid, exactly as `RaceScene` builds it.
+ * The roster is larger than a grid, so this takes the first `RACE_SIZE` cars — the
+ * race is always five cars even though ten models exist.
+ */
+const RACE_SIZE = 5;
 function fullFieldEntries(): readonly RacerEntry[] {
-  const cars = manifest.cars;
+  const cars = manifest.cars.slice(0, RACE_SIZE);
   const npcs = cars.slice(1).map(car => ({ carId: car.id, stats: car.stats, isPlayer: false }));
   const player = cars[0];
   if (player === undefined) {
@@ -187,7 +192,12 @@ describe('RaceField — car-to-car contact', () => {
   function rearEndSetup(): RaceField {
     const spline = freshSpline();
     const entries = fullFieldEntries().slice(0, 2);
-    const field = new RaceField(entries, track, spline, { countdownSeconds: 0 });
+    // These tests isolate car-to-car collision physics; NPC weapons would let the
+    // front car mine its tailgater and destroy it, which is a weapons test, not this.
+    const field = new RaceField(entries, track, spline, {
+      countdownSeconds: 0,
+      npcWeapons: false,
+    });
 
     const front = field.racers[0]!;
     const rear = field.racers[1]!;
@@ -330,7 +340,9 @@ describe('RaceField — damage, wrecks and respawn', () => {
   });
 
   it('does not raise explodedThisStep on a clean lap', () => {
-    const field = makeField();
+    // NPC weapons off: on a packed grid every car has another in its aim cone, and
+    // missile kills would make this assertion about contact/wall damage meaningless.
+    const field = new RaceField(fullFieldEntries(), track, freshSpline(), { npcWeapons: false });
     let exploded = false;
     const steps = Math.round(10 / SIMULATION_STEP_SECONDS);
     for (let i = 0; i < steps; i += 1) {

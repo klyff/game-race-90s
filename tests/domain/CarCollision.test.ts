@@ -17,6 +17,7 @@ const MARAUDER_STATS: VehicleStats = {
   armor: 0.4,
   ammoCapacity: 5,
   collisionRadius: 1.7,
+  aimRadius: 3.5,
 };
 
 const DIRT_DEVIL_STATS: VehicleStats = {
@@ -30,6 +31,7 @@ const DIRT_DEVIL_STATS: VehicleStats = {
   armor: 0.25,
   ammoCapacity: 4,
   collisionRadius: 1.55,
+  aimRadius: 3.0,
 };
 
 const AIR_BLADE_STATS: VehicleStats = {
@@ -43,6 +45,7 @@ const AIR_BLADE_STATS: VehicleStats = {
   armor: 0.15,
   ammoCapacity: 4,
   collisionRadius: 1.8,
+  aimRadius: 3.2,
 };
 
 const HAVAC_STATS: VehicleStats = {
@@ -56,6 +59,7 @@ const HAVAC_STATS: VehicleStats = {
   armor: 0.6,
   ammoCapacity: 5,
   collisionRadius: 1.85,
+  aimRadius: 2.5,
 };
 
 describe('CarCollision', () => {

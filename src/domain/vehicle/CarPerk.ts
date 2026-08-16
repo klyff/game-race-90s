@@ -55,9 +55,9 @@ export interface CarPerkProfile {
    */
   readonly slipstreamBonus: number;
   /**
-   * Multiplier on weapon reload rate. **Inert until T-016 exists** — there is no weapon,
-   * no ammo consumption and no reload anywhere in the simulation yet, so this changes
-   * nothing today and a test pins it as inert so nobody mistakes it for a live perk.
+   * Multiplier on weapon reload rate. Arsenal divides the NPC fire cooldown by
+   * this and raises the missile refill ceiling via `missileCapacity`, so the
+   * perk is a felt advantage once T-046's weapon system is live.
    */
   readonly reloadMultiplier: number;
 }
@@ -123,7 +123,7 @@ export const CAR_PERKS: Readonly<Record<CarPerkId, CarPerkProfile>> = Object.fre
   [CAR_PERK.ARSENAL]: profile({
     id: CAR_PERK.ARSENAL,
     displayName: 'Arsenal',
-    description: 'Carries and reloads far more ordnance. Needs the weapon system (T-016).',
+    description: 'Carries and reloads far more ordnance.',
     reloadMultiplier: 3,
   }),
 });

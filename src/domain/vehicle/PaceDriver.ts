@@ -1,20 +1,10 @@
-import { cross, dot, fromAngle, subtract } from '../math/Vec2.ts';
 import type { InputCommand } from '../input/InputCommand.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import type { TrackProjection } from '../track/TrackSpline.ts';
 import type { VehicleState } from './Vehicle.ts';
 import type { VehicleStats } from './VehicleStats.ts';
-
-/**
- * Curvature at or below this counts as a straight, 1/world-units.
- *
- * Purely a division guard: `sqrt(grip / curvature)` goes to Infinity as the track
- * straightens, and every value past this point is already far above any car's `maxSpeed`.
- */
-const STRAIGHT_CURVATURE_EPSILON = 1e-6;
-
-/** Floor on `brakeForce` when sizing the braking zone, so a bad stat cannot divide by zero. */
-const MINIMUM_BRAKE_FORCE = 1;
+import { cornerTargetSpeed, speedCommand } from './CornerSpeed.ts';
+import { pursuitAimPoint, pursuitSteer } from './PursuitSteering.ts';
 
 /** Configuration for the deterministic `PaceDriver` controller. */
 export interface PaceDriverOptions {
@@ -91,19 +81,8 @@ export const PACE_DRIVER_DEFAULTS: PaceDriverOptions = {
 /**
  * A deterministic, pure centreline-following controller for automated lap driving.
  *
- * It exists because T-012's headless lap harness needs something that can complete a lap
- * unattended: a fixed scripted key sequence cannot survive both a 377-unit straight and a
- * 39.8-radius hairpin. Locked decision 12 requires every non-human driver to emit an
- * `InputCommand` and go through `stepVehicle` like the player does, so this controller
- * cannot cheat by writing velocity or position directly — it only ever asks for throttle,
- * brake and steering, and lives with the result.
- *
- * Decision 13 fixes the sign conventions used here (+Y is left, positive `steer` turns
- * left). Decision 15's `SCREEN_ROTATION_SIGN` is deliberately NOT used: that constant
- * compensates for the isometric projection's mirror and belongs only to the keyboard
- * adapter. A driver that borrowed it would steer into every wall.
- *
- * No randomness and no time source, so a lap is reproducible to the last decimal.
+ * Steering and corner-speed maths live in `PursuitSteering` / `CornerSpeed` so
+ * `AIDriver` (T-038) cannot re-break them by copying (locked decision 27).
  */
 export class PaceDriver {
   readonly options: PaceDriverOptions;
@@ -143,75 +122,35 @@ export class PaceDriver {
     spline: TrackSpline,
   ): InputCommand {
     const speed = Math.hypot(state.velocity.x, state.velocity.y);
-    const { throttle, brake } = this.computeSpeed(projection, stats, spline, speed);
+    const { throttle, brake } = speedCommand(
+      this.targetSpeed(projection, stats, spline, speed),
+      speed,
+      this.options.speedControlGain,
+      this.options.speedDeadband,
+    );
+    const aim = pursuitAimPoint(
+      projection,
+      spline,
+      speed,
+      this.options.lookAheadBase,
+      this.options.lookAheadScaleFactor,
+    );
 
     return {
       throttle,
       brake,
       reverse: 0,
-      steer: this.computeSteer(state, projection, spline, speed),
+      steer: pursuitSteer(state, aim, this.options.fullLockBearing),
+      // Weapon decisions are composed by `RaceField` (aim cone + inventory), not here.
       fire: false,
+      dropOil: false,
       dropMine: false,
     };
   }
 
   /**
-   * Pure pursuit: aim at a point on the centreline ahead of the car, and steer at it.
-   *
-   * There is deliberately NO separate "correct the lateral offset" term. Pure pursuit
-   * converges on the path by itself — a car sitting left of the centreline sees an aim
-   * point to its right and turns right — and a proportional term added on top fights it.
-   * Worse, `lateralOffset` is in world units and reaches 27 near the wall, so any gain
-   * near 1 pins the steering at full lock and the car saws left and right until it beaches
-   * itself. That is precisely how the first version of this file failed, about a third of
-   * the way around Thunder Basin.
-   *
-   * The error is measured with `atan2(cross, dot)` rather than the cross product alone.
-   * The cross product is the sine of the error, so on its own it reads 150° off course as
-   * gently as 30° off course, and the driver coasts wide instead of hauling the car round.
-   *
-   * Returns a value in [-1, 1], positive turning left (decision 13).
-   */
-  private computeSteer(
-    state: VehicleState,
-    projection: TrackProjection,
-    spline: TrackSpline,
-    speed: number,
-  ): number {
-    const opts = this.options;
-    const lookAhead = opts.lookAheadBase + opts.lookAheadScaleFactor * speed;
-    const aimFrame = spline.frameAt(spline.wrap(projection.distance + lookAhead));
-
-    const toAim = subtract(aimFrame.position, state.position);
-    const heading = fromAngle(state.heading);
-
-    // Signed, full-range bearing error. Positive means the aim point lies to the left,
-    // which decision 13 says is positive steer.
-    const bearingError = Math.atan2(cross(heading, toAim), dot(heading, toAim));
-
-    return clampSteer(bearingError / opts.fullLockBearing);
-  }
-
-  /**
    * The speed this driver will hold for the tightest corner inside its braking zone,
-   * world units/s.
-   *
-   * The target is the steady-state cornering limit. Taking a corner of radius r at speed
-   * v demands v²/r of lateral acceleration, and `stats.grip` IS that acceleration limit
-   * (see `VehicleStats`), so the fastest a car can hold the line is
-   *
-   *   v_max = sqrt(grip / |curvature|)
-   *
-   * The subtlety is *where* to evaluate it. One fixed lookahead is not enough: braking
-   * from 78 u/s down to a 33 u/s hairpin takes on the order of 80 world units, so a
-   * 30-unit lookahead arrives at the corner still flat out. This samples the whole braking
-   * zone — its length derived from the car's own `brakeForce` and current speed — and
-   * takes the MINIMUM limit found, so the car starts slowing for the tightest part of what
-   * is actually coming rather than for whatever happens to sit at one arbitrary distance.
-   *
-   * Public because it is the one number worth asserting about the speed controller: a test
-   * can compare it against the closed-form grip limit instead of memorising whatever
-   * throttle value happened to come out.
+   * world units/s. Public because tests assert against the closed-form grip limit.
    */
   targetSpeed(
     projection: TrackProjection,
@@ -219,61 +158,8 @@ export class PaceDriver {
     spline: TrackSpline,
     speed: number,
   ): number {
-    const opts = this.options;
-
-    // How far this car needs to shed its speed, plus a floor so a stationary car still
-    // sees the corner ahead of it.
-    const brakingZone =
-      opts.cornerLookAheadMinimum +
-      (speed * speed) / (2 * Math.max(stats.brakeForce, MINIMUM_BRAKE_FORCE));
-
-    let target = stats.maxSpeed;
-    for (let sample = 0; sample <= opts.brakingZoneSamples; sample += 1) {
-      const ahead = (brakingZone * sample) / opts.brakingZoneSamples;
-      const curvature = Math.abs(
-        spline.curvatureAt(spline.wrap(projection.distance + ahead), opts.cornerLookAheadSpan),
-      );
-      if (curvature <= STRAIGHT_CURVATURE_EPSILON) {
-        continue;
-      }
-      const cornerLimit = opts.cornerSafetyFactor * Math.sqrt(stats.grip / curvature);
-      if (cornerLimit < target) {
-        target = cornerLimit;
-      }
-    }
-    return target;
+    return cornerTargetSpeed(projection, stats, spline, speed, this.options);
   }
-
-  /**
-   * Throttle below the target speed, brake above it, coast inside the deadband.
-   *
-   * Returns `{ throttle, brake }`, each in [0, 1] and mutually exclusive.
-   */
-  private computeSpeed(
-    projection: TrackProjection,
-    stats: VehicleStats,
-    spline: TrackSpline,
-    speed: number,
-  ): { throttle: number; brake: number } {
-    const opts = this.options;
-    const speedError = this.targetSpeed(projection, stats, spline, speed) - speed;
-
-    if (Math.abs(speedError) <= opts.speedDeadband) {
-      return { throttle: 0, brake: 0 };
-    }
-    if (speedError > 0) {
-      return { throttle: Math.min(1, speedError * opts.speedControlGain), brake: 0 };
-    }
-    return { throttle: 0, brake: Math.min(1, -speedError * opts.speedControlGain) };
-  }
-}
-
-/** Clamps a steering value into the range the input contract allows. */
-function clampSteer(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-  return Math.max(-1, Math.min(1, value));
 }
 
 /**

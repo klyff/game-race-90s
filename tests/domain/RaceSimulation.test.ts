@@ -397,10 +397,8 @@ describe('RaceSimulation', () => {
 
   describe('advanceRace - delta seconds guard', () => {
     it('treats negative deltaSeconds as 0 and does not corrupt the clock', () => {
-      let state = createRaceState(['car-1'], 0, 0);
-
-      // First transition to RACING.
-      state = advanceRace(state, [], track, spline, 0.1);
+      // countdownSeconds 0 starts already racing (no held lights).
+      const state = createRaceState(['car-1'], 0, 0);
       expect(state.phase).toBe(RACE_PHASE.RACING);
 
       const steps: RacerStep[] = [
@@ -420,10 +418,7 @@ describe('RaceSimulation', () => {
     });
 
     it('treats NaN deltaSeconds as 0 and does not corrupt the clock', () => {
-      let state = createRaceState(['car-1'], 0, 0);
-
-      // First transition to RACING.
-      state = advanceRace(state, [], track, spline, 0.1);
+      const state = createRaceState(['car-1'], 0, 0);
       expect(state.phase).toBe(RACE_PHASE.RACING);
 
       const steps: RacerStep[] = [
@@ -443,10 +438,7 @@ describe('RaceSimulation', () => {
     });
 
     it('treats Infinity deltaSeconds as 0 and does not corrupt the clock', () => {
-      let state = createRaceState(['car-1'], 0, 0);
-
-      // First transition to RACING.
-      state = advanceRace(state, [], track, spline, 0.1);
+      const state = createRaceState(['car-1'], 0, 0);
       expect(state.phase).toBe(RACE_PHASE.RACING);
 
       const steps: RacerStep[] = [

@@ -28,6 +28,7 @@ const STATS: VehicleStats = {
   armor: 0.4,
   ammoCapacity: 5,
   collisionRadius: 1.7,
+  aimRadius: 3.5,
 };
 
 const DT = SIMULATION_STEP_SECONDS;

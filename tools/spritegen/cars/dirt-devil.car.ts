@@ -152,6 +152,7 @@ export const dirtDevil: CarModelDef = {
     armor: 0.25,
     ammoCapacity: 4,
     collisionRadius: 1.55,
+    aimRadius: 3.0, // A racer, not a gunner: a modest reticle.
   },
   // Shrugs off the off-road grip and speed penalty that punishes other cars.
   perk: CAR_PERK.OFF_ROAD_ACE,
