@@ -7,6 +7,9 @@
  *  - A weapon the player lands on someone else pays a small bounty.
  */
 
+/** Cash a brand-new slot starts with. Must buy a $50k starter. */
+export const STARTING_CASH = 70_000;
+
 /** 1st-place purse on planet 1, track 1. Owner example: $100,000. */
 export const BASE_FIRST_PRIZE = 100_000;
 
@@ -20,13 +23,13 @@ export const TRACK_PRIZE_GROWTH = 0.25;
 export const PODIUM_HALVING = 0.5;
 
 /** Bounty when the player's missile hits a rival, on planet 1. */
-export const MISSILE_HIT_BOUNTY = 2_500;
+export const MISSILE_HIT_BOUNTY = 10_000;
 
 /** Bounty when the player's oil slick hits a rival, on planet 1. */
-export const OIL_HIT_BOUNTY = 1_000;
+export const OIL_HIT_BOUNTY = 4_000;
 
 /** Bounty when the player's mine hits a rival, on planet 1. */
-export const MINE_HIT_BOUNTY = 4_000;
+export const MINE_HIT_BOUNTY = 8_000;
 
 /** Hit bounties grow this much per planet after the first. */
 export const HIT_BOUNTY_PLANET_GROWTH = 0.25;

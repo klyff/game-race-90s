@@ -39,10 +39,10 @@ describe('Wallet — prize table', () => {
 
 describe('Wallet — weapon hits', () => {
   it('pays a little for each player weapon that lands', () => {
-    expect(weaponHitEarnings({ missiles: 1, oil: 0, mines: 0 }, 1)).toBe(2_500);
-    expect(weaponHitEarnings({ missiles: 0, oil: 1, mines: 0 }, 1)).toBe(1_000);
-    expect(weaponHitEarnings({ missiles: 0, oil: 0, mines: 1 }, 1)).toBe(4_000);
-    expect(weaponHitEarnings({ missiles: 2, oil: 1, mines: 1 }, 1)).toBe(10_000);
+    expect(weaponHitEarnings({ missiles: 1, oil: 0, mines: 0 }, 1)).toBe(10_000);
+    expect(weaponHitEarnings({ missiles: 0, oil: 1, mines: 0 }, 1)).toBe(4_000);
+    expect(weaponHitEarnings({ missiles: 0, oil: 0, mines: 1 }, 1)).toBe(8_000);
+    expect(weaponHitEarnings({ missiles: 2, oil: 1, mines: 1 }, 1)).toBe(32_000);
   });
 
   it('grows hit bounties on later planets', () => {

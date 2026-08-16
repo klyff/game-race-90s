@@ -8,7 +8,7 @@ export const SLOT_COUNT = 3;
 export const SAVE_BYTE_BUDGET = 3500;
 
 export interface SlotProgress {
-  /** 3-letter arcade-style name, uppercase A-Z, e.g. 'KLY'. Empty string = unused slot. */
+  /** 5-letter arcade-style name, uppercase A-Z, e.g. 'KLYFF'. Empty string = unused slot. */
   readonly name: string;
   /** Car id the player last chose, e.g. 'marauder'. */
   readonly carId: string;
@@ -33,14 +33,25 @@ export function createEmptySave(): SaveData {
   };
 }
 
+export const PLAYER_NAME_LENGTH = 5;
+
 /**
- * Normalise and truncate a player name: uppercase, keep only A-Z, max 3 characters.
+ * Normalise and truncate a player name: uppercase, keep only A-Z, max 5 characters.
  */
-function normalisePlayerName(input: string): string {
+export function normalisePlayerName(input: string): string {
   return input
     .toUpperCase()
     .replace(/[^A-Z]/g, '')
-    .slice(0, 3);
+    .slice(0, PLAYER_NAME_LENGTH);
+}
+
+/** True when `name` is already used on another occupied slot. */
+export function isNameTaken(save: SaveData, name: string, exceptIndex = -1): boolean {
+  const needle = normalisePlayerName(name);
+  if (needle.length === 0) {
+    return false;
+  }
+  return save.slots.some((slot, index) => index !== exceptIndex && slot !== null && slot.name === needle);
 }
 
 /**

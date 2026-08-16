@@ -112,6 +112,7 @@ export class AIDriver {
       dropOil: false,
       dropMine: false,
       jump: false,
+      boost: false,
     };
   }
 }

@@ -3,6 +3,7 @@ import type { CarPerkId } from '../constants.ts';
 import { DAMAGE_ROLE } from './CarIntegrity.ts';
 import type { DamageRole } from './CarIntegrity.ts';
 import { TARMAC } from './ArcadeCarPhysics.ts';
+import { TURBO_SPEED_BONUS } from './TurboCharges.ts';
 import type { SurfaceConditions } from './Vehicle.ts';
 import type { VehicleStats } from './VehicleStats.ts';
 
@@ -259,6 +260,7 @@ export function drivingStats(
   perk: CarPerkProfile,
   braking: boolean,
   draftFactor: number,
+  turboBoostActive = false,
 ): VehicleStats {
   let result = stats;
 
@@ -279,6 +281,15 @@ export function drivingStats(
   const turbo = Math.max(0, perk.turboSpeedBonus);
   if (turbo > 0) {
     const boost = 1 + turbo;
+    result = {
+      ...result,
+      enginePower: result.enginePower * boost,
+      maxSpeed: result.maxSpeed * boost,
+    };
+  }
+
+  if (turboBoostActive) {
+    const boost = 1 + TURBO_SPEED_BONUS;
     result = {
       ...result,
       enginePower: result.enginePower * boost,

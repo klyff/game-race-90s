@@ -48,7 +48,7 @@ describe('tank loadout', () => {
   it('starts with double missiles and refills to double capacity', () => {
     const tank = findCarSheet(manifest, 'car-6-tank');
     expect(missileStartCount(tankPerk)).toBe(MISSILE_START_COUNT * 2);
-    expect(createWeaponInventory(tankPerk).missiles).toBe(6);
+    expect(createWeaponInventory(tankPerk).missiles).toBe(12);
     expect(missileCapacity(tank.stats, tankPerk)).toBe(tank.stats.ammoCapacity * 2);
   });
 });

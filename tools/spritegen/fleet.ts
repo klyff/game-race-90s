@@ -28,7 +28,7 @@ const STATS_MARAUDER: VehicleStats = {
   steerRate: 2.5,
   steerSpeedFalloff: 0.45,
   armor: 0.4,
-  ammoCapacity: 5,
+  ammoCapacity: 10,
   collisionRadius: 1.7,
   aimRadius: 3.5,
 };
@@ -42,7 +42,7 @@ const STATS_MARAUDER_LIGHT: VehicleStats = {
   steerRate: 2.6,
   steerSpeedFalloff: 0.42,
   armor: 0.35,
-  ammoCapacity: 5,
+  ammoCapacity: 10,
   collisionRadius: 1.65,
   aimRadius: 3.4,
 };
@@ -56,7 +56,7 @@ const STATS_DELOREAN: VehicleStats = {
   steerRate: 2.8,
   steerSpeedFalloff: 0.5,
   armor: 0.18,
-  ammoCapacity: 4,
+  ammoCapacity: 8,
   collisionRadius: 1.75,
   aimRadius: 3,
 };
@@ -70,7 +70,7 @@ const STATS_AIR_BLADE: VehicleStats = {
   steerRate: 3.1,
   steerSpeedFalloff: 0.68,
   armor: 0.15,
-  ammoCapacity: 4,
+  ammoCapacity: 8,
   collisionRadius: 1.8,
   aimRadius: 3.2,
 };
@@ -84,7 +84,7 @@ const STATS_AIR_BOAT: VehicleStats = {
   steerRate: 3,
   steerSpeedFalloff: 0.4,
   armor: 0.3,
-  ammoCapacity: 4,
+  ammoCapacity: 8,
   collisionRadius: 1.7,
   aimRadius: 3,
 };
@@ -98,7 +98,7 @@ const STATS_SNOW_CAR: VehicleStats = {
   steerRate: 2.3,
   steerSpeedFalloff: 0.46,
   armor: 0.7,
-  ammoCapacity: 5,
+  ammoCapacity: 10,
   collisionRadius: 1.95,
   aimRadius: 3,
 };
@@ -112,7 +112,7 @@ const STATS_HAVAC: VehicleStats = {
   steerRate: 1.8,
   steerSpeedFalloff: 0.65,
   armor: 0.6,
-  ammoCapacity: 5,
+  ammoCapacity: 10,
   collisionRadius: 1.85,
   aimRadius: 2.5,
 };
@@ -126,7 +126,7 @@ const STATS_MAGMA_REX: VehicleStats = {
   steerRate: 1.4,
   steerSpeedFalloff: 0.72,
   armor: 0.88,
-  ammoCapacity: 4,
+  ammoCapacity: 8,
   collisionRadius: 2.15,
   aimRadius: 2.4,
 };
@@ -140,7 +140,7 @@ const STATS_NEON_RONIN: VehicleStats = {
   steerRate: 3.3,
   steerSpeedFalloff: 0.5,
   armor: 0.28,
-  ammoCapacity: 5,
+  ammoCapacity: 10,
   collisionRadius: 1.65,
   aimRadius: 3.4,
 };
@@ -154,7 +154,7 @@ const STATS_BATTLE_TRAK: VehicleStats = {
   steerRate: 2.4,
   steerSpeedFalloff: 0.45,
   armor: 0.42,
-  ammoCapacity: 15,
+  ammoCapacity: 30,
   collisionRadius: 1.85,
   aimRadius: 5,
 };
@@ -168,7 +168,7 @@ const STATS_DIRT_DEVIL: VehicleStats = {
   steerRate: 3.2,
   steerSpeedFalloff: 0.35,
   armor: 0.25,
-  ammoCapacity: 4,
+  ammoCapacity: 8,
   collisionRadius: 1.55,
   aimRadius: 3,
 };
@@ -178,7 +178,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-1',
     source: 'Car_1.png',
-    displayName: 'Car 1',
+    displayName: 'Marauder',
     archetype: 'Balanced muscle — Thunder Basin titular',
     perk: CAR_PERK.BULLDOZER,
     homePlanetId: 'thunder-basin',
@@ -188,7 +188,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-2',
     source: 'Car_2.png',
-    displayName: 'Car 2',
+    displayName: 'Dust Fang',
     archetype: 'Light muscle — Thunder Basin reserva',
     perk: CAR_PERK.TRENCH_GRIP,
     homePlanetId: 'thunder-basin',
@@ -208,7 +208,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-9-turbo',
     source: 'Car_9_turbo.png',
-    displayName: 'Turbo 9',
+    displayName: 'Nitro Viper',
     archetype: 'Turbo reserva — Chrome Verge',
     perk: CAR_PERK.TURBO,
     homePlanetId: 'chrome-verge',
@@ -218,7 +218,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-3',
     source: 'Car_3.png',
-    displayName: 'Car 3',
+    displayName: 'Swamp Rat',
     archetype: 'Marsh-runner — Bogmire Deep titular',
     perk: CAR_PERK.OFF_ROAD_ACE,
     homePlanetId: 'bogmire-deep',
@@ -228,7 +228,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-13',
     source: 'Car_13.png',
-    displayName: 'Car 13',
+    displayName: 'Bog Howler',
     archetype: 'Marsh reserva — Bogmire Deep',
     perk: CAR_PERK.OFF_ROAD_ACE,
     homePlanetId: 'bogmire-deep',
@@ -238,7 +238,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-4',
     source: 'Car_4.png',
-    displayName: 'Car 4',
+    displayName: 'Frostbite',
     archetype: 'Ice-crawler — Cryo Hollow titular',
     perk: CAR_PERK.TRENCH_GRIP,
     homePlanetId: 'cryo-hollow',
@@ -248,7 +248,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-17',
     source: 'Car_17.png',
-    displayName: 'Car 17',
+    displayName: 'Icebreaker',
     archetype: 'Ice reserva — Cryo Hollow',
     perk: CAR_PERK.TRENCH_GRIP,
     homePlanetId: 'cryo-hollow',
@@ -258,7 +258,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-8-strong',
     source: 'Car_8_strong.png',
-    displayName: 'Strong 8',
+    displayName: 'Iron Fist',
     archetype: 'Immovable bruiser — Ferro Rust titular',
     perk: CAR_PERK.ANVIL,
     homePlanetId: 'ferro-rust',
@@ -268,7 +268,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-12-strong',
     source: 'Car_12_strong.png',
-    displayName: 'Strong 12',
+    displayName: 'Wrecker',
     archetype: 'Bulldozer reserva — Ferro Rust',
     perk: CAR_PERK.BULLDOZER,
     homePlanetId: 'ferro-rust',
@@ -278,7 +278,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-6-tank',
     source: 'Car_6_tank.png',
-    displayName: 'Tank',
+    displayName: 'Magma Rex',
     archetype: 'War tank — Vulkanis titular',
     perk: CAR_PERK.WAR_TANK,
     homePlanetId: 'vulkanis',
@@ -288,7 +288,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-18',
     source: 'Car_18.png',
-    displayName: 'Car 18',
+    displayName: 'Slag Hammer',
     archetype: 'Heavy reserva — Vulkanis',
     perk: CAR_PERK.ANVIL,
     homePlanetId: 'vulkanis',
@@ -298,7 +298,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-11',
     source: 'Car_11.png',
-    displayName: 'Car 11',
+    displayName: 'Neon Ronin',
     archetype: 'Street-tuner — Neon Kasbah titular',
     perk: CAR_PERK.SLIPSTREAM,
     homePlanetId: 'neon-kasbah',
@@ -308,7 +308,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-15',
     source: 'Car_15.png',
-    displayName: 'Car 15',
+    displayName: 'Volt Sting',
     archetype: 'Arsenal reserva — Neon Kasbah',
     perk: CAR_PERK.ARSENAL,
     homePlanetId: 'neon-kasbah',
@@ -318,7 +318,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-7-turbo',
     source: 'Car_7_turbo.png',
-    displayName: 'Turbo 7',
+    displayName: 'Afterburn',
     archetype: 'Turbo — Ash Reach titular',
     perk: CAR_PERK.TURBO,
     homePlanetId: 'ash-reach',
@@ -328,7 +328,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-20',
     source: 'Car_20.png',
-    displayName: 'Car 20',
+    displayName: 'Ash Comet',
     archetype: 'Slipstream reserva — Ash Reach',
     perk: CAR_PERK.SLIPSTREAM,
     homePlanetId: 'ash-reach',
@@ -338,7 +338,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-10',
     source: 'Car_10.png',
-    displayName: 'Car 10',
+    displayName: 'Battle Trak',
     archetype: 'Weapons platform — Voidport titular',
     perk: CAR_PERK.ARSENAL,
     homePlanetId: 'voidport',
@@ -348,7 +348,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-14',
     source: 'Car_14.png',
-    displayName: 'Car 14',
+    displayName: 'Void Cannon',
     archetype: 'Arsenal reserva — Voidport',
     perk: CAR_PERK.ARSENAL,
     homePlanetId: 'voidport',
@@ -358,7 +358,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-16',
     source: 'Car_16.png',
-    displayName: 'Car 16',
+    displayName: 'Dirt Devil',
     archetype: 'Dirt buggy — Verdant Fault titular',
     perk: CAR_PERK.OFF_ROAD_ACE,
     homePlanetId: 'verdant-fault',
@@ -368,7 +368,7 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
   {
     id: 'car-19',
     source: 'Car_19.png',
-    displayName: 'Car 19',
+    displayName: 'Vine Whip',
     archetype: 'Dirt reserva — Verdant Fault',
     perk: CAR_PERK.OFF_ROAD_ACE,
     homePlanetId: 'verdant-fault',

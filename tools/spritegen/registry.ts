@@ -22,10 +22,10 @@ export const CAR_MODELS: readonly CarModelDef[] = [
   havac,
   airBlade,
   battleTrak,
-  delorean,
+  magmaRex,
   airBoat,
   snowCar,
-  magmaRex,
+  delorean,
   neonRonin,
 ];
 

@@ -4,7 +4,7 @@ import { PLANETS } from '../data/tracks/planets.ts';
 import { themeForPlanetId } from '../data/tracks/planetThemes.ts';
 import { isPlanetUnlocked } from '../data/tracks/campaign.ts';
 import { isTourModeOn } from '../adapters/progress/TourMode.ts';
-import { loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
+import { loadActiveCareer, loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
@@ -17,7 +17,7 @@ import { SCENE_KEY } from './sceneKeys.ts';
  * Pick a planet. Ten worlds, each with a FEATURED car and three tracks. A planet
  * is locked until the previous planet's last track is won (owner rule), and a
  * locked row cannot be entered — unless tour mode is on (`?tour=1` or TOUR on
- * the splash). Enter opens the track select; Esc goes back to the title.
+ * the splash). Enter opens the track select; Esc goes back to the garage.
  *
  * Drawn against the viewport with a plain dark backdrop so it reads at any size.
  */
@@ -49,13 +49,14 @@ export class PlanetSelectScene extends Phaser.Scene {
           (acc, planet, index) => (isPlanetUnlocked(planet, this.wonTracks) ? index : acc),
           0,
         );
+    const remembered = PLANETS.findIndex(planet => planet.id === data.lastPlanetId);
     this.menu = new MenuController(
       PLANETS.map(planet => ({
         id: planet.id,
         kind: MENU_KIND.ACTION,
         label: planet.displayName,
       })),
-      { selectedIndex: lastUnlocked },
+      { selectedIndex: remembered >= 0 ? remembered : lastUnlocked },
     );
   }
 
@@ -111,11 +112,12 @@ export class PlanetSelectScene extends Phaser.Scene {
       linesByTrack: this.payload.linesByTrack,
       carId: this.payload.carId,
       planetId: planet.id,
+      lastTrackId: this.payload.lastPlanetId === planet.id ? loadActiveCareer()?.lastTrackId : undefined,
     });
   }
 
   private back(): void {
-    this.scene.start(SCENE_KEY.SPLASH, {
+    this.scene.start(SCENE_KEY.GARAGE, {
       manifest: this.payload.manifest,
       linesByTrack: this.payload.linesByTrack,
     });

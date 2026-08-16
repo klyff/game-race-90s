@@ -343,14 +343,14 @@ describe('formatHud (integration)', () => {
       expect(hud.ammo).toBe('AMMO 0/5');
     });
 
-    it('shows A/S/D counts when oil and mines are present', () => {
+    it('shows missile / mine / oil counts when the loadout is present', () => {
       const hud = formatHud(readout({ ammo: 3, ammoCapacity: 5, oil: 2, mines: 1 }));
-      expect(hud.ammo).toBe('A 3  S 2  D 1');
+      expect(hud.ammo).toBe('3  1  2');
     });
 
-    it('appends SPC n when jumps are present with the weapon loadout', () => {
-      const hud = formatHud(readout({ ammo: 3, ammoCapacity: 5, oil: 2, mines: 1, jumps: 4 }));
-      expect(hud.ammo).toBe('A 3  S 2  D 1  SPC 4');
+    it('appends turbo charges after the weapon loadout', () => {
+      const hud = formatHud(readout({ ammo: 3, ammoCapacity: 5, oil: 2, mines: 1, turbos: 4 }));
+      expect(hud.ammo).toBe('3  1  2  4');
     });
 
   });
@@ -386,24 +386,24 @@ describe('formatHud (integration)', () => {
       expect(hud.countdown).toBe('1');
     });
 
-    it('shows "GO!" during the final second (0 < countdown <= 1)', () => {
+    it('shows "GOOOO!" during the final second (0 < countdown <= 1)', () => {
       const hud = formatHud(
         readout({
           phase: RACE_PHASE.COUNTDOWN,
           countdownRemaining: 0.5,
         }),
       );
-      expect(hud.countdown).toBe('GO!');
+      expect(hud.countdown).toBe('GOOOO!');
     });
 
-    it('shows "GO!" at exactly 1 second remaining', () => {
+    it('shows "GOOOO!" at exactly 1 second remaining', () => {
       const hud = formatHud(
         readout({
           phase: RACE_PHASE.COUNTDOWN,
           countdownRemaining: 1.0,
         }),
       );
-      expect(hud.countdown).toBe('GO!');
+      expect(hud.countdown).toBe('GOOOO!');
     });
 
     it('shows null when countdown reaches zero (in COUNTDOWN phase)', () => {

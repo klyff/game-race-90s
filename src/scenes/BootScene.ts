@@ -14,6 +14,8 @@ import {
   LINES_ASSET_DIRECTORY,
   PLANET_ART_DIRECTORY,
   SCENE_KEY,
+  GARAGE_ART_FILE,
+  GARAGE_ART_KEY,
   SPLASH_ART_FILE,
   SPLASH_ART_KEY,
   UI_ASSET_DIRECTORY,
@@ -95,6 +97,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
+    this.load.image(GARAGE_ART_KEY, `${UI_ASSET_DIRECTORY}/${GARAGE_ART_FILE}`);
 
     for (const theme of PLANET_THEMES) {
       this.load.image(theme.artKey, `${PLANET_ART_DIRECTORY}/${theme.artFile}`);

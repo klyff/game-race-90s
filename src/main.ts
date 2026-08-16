@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.ts';
+import { GarageScene } from './scenes/GarageScene.ts';
 import { HudScene } from './scenes/HudScene.ts';
 import { PauseScene } from './scenes/PauseScene.ts';
 import { PlanetSelectScene } from './scenes/PlanetSelectScene.ts';
@@ -34,6 +35,7 @@ const game = new Phaser.Game({
   scene: [
     BootScene,
     SplashScene,
+    GarageScene,
     PlanetSelectScene,
     TrackSelectScene,
     RaceScene,

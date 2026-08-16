@@ -9,6 +9,7 @@
 export const SCENE_KEY = {
   BOOT: 'boot',
   SPLASH: 'splash',
+  GARAGE: 'garage',
   PLANET_SELECT: 'planet-select',
   TRACK_SELECT: 'track-select',
   RACE: 'race',
@@ -57,6 +58,7 @@ export const WEAPON_SPRITES = [
   { key: 'weapon-missile', file: 'missile.png' },
   { key: 'weapon-oil', file: 'oil.png' },
   { key: 'weapon-mine', file: 'mine.png' },
+  { key: 'weapon-turbo', file: 'turbo.png' },
 ] as const;
 
 /** Owner missile sheet is 1774×887; 8×4 of 221 leaves a few leftover pixels. */
@@ -71,12 +73,16 @@ export const WEAPON_SHEET = {
 export const MISSILE_SPRITE_KEY = 'weapon-missile';
 export const OIL_SPRITE_KEY = 'weapon-oil';
 export const MINE_SPRITE_KEY = 'weapon-mine';
+export const TURBO_SPRITE_KEY = 'weapon-turbo';
 
 /** Texture key of the splash artwork. */
 export const SPLASH_ART_KEY = 'splash-art';
 
 /** Filename of the splash artwork inside `UI_ASSET_DIRECTORY`. */
 export const SPLASH_ART_FILE = 'splash.jpeg';
+
+export const GARAGE_ART_KEY = 'garage-art';
+export const GARAGE_ART_FILE = 'garage.png';
 
 /**
  * Which car the player drives when nobody chose one.

@@ -1,45 +1,36 @@
 /**
- * Browser persistence for the pure `SaveSlots` domain model.
- *
- * The domain layer never touches storage or the clock; this adapter is the only
- * place that does. It must never throw: a corrupt or unavailable store costs the
- * player their progress, never their ability to play.
- *
- * Until a save-slot select screen exists, the game uses a single default slot so
- * that wins and best laps are recorded from the results screen.
+ * Browser persistence for SaveSlots + the per-slot career sidecar.
+ * Never throws: a corrupt store costs progress, never the ability to play.
  */
 
+import {
+  createEmptyCareer,
+  createCareerSlot,
+  parseCareer,
+  setActiveSlot,
+  writeCareerSlot,
+} from '../../domain/progress/Career.ts';
+import type { CareerData, CareerSlot } from '../../domain/progress/Career.ts';
 import {
   createEmptySave,
   createSlot,
   fitsInCookie,
+  isNameTaken,
+  normalisePlayerName,
   parseSave,
+  PLAYER_NAME_LENGTH,
   recordRaceResult,
   serializeSave,
+  writeSlot,
 } from '../../domain/progress/SaveSlots.ts';
-import type { SaveData, SlotProgress } from '../../domain/progress/SaveSlots.ts';
+import type { SaveData } from '../../domain/progress/SaveSlots.ts';
+import { cashInValue } from '../../domain/progress/SeasonPoints.ts';
+import { listPrice, sellPrice } from '../../domain/progress/GarageCatalog.ts';
 
 const STORAGE_KEY = 'rockn90s.save';
+const CAREER_KEY = 'rockn90s.career';
 
-/**
- * Separate key for tracks CLEARED (top-3), which unlock the next track. The pure
- * `SaveSlots` model only records outright wins (1st, for planet unlocks), so the
- * top-3 clears live alongside it rather than forcing a change to that tested
- * schema and its byte budget.
- */
-const CLEARED_KEY = 'rockn90s.cleared';
-
-/** Player purse. Kept beside the save so the cookie-budgeted slot schema stays untouched. */
-const WALLET_KEY = 'rockn90s.wallet';
-
-/** Top-3 is a "clear" (owner rule); 1st is also a "win". */
 export const CLEAR_POSITION = 3;
-
-/** The slot the game auto-uses before a slot-select screen is built. */
-export const DEFAULT_SLOT_INDEX = 0;
-
-/** Placeholder name for the auto-created slot. */
-const DEFAULT_PLAYER_NAME = 'YOU';
 
 function storage(): Storage | null {
   try {
@@ -49,7 +40,6 @@ function storage(): Storage | null {
   }
 }
 
-/** Read and validate the save. Any failure yields an empty save. */
 export function loadSave(): SaveData {
   const store = storage();
   if (store === null) {
@@ -63,7 +53,6 @@ export function loadSave(): SaveData {
   }
 }
 
-/** Persist the save if it fits the budget. Silently no-ops on any failure. */
 export function persistSave(save: SaveData): void {
   const store = storage();
   if (store === null) {
@@ -75,96 +64,215 @@ export function persistSave(save: SaveData): void {
       store.setItem(STORAGE_KEY, raw);
     }
   } catch {
-    // Ignore: progress is best-effort, never a crash.
+    // best-effort
   }
 }
 
-/** Ensure the default slot exists, creating it for `carId` if the slot is empty. */
-function ensureDefaultSlot(save: SaveData, carId: string, nowMillis: number): SaveData {
-  const existing = save.slots[DEFAULT_SLOT_INDEX];
-  if (existing != null) {
-    return save;
-  }
-  const slot: SlotProgress = createSlot(DEFAULT_PLAYER_NAME, carId, nowMillis);
-  const slots = Array.from(save.slots);
-  slots[DEFAULT_SLOT_INDEX] = slot;
-  return { slots };
-}
-
-/**
- * Ensure the default slot exists for `carId` and persist it. Used by the pause
- * menu's "Save": there is no race result mid-race, but the player still expects
- * their slot (and any unlocked tracks) to be written to storage on demand.
- */
-export function saveNow(carId: string): SaveData {
-  const withSlot = ensureDefaultSlot(loadSave(), carId, Date.now());
-  persistSave(withSlot);
-  return withSlot;
-}
-
-/** Read the set of cleared (top-3) track ids. Any failure yields an empty list. */
-export function loadCleared(): string[] {
+export function loadCareer(): CareerData {
   const store = storage();
   if (store === null) {
-    return [];
+    return createEmptyCareer();
   }
   try {
-    const raw = store.getItem(CLEARED_KEY);
+    const raw = store.getItem(CAREER_KEY);
     if (raw === null) {
-      return [];
+      return createEmptyCareer();
     }
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.filter((id): id is string => typeof id === 'string');
+    return parseCareer(JSON.parse(raw));
   } catch {
-    return [];
+    return createEmptyCareer();
   }
 }
 
-/** Add a track to the cleared set (top-3), de-duplicated. Best-effort persist. */
-function recordCleared(trackId: string): string[] {
-  const cleared = loadCleared();
-  if (cleared.includes(trackId)) {
-    return cleared;
-  }
-  const next = [...cleared, trackId];
+export function persistCareer(career: CareerData): void {
   const store = storage();
-  if (store !== null) {
-    try {
-      store.setItem(CLEARED_KEY, JSON.stringify(next));
-    } catch {
-      // Ignore: progress is best-effort, never a crash.
-    }
+  if (store === null) {
+    return;
   }
+  try {
+    store.setItem(CAREER_KEY, JSON.stringify(career));
+  } catch {
+    // best-effort
+  }
+}
+
+export function activeSlotIndex(): number {
+  return loadCareer().activeSlotIndex;
+}
+
+export function activateSlot(index: number): CareerData {
+  const next = setActiveSlot(loadCareer(), index);
+  persistCareer(next);
   return next;
 }
 
-/** The outcome of persisting one race: the save, plus the updated cleared set. */
+export function loadActiveCareer(): CareerSlot | null {
+  const career = loadCareer();
+  return career.slots[career.activeSlotIndex] ?? null;
+}
+
+export function loadActiveName(): string {
+  const slot = loadSave().slots[activeSlotIndex()];
+  return slot?.name ?? '';
+}
+
+export function occupiedNames(): string[] {
+  return loadSave()
+    .slots.filter((slot): slot is NonNullable<typeof slot> => slot !== null)
+    .map(slot => slot.name);
+}
+
+export function beginSlot(index: number, name: string, nowMillis: number): { ok: true } | { ok: false; reason: string } {
+  const trimmed = normalisePlayerName(name);
+  if (trimmed.length !== PLAYER_NAME_LENGTH) {
+    return { ok: false, reason: 'NAME' };
+  }
+  const save = loadSave();
+  if (isNameTaken(save, trimmed, index)) {
+    return { ok: false, reason: 'TAKEN' };
+  }
+  persistSave(writeSlot(save, index, createSlot(trimmed, '', nowMillis)));
+  const career = writeCareerSlot(setActiveSlot(loadCareer(), index), index, createCareerSlot(nowMillis));
+  persistCareer(career);
+  return { ok: true };
+}
+
+function mutateActive(mutator: (slot: CareerSlot) => CareerSlot): CareerSlot | null {
+  const career = loadCareer();
+  const current = career.slots[career.activeSlotIndex];
+  if (current === null || current === undefined) {
+    return null;
+  }
+  const nextSlot = mutator(current);
+  persistCareer(writeCareerSlot(career, career.activeSlotIndex, nextSlot));
+  return nextSlot;
+}
+
+export function loadWallet(): number {
+  return loadActiveCareer()?.cash ?? 0;
+}
+
+export function creditWallet(amount: number): number {
+  const add = Number.isFinite(amount) && amount > 0 ? Math.round(amount) : 0;
+  const next = mutateActive(slot => ({ ...slot, cash: slot.cash + add }));
+  return next?.cash ?? 0;
+}
+
+export function debitWallet(amount: number): number | null {
+  const take = Number.isFinite(amount) && amount > 0 ? Math.round(amount) : 0;
+  const current = loadActiveCareer();
+  if (current === null || current.cash < take) {
+    return null;
+  }
+  const next = mutateActive(slot => ({ ...slot, cash: slot.cash - take }));
+  return next?.cash ?? null;
+}
+
+export function loadPoints(): number {
+  return loadActiveCareer()?.points ?? 0;
+}
+
+export function buyCar(carId: string): CareerSlot | null {
+  const price = listPrice(carId);
+  const current = loadActiveCareer();
+  if (current === null || price <= 0 || current.ownedCarIds.includes(carId) || current.cash < price) {
+    return null;
+  }
+  return mutateActive(slot => ({
+    ...slot,
+    cash: slot.cash - price,
+    ownedCarIds: [...slot.ownedCarIds, carId],
+    equippedCarId: carId,
+  }));
+}
+
+export function sellCar(carId: string): CareerSlot | null {
+  const current = loadActiveCareer();
+  if (current === null || !current.ownedCarIds.includes(carId)) {
+    return null;
+  }
+  const remaining = current.ownedCarIds.filter(id => id !== carId);
+  return mutateActive(slot => ({
+    ...slot,
+    cash: slot.cash + sellPrice(carId),
+    ownedCarIds: remaining,
+    equippedCarId: remaining.includes(slot.equippedCarId) ? slot.equippedCarId : (remaining[0] ?? ''),
+  }));
+}
+
+export function equipCar(carId: string): CareerSlot | null {
+  const current = loadActiveCareer();
+  if (current === null || !current.ownedCarIds.includes(carId)) {
+    return null;
+  }
+  const save = loadSave();
+  const index = activeSlotIndex();
+  const slot = save.slots[index];
+  if (slot !== null && slot !== undefined) {
+    persistSave(writeSlot(save, index, { ...slot, carId }));
+  }
+  return mutateActive(entry => ({ ...entry, equippedCarId: carId }));
+}
+
+export function cashInPoints(): CareerSlot | null {
+  const current = loadActiveCareer();
+  if (current === null) {
+    return null;
+  }
+  const deal = cashInValue(current.points);
+  if (deal.batches <= 0) {
+    return null;
+  }
+  return mutateActive(slot => ({
+    ...slot,
+    points: deal.remaining,
+    cash: slot.cash + deal.cash,
+  }));
+}
+
+export function rememberLastTrack(planetId: string, trackId: string): void {
+  mutateActive(slot => ({ ...slot, lastPlanetId: planetId, lastTrackId: trackId }));
+}
+
+export function saveNow(carId: string): SaveData {
+  const save = loadSave();
+  const index = activeSlotIndex();
+  const slot = save.slots[index];
+  if (slot !== null && slot !== undefined) {
+    persistSave(writeSlot(save, index, { ...slot, carId, updatedAt: Date.now() }));
+  }
+  persistCareer(loadCareer());
+  return loadSave();
+}
+
+export function loadCleared(): string[] {
+  return [...(loadActiveCareer()?.clearedTrackIds ?? [])];
+}
+
+export function loadWonTracks(): string[] {
+  const slot = loadSave().slots[activeSlotIndex()];
+  return slot === null || slot === undefined ? [] : [...slot.tracksWon];
+}
+
 export interface ProgressUpdate {
   readonly save: SaveData;
   readonly cleared: readonly string[];
 }
 
-/**
- * Record the outcome of one race into the default slot and persist it. A win
- * (1st) goes into `SaveSlots.tracksWon`; a top-3 finish is also stored in the
- * cleared set, which unlocks the next track. Returns both so the results screen
- * can decide routing without re-reading storage.
- */
 export function recordProgress(params: {
   readonly trackId: string;
   readonly carId: string;
   readonly position: number;
   readonly lapSeconds: number;
   readonly nowMillis: number;
+  readonly playerPoints?: number;
+  readonly rivalResults?: readonly { readonly name: string; readonly points: number }[];
 }): ProgressUpdate {
+  const index = activeSlotIndex();
   const won = params.position === 1;
-  const withSlot = ensureDefaultSlot(loadSave(), params.carId, params.nowMillis);
   const updated = recordRaceResult(
-    withSlot,
-    DEFAULT_SLOT_INDEX,
+    loadSave(),
+    index,
     params.trackId,
     params.lapSeconds,
     won,
@@ -172,50 +280,29 @@ export function recordProgress(params: {
   );
   persistSave(updated);
 
-  const cleared =
-    params.position <= CLEAR_POSITION ? recordCleared(params.trackId) : loadCleared();
-  return { save: updated, cleared };
-}
+  mutateActive(slot => {
+    const cleared =
+      params.position <= CLEAR_POSITION && !slot.clearedTrackIds.includes(params.trackId)
+        ? [...slot.clearedTrackIds, params.trackId]
+        : slot.clearedTrackIds;
+    const rivalPoints = slot.rivalNames.map((name, rivalIndex) => {
+      const earned = params.rivalResults?.find(row => row.name === name)?.points ?? 0;
+      return (slot.rivalPoints[rivalIndex] ?? 0) + earned;
+    });
+    const playerPts = params.playerPoints ?? 0;
+    const trackPoints = {
+      ...slot.trackPoints,
+      [params.trackId]: (slot.trackPoints[params.trackId] ?? 0) + playerPts,
+    };
+    return {
+      ...slot,
+      points: slot.points + playerPts,
+      clearedTrackIds: cleared,
+      rivalPoints,
+      trackPoints,
+      equippedCarId: params.carId || slot.equippedCarId,
+    };
+  });
 
-/** Track ids the player has WON (1st) in the default slot. */
-export function loadWonTracks(): string[] {
-  const slot = loadSave().slots[DEFAULT_SLOT_INDEX];
-  return slot === null ? [] : [...slot.tracksWon];
-}
-
-/** Current purse. Any failure yields 0. */
-export function loadWallet(): number {
-  const store = storage();
-  if (store === null) {
-    return 0;
-  }
-  try {
-    const raw = store.getItem(WALLET_KEY);
-    if (raw === null) {
-      return 0;
-    }
-    const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null) {
-      return 0;
-    }
-    const cash = (parsed as { cash?: unknown }).cash;
-    return typeof cash === 'number' && Number.isFinite(cash) && cash > 0 ? Math.round(cash) : 0;
-  } catch {
-    return 0;
-  }
-}
-
-/** Add `amount` to the purse (no-op for non-positive) and persist. Returns the new total. */
-export function creditWallet(amount: number): number {
-  const add = Number.isFinite(amount) && amount > 0 ? Math.round(amount) : 0;
-  const next = loadWallet() + add;
-  const store = storage();
-  if (store !== null) {
-    try {
-      store.setItem(WALLET_KEY, JSON.stringify({ cash: next }));
-    } catch {
-      // Ignore: progress is best-effort, never a crash.
-    }
-  }
-  return next;
+  return { save: updated, cleared: loadCleared() };
 }

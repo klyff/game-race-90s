@@ -7,6 +7,7 @@ import { findTrack } from '../../src/data/tracks/registry.ts';
 import { parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
 import { CAR_PERK, SIMULATION_STEP_SECONDS } from '../../src/domain/constants.ts';
 import { IDLE_INPUT } from '../../src/domain/input/InputCommand.ts';
+import { distance } from '../../src/domain/math/Vec2.ts';
 import { RaceField } from '../../src/domain/race/RaceField.ts';
 import type { RacerEntry } from '../../src/domain/race/RaceField.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
@@ -16,6 +17,8 @@ import { JUMP_START_COUNT } from '../../src/domain/vehicle/JumpCharges.ts';
 import { CAR_PERKS, NEUTRAL_PERK } from '../../src/domain/vehicle/CarPerk.ts';
 import { decideMissileAim } from '../../src/domain/weapons/WeaponAim.ts';
 import {
+  CAR_LENGTH_PER_COLLISION_RADIUS,
+  DROP_BEHIND_CAR_LENGTHS,
   MISSILE_RAW_DAMAGE,
   MISSILE_START_COUNT,
   MISSILE_SPEED_FACTOR,
@@ -65,10 +68,10 @@ describe('WeaponInventory', () => {
   it('Arsenal raises the missile refill ceiling by reloadMultiplier', () => {
     const battle = manifest.cars.find(car => car.id === 'car-10')!;
     const arsenal = CAR_PERKS[CAR_PERK.ARSENAL];
-    expect(missileCapacity(battle.stats, NEUTRAL_PERK)).toBe(15);
-    expect(missileCapacity(battle.stats, arsenal)).toBe(45);
+    expect(missileCapacity(battle.stats, NEUTRAL_PERK)).toBe(battle.stats.ammoCapacity);
+    expect(missileCapacity(battle.stats, arsenal)).toBe(battle.stats.ammoCapacity * 3);
     const refilled = refillWeaponInventory(createWeaponInventory(), battle.stats, arsenal);
-    expect(refilled.missiles).toBe(45);
+    expect(refilled.missiles).toBe(battle.stats.ammoCapacity * 3);
   });
 
   it('shortens NPC cooldown by reloadMultiplier', () => {
@@ -208,11 +211,11 @@ describe('RaceField weapons', () => {
     player.state = {
       ...player.state,
       position: {
-        x: frame.position.x - frame.tangent.x * 12,
-        y: frame.position.y - frame.tangent.y * 12,
+        x: frame.position.x - frame.tangent.x * 15,
+        y: frame.position.y - frame.tangent.y * 15,
       },
     };
-    player.distance = track.startLineDistance + 38;
+    player.distance = track.startLineDistance + 35;
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
     const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL && h.ownerCarId === npc.carId);
     expect(oil).toBeDefined();
@@ -281,8 +284,8 @@ describe('RaceField weapons', () => {
     const npc = field.racers.find(r => !r.isPlayer)!;
     const player = field.racers.find(r => r.isPlayer)!;
 
-    // Put the NPC on the track with the player 12 units behind: inside the oil-drop
-    // gap (16) but outside the tighter mine gap (10).
+    // Player 15 units behind: inside the oil-drop gap (16), outside the mine
+    // gap (10), and clear of the slick that now lands a full car length back.
     const frame = spline.frameAt(track.startLineDistance + 50);
     npc.state = {
       ...npc.state,
@@ -293,11 +296,11 @@ describe('RaceField weapons', () => {
     player.state = {
       ...player.state,
       position: {
-        x: frame.position.x - frame.tangent.x * 12,
-        y: frame.position.y - frame.tangent.y * 12,
+        x: frame.position.x - frame.tangent.x * 15,
+        y: frame.position.y - frame.tangent.y * 15,
       },
     };
-    player.distance = track.startLineDistance + 38;
+    player.distance = track.startLineDistance + 35;
 
     const before = field.activeHazards.length;
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
@@ -409,5 +412,18 @@ describe('RaceField hop', () => {
     expect(rival.integrity.integrity).toBe(before);
     expect(field.activeMissiles.length).toBe(1);
     expect(field.playerWeaponHits.missiles).toBe(0);
+  });
+
+  it('throws a mine at least one car length behind the bumper', () => {
+    const field = twoCarField();
+    const player = field.player;
+    field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
+    const mine = field.activeHazards.find(h => h.kind === HAZARD_KIND.MINE)!;
+    const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * player.stats.collisionRadius;
+    const gap = distance(player.state.position, mine.position) - player.stats.collisionRadius - mine.radius;
+    expect(gap).toBeGreaterThanOrEqual(carLength * DROP_BEHIND_CAR_LENGTHS - 0.05);
+    expect(mine.ownerCarId).toBe(player.carId);
+    expect(mine.ownerArmed).toBe(true);
+    expect(player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
   });
 });

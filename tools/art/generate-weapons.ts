@@ -165,6 +165,21 @@ function drawMine(angle: number): Uint8Array {
   return frame;
 }
 
+function drawTurbo(angle: number): Uint8Array {
+  const frame = emptyFrame();
+  const core: Rgba = [255, 240, 120, 255];
+  const mid: Rgba = [255, 140, 40, 230];
+  const edge: Rgba = [255, 60, 20, 180];
+  for (let i = 0; i < 10; i += 1) {
+    stamp(frame, CENTRE, CENTRE + i * 0.7, angle, i < 3 ? core : i < 7 ? mid : edge);
+    stamp(frame, CENTRE - 1, CENTRE + i * 0.55, angle, mid);
+    stamp(frame, CENTRE + 1, CENTRE + i * 0.55, angle, mid);
+  }
+  stamp(frame, CENTRE, CENTRE - 2, angle, core);
+  stamp(frame, CENTRE, CENTRE - 1, angle, core);
+  return frame;
+}
+
 function scaleFrame(frame: Uint8Array): Uint8Array {
   const out = new Uint8Array(FRAME_OUT * FRAME_OUT * 4);
   for (let y = 0; y < FRAME_OUT; y += 1) {
@@ -264,6 +279,7 @@ const sheets = [
   { file: 'missile.png', draw: drawMissile },
   { file: 'oil.png', draw: drawOil },
   { file: 'mine.png', draw: drawMine },
+  { file: 'turbo.png', draw: drawTurbo },
 ];
 
 let written = 0;

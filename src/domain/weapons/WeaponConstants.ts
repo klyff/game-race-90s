@@ -7,13 +7,13 @@
  * Missiles on the grid for EVERY car (owner, 2026-08-16). Refill at the finish
  * line goes up to that car's own `ammoCapacity` (battle-trak 15, air-blade 4).
  */
-export const MISSILE_START_COUNT = 3;
+export const MISSILE_START_COUNT = 6;
 
 /** Oil slicks each car may carry. */
-export const OIL_START_COUNT = 2;
+export const OIL_START_COUNT = 4;
 
-/** Landmines each car may carry. Spec did not name a count; matches oil. */
-export const MINE_START_COUNT = 2;
+/** Landmines each car may carry. */
+export const MINE_START_COUNT = 4;
 
 /**
  * Missile travel speed as a multiple of the firing car's authored `maxSpeed`.
@@ -107,10 +107,10 @@ export const OIL_LAP_REFERENCE_SPEED = 45;
 export const OIL_YAW_SPIN = 14;
 
 /**
- * How far behind the car an oil slick / mine is dropped, in car radii.
- * Must clear (car radius + oil radius) so a 1.6× slick does not sit under the dropper.
+ * How far behind the rear bumper a mine / oil is thrown, in car lengths.
+ * Owner: at least one car length so the dropper does not sit on the blast.
  */
-export const DROP_BEHIND_FACTOR = 3.4;
+export const DROP_BEHIND_CAR_LENGTHS = 1;
 
 /**
  * How close behind an NPC a rival must be, in world units, before the NPC drops

@@ -2,16 +2,16 @@ import { CAR_PERK, PALETTE_ROLE } from '../../../src/domain/constants.ts';
 import type { CarModelDef } from '../schema.ts';
 
 /**
- * MAGMA REX — Heat-shielded siege tank.
+ * MAGMA REX — War tank.
  *
- * The heaviest, most armoured car of the roster: a slab-sided bruiser with a
- * blunt ram plate and vented flanks, built to keep going where the ground is
- * broken and hot. Slow and clumsy, but almost nothing moves it. ~4.1 long.
+ * The strongest and slowest car of the roster: a slab-sided bunker with a
+ * blunt ram plate and vented flanks. Almost nothing hurts it, and whatever it
+ * hits pays for the contact. ~4.1 long.
  */
 export const magmaRex: CarModelDef = {
   id: 'magma-rex',
   displayName: 'Magma Rex',
-  archetype: 'Siege tank — unmovable through fire and rubble',
+  archetype: 'War tank — slowest, hardest, rams flatten rivals',
 
   palette: {
     body: '#7a2410',
@@ -114,21 +114,20 @@ export const magmaRex: CarModelDef = {
     },
   ],
 
-  // Mass, power and armour maxed; grip, speed and steering all low. It wins where
-  // the track is broad and brutal and grip matters least.
+  // Strongest and slowest of the roster: a bunker that crawls, shrugs hits,
+  // and charges whoever it touches.
   stats: {
-    mass: 1250,
-    enginePower: 41,
-    brakeForce: 40,
-    maxSpeed: 70,
-    grip: 20,
-    steerRate: 1.9,
-    steerSpeedFalloff: 0.6,
-    armor: 0.62,
-    ammoCapacity: 5,
-    collisionRadius: 1.9,
-    aimRadius: 2.6,
+    mass: 1600,
+    enginePower: 34,
+    brakeForce: 36,
+    maxSpeed: 52,
+    grip: 16,
+    steerRate: 1.4,
+    steerSpeedFalloff: 0.72,
+    armor: 0.88,
+    ammoCapacity: 4,
+    collisionRadius: 2.15,
+    aimRadius: 2.4,
   },
-  // Immovable in contact and shrugs off hits — a rolling roadblock.
-  perk: CAR_PERK.ANVIL,
+  perk: CAR_PERK.WAR_TANK,
 };

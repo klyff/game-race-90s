@@ -10,7 +10,7 @@
   "cars": [
     {
       "id": "car-1",
-      "displayName": "Car 1",
+      "displayName": "Marauder",
       "archetype": "Balanced muscle — Thunder Basin titular",
       "image": "car-1.png",
       "shadow": {
@@ -26,7 +26,7 @@
         "steerRate": 2.5,
         "steerSpeedFalloff": 0.45,
         "armor": 0.4,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.7,
         "aimRadius": 3.5
       },
@@ -36,7 +36,7 @@
     },
     {
       "id": "car-2",
-      "displayName": "Car 2",
+      "displayName": "Dust Fang",
       "archetype": "Light muscle — Thunder Basin reserva",
       "image": "car-2.png",
       "shadow": {
@@ -52,7 +52,7 @@
         "steerRate": 2.6,
         "steerSpeedFalloff": 0.42,
         "armor": 0.35,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.65,
         "aimRadius": 3.4
       },
@@ -78,7 +78,7 @@
         "steerRate": 2.8,
         "steerSpeedFalloff": 0.5,
         "armor": 0.18,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 1.75,
         "aimRadius": 3
       },
@@ -88,7 +88,7 @@
     },
     {
       "id": "car-9-turbo",
-      "displayName": "Turbo 9",
+      "displayName": "Nitro Viper",
       "archetype": "Turbo reserva — Chrome Verge",
       "image": "car-9-turbo.png",
       "shadow": {
@@ -104,7 +104,7 @@
         "steerRate": 3.1,
         "steerSpeedFalloff": 0.68,
         "armor": 0.15,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 1.8,
         "aimRadius": 3.2
       },
@@ -114,7 +114,7 @@
     },
     {
       "id": "car-3",
-      "displayName": "Car 3",
+      "displayName": "Swamp Rat",
       "archetype": "Marsh-runner — Bogmire Deep titular",
       "image": "car-3.png",
       "shadow": {
@@ -130,7 +130,7 @@
         "steerRate": 3,
         "steerSpeedFalloff": 0.4,
         "armor": 0.3,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 1.7,
         "aimRadius": 3
       },
@@ -140,7 +140,7 @@
     },
     {
       "id": "car-13",
-      "displayName": "Car 13",
+      "displayName": "Bog Howler",
       "archetype": "Marsh reserva — Bogmire Deep",
       "image": "car-13.png",
       "shadow": {
@@ -156,7 +156,7 @@
         "steerRate": 3,
         "steerSpeedFalloff": 0.4,
         "armor": 0.3,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 1.7,
         "aimRadius": 3
       },
@@ -166,7 +166,7 @@
     },
     {
       "id": "car-4",
-      "displayName": "Car 4",
+      "displayName": "Frostbite",
       "archetype": "Ice-crawler — Cryo Hollow titular",
       "image": "car-4.png",
       "shadow": {
@@ -182,7 +182,7 @@
         "steerRate": 2.3,
         "steerSpeedFalloff": 0.46,
         "armor": 0.7,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.95,
         "aimRadius": 3
       },
@@ -192,7 +192,7 @@
     },
     {
       "id": "car-17",
-      "displayName": "Car 17",
+      "displayName": "Icebreaker",
       "archetype": "Ice reserva — Cryo Hollow",
       "image": "car-17.png",
       "shadow": {
@@ -208,7 +208,7 @@
         "steerRate": 2.3,
         "steerSpeedFalloff": 0.46,
         "armor": 0.7,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.95,
         "aimRadius": 3
       },
@@ -218,7 +218,7 @@
     },
     {
       "id": "car-8-strong",
-      "displayName": "Strong 8",
+      "displayName": "Iron Fist",
       "archetype": "Immovable bruiser — Ferro Rust titular",
       "image": "car-8-strong.png",
       "shadow": {
@@ -234,7 +234,7 @@
         "steerRate": 1.8,
         "steerSpeedFalloff": 0.65,
         "armor": 0.6,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.85,
         "aimRadius": 2.5
       },
@@ -244,7 +244,7 @@
     },
     {
       "id": "car-12-strong",
-      "displayName": "Strong 12",
+      "displayName": "Wrecker",
       "archetype": "Bulldozer reserva — Ferro Rust",
       "image": "car-12-strong.png",
       "shadow": {
@@ -260,7 +260,7 @@
         "steerRate": 1.8,
         "steerSpeedFalloff": 0.65,
         "armor": 0.6,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.85,
         "aimRadius": 2.5
       },
@@ -270,7 +270,7 @@
     },
     {
       "id": "car-6-tank",
-      "displayName": "Tank",
+      "displayName": "Magma Rex",
       "archetype": "War tank — Vulkanis titular",
       "image": "car-6-tank.png",
       "shadow": {
@@ -286,7 +286,7 @@
         "steerRate": 1.4,
         "steerSpeedFalloff": 0.72,
         "armor": 0.88,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 2.15,
         "aimRadius": 2.4
       },
@@ -296,7 +296,7 @@
     },
     {
       "id": "car-18",
-      "displayName": "Car 18",
+      "displayName": "Slag Hammer",
       "archetype": "Heavy reserva — Vulkanis",
       "image": "car-18.png",
       "shadow": {
@@ -312,7 +312,7 @@
         "steerRate": 1.8,
         "steerSpeedFalloff": 0.65,
         "armor": 0.6,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.85,
         "aimRadius": 2.5
       },
@@ -322,7 +322,7 @@
     },
     {
       "id": "car-11",
-      "displayName": "Car 11",
+      "displayName": "Neon Ronin",
       "archetype": "Street-tuner — Neon Kasbah titular",
       "image": "car-11.png",
       "shadow": {
@@ -338,7 +338,7 @@
         "steerRate": 3.3,
         "steerSpeedFalloff": 0.5,
         "armor": 0.28,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.65,
         "aimRadius": 3.4
       },
@@ -348,7 +348,7 @@
     },
     {
       "id": "car-15",
-      "displayName": "Car 15",
+      "displayName": "Volt Sting",
       "archetype": "Arsenal reserva — Neon Kasbah",
       "image": "car-15.png",
       "shadow": {
@@ -364,7 +364,7 @@
         "steerRate": 3.3,
         "steerSpeedFalloff": 0.5,
         "armor": 0.28,
-        "ammoCapacity": 5,
+        "ammoCapacity": 10,
         "collisionRadius": 1.65,
         "aimRadius": 3.4
       },
@@ -374,7 +374,7 @@
     },
     {
       "id": "car-7-turbo",
-      "displayName": "Turbo 7",
+      "displayName": "Afterburn",
       "archetype": "Turbo — Ash Reach titular",
       "image": "car-7-turbo.png",
       "shadow": {
@@ -390,7 +390,7 @@
         "steerRate": 3.1,
         "steerSpeedFalloff": 0.68,
         "armor": 0.15,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 1.8,
         "aimRadius": 3.2
       },
@@ -400,7 +400,7 @@
     },
     {
       "id": "car-20",
-      "displayName": "Car 20",
+      "displayName": "Ash Comet",
       "archetype": "Slipstream reserva — Ash Reach",
       "image": "car-20.png",
       "shadow": {
@@ -416,7 +416,7 @@
         "steerRate": 3.1,
         "steerSpeedFalloff": 0.68,
         "armor": 0.15,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 1.8,
         "aimRadius": 3.2
       },
@@ -426,7 +426,7 @@
     },
     {
       "id": "car-10",
-      "displayName": "Car 10",
+      "displayName": "Battle Trak",
       "archetype": "Weapons platform — Voidport titular",
       "image": "car-10.png",
       "shadow": {
@@ -442,7 +442,7 @@
         "steerRate": 2.4,
         "steerSpeedFalloff": 0.45,
         "armor": 0.42,
-        "ammoCapacity": 15,
+        "ammoCapacity": 30,
         "collisionRadius": 1.85,
         "aimRadius": 5
       },
@@ -452,7 +452,7 @@
     },
     {
       "id": "car-14",
-      "displayName": "Car 14",
+      "displayName": "Void Cannon",
       "archetype": "Arsenal reserva — Voidport",
       "image": "car-14.png",
       "shadow": {
@@ -468,7 +468,7 @@
         "steerRate": 2.4,
         "steerSpeedFalloff": 0.45,
         "armor": 0.42,
-        "ammoCapacity": 15,
+        "ammoCapacity": 30,
         "collisionRadius": 1.85,
         "aimRadius": 5
       },
@@ -478,7 +478,7 @@
     },
     {
       "id": "car-16",
-      "displayName": "Car 16",
+      "displayName": "Dirt Devil",
       "archetype": "Dirt buggy — Verdant Fault titular",
       "image": "car-16.png",
       "shadow": {
@@ -494,7 +494,7 @@
         "steerRate": 3.2,
         "steerSpeedFalloff": 0.35,
         "armor": 0.25,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 1.55,
         "aimRadius": 3
       },
@@ -504,7 +504,7 @@
     },
     {
       "id": "car-19",
-      "displayName": "Car 19",
+      "displayName": "Vine Whip",
       "archetype": "Dirt reserva — Verdant Fault",
       "image": "car-19.png",
       "shadow": {
@@ -520,7 +520,7 @@
         "steerRate": 3.2,
         "steerSpeedFalloff": 0.35,
         "armor": 0.25,
-        "ammoCapacity": 4,
+        "ammoCapacity": 8,
         "collisionRadius": 1.55,
         "aimRadius": 3
       },

@@ -41,6 +41,12 @@ import {
   hopLaunchSpeed,
   refillJumpCharges,
 } from '../vehicle/JumpCharges.ts';
+import {
+  consumeTurbo,
+  createTurboCharges,
+  refillTurboCharges,
+  TURBO_DURATION_SECONDS,
+} from '../vehicle/TurboCharges.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 import { decideMissileAim } from '../weapons/WeaponAim.ts';
 import {
@@ -53,6 +59,7 @@ import {
 } from '../weapons/WeaponConstants.ts';
 import {
   ageHazards,
+  armHazards,
   dropMine,
   dropOil,
   findHazardHits,
@@ -132,6 +139,10 @@ export interface RacerRuntime {
   inventory: WeaponInventory;
   /** Hops remaining this lap. Refills at the finish line. */
   jumps: number;
+  /** Turbo charges remaining this lap. */
+  turbos: number;
+  /** Seconds of turbo still burning. */
+  turboRemaining: number;
   /**
    * Hardest contact seen since the presentation layer last read it, world units/s.
    * The scene drains this to trigger the impact sound; the damage rules have
@@ -285,6 +296,8 @@ export class RaceField {
         integrity: createCarIntegrity(),
         inventory: createWeaponInventory(perkProfile(entry.perk)),
         jumps: createJumpCharges(),
+        turbos: createTurboCharges(),
+        turboRemaining: 0,
         pendingImpactSpeed: 0,
         explodedThisStep: false,
         respawnedThisStep: false,
@@ -360,6 +373,8 @@ export class RaceField {
       racer.integrity = createCarIntegrity();
       racer.inventory = createWeaponInventory(racer.perk);
       racer.jumps = createJumpCharges();
+      racer.turbos = createTurboCharges();
+      racer.turboRemaining = 0;
       racer.pendingImpactSpeed = 0;
       racer.explodedThisStep = false;
       racer.respawnedThisStep = false;
@@ -437,6 +452,7 @@ export class RaceField {
       if (!frozen) {
         this.resolveWeaponCommand(racer, command);
         this.resolveHopCommand(racer, command);
+        this.resolveTurboCommand(racer, command);
       }
 
       // Perks enter as DERIVED values, never as a special case inside the physics: the
@@ -450,7 +466,16 @@ export class RaceField {
         racer.worldAdvantage,
         this.planetId,
       );
-      const stats = drivingStats(worlded, racer.perk, command.brake > 0, draft);
+      if (racer.turboRemaining > 0) {
+        racer.turboRemaining = Math.max(0, racer.turboRemaining - stepSeconds);
+      }
+      const stats = drivingStats(
+        worlded,
+        racer.perk,
+        command.brake > 0,
+        draft,
+        racer.turboRemaining > 0,
+      );
       const step = stepVehicleOnTrack(
         racer.state,
         command,
@@ -670,6 +695,7 @@ export class RaceField {
       if (after > before) {
         racer.inventory = refillWeaponInventory(racer.inventory, racer.stats, racer.perk);
         racer.jumps = refillJumpCharges(racer.jumps);
+        racer.turbos = refillTurboCharges(racer.turbos);
       }
     });
   }
@@ -726,6 +752,18 @@ export class RaceField {
     }
   }
 
+  private resolveTurboCommand(racer: RacerRuntime, command: InputCommand): void {
+    if (!command.boost || racer.turboRemaining > 0) {
+      return;
+    }
+    const next = consumeTurbo(racer.turbos);
+    if (next === null) {
+      return;
+    }
+    racer.turbos = next;
+    racer.turboRemaining = TURBO_DURATION_SECONDS;
+  }
+
   /** Impart hop velocity when grounded and a charge remains. */
   private resolveHopCommand(racer: RacerRuntime, command: InputCommand): void {
     if (!command.jump || isAirborne(racer.state)) {
@@ -752,6 +790,7 @@ export class RaceField {
         radius: racer.stats.collisionRadius,
       }));
 
+    this.hazards = armHazards(this.hazards, targets);
     const hits = findHazardHits(this.hazards, targets);
     if (hits.length === 0) {
       return;

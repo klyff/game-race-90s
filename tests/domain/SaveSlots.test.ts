@@ -340,12 +340,12 @@ describe('SaveSlots', () => {
       expect((s.slots[0] as SlotProgress).name).toBe('AB');
     });
 
-    it('truncates to 3 characters', () => {
+    it('truncates to 5 characters', () => {
       const save = createEmptySave();
       const slot = createSlot('toolong', 'marauder', 1000);
       const s = writeSlot(save, 0, slot);
 
-      expect((s.slots[0] as SlotProgress).name).toBe('TOO');
+      expect((s.slots[0] as SlotProgress).name).toBe('TOOLO');
     });
 
     it('handles mixed case with numbers and symbols', () => {
@@ -353,7 +353,7 @@ describe('SaveSlots', () => {
       const slot = createSlot('a1b2c3d4e5', 'marauder', 1000);
       const s = writeSlot(save, 0, slot);
 
-      expect((s.slots[0] as SlotProgress).name).toBe('ABC');
+      expect((s.slots[0] as SlotProgress).name).toBe('ABCDE');
     });
 
     it('handles empty string after filtering', () => {

@@ -2,7 +2,7 @@ import { add, distance, fromAngle, scale } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
-  DROP_BEHIND_FACTOR,
+  DROP_BEHIND_CAR_LENGTHS,
   MINE_RADIUS_FACTOR,
   OIL_SIZE_OF_CAR,
   OIL_YAW_SPIN,
@@ -32,6 +32,12 @@ export interface TrackHazard {
    * the track the same way T-017 planned. Not used for collision today.
    */
   readonly distance: number;
+  /**
+   * False until the owner drives off the blast radius. Prevents a drop under
+   * the bumper from exploding the thrower; after they leave, anyone (including
+   * the owner on a later lap) can hit it.
+   */
+  readonly ownerArmed: boolean;
 }
 
 export interface HazardHit {
@@ -46,9 +52,11 @@ export function resetHazardIds(next: number = 1): void {
   nextHazardId = next;
 }
 
-function dropBehind(position: Vec2, heading: number, carRadius: number): Vec2 {
+function dropBehind(position: Vec2, heading: number, collisionRadius: number, hazardRadius: number): Vec2 {
+  const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * collisionRadius;
+  const dropDistance = carLength / 2 + carLength * DROP_BEHIND_CAR_LENGTHS + hazardRadius;
   const back = fromAngle(heading + Math.PI);
-  return add(position, scale(back, carRadius * DROP_BEHIND_FACTOR));
+  return add(position, scale(back, dropDistance));
 }
 
 export function dropOil(
@@ -65,10 +73,11 @@ export function dropOil(
     id: nextHazardId++,
     kind: HAZARD_KIND.OIL,
     ownerCarId,
-    position: dropBehind(position, heading, collisionRadius),
+    position: dropBehind(position, heading, collisionRadius, radius),
     radius,
     lifeRemaining: Math.max(0, lifetimeSeconds),
     distance: distanceAlongTrack,
+    ownerArmed: false,
   };
 }
 
@@ -84,11 +93,12 @@ export function dropMine(
     id: nextHazardId++,
     kind: HAZARD_KIND.MINE,
     ownerCarId,
-    position: dropBehind(position, heading, collisionRadius),
+    position: dropBehind(position, heading, collisionRadius, radius),
     radius,
     // Mines persist until hit; a huge life is simpler than a separate flag.
     lifeRemaining: Number.POSITIVE_INFINITY,
     distance: distanceAlongTrack,
+    ownerArmed: false,
   };
 }
 
@@ -106,7 +116,7 @@ export function ageHazards(
     }
     const lifeRemaining = hazard.lifeRemaining - dt;
     if (lifeRemaining > 0) {
-      next.push({ ...hazard, lifeRemaining });
+      next.push({ ...hazard, lifeRemaining, ownerArmed: hazard.ownerArmed });
     }
   }
   return next;
@@ -118,11 +128,29 @@ export interface HazardTarget {
   readonly radius: number;
 }
 
+/** Arm any hazard whose owner has left the blast circle. */
+export function armHazards(
+  hazards: readonly TrackHazard[],
+  targets: readonly HazardTarget[],
+): TrackHazard[] {
+  return hazards.map(hazard => {
+    if (hazard.ownerArmed) {
+      return hazard;
+    }
+    const owner = targets.find(target => target.carId === hazard.ownerCarId);
+    if (owner === undefined) {
+      return { ...hazard, ownerArmed: true };
+    }
+    if (distance(hazard.position, owner.position) > hazard.radius + owner.radius) {
+      return { ...hazard, ownerArmed: true };
+    }
+    return hazard;
+  });
+}
+
 /**
- * First hazard overlapping a target. Owner immunity lasts until they drive off
- * the drop — a car may re-hit its own oil on a later lap, which is fair.
- * Immunity is "same step as drop" and is enforced by the caller skipping the
- * dropper on the spawn step; here every living car is fair game.
+ * First hazard overlapping a target. The owner is immune until they drive off
+ * the drop (`ownerArmed`); after that anyone, including the owner, can hit it.
  */
 export function findHazardHits(
   hazards: readonly TrackHazard[],
@@ -138,6 +166,9 @@ export function findHazardHits(
     }
     for (const target of targets) {
       if (claimedCars.has(target.carId)) {
+        continue;
+      }
+      if (!hazard.ownerArmed && target.carId === hazard.ownerCarId) {
         continue;
       }
       if (distance(hazard.position, target.position) <= hazard.radius + target.radius) {

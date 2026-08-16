@@ -3,7 +3,13 @@ import { formatHud } from '../adapters/render/HudFormat.ts';
 import type { HudReadout, HudText } from '../adapters/render/HudFormat.ts';
 import { SpeedoGauge } from '../adapters/render/SpeedoGauge.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
-import { SCENE_KEY } from './sceneKeys.ts';
+import {
+  MINE_SPRITE_KEY,
+  MISSILE_SPRITE_KEY,
+  OIL_SPRITE_KEY,
+  SCENE_KEY,
+  TURBO_SPRITE_KEY,
+} from './sceneKeys.ts';
 
 /**
  * Screen inset for the corner blocks, pixels.
@@ -68,6 +74,7 @@ export class HudScene extends Phaser.Scene {
   private cashText!: Phaser.GameObjects.Text;
   private timeText!: Phaser.GameObjects.Text;
   private ammoText!: Phaser.GameObjects.Text;
+  private ammoIcons: Phaser.GameObjects.Sprite[] = [];
   private countdownText!: Phaser.GameObjects.Text;
   private standingsText!: Phaser.GameObjects.Text;
   private barBackground!: Phaser.GameObjects.Rectangle;
@@ -90,6 +97,13 @@ export class HudScene extends Phaser.Scene {
     this.timeText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
     this.standingsText = this.add.text(0, 0, '', this.smallStyle()).setDepth(HUD_DEPTH);
     this.ammoText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
+    this.ammoIcons = [MISSILE_SPRITE_KEY, MINE_SPRITE_KEY, OIL_SPRITE_KEY, TURBO_SPRITE_KEY].map(
+      key => {
+        const sprite = this.add.sprite(0, 0, key, 0).setDepth(HUD_DEPTH).setVisible(this.textures.exists(key));
+        sprite.setDisplaySize(22, 22);
+        return sprite;
+      },
+    );
 
     this.barBackground = this.add
       .rectangle(0, 0, BAR_WIDTH, BAR_HEIGHT, 0x000000, 0.55)
@@ -203,7 +217,7 @@ export class HudScene extends Phaser.Scene {
       ease: Phaser.Math.Easing.Back.Out,
     });
 
-    if (text.countdown === 'GO!') {
+    if (text.countdown === 'GOOOO!') {
       this.tweens.add({
         targets: this.countdownText,
         alpha: 0,
@@ -261,7 +275,10 @@ export class HudScene extends Phaser.Scene {
     const barY = height - MARGIN - BAR_HEIGHT;
     this.barBackground.setPosition(MARGIN, barY);
     this.barFill.setPosition(MARGIN, barY);
-    this.ammoText.setPosition(MARGIN, barY - 30);
+    this.ammoText.setPosition(MARGIN + 108, barY - 30);
+    this.ammoIcons.forEach((icon, index) => {
+      icon.setPosition(MARGIN + 12 + index * 26, barY - 18);
+    });
 
     // Speedometer: bottom-right, the only free corner — top corners hold position/lap
     // and time/standings, and bottom-left is the integrity bar with the ammo readout

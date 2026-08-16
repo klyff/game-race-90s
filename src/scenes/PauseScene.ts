@@ -53,6 +53,7 @@ export class PauseScene extends Phaser.Scene {
           values: AUDIO_VALUES,
           valueIndex: data.muted ? 1 : 0,
         },
+        { id: 'garage', kind: MENU_KIND.ACTION, label: 'GARAGE' },
         { id: 'menu', kind: MENU_KIND.ACTION, label: 'MAIN MENU' },
       ],
       {
@@ -103,6 +104,10 @@ export class PauseScene extends Phaser.Scene {
         this.save();
         return;
       }
+      if (result.id === 'garage') {
+        this.garage();
+        return;
+      }
       if (result.id === 'menu') {
         this.mainMenu();
       }
@@ -139,6 +144,15 @@ export class PauseScene extends Phaser.Scene {
   private save(): void {
     saveNow(this.payload.carId);
     this.statusText.setText('SAVED');
+  }
+
+  private garage(): void {
+    this.scene.stop(SCENE_KEY.HUD);
+    this.scene.stop(SCENE_KEY.RACE);
+    this.scene.start(SCENE_KEY.GARAGE, {
+      manifest: this.payload.manifest,
+      linesByTrack: this.payload.linesByTrack,
+    });
   }
 
   private mainMenu(): void {

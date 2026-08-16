@@ -20,7 +20,9 @@ import { themeForTrackId } from '../data/tracks/planetThemes.ts';
 import { musicForTrackId } from '../data/tracks/planetMusic.ts';
 import { findTrack } from '../data/tracks/registry.ts';
 import { CEREMONY_HOLD_SECONDS } from '../domain/race/Coast.ts';
-import { loadWallet } from '../adapters/progress/ProgressStore.ts';
+import { loadActiveCareer, loadActiveName, loadWallet, rememberLastTrack } from '../adapters/progress/ProgressStore.ts';
+import { npcRosterForPlanet } from '../domain/progress/GarageCatalog.ts';
+import { rivalsForPlanet } from '../data/pilots/PilotRoster.ts';
 import { weaponHitEarnings } from '../domain/progress/Wallet.ts';
 import { SIMULATION_STEP_SECONDS } from '../domain/constants.ts';
 import type { InputCommand } from '../domain/input/InputCommand.ts';
@@ -180,6 +182,10 @@ export class RaceScene extends Phaser.Scene {
   private startingCash = 0;
   /** 1-based campaign planet, for hit-bounty scaling. */
   private planetIndex = 1;
+  /** Pilot names for the HUD and results, keyed by car id. */
+  private pilotNames: Record<string, string> = {};
+  private playerPilotName = 'YOU';
+  private sittingRivals: readonly string[] = [];
 
   constructor() {
     super(SCENE_KEY.RACE);
@@ -193,6 +199,8 @@ export class RaceScene extends Phaser.Scene {
     this.trackLines = this.linesByTrack[this.trackId];
     this.startingCash = loadWallet();
     this.planetIndex = campaignSlotForTrackId(this.trackId)?.planetIndex ?? 1;
+    const planet = planetForTrackId(this.trackId);
+    rememberLastTrack(planet?.id ?? 'thunder-basin', this.trackId);
   }
 
   create(): void {
@@ -296,7 +304,7 @@ export class RaceScene extends Phaser.Scene {
     const standings: ResultsEntry[] = this.field.race.standings.map(entry => ({
       position: entry.position,
       carId: entry.carId,
-      name: findCarSheet(this.manifest, entry.carId).displayName,
+      name: this.pilotNames[entry.carId] ?? findCarSheet(this.manifest, entry.carId).displayName,
       isPlayer: entry.carId === this.carId,
     }));
     const playerPosition =
@@ -323,6 +331,12 @@ export class RaceScene extends Phaser.Scene {
       finishSeconds,
       parSeconds,
       weaponHits: this.field.playerWeaponHits,
+      playerName: this.playerPilotName,
+      sittingRivals: this.sittingRivals,
+      rivalSeason: loadActiveCareer()?.rivalNames.map((name, index) => ({
+        name,
+        points: loadActiveCareer()?.rivalPoints[index] ?? 0,
+      })) ?? [],
     } satisfies ResultsSceneData);
   }
 
@@ -348,12 +362,13 @@ export class RaceScene extends Phaser.Scene {
       // clamps it to `totalLaps`, so a finished car reads 3/3 rather than 4/3.
       lap: (standing?.lapsCompleted ?? 0) + 1,
       totalLaps: this.track.laps,
-      // Live loadout; A/S/D on the HUD match the console weapon buttons.
+      // Live loadout; C/X/Z/Shift on the HUD match the console weapon buttons.
       ammo: player.inventory.missiles,
       ammoCapacity: missileCapacity(player.stats, player.perk),
       oil: player.inventory.oil,
       mines: player.inventory.mines,
       jumps: player.jumps,
+      turbos: player.turbos,
       integrity: player.integrity.integrity,
       standings: race.standings.map(entry => ({
         carId: entry.carId,
@@ -368,7 +383,7 @@ export class RaceScene extends Phaser.Scene {
   /** The standings with display names rather than ids, for the HUD's list. */
   standingsWithNames(): readonly { readonly name: string; readonly position: number }[] {
     return this.field.race.standings.map(entry => ({
-      name: findCarSheet(this.manifest, entry.carId).displayName,
+      name: this.pilotNames[entry.carId] ?? findCarSheet(this.manifest, entry.carId).displayName,
       position: entry.position,
     }));
   }
@@ -579,8 +594,20 @@ export class RaceScene extends Phaser.Scene {
    * arcade race means driving away from everyone and never seeing another car.
    */
   private buildEntries(): readonly RacerEntry[] {
-    const rosterIds = this.manifest.cars.map(car => car.id);
+    const rosterIds = npcRosterForPlanet(this.planetIndex);
     const npcIds = assignNpcCars(rosterIds, this.carId, RACER_COUNT - 1);
+    this.playerPilotName = loadActiveName() || 'YOU';
+    const career = loadActiveCareer();
+    const rivals = rivalsForPlanet(
+      career?.rivalNames ?? [],
+      career?.rivalPoints ?? [],
+      this.planetIndex,
+    );
+    this.pilotNames = { [this.carId]: this.playerPilotName };
+    npcIds.forEach((id, index) => {
+      this.pilotNames[id] = rivals[index] ?? `RIV${index + 1}`;
+    });
+    this.sittingRivals = rivals.slice(npcIds.length);
 
     // The perk travels with the car, for the NPCs exactly as for the player: an advantage
     // the player can feel is an advantage they must also race against.
@@ -662,7 +689,7 @@ export class RaceScene extends Phaser.Scene {
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.pauseGame());
 
     // X wrecks the player's own car on demand. Debug only — not a player control.
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X).on('down', unlessPaused(() => this.wreckPlayer()));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K).on('down', unlessPaused(() => this.wreckPlayer()));
 
     // Browsers start every AudioContext suspended and only honour a resume that
     // comes from a real user gesture, so the first key press is the earliest the

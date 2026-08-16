@@ -116,6 +116,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       let currentState = state;
@@ -157,6 +158,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       let currentState = initialState;
@@ -207,6 +209,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       let currentState = initialState;
@@ -250,6 +253,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       let currentState = initialState;
@@ -299,6 +303,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       let currentState = state;
@@ -343,6 +348,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       let currentState = state;
@@ -395,6 +401,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       let currentState = initialState;
@@ -455,6 +462,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       let currentState = initialState;
@@ -505,6 +513,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         dropOil: false,
         dropMine: false,
         jump: false,
+        boost: false,
       };
 
       const result = stepVehicleOnTrack(

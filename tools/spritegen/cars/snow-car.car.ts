@@ -2,16 +2,16 @@ import { CAR_PERK, PALETTE_ROLE } from '../../../src/domain/constants.ts';
 import type { CarModelDef } from '../schema.ts';
 
 /**
- * SNOW CAR — Studded ice-crawler.
+ * SNOW CAR — Heavy ice-crawler.
  *
- * A chunky, high-sided wagon on fat studded tyres. Slow flat out, but the
- * highest grip on the roster and extra bite under braking, so it corners and
- * stops where lighter cars just skate on. Roughly 3.9 long, 2.0 wide.
+ * A chunky, high-sided wagon on fat studded tyres. Second-heaviest on the
+ * roster after the war tank: planted, armoured, and still the grip king.
+ * Roughly 3.9 long, 2.0 wide.
  */
 export const snowCar: CarModelDef = {
   id: 'snow-car',
   displayName: 'Snow Car',
-  archetype: 'Ice-crawler — grips and stops where others skate',
+  archetype: 'Heavy ice-crawler — planted, armoured, hard to shove',
 
   palette: {
     body: '#e8eef5',
@@ -109,19 +109,19 @@ export const snowCar: CarModelDef = {
     },
   ],
 
-  // The grip king: highest lateral grip and strong brakes at a low top speed, so
-  // it owns the slippery, twisty planets where cornering is the whole game.
+  // Stronger and heavier than the rest of the mid-table: second mass and
+  // second armour, still the grip king.
   stats: {
-    mass: 980,
-    enginePower: 32,
-    brakeForce: 48,
-    maxSpeed: 68,
+    mass: 1320,
+    enginePower: 36,
+    brakeForce: 50,
+    maxSpeed: 62,
     grip: 38,
-    steerRate: 2.6,
-    steerSpeedFalloff: 0.42,
-    armor: 0.45,
+    steerRate: 2.3,
+    steerSpeedFalloff: 0.46,
+    armor: 0.7,
     ammoCapacity: 5,
-    collisionRadius: 1.8,
+    collisionRadius: 1.95,
     aimRadius: 3.0,
   },
   // Extra grip under braking — the perk finally earns a home on the roster.

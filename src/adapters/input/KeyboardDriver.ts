@@ -29,12 +29,13 @@
  *                   which the mirrored projection draws as a LEFT turn on screen)
  *   Right         = steer SCREEN_ROTATION_SIGN * -1 = +1 (a LEFT turn in world space,
  *                   drawn as a RIGHT turn on screen)
- *   A             = fire missile (edge-triggered)
- *   S             = drop oil (edge-triggered)
- *   D             = drop landmine (edge-triggered)
+ *   C             = fire missile (edge-triggered)
+ *   Z             = drop oil (edge-triggered)
+ *   X             = drop landmine (edge-triggered)
+ *   Left Shift    = turbo (edge-triggered; 4 charges, +35% for 2s)
  *   Space         = hop (edge-triggered; 4 charges, refill at the line)
  *
- * Movement is arrows only so A/S/D can be the three weapon buttons without
+ * Movement is arrows only so C/X/Z can be the weapon buttons without
  * fighting the steering. If neither or both horizontal keys are held, steer is 0.
  */
 
@@ -53,6 +54,7 @@ export class KeyboardDriver {
   private readonly keyOil: Phaser.Input.Keyboard.Key;
   private readonly keyMine: Phaser.Input.Keyboard.Key;
   private readonly keyJump: Phaser.Input.Keyboard.Key;
+  private readonly keyTurbo: Phaser.Input.Keyboard.Key;
   private readonly reverseLatch: ReverseLatch;
 
   constructor(keyboard: Phaser.Input.Keyboard.KeyboardPlugin) {
@@ -71,10 +73,11 @@ export class KeyboardDriver {
     this.keyDown = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
     this.keyLeft = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
     this.keyRight = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
-    this.keyMissile = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-    this.keyOil = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-    this.keyMine = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+    this.keyMissile = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+    this.keyOil = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+    this.keyMine = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.keyJump = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.keyTurbo = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
   }
 
   /**
@@ -108,6 +111,7 @@ export class KeyboardDriver {
       dropOil: Phaser.Input.Keyboard.JustDown(this.keyOil),
       dropMine: Phaser.Input.Keyboard.JustDown(this.keyMine),
       jump: Phaser.Input.Keyboard.JustDown(this.keyJump),
+      boost: Phaser.Input.Keyboard.JustDown(this.keyTurbo),
     };
   }
 
@@ -120,5 +124,6 @@ export class KeyboardDriver {
     this.keyboardPlugin.removeKey(this.keyOil);
     this.keyboardPlugin.removeKey(this.keyMine);
     this.keyboardPlugin.removeKey(this.keyJump);
+    this.keyboardPlugin.removeKey(this.keyTurbo);
   }
 }

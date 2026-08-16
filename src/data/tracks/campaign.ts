@@ -47,6 +47,23 @@ export function campaignTracks(): readonly CampaignTrack[] {
   return PLANETS.flatMap(planet => planetTracks(planet));
 }
 
+/** Highest planet index the player may enter (1-based). */
+export function highestUnlockedPlanetIndex(
+  wonTrackIds: readonly string[],
+  unlockAll = false,
+): number {
+  if (unlockAll) {
+    return PLANETS.length;
+  }
+  let highest = 1;
+  for (const planet of PLANETS) {
+    if (isPlanetUnlocked(planet, wonTrackIds, unlockAll)) {
+      highest = planet.index;
+    }
+  }
+  return highest;
+}
+
 /** A planet opens once the PREVIOUS planet's last track has been won. */
 export function isPlanetUnlocked(
   planet: PlanetDefinition,

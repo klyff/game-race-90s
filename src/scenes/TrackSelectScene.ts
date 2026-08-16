@@ -38,12 +38,14 @@ export class TrackSelectScene extends Phaser.Scene {
     this.tracks = planetTracks(findPlanet(data.planetId));
     this.cleared = loadCleared();
     this.won = loadWonTracks();
+    const remembered = this.tracks.findIndex(track => track.id === data.lastTrackId);
     this.menu = new MenuController(
       this.tracks.map(track => ({
         id: track.id,
         kind: MENU_KIND.ACTION,
         label: track.name,
       })),
+      { selectedIndex: remembered >= 0 ? remembered : 0 },
     );
   }
 

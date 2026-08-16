@@ -35,6 +35,8 @@ export interface HudReadout {
   readonly mines?: number;
   /** Hops remaining. When set with oil/mines, the HUD appends `SPC n`. */
   readonly jumps?: number;
+  /** Turbo charges remaining. */
+  readonly turbos?: number;
   readonly integrity: number; // 0..1 (0% to 100%)
   readonly standings: readonly { readonly carId: string; readonly position: number }[];
   /** The player's current speed, world units per second. */
@@ -190,7 +192,7 @@ function formatCountdown(phase: RacePhase, countdownRemaining: number): string |
 
   // Final second: show "GO!"
   if (countdownRemaining <= 1) {
-    return 'GO!';
+    return 'GOOOO!';
   }
 
   // Show the floor of remaining time: 3.5s -> "3", 2.1s -> "2", etc.
@@ -303,14 +305,14 @@ export function formatHud(readout: HudReadout): HudText {
   const clampedAmmoCap = Math.max(0, ammoCap);
   const oilCount = Math.max(0, Number.isFinite(readout.oil) ? readout.oil! : 0);
   const mineCount = Math.max(0, Number.isFinite(readout.mines) ? readout.mines! : 0);
-  const jumpCount = Math.max(0, Number.isFinite(readout.jumps) ? readout.jumps! : 0);
+  const turboCount = Math.max(0, Number.isFinite(readout.turbos) ? readout.turbos! : 0);
   const loadout =
     readout.oil !== undefined && readout.mines !== undefined
-      ? `A ${clampedAmmo}  S ${oilCount}  D ${mineCount}`
+      ? `${clampedAmmo}  ${mineCount}  ${oilCount}`
       : `AMMO ${clampedAmmo}/${clampedAmmoCap}`;
   const ammo =
-    readout.oil !== undefined && readout.mines !== undefined && readout.jumps !== undefined
-      ? `${loadout}  SPC ${jumpCount}`
+    readout.oil !== undefined && readout.mines !== undefined && readout.turbos !== undefined
+      ? `${loadout}  ${turboCount}`
       : loadout;
 
   // Countdown: "3", "2", "1", "GO!", or null
