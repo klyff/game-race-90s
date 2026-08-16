@@ -77,6 +77,9 @@ const BOUNDS_PADDING_PX = 48;
  */
 export const ROAD_DEPTH = -1000;
 
+/** TileSprite larger than this (px) is what froze Chrome Verge. Never allocate more. */
+const MAX_GROUND_TILE_PX = 2048;
+
 export interface TrackRendererOptions {
   readonly sampleSpacing?: number;
   /** Per-planet palette and optional ground tile. Defaults to Thunder Basin. */
@@ -173,8 +176,10 @@ export class TrackRenderer {
 
     this.bounds = computeBounds(frames, wallOuter, projection, BOUNDS_PADDING_PX);
 
-    // Ground first, under the road. The tile is a flat top-down swatch; a 2:1
-    // squash puts it on the dimetric plane the cars already drive on.
+    // Solid fill covers the whole circuit — a rectangle is two triangles, cheap
+    // at any size. The repeating tile must NOT be that size: Chrome Verge's
+    // projected bounds are ~13k px, and a TileSprite that large allocates a
+    // texture that freezes the tab. The tile follows the camera instead.
     this.groundFill = scene.add
       .rectangle(
         this.bounds.x,
@@ -187,15 +192,8 @@ export class TrackRenderer {
       .setDepth(ROAD_DEPTH - 2);
     this.groundTile = scene.textures.exists(this.theme.groundKey)
       ? scene.add
-          .tileSprite(
-            this.bounds.x,
-            this.bounds.y,
-            this.bounds.width,
-            this.bounds.height * 2,
-            this.theme.groundKey,
-          )
+          .tileSprite(0, 0, 64, 64, this.theme.groundKey)
           .setOrigin(0, 0)
-          .setScale(1, 0.5)
           .setDepth(ROAD_DEPTH - 1)
           .setAlpha(0.92)
       : null;
@@ -217,6 +215,23 @@ export class TrackRenderer {
 
     this.drawCenterline(frames, spacing);
     this.drawStartLine(track, spline);
+  }
+
+  /**
+   * Pins the ground tile to the visible camera rect so it stays a few hundred
+   * pixels, not the size of the whole circuit.
+   */
+  syncToCamera(camera: Phaser.Cameras.Scene2D.Camera): void {
+    if (this.groundTile === null) {
+      return;
+    }
+    const view = camera.worldView;
+    const width = Math.max(1, Math.min(MAX_GROUND_TILE_PX, Math.ceil(view.width)));
+    const height = Math.max(1, Math.min(MAX_GROUND_TILE_PX, Math.ceil(view.height)));
+    this.groundTile.setPosition(view.x, view.y);
+    this.groundTile.setSize(width, height);
+    this.groundTile.tilePositionX = view.x;
+    this.groundTile.tilePositionY = view.y;
   }
 
   destroy(): void {

@@ -1,5 +1,5 @@
 /**
- * Writes one 256×256 seamless SNES-era ground tile per planet into
+ * Writes one 128×128 seamless SNES-era ground tile per planet into
  * `public/assets/ground/<slug>.png`. Palettes match `planetThemes.ts`.
  *
  * These are stand-ins until the owner drops the full Prompt B 1024² tiles.
@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
 
-const SIZE = 256;
+const SIZE = 128;
 
 interface Swatch {
   readonly slug: string;

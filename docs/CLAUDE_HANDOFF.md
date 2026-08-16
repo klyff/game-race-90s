@@ -27,7 +27,7 @@ Play: `npm run dev` → http://localhost:5173 (or 5174)
     dimetric plane).
   - Generated 256² stand-in tiles in `public/assets/ground/<slug>.png`
     (`npm run gen:ground`).
-  - Planet-select shows `public/assets/ui/planets/<slug>.png` when present.
+  - Planet-select shows `public/assets/ui/planets/<slug>.jpeg` when present.
     Only **Thunder Basin** has a real illustration today.
 
 ---
@@ -42,9 +42,9 @@ Read `docs/art-briefs/planets.md` before touching art.
 
 | Path | What it is | Use |
 | --- | --- | --- |
-| `public/assets/ui/planets/thunder-basin.png` | Full Prompt A illustration (1672×940). The only finished select art. | Already loaded as `planet-thunder-basin`. |
-| `public/assets/ui/planets/<slug>.png` | **MISSING for planets 2–10.** | Drop Prompt A 16:9 art here. Boot already loads `planet-<slug>`. Never `import`. |
-| `public/assets/ground/<slug>.png` | Stand-in seamless tiles (256², generated). | Replace with real Prompt B 1024² **flat top-down** tiles. Same filename. |
+| `public/assets/ui/planets/thunder-basin.jpeg` | Prompt A illustration, compressed (~1280 wide). The only finished select art. | Loaded as `planet-thunder-basin`. |
+| `public/assets/ui/planets/<slug>.jpeg` | **MISSING for planets 2–10.** | Drop Prompt A 16:9 JPEG here. Boot already loads `planet-<slug>`. Never `import`. |
+| `public/assets/ground/<slug>.png` | Stand-in seamless tiles (128², generated). | Replace with real Prompt B 1024² **flat top-down** tiles. Same filename. |
 | `docs/art-briefs/references/contact-sheet-illustrations.png` | All 10 planets, labelled grid. **Reference only.** | Do not load in Phaser. Crop/upscale only as a last resort. |
 | `docs/art-briefs/references/contact-sheet-tiles-and-props.png` | Per planet: A illustration, B tile, C iso props. **Reference only.** | Same. Column C is the prop brief (2:1 dimetric). |
 | `public/assets/ui/splash.jpeg` | Title art. Logo is painted in. | Do not draw a second title. |

@@ -16,7 +16,7 @@ reverses, marks the tarmac, sounds like an engine, and the camera breathes with 
 
 **Read `docs/CLAUDE_HANDOFF.md` first.** Wallet, coast-to-stop, WINNER IS ceremony, and
 per-planet palettes + stand-in ground tiles are in. Claude team: drop real Prompt A/B
-art into `public/assets/ui/planets/<slug>.png` and `public/assets/ground/<slug>.png`,
+art into `public/assets/ui/planets/<slug>.jpeg` and `public/assets/ground/<slug>.png`,
 then place Prompt C props. Only Thunder Basin has a real select illustration today.
 
 **Owner close:** race Thunder Basin, watch cars coast after the flag, confirm

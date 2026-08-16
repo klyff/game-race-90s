@@ -37,7 +37,7 @@ function theme(
     groundKey: `ground-${planetId}`,
     artKey: `planet-${planetId}`,
     groundFile: `${planetId}.png`,
-    artFile: `${planetId}.png`,
+    artFile: `${planetId}.jpeg`,
   };
 }
 

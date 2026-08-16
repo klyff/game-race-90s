@@ -222,6 +222,7 @@ export class RaceScene extends Phaser.Scene {
 
     const bounds = this.trackRenderer.bounds;
     this.cameras.main.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+    this.trackRenderer.syncToCamera(this.cameras.main);
 
     this.overlay = new TuningOverlay(this, this.cameras.main);
 
@@ -259,6 +260,7 @@ export class RaceScene extends Phaser.Scene {
     this.updatePlayerAudio();
     this.explosions.update(deltaSeconds);
     this.chaseCamera.follow(this.player.state, deltaSeconds, this.targetZoom());
+    this.trackRenderer.syncToCamera(this.cameras.main);
     this.refreshOverlay();
 
     this.maybeFinishRace(deltaSeconds);
