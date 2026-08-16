@@ -201,6 +201,8 @@ export class RaceField {
   private hazards: TrackHazard[] = [];
   /** Hazard ids spawned this step — their dropper is immune until the next step. */
   private readonly freshHazardIds = new Set<number>();
+  /** Player weapon hits landed on rivals this race (for the purse bounty). */
+  private playerHits = { missiles: 0, oil: 0, mines: 0 };
 
 
   constructor(
@@ -292,6 +294,11 @@ export class RaceField {
     return this.hazards;
   }
 
+  /** How many of the player's weapons have hit a rival this race. */
+  get playerWeaponHits(): { readonly missiles: number; readonly oil: number; readonly mines: number } {
+    return this.playerHits;
+  }
+
   /** Laps completed by one car, for the HUD. */
   standingOf(carId: string): RacerStanding | undefined {
     return this.raceState.standings.find(standing => standing.carId === carId);
@@ -321,6 +328,7 @@ export class RaceField {
     this.missiles = [];
     this.hazards = [];
     this.freshHazardIds.clear();
+    this.playerHits = { missiles: 0, oil: 0, mines: 0 };
     this.raceState = this.freshRaceState();
   }
 
@@ -448,6 +456,9 @@ export class RaceField {
         const targetIndex = this.racers.findIndex(racer => racer.carId === hit.targetCarId);
         if (targetIndex >= 0) {
           missileHits.push({ targetIndex, ownerCarId: hit.ownerCarId });
+          if (hit.ownerCarId === this.player.carId && hit.targetCarId !== this.player.carId) {
+            this.playerHits.missiles += 1;
+          }
         }
         // Missile is consumed on hit — if the target dies, both "explode" (stage 4).
       }
@@ -652,6 +663,19 @@ export class RaceField {
         continue;
       }
       consumed.add(hit.hazardId);
+
+      const hazard = this.hazards.find(entry => entry.id === hit.hazardId);
+      if (
+        hazard !== undefined &&
+        hazard.ownerCarId === this.player.carId &&
+        hit.targetCarId !== this.player.carId
+      ) {
+        if (hit.kind === HAZARD_KIND.OIL) {
+          this.playerHits.oil += 1;
+        } else if (hit.kind === HAZARD_KIND.MINE) {
+          this.playerHits.mines += 1;
+        }
+      }
 
       if (hit.kind === HAZARD_KIND.OIL) {
         racer.state = {

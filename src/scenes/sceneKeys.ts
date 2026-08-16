@@ -42,12 +42,25 @@ export const WEAPON_ASSET_DIRECTORY = 'assets/weapons';
  * Texture keys and filenames for the weapon sprites. These are OPTIONAL: the game
  * boots and plays with geometric fallbacks when the files are absent, and swaps in
  * the art automatically once the owner drops it into `WEAPON_ASSET_DIRECTORY`.
+ *
+ * Each file is a 4×8 contact sheet (32 yaw frames), same convention as the cars —
+ * NOT a single image. Boot loads them as spritesheets so RaceScene can show one
+ * frame instead of the whole grid.
  */
 export const WEAPON_SPRITES = [
   { key: 'weapon-missile', file: 'missile.png' },
   { key: 'weapon-oil', file: 'oil.png' },
   { key: 'weapon-mine', file: 'mine.png' },
 ] as const;
+
+/** Owner sheets are 1774×887; 8 columns × 4 rows leaves a few leftover pixels. */
+export const WEAPON_SHEET = {
+  columns: 8,
+  rows: 4,
+  frameWidth: 221,
+  frameHeight: 221,
+  frameCount: 32,
+} as const;
 
 export const MISSILE_SPRITE_KEY = 'weapon-missile';
 export const OIL_SPRITE_KEY = 'weapon-oil';

@@ -35,6 +35,11 @@ export interface HudReadout {
   readonly speed: number;
   /** The player car's authored top speed, world units per second. Sizes the bar. */
   readonly maxSpeed: number;
+  /**
+   * Live purse (starting bank + hit bounties this race). Optional so existing
+   * `formatHud` tests stay unchanged; the HUD scene formats it itself.
+   */
+  readonly cash?: number;
 }
 
 /**

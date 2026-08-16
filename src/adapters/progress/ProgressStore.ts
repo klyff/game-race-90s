@@ -29,6 +29,9 @@ const STORAGE_KEY = 'rockn90s.save';
  */
 const CLEARED_KEY = 'rockn90s.cleared';
 
+/** Player purse. Kept beside the save so the cookie-budgeted slot schema stays untouched. */
+const WALLET_KEY = 'rockn90s.wallet';
+
 /** Top-3 is a "clear" (owner rule); 1st is also a "win". */
 export const CLEAR_POSITION = 3;
 
@@ -178,4 +181,41 @@ export function recordProgress(params: {
 export function loadWonTracks(): string[] {
   const slot = loadSave().slots[DEFAULT_SLOT_INDEX];
   return slot === null ? [] : [...slot.tracksWon];
+}
+
+/** Current purse. Any failure yields 0. */
+export function loadWallet(): number {
+  const store = storage();
+  if (store === null) {
+    return 0;
+  }
+  try {
+    const raw = store.getItem(WALLET_KEY);
+    if (raw === null) {
+      return 0;
+    }
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null) {
+      return 0;
+    }
+    const cash = (parsed as { cash?: unknown }).cash;
+    return typeof cash === 'number' && Number.isFinite(cash) && cash > 0 ? Math.round(cash) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Add `amount` to the purse (no-op for non-positive) and persist. Returns the new total. */
+export function creditWallet(amount: number): number {
+  const add = Number.isFinite(amount) && amount > 0 ? Math.round(amount) : 0;
+  const next = loadWallet() + add;
+  const store = storage();
+  if (store !== null) {
+    try {
+      store.setItem(WALLET_KEY, JSON.stringify({ cash: next }));
+    } catch {
+      // Ignore: progress is best-effort, never a crash.
+    }
+  }
+  return next;
 }

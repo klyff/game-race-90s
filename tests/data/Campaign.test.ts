@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  campaignSlotForTrackId,
   campaignTracks,
   isPlanetUnlocked,
   isTrackUnlocked,
@@ -52,6 +53,23 @@ describe('campaign — track unlocks', () => {
   it('keeps every track of a locked planet closed', () => {
     // planet2 not unlocked, even if its own track 1 would otherwise be free.
     expect(isTrackUnlocked(planet2, 1, [], [])).toBe(false);
+  });
+});
+
+describe('campaign — slot lookup', () => {
+  it('returns planet index and track number for a campaign id', () => {
+    expect(campaignSlotForTrackId(planetTrackId(planet1, 2))).toEqual({
+      planetIndex: 1,
+      trackN: 2,
+    });
+    expect(campaignSlotForTrackId(planetTrackId(planet2, 3))).toEqual({
+      planetIndex: 2,
+      trackN: 3,
+    });
+  });
+
+  it('returns null for an unknown track', () => {
+    expect(campaignSlotForTrackId('not-a-track')).toBeNull();
   });
 });
 

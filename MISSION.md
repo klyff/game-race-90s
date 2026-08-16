@@ -14,17 +14,15 @@ reverses, marks the tarmac, sounds like an engine, and the camera breathes with 
 
 ## Next step
 
-**T-046 / T-043 / T-047 / T-038 skeleton are DONE (Cursor session 2026-08-16).** Weapons live
-(keys 1/2/3); `npm run gen:lines` writes `public/assets/lines/<track>.json` with `parTime`;
-`AIDriver` follows the searched line. **Centreline still wins every search** — tune candidate
-profiles next. Then playtest (owner must not win first try), then **T-044** three cars, then
-T-041 → T-042 (uses `parTime`).
+**Wallet is in.** Podium (1st / 50% / 25%) grows per planet and track; weapon hits pay a
+bounty; purse persists in `rockn90s.wallet`. HUD shows live cash; results credit the bank;
+select screens show BANK and 1st-place purse.
 
-**Still only the owner can close:** hear `TitleMusic`, feel the five perks, race with weapons.
-Run `npm run dev` → http://localhost:5173.
+**Still only the owner can close:** play a race, take a podium, confirm BANK rises, then
+land a missile/oil/mine and see the hit bonus. Run `npm run dev` → http://localhost:5173
+(or 5174 if 5173 is busy).
 
-**865 tests / 33 files, typecheck and build clean.** Uncommitted Cursor work — see WORKLOG Final
-handoff ~01:40. **Read that block first.**
+Deferred: two-missile special, per-car surface grip, save-slot select.
 
 ## Constraints
 

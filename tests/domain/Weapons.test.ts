@@ -175,6 +175,51 @@ describe('RaceField weapons', () => {
     expect(rival.state.yawSpin).toBeGreaterThanOrEqual(oilYawSpinForArmor(rival.stats.armor) * 0.99);
   });
 
+  it('counts a player oil hit on a rival toward the purse bounty', () => {
+    const field = twoCarField();
+    field.step({ ...IDLE_INPUT, dropOil: true }, SIMULATION_STEP_SECONDS);
+    const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL)!;
+    const rival = field.racers.find(r => !r.isPlayer)!;
+    rival.state = { ...rival.state, position: oil.position };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(field.playerWeaponHits.oil).toBe(1);
+    expect(field.playerWeaponHits.missiles).toBe(0);
+    expect(field.playerWeaponHits.mines).toBe(0);
+  });
+
+  it('does not count an NPC hazard that hits the player', () => {
+    const field = twoCarField();
+    const npc = field.racers.find(r => !r.isPlayer)!;
+    // Force the NPC to drop by issuing its own drop through a step after we
+    // park the player on the resulting slick — drop via the player command
+    // would be the player's oil. Instead, drop as the NPC by putting the
+    // player right behind it (existing NPC drop rule).
+    const spline = freshSpline();
+    const frame = spline.frameAt(track.startLineDistance + 50);
+    npc.state = {
+      ...npc.state,
+      position: frame.position,
+      heading: Math.atan2(frame.tangent.y, frame.tangent.x),
+    };
+    npc.distance = track.startLineDistance + 50;
+    const player = field.player;
+    player.state = {
+      ...player.state,
+      position: {
+        x: frame.position.x - frame.tangent.x * 8,
+        y: frame.position.y - frame.tangent.y * 8,
+      },
+    };
+    player.distance = track.startLineDistance + 42;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL && h.ownerCarId === npc.carId);
+    expect(oil).toBeDefined();
+    player.state = { ...player.state, position: oil!.position };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(field.playerWeaponHits.oil).toBe(0);
+    expect(field.playerWeaponHits.mines).toBe(0);
+  });
+
   it('a landmine destroys a car on contact', () => {
     const field = twoCarField();
     field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
@@ -208,6 +253,19 @@ describe('RaceField weapons', () => {
     const lost = before - rival.integrity.integrity;
     const expected = MISSILE_RAW_DAMAGE * (1 - rival.stats.armor);
     expect(lost).toBeCloseTo(expected, 5);
+    expect(field.playerWeaponHits.missiles).toBe(1);
+  });
+
+  it('clears player weapon hits on reset', () => {
+    const field = twoCarField();
+    field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
+    const mine = field.activeHazards.find(h => h.kind === HAZARD_KIND.MINE)!;
+    const rival = field.racers.find(r => !r.isPlayer)!;
+    rival.state = { ...rival.state, position: mine.position };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(field.playerWeaponHits.mines).toBe(1);
+    field.reset();
+    expect(field.playerWeaponHits).toEqual({ missiles: 0, oil: 0, mines: 0 });
   });
 
   it('battle-trak on the roster carries the Arsenal perk', () => {

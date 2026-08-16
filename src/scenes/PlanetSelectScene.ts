@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { findCarSheet } from '../data/cars/CarManifest.ts';
 import { PLANETS } from '../data/tracks/planets.ts';
 import { isPlanetUnlocked } from '../data/tracks/campaign.ts';
-import { loadWonTracks } from '../adapters/progress/ProgressStore.ts';
+import { loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
+import { formatCash } from '../domain/progress/Wallet.ts';
 import type { PlanetSelectData } from './selectData.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
@@ -21,6 +22,7 @@ export class PlanetSelectScene extends Phaser.Scene {
 
   private backdrop!: Phaser.GameObjects.Rectangle;
   private titleText!: Phaser.GameObjects.Text;
+  private walletText!: Phaser.GameObjects.Text;
   private rows: Phaser.GameObjects.Text[] = [];
   private promptText!: Phaser.GameObjects.Text;
 
@@ -42,6 +44,9 @@ export class PlanetSelectScene extends Phaser.Scene {
   create(): void {
     this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.92).setOrigin(0, 0);
     this.titleText = this.add.text(0, 0, 'SELECT PLANET', this.titleStyle()).setOrigin(0.5, 0.5);
+    this.walletText = this.add
+      .text(0, 0, `BANK ${formatCash(loadWallet())}`, this.walletStyle())
+      .setOrigin(0.5, 0.5);
     this.rows = PLANETS.map(() => this.add.text(0, 0, '', this.rowStyle()).setOrigin(0.5, 0.5));
     this.promptText = this.add
       .text(0, 0, '↑↓ MOVE     ENTER SELECT     ESC BACK', this.promptStyle())
@@ -128,7 +133,8 @@ export class PlanetSelectScene extends Phaser.Scene {
     const centreX = width / 2;
 
     this.backdrop.setSize(width, height);
-    this.titleText.setPosition(centreX, height * 0.1);
+    this.titleText.setPosition(centreX, height * 0.08);
+    this.walletText.setPosition(centreX, height * 0.145);
     this.rows.forEach((row, index) => {
       row.setPosition(centreX, height * (0.22 + index * 0.06));
     });
@@ -142,6 +148,16 @@ export class PlanetSelectScene extends Phaser.Scene {
       color: '#ffffff',
       stroke: '#1a0e05',
       strokeThickness: 8,
+    };
+  }
+
+  private walletStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#8bff9b',
+      stroke: '#101014',
+      strokeThickness: 4,
     };
   }
 

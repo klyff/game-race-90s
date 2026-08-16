@@ -14,6 +14,7 @@ import {
   SPLASH_ART_KEY,
   UI_ASSET_DIRECTORY,
   WEAPON_ASSET_DIRECTORY,
+  WEAPON_SHEET,
   WEAPON_SPRITES,
 } from './sceneKeys.ts';
 
@@ -87,11 +88,13 @@ export class BootScene extends Phaser.Scene {
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
 
-    // Optional weapon art: queued best-effort. Missing files are swallowed by the
-    // filtered error handler above, and `RaceScene` checks `textures.exists` before
-    // using them, so a partial or absent set never breaks the game.
+    // Optional weapon art: 32-frame contact sheets, same layout as the cars.
+    // Missing files are swallowed by the filtered error handler above.
     for (const sprite of WEAPON_SPRITES) {
-      this.load.image(sprite.key, `${WEAPON_ASSET_DIRECTORY}/${sprite.file}`);
+      this.load.spritesheet(sprite.key, `${WEAPON_ASSET_DIRECTORY}/${sprite.file}`, {
+        frameWidth: WEAPON_SHEET.frameWidth,
+        frameHeight: WEAPON_SHEET.frameHeight,
+      });
     }
 
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {

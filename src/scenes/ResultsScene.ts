@@ -2,9 +2,16 @@ import Phaser from 'phaser';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { computeRaceScore } from '../domain/race/RaceScore.ts';
-import { recordProgress } from '../adapters/progress/ProgressStore.ts';
-import { nextCampaignTrack } from '../data/tracks/campaign.ts';
+import { creditWallet, recordProgress } from '../adapters/progress/ProgressStore.ts';
+import { campaignSlotForTrackId, nextCampaignTrack } from '../data/tracks/campaign.ts';
 import type { CampaignTrack } from '../data/tracks/campaign.ts';
+import {
+  EMPTY_WEAPON_HITS,
+  formatCash,
+  podiumPrize,
+  weaponHitEarnings,
+  type WeaponHits,
+} from '../domain/progress/Wallet.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 /** One row of the final classification. */
@@ -31,6 +38,8 @@ export interface ResultsSceneData {
   readonly finishSeconds: number;
   /** Target time for the whole race (par lap × laps), if the track has generated lines. */
   readonly parSeconds?: number;
+  /** Player weapon hits landed on rivals this race, for the hit bounty. */
+  readonly weaponHits?: WeaponHits;
 }
 
 /** Top-3 of five advances (owner rule, RNRR style). */
@@ -48,6 +57,9 @@ export class ResultsScene extends Phaser.Scene {
   private payload!: ResultsSceneData;
   private score = 0;
   private advanced = false;
+  private prize = 0;
+  private hitBonus = 0;
+  private balance = 0;
   /** The next campaign track, offered when the player advanced. */
   private next: CampaignTrack | null = null;
 
@@ -56,6 +68,7 @@ export class ResultsScene extends Phaser.Scene {
   private trackText!: Phaser.GameObjects.Text;
   private standingsText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
+  private purseText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
 
   constructor() {
@@ -73,6 +86,12 @@ export class ResultsScene extends Phaser.Scene {
     this.advanced = data.playerPosition <= ADVANCE_POSITION;
     // Only offer the next track when the player actually advanced (top-3) and one exists.
     this.next = this.advanced ? nextCampaignTrack(data.trackId) : null;
+
+    const slot = campaignSlotForTrackId(data.trackId);
+    const planetIndex = slot?.planetIndex ?? 1;
+    const trackN = slot?.trackN ?? 1;
+    this.prize = podiumPrize(data.playerPosition, planetIndex, trackN);
+    this.hitBonus = weaponHitEarnings(data.weaponHits ?? EMPTY_WEAPON_HITS, planetIndex);
   }
 
   create(): void {
@@ -84,6 +103,7 @@ export class ResultsScene extends Phaser.Scene {
       lapSeconds: this.payload.finishSeconds / Math.max(1, this.payload.laps),
       nowMillis: Date.now(),
     });
+    this.balance = creditWallet(this.prize + this.hitBonus);
 
     this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.86).setOrigin(0, 0);
     this.headerText = this.add.text(0, 0, this.headerLine(), this.headerStyle()).setOrigin(0.5, 0.5);
@@ -92,6 +112,7 @@ export class ResultsScene extends Phaser.Scene {
       .text(0, 0, this.standingsBlock(), this.listStyle())
       .setOrigin(0.5, 0);
     this.scoreText = this.add.text(0, 0, this.scoreLine(), this.scoreStyle()).setOrigin(0.5, 0.5);
+    this.purseText = this.add.text(0, 0, this.purseLine(), this.purseStyle()).setOrigin(0.5, 0.5);
     this.promptText = this.add.text(0, 0, this.promptLine(), this.promptStyle()).setOrigin(0.5, 0.5);
 
     this.layout();
@@ -124,6 +145,18 @@ export class ResultsScene extends Phaser.Scene {
   private scoreLine(): string {
     const advance = this.advanced ? 'ADVANCES' : 'ELIMINATED';
     return `SCORE ${this.score}/100   -   ${advance}`;
+  }
+
+  private purseLine(): string {
+    const parts: string[] = [];
+    if (this.prize > 0) {
+      parts.push(`${ordinal(this.payload.playerPosition)} ${formatCash(this.prize)}`);
+    }
+    if (this.hitBonus > 0) {
+      parts.push(`HITS ${formatCash(this.hitBonus)}`);
+    }
+    const earned = parts.length > 0 ? `${parts.join('  +  ')}   →   ` : '';
+    return `${earned}BANK ${formatCash(this.balance)}`;
   }
 
   private promptLine(): string {
@@ -179,8 +212,9 @@ export class ResultsScene extends Phaser.Scene {
     this.headerText.setPosition(centreX, height * 0.16);
     this.trackText.setPosition(centreX, height * 0.27);
     this.standingsText.setPosition(centreX, height * 0.36);
-    this.scoreText.setPosition(centreX, height * 0.78);
-    this.promptText.setPosition(centreX, height * 0.9);
+    this.scoreText.setPosition(centreX, height * 0.72);
+    this.purseText.setPosition(centreX, height * 0.8);
+    this.promptText.setPosition(centreX, height * 0.91);
   }
 
   private headerStyle(): Phaser.Types.GameObjects.Text.TextStyle {
@@ -211,6 +245,16 @@ export class ResultsScene extends Phaser.Scene {
       align: 'left',
       stroke: '#101014',
       strokeThickness: 4,
+    };
+  }
+
+  private purseStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '20px',
+      color: this.prize + this.hitBonus > 0 ? '#8bff9b' : '#d8dae2',
+      stroke: '#101014',
+      strokeThickness: 5,
     };
   }
 

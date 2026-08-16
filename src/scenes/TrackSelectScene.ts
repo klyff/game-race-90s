@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { findPlanet } from '../data/tracks/planets.ts';
 import { planetTracks, isTrackUnlocked } from '../data/tracks/campaign.ts';
 import type { CampaignTrack } from '../data/tracks/campaign.ts';
-import { loadCleared, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
+import { loadCleared, loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
+import { firstPlacePrize, formatCash } from '../domain/progress/Wallet.ts';
 import type { TrackSelectData } from './selectData.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
@@ -20,6 +21,7 @@ export class TrackSelectScene extends Phaser.Scene {
 
   private backdrop!: Phaser.GameObjects.Rectangle;
   private titleText!: Phaser.GameObjects.Text;
+  private walletText!: Phaser.GameObjects.Text;
   private rows: Phaser.GameObjects.Text[] = [];
   private promptText!: Phaser.GameObjects.Text;
 
@@ -40,6 +42,9 @@ export class TrackSelectScene extends Phaser.Scene {
     this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.92).setOrigin(0, 0);
     this.titleText = this.add
       .text(0, 0, planet.displayName.toUpperCase(), this.titleStyle())
+      .setOrigin(0.5, 0.5);
+    this.walletText = this.add
+      .text(0, 0, `BANK ${formatCash(loadWallet())}`, this.walletStyle())
       .setOrigin(0.5, 0.5);
     this.rows = this.tracks.map(() => this.add.text(0, 0, '', this.rowStyle()).setOrigin(0.5, 0.5));
     this.promptText = this.add
@@ -111,7 +116,8 @@ export class TrackSelectScene extends Phaser.Scene {
           : unlocked
             ? ''
             : '  [LOCKED]';
-      row.setText(`${marker} ${track.name.toUpperCase()}${status}`);
+      const purse = formatCash(firstPlacePrize(track.planet.index, track.n));
+      row.setText(`${marker} ${track.name.toUpperCase()}  ${purse}${status}`);
       row.setColor(unlocked ? (selected ? '#ffd85c' : '#d8dae2') : '#6a6f7a');
     });
   }
@@ -122,7 +128,8 @@ export class TrackSelectScene extends Phaser.Scene {
     const centreX = width / 2;
 
     this.backdrop.setSize(width, height);
-    this.titleText.setPosition(centreX, height * 0.22);
+    this.titleText.setPosition(centreX, height * 0.18);
+    this.walletText.setPosition(centreX, height * 0.28);
     this.rows.forEach((row, index) => {
       row.setPosition(centreX, height * (0.42 + index * 0.1));
     });
@@ -136,6 +143,16 @@ export class TrackSelectScene extends Phaser.Scene {
       color: '#ffd85c',
       stroke: '#1a0e05',
       strokeThickness: 8,
+    };
+  }
+
+  private walletStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '20px',
+      color: '#8bff9b',
+      stroke: '#101014',
+      strokeThickness: 4,
     };
   }
 

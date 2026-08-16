@@ -87,6 +87,18 @@ export function isTrackUnlocked(
  * already established the finish that unlocks it, so this returns the raw next
  * slot and lets the select screen enforce locks.
  */
+/** Planet index (1-based) and track number (1-based) for a campaign track id. */
+export function campaignSlotForTrackId(
+  trackId: string,
+): { readonly planetIndex: number; readonly trackN: number } | null {
+  for (const track of campaignTracks()) {
+    if (track.id === trackId) {
+      return { planetIndex: track.planet.index, trackN: track.n };
+    }
+  }
+  return null;
+}
+
 export function nextCampaignTrack(trackId: string): CampaignTrack | null {
   const all = campaignTracks();
   const index = all.findIndex(track => track.id === trackId);

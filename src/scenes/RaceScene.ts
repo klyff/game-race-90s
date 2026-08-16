@@ -11,14 +11,17 @@ import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
 import { TuningOverlay } from '../adapters/render/TuningOverlay.ts';
 import { TyreMarks } from '../adapters/render/TyreMarks.ts';
 import { VehicleView } from '../adapters/render/VehicleView.ts';
-import { findCarSheet } from '../data/cars/CarManifest.ts';
+import { findCarSheet, frameIndexForHeading } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
+import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
 import { findTrack } from '../data/tracks/registry.ts';
+import { loadWallet } from '../adapters/progress/ProgressStore.ts';
+import { weaponHitEarnings } from '../domain/progress/Wallet.ts';
 import { SIMULATION_STEP_SECONDS } from '../domain/constants.ts';
 import type { InputCommand } from '../domain/input/InputCommand.ts';
 import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
-import { dot, fromAngle } from '../domain/math/Vec2.ts';
+import { angleOf, dot, fromAngle } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
 import { assignNpcCars } from '../domain/race/CarAssignment.ts';
 import { RaceField } from '../domain/race/RaceField.ts';
@@ -28,7 +31,7 @@ import { TrackSpline } from '../domain/track/TrackSpline.ts';
 import { CAR_CONDITION } from '../domain/vehicle/CarIntegrity.ts';
 import { missileCapacity } from '../domain/weapons/WeaponInventory.ts';
 import { HAZARD_KIND } from '../domain/weapons/Hazard.ts';
-import { aimReticleCenter } from '../domain/weapons/WeaponAim.ts';
+import { CAR_LENGTH_PER_COLLISION_RADIUS } from '../domain/weapons/WeaponConstants.ts';
 import type { ResultsEntry, ResultsSceneData } from './ResultsScene.ts';
 import type { PauseSceneData } from './PauseScene.ts';
 import {
@@ -38,6 +41,7 @@ import {
   OIL_SPRITE_KEY,
   PLAYER_CAR_ID,
   SCENE_KEY,
+  WEAPON_SHEET,
 } from './sceneKeys.ts';
 
 /** Milliseconds → seconds, for Phaser's `update` delta. */
@@ -161,10 +165,14 @@ export class RaceScene extends Phaser.Scene {
    * Empty and unused until the owner's optional textures are present; the layer
    * above draws geometric fallbacks in that case.
    */
-  private missileSprites: Phaser.GameObjects.Image[] = [];
-  private hazardSprites: Phaser.GameObjects.Image[] = [];
+  private missileSprites: Phaser.GameObjects.Sprite[] = [];
+  private hazardSprites: Phaser.GameObjects.Sprite[] = [];
   /** True once the player has finished and the results screen has been handed off to. */
   private resultsShown = false;
+  /** Purse at race start; live HUD adds hit bounties on top. */
+  private startingCash = 0;
+  /** 1-based campaign planet, for hit-bounty scaling. */
+  private planetIndex = 1;
 
   constructor() {
     super(SCENE_KEY.RACE);
@@ -176,6 +184,8 @@ export class RaceScene extends Phaser.Scene {
     this.carId = data.carId ?? PLAYER_CAR_ID;
     this.trackId = data.trackId ?? DEFAULT_TRACK_ID;
     this.trackLines = this.linesByTrack[this.trackId];
+    this.startingCash = loadWallet();
+    this.planetIndex = campaignSlotForTrackId(this.trackId)?.planetIndex ?? 1;
   }
 
   create(): void {
@@ -297,6 +307,7 @@ export class RaceScene extends Phaser.Scene {
       totalRacers: this.field.racers.length,
       finishSeconds,
       parSeconds,
+      weaponHits: this.field.playerWeaponHits,
     } satisfies ResultsSceneData);
   }
 
@@ -332,6 +343,7 @@ export class RaceScene extends Phaser.Scene {
       })),
       speed: player.telemetry?.speed ?? 0,
       maxSpeed: player.stats.maxSpeed,
+      cash: this.startingCash + weaponHitEarnings(this.field.playerWeaponHits, this.planetIndex),
     };
   }
 
@@ -388,8 +400,9 @@ export class RaceScene extends Phaser.Scene {
   }
 
   /**
-   * Simple projected markers for live weapons so a screenshot can prove they exist.
-   * Not art — geometry only, rebuilt from domain state every frame.
+   * Live weapons: one frame from the owner contact sheets (32 yaw poses), sized
+   * in world units so a missile/mine/oil reads next to a car instead of as a
+   * tiny postage stamp of the whole 4×8 grid.
    */
   private drawWeapons(): void {
     this.weaponLayer.clear();
@@ -400,13 +413,18 @@ export class RaceScene extends Phaser.Scene {
     for (const missile of this.field.activeMissiles) {
       const screen = this.projection.toScreen(missile.position);
       if (hasMissileArt) {
-        const image = this.missileImage(missileSlot);
+        const sprite = this.missileSprite(missileSlot);
         missileSlot += 1;
-        image.setVisible(true).setPosition(screen.x, screen.y);
-        this.scaleToWorldDiameter(image, missile.radius * 2 * px);
-        image.setRotation(0);
+        const heading = angleOf(missile.velocity);
+        sprite
+          .setVisible(true)
+          .setPosition(screen.x, screen.y)
+          .setFrame(frameIndexForHeading(heading, WEAPON_SHEET.frameCount))
+          .setDepth(this.projection.depthOf(missile.position) + 0.5);
+        const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * missile.radius;
+        this.scaleWeaponSprite(sprite, carLength * 0.7 * px);
       } else {
-        const radius = Math.max(2, missile.radius * px * 0.35);
+        const radius = Math.max(4, missile.radius * px * 0.45);
         this.weaponLayer.fillStyle(0xffe066, 1);
         this.weaponLayer.fillCircle(screen.x, screen.y, radius);
       }
@@ -419,18 +437,19 @@ export class RaceScene extends Phaser.Scene {
       const isOil = hazard.kind === HAZARD_KIND.OIL;
       const artKey = isOil ? OIL_SPRITE_KEY : MINE_SPRITE_KEY;
       if (this.textures.exists(artKey)) {
-        const image = this.hazardImage(hazardSlot, artKey);
+        const sprite = this.hazardSprite(hazardSlot, artKey);
         hazardSlot += 1;
-        image.setVisible(true).setPosition(screen.x, screen.y);
-        // Oil reads as a ground stain: squash it to the 2:1 iso ground plane. A mine
-        // is an object sitting on the road, so it keeps its aspect.
-        const diameter = hazard.radius * 2 * px;
-        this.scaleToWorldDiameter(image, diameter);
-        if (isOil) {
-          image.scaleY *= 0.5;
-        }
+        sprite
+          .setVisible(true)
+          .setPosition(screen.x, screen.y)
+          .setFrame(0)
+          .setDepth(this.projection.depthOf(hazard.position) - 0.2);
+        const display = isOil
+          ? hazard.radius * 2
+          : Math.max(hazard.radius * 2, CAR_LENGTH_PER_COLLISION_RADIUS * hazard.radius * 2 * 0.55);
+        this.scaleWeaponSprite(sprite, display * px);
       } else {
-        const radius = Math.max(3, hazard.radius * px * 0.5);
+        const radius = Math.max(4, hazard.radius * px * 0.55);
         if (isOil) {
           this.weaponLayer.fillStyle(0x1a1208, 0.85);
           this.weaponLayer.fillEllipse(screen.x, screen.y, radius * 2, radius);
@@ -441,73 +460,39 @@ export class RaceScene extends Phaser.Scene {
       }
     }
     this.hideFrom(this.hazardSprites, hazardSlot);
-
-    this.drawAim();
   }
 
-  /** Fetch (or lazily create) the pooled missile image at `index`. */
-  private missileImage(index: number): Phaser.GameObjects.Image {
-    let image = this.missileSprites[index];
-    if (image === undefined) {
-      image = this.add.image(0, 0, MISSILE_SPRITE_KEY).setDepth(41);
-      this.missileSprites[index] = image;
+  private missileSprite(index: number): Phaser.GameObjects.Sprite {
+    let sprite = this.missileSprites[index];
+    if (sprite === undefined) {
+      sprite = this.add.sprite(0, 0, MISSILE_SPRITE_KEY, 0).setDepth(41);
+      this.missileSprites[index] = sprite;
     }
-    return image;
+    return sprite;
   }
 
-  /** Fetch (or lazily create) the pooled hazard image at `index`, set to `textureKey`. */
-  private hazardImage(index: number, textureKey: string): Phaser.GameObjects.Image {
-    let image = this.hazardSprites[index];
-    if (image === undefined) {
-      image = this.add.image(0, 0, textureKey).setDepth(39);
-      this.hazardSprites[index] = image;
-    } else {
-      image.setTexture(textureKey);
+  private hazardSprite(index: number, textureKey: string): Phaser.GameObjects.Sprite {
+    let sprite = this.hazardSprites[index];
+    if (sprite === undefined) {
+      sprite = this.add.sprite(0, 0, textureKey, 0).setDepth(39);
+      this.hazardSprites[index] = sprite;
+    } else if (sprite.texture.key !== textureKey) {
+      sprite.setTexture(textureKey, 0);
     }
-    return image;
+    return sprite;
   }
 
-  /** Scale a unit-origin sprite so its widest side spans `diameter` screen pixels. */
-  private scaleToWorldDiameter(image: Phaser.GameObjects.Image, diameter: number): void {
-    const source = Math.max(image.width, image.height, 1);
-    const scale = Math.max(diameter, 1) / source;
-    image.setScale(scale);
+  /** Scale one sheet frame so its widest side spans `pixelSize` screen pixels. */
+  private scaleWeaponSprite(sprite: Phaser.GameObjects.Sprite, pixelSize: number): void {
+    const source = Math.max(sprite.frame.width, sprite.frame.height, 1);
+    sprite.setScale(Math.max(pixelSize, 8) / source);
   }
 
-  /** Hide every pooled image from `start` onward (last frame drew fewer than this). */
-  private hideFrom(pool: readonly Phaser.GameObjects.Image[], start: number): void {
+  /** Hide every pooled sprite from `start` onward (last frame drew fewer than this). */
+  private hideFrom(pool: readonly Phaser.GameObjects.Sprite[], start: number): void {
     for (let index = start; index < pool.length; index += 1) {
       pool[index]?.setVisible(false);
     }
-  }
-
-  /**
-   * The player's aim: a green line from the car to a reticle ~2.5 car-lengths ahead,
-   * ending in a circle whose radius is the car's `aimRadius`. That circle is the
-   * missile-lock capture zone, so a wider circle is a car that shoots "more precisely"
-   * (a target inside it can be locked). Drawn as a ground-plane ellipse so it sits on
-   * the track in the isometric view rather than floating.
-   */
-  private drawAim(): void {
-    const player = this.player;
-    if (player.integrity.condition === CAR_CONDITION.DESTROYED) {
-      return;
-    }
-    const px = this.manifest.pixelsPerUnit;
-    const start = this.projection.toScreen(player.state.position);
-    const reticleWorld = aimReticleCenter(
-      player.state.position,
-      player.state.heading,
-      player.stats.collisionRadius,
-    );
-    const reticle = this.projection.toScreen(reticleWorld);
-    const circleWidth = player.stats.aimRadius * px * 2;
-    // 2:1 isometric squish on the ground plane, matching the oil-slick ellipse.
-    const circleHeight = player.stats.aimRadius * px;
-
-    this.weaponLayer.lineStyle(2, 0x33ff66, 0.9);
-    this.weaponLayer.lineBetween(start.x, start.y, reticle.x, reticle.y);
-    this.weaponLayer.strokeEllipse(reticle.x, reticle.y, circleWidth, circleHeight);
   }
 
   private presentExplosions(): void {

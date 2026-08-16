@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { formatHud } from '../adapters/render/HudFormat.ts';
 import type { HudReadout, HudText } from '../adapters/render/HudFormat.ts';
 import { SpeedoGauge } from '../adapters/render/SpeedoGauge.ts';
+import { formatCash } from '../domain/progress/Wallet.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 /**
@@ -64,6 +65,7 @@ export interface HudSource {
 export class HudScene extends Phaser.Scene {
   private positionText!: Phaser.GameObjects.Text;
   private lapText!: Phaser.GameObjects.Text;
+  private cashText!: Phaser.GameObjects.Text;
   private timeText!: Phaser.GameObjects.Text;
   private ammoText!: Phaser.GameObjects.Text;
   private countdownText!: Phaser.GameObjects.Text;
@@ -84,6 +86,7 @@ export class HudScene extends Phaser.Scene {
   create(): void {
     this.positionText = this.add.text(0, 0, '', this.bigStyle()).setDepth(HUD_DEPTH);
     this.lapText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
+    this.cashText = this.add.text(0, 0, '', this.cashStyle()).setDepth(HUD_DEPTH);
     this.timeText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
     this.standingsText = this.add.text(0, 0, '', this.smallStyle()).setDepth(HUD_DEPTH);
     this.ammoText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
@@ -127,6 +130,7 @@ export class HudScene extends Phaser.Scene {
 
     this.timeText.setText(text.time);
     this.ammoText.setText(text.ammo);
+    this.cashText.setText(formatCash(readout.cash ?? 0));
     this.applyPosition(text);
     this.applyLap(text);
     this.applyIntegrity(text);
@@ -249,6 +253,7 @@ export class HudScene extends Phaser.Scene {
 
     this.positionText.setPosition(MARGIN, MARGIN);
     this.lapText.setPosition(MARGIN, MARGIN + 58);
+    this.cashText.setPosition(MARGIN, MARGIN + 88);
 
     this.timeText.setPosition(width - MARGIN, MARGIN).setOrigin(1, 0);
     this.standingsText.setPosition(width - MARGIN, MARGIN + 34).setOrigin(1, 0);
@@ -296,6 +301,16 @@ export class HudScene extends Phaser.Scene {
       color: '#ffd85c',
       stroke: '#1a0e05',
       strokeThickness: 7,
+    };
+  }
+
+  private cashStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '20px',
+      color: '#8bff9b',
+      stroke: '#101014',
+      strokeThickness: 5,
     };
   }
 
