@@ -14,34 +14,29 @@ reverses, marks the tarmac, sounds like an engine, and the camera breathes with 
 
 ## Next step
 
-**1. T-018 `SplashScene` — the owner has now twice expected to see it and it DOES NOT EXIST.** Art is
-ready at `public/assets/ui/splash.jpeg`; `src/adapters/audio/TitleMusic.ts` is ready (172 BPM E-minor
-punk/metal, 21 tests) and **has never been heard**. Needs a user gesture before it sounds, like
-`RaceAudio.resume()`. **Draw NO title — the logo and credit are painted into the art.** Text goes in
-the dark explosion void mid-frame; scale the art to COVER and position against the IMAGE's rect, not
-the viewport. Prompt "PRESS SPACE TO ROCK'N THE 90s" blinking ~1.0–1.4 s with a **hard on/off cut,
-never an alpha tween**, from a pure `BlinkClock`. LEFT/RIGHT pick the car, SPACE starts.
+**1. T-018 `SplashScene` — DOES NOT EXIST, and the owner has twice expected to see it.**
+Art ready: `public/assets/ui/splash.jpeg`. Music ready and **never heard**:
+`src/adapters/audio/TitleMusic.ts` (needs a user gesture, like `RaceAudio.resume()`).
+**Draw NO title — logo and credit are painted into the art.** Text in the dark void mid-frame; scale
+art to COVER, position against the IMAGE's rect not the viewport. "PRESS SPACE TO ROCK'N THE 90s"
+blinking ~1.2 s with a **hard on/off cut, never an alpha tween**, from a pure `BlinkClock`.
+LEFT/RIGHT pick the car, SPACE starts.
 
-**2. T-037 + T-038 — the difficulty. Owner, 2026-08-15: "hoje está muito fácil para o jogador."**
-Ship them together; one alone will not move it.
-- **T-037** every car gets ONE FELT advantage, not a stat delta: marauder Bulldozer (wins contact),
-  dirt-devil Off-road Ace (small off-road penalty), havac Anvil (immovable, shrugs off damage),
-  air-blade Slipstream (draft bonus), battle-trak Arsenal. Author as DATA in
-  `tools/spritegen/cars/*.car.ts`; rules pure in `src/domain/`; **no perk writes velocity directly.**
-- **T-038** the NPCs must RACE, not commute. Measured cause: `PaceDriver` follows the CENTRELINE
-  inside the grip limit and never drifts, lapping in 33 s, so any drifting human beats it. Give it a
-  curvature-offset racing line (outside-apex-outside), overtaking and defending, permission to use its
-  grip, and bounded rubber-banding. **Gate: the owner races and does NOT win first try.**
+**2. T-037 + T-038 — the difficulty. Owner: "hoje está muito fácil para o jogador." Ship together.**
+- **T-037**: one FELT advantage per car, not a stat delta — marauder wins contact, dirt-devil ignores
+  dirt, havac is immovable, air-blade drafts, battle-trak out-guns. Author as DATA in
+  `tools/spritegen/cars/*.car.ts`; rules pure; **no perk writes velocity directly.**
+- **T-038**: NPCs must RACE, not commute. Measured cause — `PaceDriver` follows the CENTRELINE inside
+  the grip limit and never drifts (33 s lap), so any drifting human beats it. Needs a
+  curvature-offset racing line, overtaking, defending, bounded rubber-banding.
+  **Gate: the owner races and does NOT win first try.**
 
 **3.** Then T-035's `CookieStore` + slot screen, then T-036 (`theme` on `TrackDefinition`, or all ten
 planets render in Thunder Basin's colours).
 
-**State: 640 tests / 26 files, typecheck and build clean. Nine commits, all PUSHED to
-`https://github.com/klyff/game-race-90s`.** Read WORKLOG.md's last cleanup block first — it is the
-handoff and it lists the traps that have each already cost this project a task.
-
-**Unseen/unheard by anyone:** `TitleMusic`, and the polished `ExplosionEffect` (which is still
-smooth-vector art in a pixel-art game; `X` in-game wrecks the player's car so it can be judged).
+**640 tests / 26 files, typecheck and build clean. All pushed to
+`https://github.com/klyff/game-race-90s`.** **Read WORKLOG.md's LAST cleanup block first — it is the
+handoff.** Full task detail lives there, not here.
 
 ## Constraints
 
@@ -61,11 +56,12 @@ smooth-vector art in a pixel-art game; `X` in-game wrecks the player's car so it
 
 <!-- Proven wrong already. Do not propose these again. -->
 
-- **`npm run dev` from an agent session** — `EPERM` everywhere. It worked once early, then stopped.
-- **Verifying through `http://localhost:5173` headless** — 502. Use `file://` on the build output.
-- **Reading status numbers here as truth** — they have gone stale before. Run the suite.
-- **`setScrollFactor(0)` to pin a HUD** — does not survive camera zoom. Track `camera.worldView` and
-  counter-scale by `1 / zoom`, as `TuningOverlay` does.
+- **`npm run dev` from an agent session** — `EPERM` everywhere.
+- **`localhost` from a headless browser** — 502. Use `file://` on the build output.
+- **Reading status numbers as truth** — they go stale. Run the suite.
+- **`setScrollFactor(0)` to pin a HUD** — does not survive camera zoom. A separate scene at zoom 1 is
+  the clean fix (that is what `HudScene` does); `TuningOverlay`'s counter-scaling is the workaround
+  for living inside `RaceScene`.
 
 ## Decisions
 
