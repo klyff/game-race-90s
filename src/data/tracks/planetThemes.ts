@@ -58,18 +58,18 @@ function theme(
 
 /** Thunder Basin defaults — the colours the renderer shipped with before themes. */
 export const DEFAULT_THEME: PlanetTheme = theme('thunder-basin', {
-  wall: 0xaca898,
-  shoulder: 0x6b4a2e,
-  tarmac: 0x2a2a2e,
-  kerb: 0xe0c21a,
-  marking: 0xf2f2f2,
-  chequerDark: 0x101010,
-  ground: 0x5a3018,
+  wall: 0x8a7060,
+  shoulder: 0x4a3424,
+  tarmac: 0x6a5340,
+  kerb: 0x3a2a1c,
+  marking: 0xd4c4a8,
+  chequerDark: 0x2a2018,
+  ground: 0x4a3018,
   propShape: 'blob',
-  propHeight: 1.2,
-  propWidth: 1.4,
-  propColor: 0x8a5030,
-  propAccent: 0xe8b070,
+  propHeight: 1.6,
+  propWidth: 1.8,
+  propColor: 0x7a5840,
+  propAccent: 0xc8a070,
 });
 
 export const PLANET_THEMES: readonly PlanetTheme[] = [

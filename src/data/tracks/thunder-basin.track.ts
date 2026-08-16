@@ -67,4 +67,11 @@ export const thunderBasin: TrackDefinition = {
   // Four cars, two by two, staggered like a real grid.
   gridLateralOffsets: [-9, 9],
   gridRowSpacing: 11,
+
+  // Rock slabs, not painted ramps: mid-straight hop, sweeper exit, hairpin approach.
+  rampZones: [
+    { triggerDistance: 200, triggerLength: 12, launchSpeed: 12 },
+    { triggerDistance: 680, triggerLength: 10, launchSpeed: 13 },
+    { triggerDistance: 1180, triggerLength: 10, launchSpeed: 11 },
+  ],
 };

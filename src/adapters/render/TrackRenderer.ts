@@ -4,15 +4,16 @@ import type { TrackDefinition } from '../../domain/track/TrackDefinition.ts';
 import type { TrackFrame } from '../../domain/track/TrackSpline.ts';
 import { TrackSpline } from '../../domain/track/TrackSpline.ts';
 import { DEFAULT_THEME, type PlanetTheme } from '../../data/tracks/planetThemes.ts';
+import { rampPeakHeight } from '../../domain/track/RampZone.ts';
+import type { RampZone } from '../../domain/track/RampZone.ts';
 import { IsoProjection } from './IsoProjection.ts';
 import type { ScreenPoint } from './IsoProjection.ts';
 
 /**
  * Draws the whole circuit once, as flat static geometry, into a single
- * `Phaser.GameObjects.Graphics`. This is the first thing ever rendered in
- * this project, so the road must be legible by eye: bounded by a visible
- * wall, coloured so tarmac/shoulder/wall read apart at a glance, and marked
- * with a start line that proves the projection and the scale are both right.
+ * `Phaser.GameObjects.Graphics`. The racing surface is a carved rock bed —
+ * packed slabs, jagged lips, cliff walls — not a painted highway. There is
+ * no dashed centreline: that marking would not exist on a stone path.
  *
  * The track never changes shape after authoring, so everything is built once
  * in the constructor. Re-tessellating a static circuit every frame would just
@@ -36,19 +37,11 @@ const DEFAULT_SAMPLE_SPACING_UNITS = 3;
  */
 const WALL_THICKNESS_UNITS = 2.5;
 
-/** Width of the bright kerb strip straddling each tarmac edge, world units. */
-const KERB_WIDTH_UNITS = 0.6;
+/** How far a rock lip may wander off the authored edge, world units. */
+const ROCK_EDGE_JITTER_UNITS = 1.1;
 
-/** Length of one painted centreline dash, world units. */
-const CENTERLINE_DASH_PAINT_UNITS = 6;
-/** Length of the gap between centreline dashes, world units. */
-const CENTERLINE_DASH_GAP_UNITS = 10;
-
-/** Full paint+gap period of the dashed centreline, world units. */
-const CENTERLINE_DASH_CYCLE_UNITS = CENTERLINE_DASH_PAINT_UNITS + CENTERLINE_DASH_GAP_UNITS;
-
-/** Width of the dashed centreline stripe, world units. */
-const CENTERLINE_WIDTH_UNITS = 0.5;
+/** Typical flagstone width across the bed, world units. */
+const SLAB_WIDTH_UNITS = 5.5;
 
 /**
  * Length of the start/finish chequered band along the direction of travel,
@@ -56,14 +49,11 @@ const CENTERLINE_WIDTH_UNITS = 0.5;
  */
 const START_LINE_LENGTH_UNITS = 3;
 
-/** Side length of one chequer square across the start line, world units. */
-const CHEQUER_SIZE_UNITS = 2.5;
-
 /**
- * Arc-length spacing between trackside props (T-048), world units. Wide
- * enough that props read as scattered decoration, not a fence.
+ * Arc-length spacing between trackside boulders (T-048), world units. Tight
+ * enough that the wall reads as a rock field, not a painted fence.
  */
-const PROP_SPACING_UNITS = 26;
+const PROP_SPACING_UNITS = 14;
 
 /** How far a prop's position along the track may jitter from its slot, as a
  * fraction of `PROP_SPACING_UNITS`, so a straight line of props does not look
@@ -110,9 +100,10 @@ interface ScreenBounds {
 /** Darkens a 0xRRGGBB colour by `factor` (0..1), for a prop's outline/shadow
  * so its silhouette reads against a similarly-toned wall or ground. */
 function shade(color: number, factor: number): number {
-  const r = Math.round(((color >> 16) & 0xff) * factor);
-  const g = Math.round(((color >> 8) & 0xff) * factor);
-  const b = Math.round((color & 0xff) * factor);
+  const clamp = (channel: number): number => Math.max(0, Math.min(255, Math.round(channel * factor)));
+  const r = clamp((color >> 16) & 0xff);
+  const g = clamp((color >> 8) & 0xff);
+  const b = clamp(color & 0xff);
   return (r << 16) | (g << 8) | b;
 }
 
@@ -205,7 +196,6 @@ export class TrackRenderer {
 
     const shoulderOuter = track.halfWidth + track.shoulderWidth;
     const wallOuter = shoulderOuter + WALL_THICKNESS_UNITS;
-    const kerbHalf = KERB_WIDTH_UNITS / 2;
 
     this.bounds = computeBounds(frames, wallOuter, projection, BOUNDS_PADDING_PX);
 
@@ -234,21 +224,22 @@ export class TrackRenderer {
     this.graphics = scene.add.graphics();
     this.graphics.setDepth(ROAD_DEPTH);
 
-    // Back to front: wall, shoulder, tarmac, kerb, centreline, start line.
-    this.fillBand(frames, wallOuter, shoulderOuter, this.theme.wall);
-    this.fillBand(frames, -shoulderOuter, -wallOuter, this.theme.wall);
+    // Back to front: cliff, scree, stone bed, rock lip, start stones, ramps, boulders.
+    this.fillJaggedBand(frames, wallOuter, shoulderOuter, this.theme.wall, 11);
+    this.fillJaggedBand(frames, -shoulderOuter, -wallOuter, this.theme.wall, 12);
 
-    this.fillBand(frames, shoulderOuter, track.halfWidth, this.theme.shoulder);
-    this.fillBand(frames, -track.halfWidth, -shoulderOuter, this.theme.shoulder);
+    this.fillRockyBand(frames, shoulderOuter, track.halfWidth, this.theme.shoulder, 21);
+    this.fillRockyBand(frames, -track.halfWidth, -shoulderOuter, this.theme.shoulder, 22);
 
-    this.fillBand(frames, track.halfWidth, -track.halfWidth, this.theme.tarmac);
+    this.fillRockyBed(frames, track.halfWidth, this.theme.tarmac);
 
-    this.fillBand(frames, track.halfWidth + kerbHalf, track.halfWidth - kerbHalf, this.theme.kerb);
-    this.fillBand(frames, -(track.halfWidth - kerbHalf), -(track.halfWidth + kerbHalf), this.theme.kerb);
+    this.fillJaggedBand(frames, track.halfWidth + 0.9, track.halfWidth - 0.4, shade(this.theme.tarmac, 0.55), 31);
+    this.fillJaggedBand(frames, -(track.halfWidth - 0.4), -(track.halfWidth + 0.9), shade(this.theme.tarmac, 0.55), 32);
 
-    this.drawCenterline(frames, spacing);
-    this.drawStartLine(track, spline);
+    this.drawStoneThreshold(track, spline);
+    this.drawRockRamps(track, spline);
     this.drawBorderProps(spline, wallOuter);
+    this.drawShoulderBoulders(spline, track.halfWidth, track.shoulderWidth);
   }
 
   /**
@@ -311,61 +302,186 @@ export class TrackRenderer {
   }
 
   /**
-   * Dashed centreline. Painted per segment rather than clipped exactly at
-   * dash boundaries: the sample spacing (a few units) is small relative to
-   * both the dash length and the gap, so quantising the on/off decision to
-   * whichever side of the boundary a segment's midpoint falls on is well
-   * within "roughly 6 units painted, 10 units gap" and not worth the extra
-   * geometry of clipping quads at exact dash edges on a track drawn once.
+   * Stone bed: a dark packed base, then irregular flagstones across the width.
+   * Each slab is a hashed shade of the planet's surface colour so the path
+   * reads as rock, not a sprayed ribbon of tarmac.
    */
-  private drawCenterline(frames: readonly TrackFrame[], spacing: number): void {
-    this.graphics.fillStyle(this.theme.marking, 1);
-    const halfWidth = CENTERLINE_WIDTH_UNITS / 2;
+  private fillRockyBed(frames: readonly TrackFrame[], halfWidth: number, color: number): void {
+    this.fillBand(frames, halfWidth, -halfWidth, shade(color, 0.72));
     const count = frames.length;
     for (let i = 0; i < count; i += 1) {
-      const midDistance = frames[i]!.distance + spacing / 2;
-      const cyclePosition = midDistance % CENTERLINE_DASH_CYCLE_UNITS;
-      if (cyclePosition >= CENTERLINE_DASH_PAINT_UNITS) continue;
-
       const next = (i + 1) % count;
-      const quad: ScreenPoint[] = [
-        this.edgeScreen(frames[i]!, halfWidth),
-        this.edgeScreen(frames[next]!, halfWidth),
-        this.edgeScreen(frames[next]!, -halfWidth),
-        this.edgeScreen(frames[i]!, -halfWidth),
-      ];
-      this.graphics.fillPoints(quad, true);
+      let lateral = -halfWidth;
+      let slab = 0;
+      while (lateral < halfWidth - 0.4) {
+        const width = SLAB_WIDTH_UNITS * (0.65 + propHash(i, 40 + slab) * 0.7);
+        const far = Math.min(halfWidth, lateral + width);
+        const jitterA = (propHash(i, 50 + slab) - 0.5) * 0.7;
+        const jitterB = (propHash(next, 50 + slab) - 0.5) * 0.7;
+        const tone = 0.78 + propHash(i, 60 + slab) * 0.28;
+        this.graphics.fillStyle(shade(color, tone), 1);
+        this.graphics.fillPoints(
+          [
+            this.edgeScreen(frames[i]!, lateral + jitterA),
+            this.edgeScreen(frames[next]!, lateral + jitterB),
+            this.edgeScreen(frames[next]!, far + jitterB),
+            this.edgeScreen(frames[i]!, far + jitterA),
+          ],
+          true,
+        );
+        lateral = far;
+        slab += 1;
+      }
     }
   }
 
+  /** A ribbon whose edges wander, so a cliff or lip does not look extruded. */
+  private fillJaggedBand(
+    frames: readonly TrackFrame[],
+    edgeOffsetA: number,
+    edgeOffsetB: number,
+    color: number,
+    salt: number,
+  ): void {
+    const count = frames.length;
+    for (let i = 0; i < count; i += 1) {
+      const next = (i + 1) % count;
+      const tone = 0.82 + propHash(i, salt) * 0.28;
+      this.graphics.fillStyle(shade(color, tone), 1);
+      this.graphics.fillPoints(
+        [
+          this.edgeScreen(frames[i]!, edgeOffsetA + this.edgeWander(i, salt)),
+          this.edgeScreen(frames[next]!, edgeOffsetA + this.edgeWander(next, salt)),
+          this.edgeScreen(frames[next]!, edgeOffsetB + this.edgeWander(next, salt + 1)),
+          this.edgeScreen(frames[i]!, edgeOffsetB + this.edgeWander(i, salt + 1)),
+        ],
+        true,
+      );
+    }
+  }
+
+  /** Shoulder/scree with per-quad tone shifts. */
+  private fillRockyBand(
+    frames: readonly TrackFrame[],
+    edgeOffsetA: number,
+    edgeOffsetB: number,
+    color: number,
+    salt: number,
+  ): void {
+    const count = frames.length;
+    for (let i = 0; i < count; i += 1) {
+      const next = (i + 1) % count;
+      const tone = 0.7 + propHash(i, salt) * 0.4;
+      this.graphics.fillStyle(shade(color, tone), 1);
+      this.graphics.fillPoints(
+        [
+          this.edgeScreen(frames[i]!, edgeOffsetA),
+          this.edgeScreen(frames[next]!, edgeOffsetA),
+          this.edgeScreen(frames[next]!, edgeOffsetB),
+          this.edgeScreen(frames[i]!, edgeOffsetB),
+        ],
+        true,
+      );
+    }
+  }
+
+  private edgeWander(index: number, salt: number): number {
+    return (propHash(index, salt) - 0.5) * ROCK_EDGE_JITTER_UNITS;
+  }
+
   /**
-   * Start/finish chequered band: a single row of alternating squares spanning
-   * the full tarmac width at `track.startLineDistance`. Queried directly from
-   * the spline at two explicit distances (rather than reused from the general
-   * sample ring) so its length is exactly `START_LINE_LENGTH_UNITS`
-   * regardless of the sample spacing chosen for the rest of the track.
+   * Start/finish as a row of pale threshold stones — a carved step, not a
+   * painted chequer. Still spans the full racing width so the line is obvious.
    */
-  private drawStartLine(track: TrackDefinition, spline: TrackSpline): void {
+  private drawStoneThreshold(track: TrackDefinition, spline: TrackSpline): void {
     const halfLength = START_LINE_LENGTH_UNITS / 2;
     const backFrame = spline.frameAt(track.startLineDistance - halfLength);
     const frontFrame = spline.frameAt(track.startLineDistance + halfLength);
 
     const fullWidth = track.halfWidth * 2;
-    const columns = Math.max(2, Math.round(fullWidth / CHEQUER_SIZE_UNITS));
+    const columns = Math.max(3, Math.round(fullWidth / 4.2));
     const cellWidth = fullWidth / columns;
 
     for (let column = 0; column < columns; column += 1) {
       const outer = track.halfWidth - column * cellWidth;
       const inner = outer - cellWidth;
-      const color = column % 2 === 0 ? this.theme.marking : this.theme.chequerDark;
-      this.graphics.fillStyle(color, 1);
-      const quad: ScreenPoint[] = [
-        this.edgeScreen(backFrame, outer),
-        this.edgeScreen(frontFrame, outer),
-        this.edgeScreen(frontFrame, inner),
-        this.edgeScreen(backFrame, inner),
-      ];
-      this.graphics.fillPoints(quad, true);
+      const pale = propHash(column, 90) > 0.45;
+      this.graphics.fillStyle(pale ? this.theme.marking : shade(this.theme.tarmac, 1.15), 1);
+      const inset = 0.15 + propHash(column, 91) * 0.25;
+      this.graphics.fillPoints(
+        [
+          this.edgeScreen(backFrame, outer - inset),
+          this.edgeScreen(frontFrame, outer - inset * 0.4),
+          this.edgeScreen(frontFrame, inner + inset * 0.4),
+          this.edgeScreen(backFrame, inner + inset),
+        ],
+        true,
+      );
+    }
+  }
+
+  /**
+   * Raised rock wedges on authored ramp zones. Height matches `rampPeakHeight`
+   * so the slab the player sees is the same launch the physics uses.
+   */
+  private drawRockRamps(track: TrackDefinition, spline: TrackSpline): void {
+    const zones = track.rampZones;
+    if (zones === undefined || zones.length === 0) {
+      return;
+    }
+    for (const zone of zones) {
+      this.drawRockRamp(spline, track.halfWidth * 0.72, zone);
+    }
+  }
+
+  private drawRockRamp(spline: TrackSpline, halfWidth: number, zone: RampZone): void {
+    const peak = rampPeakHeight(zone);
+    const steps = Math.max(4, Math.round(zone.triggerLength / 2));
+    for (let i = 0; i < steps; i += 1) {
+      const t0 = i / steps;
+      const t1 = (i + 1) / steps;
+      const d0 = zone.triggerDistance + zone.triggerLength * t0;
+      const d1 = zone.triggerDistance + zone.triggerLength * t1;
+      const h0 = peak * t0;
+      const h1 = peak * t1;
+      const a = spline.frameAt(d0);
+      const b = spline.frameAt(d1);
+      const left0 = add(a.position, scale(a.normal, halfWidth));
+      const right0 = add(a.position, scale(a.normal, -halfWidth));
+      const left1 = add(b.position, scale(b.normal, halfWidth));
+      const right1 = add(b.position, scale(b.normal, -halfWidth));
+      const sL0 = this.projection.toScreen(left0, h0);
+      const sR0 = this.projection.toScreen(right0, h0);
+      const sL1 = this.projection.toScreen(left1, h1);
+      const sR1 = this.projection.toScreen(right1, h1);
+      this.graphics.fillStyle(shade(this.theme.tarmac, 0.95 + t0 * 0.2), 1);
+      this.graphics.fillPoints([sL0, sL1, sR1, sR0], true);
+      this.graphics.fillStyle(shade(this.theme.wall, 0.7), 1);
+      this.graphics.fillPoints(
+        [this.projection.toScreen(left0), sL0, sL1, this.projection.toScreen(left1)],
+        true,
+      );
+    }
+  }
+
+  /** Extra boulders sitting in the scree so the border is rock, not a painted kerb. */
+  private drawShoulderBoulders(
+    spline: TrackSpline,
+    halfWidth: number,
+    shoulderWidth: number,
+  ): void {
+    const count = Math.max(1, Math.round(spline.totalLength / 9));
+    const slot = spline.totalLength / count;
+    for (let i = 0; i < count; i += 1) {
+      for (const side of [1, -1] as const) {
+        if (propHash(i, side === 1 ? 70 : 71) < 0.35) {
+          continue;
+        }
+        const distance = i * slot + (propHash(i, 72) - 0.5) * slot * 0.4;
+        const frame = spline.frameAt(distance);
+        const inset = 1.2 + propHash(i, 73) * Math.max(1, shoulderWidth - 2);
+        this.drawStandingProp(frame, side * (halfWidth + inset), i * 5 + (side === 1 ? 3 : 4));
+      }
     }
   }
 
