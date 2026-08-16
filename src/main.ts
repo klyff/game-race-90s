@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.ts';
+import { HudScene } from './scenes/HudScene.ts';
 import { RaceScene } from './scenes/RaceScene.ts';
 
 /**
@@ -21,7 +22,9 @@ const game = new Phaser.Game({
     width: '100%',
     height: '100%',
   },
-  scene: [BootScene, RaceScene],
+  // `HudScene` is registered but not started: it declares `active: false` and is
+  // launched by `RaceScene` once the race exists to report on.
+  scene: [BootScene, RaceScene, HudScene],
 });
 
 /**

@@ -14,29 +14,36 @@ reverses, marks the tarmac, sounds like an engine, and the camera breathes with 
 
 ## Next step
 
-**Wire `RaceField` into `RaceScene` for five cars**, then **T-015 `HudScene`** (own scene/layer:
-position, lap, timer, ammo, countdown, standings, animated). T-013's domain work is DONE, including
-`src/domain/race/RaceField.ts` — the whole field plus the locked five-stage step order, 18 tests.
-`RaceScene` still draws exactly one car. **570 tests across 23 files, typecheck clean.**
+**T-018: the splash screen with car select on it**, then T-032 (per-track rival), then T-016/T-017
+(weapons). `TitleMusic` already exists (172 BPM E-minor punk/metal loop, 11 tests) but has **never
+been heard** — the splash is what plays it.
 
-**New scope taken from the user on 2026-08-15, in the plan and WORKLOG, not started:**
-- **T-018 is now the splash screen WITH car select on it.** Art `src/assets/spash.jpeg` → move to
-  `public/assets/ui/splash.jpeg`. The logo and credit are ALREADY painted into the top of the image
-  (draw no title); the dark explosion void mid-frame is the only high-contrast area for text. Prompt
-  "PRESS SPACE TO ROCK'N THE 90s" blinking slowly, ~1.0–1.4 s, **hard on/off cut, never an alpha
-  tween**, from a pure `BlinkClock`. LEFT/RIGHT pick the player's car; SPACE starts.
-- **T-031** NPCs always get cars the player did not pick, no duplicates (pure `assignNpcCars`).
-- **T-032** Every track has one rival NPC with a small **handling** edge (grip, drift resistance,
-  corner confidence — never engine power), as derived `VehicleStats`, bounded to ~3–5% of lap time.
-- **T-033 (measured defect)** No car can explode today: wall `impactSpeed` is only the NORMAL
-  component, so real driving crosses the 12 u/s threshold once or twice a lap and integrity falls
-  1.00 → 0.90 at worst. Re-measure with `tools/measure-impacts.ts` after any change.
+T-018 spec, all from the user: background is `src/assets/spash.jpeg` → **move to
+`public/assets/ui/splash.jpeg`** and load in `BootScene` (a Vite `import` would inline 1 MB).
+**The logo and credit are already painted into the top of the art — draw no title.** The dark
+explosion void mid-frame is the only high-contrast area for text. Prompt "PRESS SPACE TO ROCK'N THE
+90s" blinking slowly, ~1.0–1.4 s, **hard on/off cut, never an alpha tween**, from a pure `BlinkClock`.
+LEFT/RIGHT pick the player's car; SPACE starts. Scale the art to COVER and place text against the
+IMAGE's rect, not the viewport.
 
-**Signed off by the user at the wheel on 2026-08-15:** the audio (T-023) and T-012's feel gate — the car
-is controllable, it drifts, the five cars feel different. T-029 (tyre marks halved) still wants a glance.
+**DONE this iteration — five cars race, and the HUD is real.** `RaceField` is wired into `RaceScene`
+(one `VehicleView` per car, player starts at the back), `HudScene` is its own scene at zoom 1
+(position, lap, timer, ammo, integrity bar, animated countdown, live standings), `assignNpcCars`
+gives every NPC a different car, and the explosion is wired end to end. **Damage is now asymmetric:
+the car that takes the hit takes full damage, the one that deals it takes 40%.** Wall damage now
+reads TOTAL SPEED LOST in the step, not just the normal component — that was T-033's fix.
+**599 tests across 25 files, typecheck and build clean. First commit landed: `01c9b04`.**
 
-**T-030 explosion pieces exist but are wired to NOTHING and have never been seen or heard:**
-`src/adapters/audio/ExplosionVoice.ts`, `src/adapters/render/ExplosionEffect.ts`.
+**PUSH IS BLOCKED:** the user asked for commit + push each iteration, but `git remote -v` is EMPTY.
+Ask them to run `git remote add origin <url> && git push -u origin main`, or
+`gh repo create <repo> --private --source=. --remote=origin --push`.
+
+**An agent CAN now see the screen — use `tools/verify/` and READ ITS README.** Do not re-derive this:
+system Chrome fails (`SingletonSocket` bind), Playwright's cached headless shell works, and
+`--allow-file-access-from-files` is mandatory or the game silently never boots on `file://`.
+
+**Still unseen/unheard by anyone:** `TitleMusic`, and the polished `ExplosionEffect`.
+T-029 (tyre marks halved) still wants the user's eye.
 
 ## Constraints
 

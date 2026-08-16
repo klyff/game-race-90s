@@ -9,6 +9,7 @@
 export const SCENE_KEY = {
   BOOT: 'boot',
   RACE: 'race',
+  HUD: 'hud',
 } as const;
 export type SceneKey = (typeof SCENE_KEY)[keyof typeof SCENE_KEY];
 

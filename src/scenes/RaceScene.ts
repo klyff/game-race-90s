@@ -5,6 +5,7 @@ import { KeyboardDriver } from '../adapters/input/KeyboardDriver.ts';
 import { CameraZoomPolicy } from '../adapters/render/CameraZoomPolicy.ts';
 import { ChaseCamera } from '../adapters/render/ChaseCamera.ts';
 import { ExplosionEffect } from '../adapters/render/ExplosionEffect.ts';
+import type { HudReadout } from '../adapters/render/HudFormat.ts';
 import { IsoProjection } from '../adapters/render/IsoProjection.ts';
 import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
 import { TuningOverlay } from '../adapters/render/TuningOverlay.ts';
@@ -74,6 +75,15 @@ const RACER_COUNT = 5;
  * you still registers, near enough that the far side of the circuit stays quiet.
  */
 const EXPLOSION_EARSHOT_UNITS = 500;
+
+/**
+ * Seconds a debug-wrecked car sits out before respawning.
+ *
+ * Matches `CarIntegrity`'s own respawn time. Duplicated as a constant rather than
+ * exported from there, because this is a debug shortcut and the damage rules should
+ * not grow an API for it.
+ */
+const DEBUG_RESPAWN_SECONDS = 2;
 
 interface RaceSceneData {
   readonly manifest: CarSetManifest;
@@ -164,6 +174,12 @@ export class RaceScene extends Phaser.Scene {
 
     this.bindSceneKeys();
     this.respawn();
+
+    // The HUD is its own scene deliberately (decision 25): launched over this one, it
+    // gets a camera at zoom 1 so screen pixels stay screen pixels. `launch` rather than
+    // `start`, because this scene must keep running underneath it.
+    this.scene.launch(SCENE_KEY.HUD);
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.releaseResources());
   }
 
@@ -184,6 +200,49 @@ export class RaceScene extends Phaser.Scene {
     this.explosions.update(deltaSeconds);
     this.chaseCamera.follow(this.player.state, deltaSeconds, this.targetZoom());
     this.refreshOverlay();
+  }
+
+  /**
+   * Everything the HUD needs, assembled once per frame.
+   *
+   * The HUD is a separate scene that pulls this rather than being pushed to, which
+   * keeps the race loop free of any knowledge of what is on screen.
+   */
+  hudReadout(): HudReadout {
+    const player = this.player;
+    const standing = this.field.standingOf(player.carId);
+    const race = this.field.race;
+
+    return {
+      phase: race.phase,
+      countdownRemaining: race.countdownRemaining,
+      elapsedSeconds: race.elapsedSeconds,
+      position: standing?.position ?? this.field.racers.length,
+      totalRacers: this.field.racers.length,
+      // `lapsCompleted + 1` is the lap the car is ON, which is what a racing game
+      // shows: a car that has completed nothing is on lap 1, not lap 0. `formatHud`
+      // clamps it to `totalLaps`, so a finished car reads 3/3 rather than 4/3.
+      lap: (standing?.lapsCompleted ?? 0) + 1,
+      totalLaps: this.track.laps,
+      // Ammo is full until the weapon system exists (T-016). Reporting the capacity
+      // rather than a hard-coded number means the HUD is already correct per car —
+      // battle-trak carries 15 rounds where air-blade carries 4.
+      ammo: player.stats.ammoCapacity,
+      ammoCapacity: player.stats.ammoCapacity,
+      integrity: player.integrity.integrity,
+      standings: race.standings.map(entry => ({
+        carId: entry.carId,
+        position: entry.position,
+      })),
+    };
+  }
+
+  /** The standings with display names rather than ids, for the HUD's list. */
+  standingsWithNames(): readonly { readonly name: string; readonly position: number }[] {
+    return this.field.race.standings.map(entry => ({
+      name: findCarSheet(this.manifest, entry.carId).displayName,
+      position: entry.position,
+    }));
   }
 
   /**
@@ -350,10 +409,30 @@ export class RaceScene extends Phaser.Scene {
     // whether the stat sets actually feel different, which is T-012's gate.
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C).on('down', () => this.cycleCar());
 
+    // X wrecks the player's own car on demand. This is a debug aid and it earns its
+    // place: destruction is otherwise reachable only by crashing hard enough, which
+    // makes the explosion, the respawn and the integrity bar tedious to look at while
+    // they are being tuned. It only ever harms the car of whoever pressed it.
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X).on('down', () => this.wreckPlayer());
+
     // Browsers start every AudioContext suspended and only honour a resume that
     // comes from a real user gesture, so the first key press is the earliest the
     // engine can be heard. `resume()` is a no-op once it has taken.
     keyboard.on('keydown', () => this.audio.resume());
+  }
+
+  /** Debug: destroys the player's car so the wreck, explosion and respawn can be watched. */
+  private wreckPlayer(): void {
+    const player = this.player;
+    if (player.integrity.condition === CAR_CONDITION.DESTROYED) {
+      return;
+    }
+    player.integrity = {
+      integrity: 0,
+      condition: CAR_CONDITION.DESTROYED,
+      respawnRemaining: DEBUG_RESPAWN_SECONDS,
+    };
+    this.pendingExplosions.push({ position: player.state.position, intensity: 1 });
   }
 
   /** Puts the whole field back on the grid and restarts the countdown. */
@@ -425,6 +504,9 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private releaseResources(): void {
+    // Stopped explicitly: `C` restarts this scene, and a HUD left running would be
+    // launched a second time on the next `create` and stack another copy of itself.
+    this.scene.stop(SCENE_KEY.HUD);
     this.driver.destroy();
     this.audio.destroy();
     for (const view of this.views) {

@@ -38,7 +38,11 @@ export class TuningOverlay {
       })
       // The maximum depth keeps the block above the road, the cars and the tyre marks, all
       // of which use `IsoProjection.depthOf` values that grow with world position.
-      .setDepth(Number.MAX_SAFE_INTEGER);
+      .setDepth(Number.MAX_SAFE_INTEGER)
+      // Hidden until `T` asks for it. This is a debug readout and it shares the top-left
+      // corner with the real HUD's position and lap counter (T-015), so leaving it on by
+      // default means the game always boots with two blocks of text on top of each other.
+      .setVisible(false);
   }
 
   /** True when the overlay is on screen. */
