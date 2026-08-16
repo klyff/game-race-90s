@@ -13,7 +13,7 @@ import * as fs from 'fs';
 
 /**
  * All car stats from the game manifest. Used to verify that damage mitigation
- * works across the full range of armor values (0.15 to 0.6).
+ * works across the full range of armor values (0.15 to 0.88).
  */
 const carManifestJson = fs.readFileSync(
   'public/assets/cars/cars.json',
@@ -38,27 +38,27 @@ describe('CarIntegrity', () => {
   describe('applyImpactDamage', () => {
     it('costs zero damage below the threshold speed (5 u/s scrape)', () => {
       const car = createCarIntegrity();
-      const damaged = applyImpactDamage(car, 5, carsByArmor.marauder);
+      const damaged = applyImpactDamage(car, 5, carsByArmor['car-1']);
       expect(damaged.integrity).toBe(1);
       expect(damaged.condition).toBe(CAR_CONDITION.HEALTHY);
     });
 
     it('costs nearly nothing at exactly the threshold (6 u/s)', () => {
       const car = createCarIntegrity();
-      const damaged = applyImpactDamage(car, 6, carsByArmor.marauder);
+      const damaged = applyImpactDamage(car, 6, carsByArmor['car-1']);
       expect(damaged.integrity).toBe(1); // 0 excess speed = 0 damage
     });
 
     it('applies measurable damage just above the threshold (13 u/s)', () => {
       const car = createCarIntegrity();
-      const damaged = applyImpactDamage(car, 13, carsByArmor.marauder);
+      const damaged = applyImpactDamage(car, 13, carsByArmor['car-1']);
       expect(damaged.integrity).toBeLessThan(1);
       expect(damaged.integrity).toBeGreaterThan(0.98);
     });
 
     it('applies severe damage on a high-speed head-on wall hit (78 u/s)', () => {
       const car = createCarIntegrity();
-      const damaged = applyImpactDamage(car, 78, carsByArmor.marauder);
+      const damaged = applyImpactDamage(car, 78, carsByArmor['car-1']);
       // Damage is catastrophic at 78 u/s: (78 - 6)² / 2731 * (1 - 0.4) ≈ 1.139
       // This destroys the car.
       expect(damaged.integrity).toBe(0);
@@ -67,10 +67,10 @@ describe('CarIntegrity', () => {
 
     it('scales damage monotonically with impact speed', () => {
       const car = createCarIntegrity();
-      const impact20 = applyImpactDamage(car, 20, carsByArmor.marauder);
-      const impact40 = applyImpactDamage(car, 40, carsByArmor.marauder);
-      const impact60 = applyImpactDamage(car, 60, carsByArmor.marauder);
-      const impact70 = applyImpactDamage(car, 70, carsByArmor.marauder);
+      const impact20 = applyImpactDamage(car, 20, carsByArmor['car-1']);
+      const impact40 = applyImpactDamage(car, 40, carsByArmor['car-1']);
+      const impact60 = applyImpactDamage(car, 60, carsByArmor['car-1']);
+      const impact70 = applyImpactDamage(car, 70, carsByArmor['car-1']);
 
       expect(impact20.integrity).toBeGreaterThan(impact40.integrity);
       expect(impact40.integrity).toBeGreaterThan(impact60.integrity);
@@ -81,8 +81,8 @@ describe('CarIntegrity', () => {
       const car = createCarIntegrity();
       const impact78 = 78;
 
-      const denseHavac = applyImpactDamage(car, impact78, carsByArmor.havac);
-      const fragileBlade = applyImpactDamage(car, impact78, carsByArmor['air-blade']);
+      const denseHavac = applyImpactDamage(car, impact78, carsByArmor['car-8-strong']);
+      const fragileBlade = applyImpactDamage(car, impact78, carsByArmor['car-7-turbo']);
 
       // Both should take damage, havac might survive better if not destroyed.
       // havac: (78 - 6)² / 2731 * (1 - 0.6) = 5184 / 2731 * 0.4 ≈ 0.7591
@@ -96,7 +96,7 @@ describe('CarIntegrity', () => {
 
     it('never pushes integrity below 0', () => {
       const car = createCarIntegrity();
-      const destroyed = applyImpactDamage(car, 500, carsByArmor.marauder);
+      const destroyed = applyImpactDamage(car, 500, carsByArmor['car-1']);
       expect(destroyed.integrity).toBe(0);
       expect(destroyed.condition).toBe(CAR_CONDITION.DESTROYED);
       expect(destroyed.respawnRemaining).toBe(2.0);
@@ -105,11 +105,11 @@ describe('CarIntegrity', () => {
     it('does not apply damage to a destroyed car', () => {
       let car = createCarIntegrity();
       // Destroy it first.
-      car = applyImpactDamage(car, 500, carsByArmor.marauder);
+      car = applyImpactDamage(car, 500, carsByArmor['car-1']);
       expect(car.condition).toBe(CAR_CONDITION.DESTROYED);
 
       // Try to damage it again.
-      const stayDestroyed = applyImpactDamage(car, 78, carsByArmor.marauder);
+      const stayDestroyed = applyImpactDamage(car, 78, carsByArmor['car-1']);
       expect(stayDestroyed.integrity).toBe(0);
       expect(stayDestroyed.condition).toBe(CAR_CONDITION.DESTROYED);
       expect(stayDestroyed.respawnRemaining).toBe(2.0);
@@ -117,14 +117,14 @@ describe('CarIntegrity', () => {
 
     it('handles NaN impact speed by treating it as 0', () => {
       const car = createCarIntegrity();
-      const result = applyImpactDamage(car, NaN, carsByArmor.marauder);
+      const result = applyImpactDamage(car, NaN, carsByArmor['car-1']);
       expect(result.integrity).toBe(1);
       expect(result.condition).toBe(CAR_CONDITION.HEALTHY);
     });
 
     it('handles Infinity impact speed safely', () => {
       const car = createCarIntegrity();
-      const result = applyImpactDamage(car, Infinity, carsByArmor.marauder);
+      const result = applyImpactDamage(car, Infinity, carsByArmor['car-1']);
       // Infinity should cause destruction.
       expect(result.integrity).toBe(0);
       expect(result.condition).toBe(CAR_CONDITION.DESTROYED);
@@ -133,7 +133,7 @@ describe('CarIntegrity', () => {
     it('handles NaN armor by using a neutral default', () => {
       const car = createCarIntegrity();
       const badStats: VehicleStats = {
-        ...carsByArmor.marauder,
+        ...carsByArmor['car-1'],
         armor: NaN,
       };
       const result = applyImpactDamage(car, 50, badStats);
@@ -150,13 +150,13 @@ describe('CarIntegrity', () => {
         const victimResult = applyImpactDamage(
           carVictim,
           70,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.VICTIM,
         );
         const aggressorResult = applyImpactDamage(
           carAggressor,
           70,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.AGGRESSOR,
         );
 
@@ -170,13 +170,13 @@ describe('CarIntegrity', () => {
         const victimResult = applyImpactDamage(
           carVictim,
           70,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.VICTIM,
         );
         const aggressorResult = applyImpactDamage(
           carAggressor,
           70,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.AGGRESSOR,
         );
 
@@ -193,13 +193,13 @@ describe('CarIntegrity', () => {
         const victimResult = applyImpactDamage(
           carVictim,
           50,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.VICTIM,
         );
         const aggressorResult = applyImpactDamage(
           carAggressor,
           50,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.AGGRESSOR,
         );
 
@@ -213,11 +213,11 @@ describe('CarIntegrity', () => {
         const carDefault = createCarIntegrity();
         const carExplicit = createCarIntegrity();
 
-        const defaultResult = applyImpactDamage(carDefault, 70, carsByArmor.marauder);
+        const defaultResult = applyImpactDamage(carDefault, 70, carsByArmor['car-1']);
         const explicitResult = applyImpactDamage(
           carExplicit,
           70,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.VICTIM,
         );
 
@@ -231,7 +231,7 @@ describe('CarIntegrity', () => {
         const damaged = applyImpactDamage(
           car,
           70,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.VICTIM,
         );
 
@@ -246,7 +246,7 @@ describe('CarIntegrity', () => {
         const damaged = applyImpactDamage(
           car,
           5,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.VICTIM,
         );
         expect(damaged.integrity).toBe(1);
@@ -257,7 +257,7 @@ describe('CarIntegrity', () => {
         const damaged = applyImpactDamage(
           car,
           5,
-          carsByArmor.marauder,
+          carsByArmor['car-1'],
           DAMAGE_ROLE.AGGRESSOR,
         );
         expect(damaged.integrity).toBe(1);
@@ -270,13 +270,13 @@ describe('CarIntegrity', () => {
         const havacDamaged = applyImpactDamage(
           carHavac,
           70,
-          carsByArmor.havac,
+          carsByArmor['car-8-strong'],
           DAMAGE_ROLE.VICTIM,
         );
         const bladeDamaged = applyImpactDamage(
           carBlade,
           70,
-          carsByArmor['air-blade'],
+          carsByArmor['car-7-turbo'],
           DAMAGE_ROLE.VICTIM,
         );
 
@@ -290,13 +290,13 @@ describe('CarIntegrity', () => {
         const havacDamaged = applyImpactDamage(
           carHavac,
           70,
-          carsByArmor.havac,
+          carsByArmor['car-8-strong'],
           DAMAGE_ROLE.AGGRESSOR,
         );
         const bladeDamaged = applyImpactDamage(
           carBlade,
           70,
-          carsByArmor['air-blade'],
+          carsByArmor['car-7-turbo'],
           DAMAGE_ROLE.AGGRESSOR,
         );
 
@@ -313,9 +313,9 @@ describe('CarIntegrity', () => {
       const marauderHit = applyWeaponDamage(
         car,
         rawDamage,
-        carsByArmor.marauder,
+        carsByArmor['car-1'],
       );
-      const bladeHit = applyWeaponDamage(car, rawDamage, carsByArmor['air-blade']);
+      const bladeHit = applyWeaponDamage(car, rawDamage, carsByArmor['car-7-turbo']);
 
       // Both lose integrity, but marauder loses less (armor 0.4 > 0.15).
       expect(marauderHit.integrity).toBeGreaterThan(bladeHit.integrity);
@@ -325,32 +325,32 @@ describe('CarIntegrity', () => {
 
     it('does not apply damage for zero rawDamage', () => {
       const car = createCarIntegrity();
-      const result = applyWeaponDamage(car, 0, carsByArmor.marauder);
+      const result = applyWeaponDamage(car, 0, carsByArmor['car-1']);
       expect(result.integrity).toBe(1);
     });
 
     it('clamps negative damage to zero', () => {
       const car = createCarIntegrity();
-      const result = applyWeaponDamage(car, -0.5, carsByArmor.marauder);
+      const result = applyWeaponDamage(car, -0.5, carsByArmor['car-1']);
       expect(result.integrity).toBe(1);
     });
 
     it('does not apply damage to a destroyed car', () => {
       let car = createCarIntegrity();
-      car = applyImpactDamage(car, 500, carsByArmor.marauder);
+      car = applyImpactDamage(car, 500, carsByArmor['car-1']);
       expect(car.condition).toBe(CAR_CONDITION.DESTROYED);
 
-      const stillDestroyed = applyWeaponDamage(car, 0.5, carsByArmor.marauder);
+      const stillDestroyed = applyWeaponDamage(car, 0.5, carsByArmor['car-1']);
       expect(stillDestroyed.integrity).toBe(0);
       expect(stillDestroyed.condition).toBe(CAR_CONDITION.DESTROYED);
     });
 
     it('handles NaN and Infinity damage safely', () => {
       const car = createCarIntegrity();
-      const nanResult = applyWeaponDamage(car, NaN, carsByArmor.marauder);
+      const nanResult = applyWeaponDamage(car, NaN, carsByArmor['car-1']);
       expect(Number.isFinite(nanResult.integrity)).toBe(true);
 
-      const infResult = applyWeaponDamage(car, Infinity, carsByArmor.marauder);
+      const infResult = applyWeaponDamage(car, Infinity, carsByArmor['car-1']);
       expect(infResult.integrity).toBe(0);
       expect(infResult.condition).toBe(CAR_CONDITION.DESTROYED);
     });
@@ -366,7 +366,7 @@ describe('CarIntegrity', () => {
 
     it('counts down the respawn timer while destroyed', () => {
       let car = createCarIntegrity();
-      car = applyImpactDamage(car, 500, carsByArmor.marauder);
+      car = applyImpactDamage(car, 500, carsByArmor['car-1']);
       expect(car.respawnRemaining).toBe(2.0);
 
       const ticked1 = tickIntegrity(car, 0.5);
@@ -382,7 +382,7 @@ describe('CarIntegrity', () => {
 
     it('restores a pristine healthy car when respawn timer expires', () => {
       let car = createCarIntegrity();
-      car = applyImpactDamage(car, 500, carsByArmor.marauder);
+      car = applyImpactDamage(car, 500, carsByArmor['car-1']);
       expect(car.integrity).toBe(0);
 
       const restored = tickIntegrity(car, 2.0);
@@ -393,7 +393,7 @@ describe('CarIntegrity', () => {
 
     it('clamps the timer to 0 if delta overshoots', () => {
       let car = createCarIntegrity();
-      car = applyImpactDamage(car, 500, carsByArmor.marauder);
+      car = applyImpactDamage(car, 500, carsByArmor['car-1']);
       const restored = tickIntegrity(car, 5.0); // Much larger than remaining 2.0
       expect(restored.integrity).toBe(1);
       expect(restored.respawnRemaining).toBe(0);
@@ -401,7 +401,7 @@ describe('CarIntegrity', () => {
 
     it('handles NaN delta safely', () => {
       let car = createCarIntegrity();
-      car = applyImpactDamage(car, 500, carsByArmor.marauder);
+      car = applyImpactDamage(car, 500, carsByArmor['car-1']);
       const ticked = tickIntegrity(car, NaN);
       // NaN is treated as 0, so timer should not change.
       expect(ticked.respawnRemaining).toBe(2.0);
@@ -412,12 +412,12 @@ describe('CarIntegrity', () => {
     it('is HEALTHY above 0.66', () => {
       let car = createCarIntegrity();
       // Damage to 0.67 integrity.
-      car = applyWeaponDamage(car, 0.33, carsByArmor.marauder);
+      car = applyWeaponDamage(car, 0.33, carsByArmor['car-1']);
       expect(car.condition).toBe(CAR_CONDITION.HEALTHY);
     });
 
     it('is DAMAGED at exactly 0.66 (boundary)', () => {
-      const statsNoArmor: VehicleStats = { ...carsByArmor.marauder, armor: 0 };
+      const statsNoArmor: VehicleStats = { ...carsByArmor['car-1'], armor: 0 };
       let car = createCarIntegrity();
       car = applyWeaponDamage(car, 0.34, statsNoArmor);
       expect(car.integrity).toBeCloseTo(0.66, 5);
@@ -425,7 +425,7 @@ describe('CarIntegrity', () => {
     });
 
     it('is DAMAGED between 0.33 and 0.66', () => {
-      const statsNoArmor: VehicleStats = { ...carsByArmor.marauder, armor: 0 };
+      const statsNoArmor: VehicleStats = { ...carsByArmor['car-1'], armor: 0 };
       let car = createCarIntegrity();
       car = applyWeaponDamage(car, 0.5, statsNoArmor); // 0.5 damage with no armor
       expect(car.integrity).toBe(0.5);
@@ -433,7 +433,7 @@ describe('CarIntegrity', () => {
     });
 
     it('is CRITICAL at exactly 0.33 (boundary)', () => {
-      const statsNoArmor: VehicleStats = { ...carsByArmor.marauder, armor: 0 };
+      const statsNoArmor: VehicleStats = { ...carsByArmor['car-1'], armor: 0 };
       let car = createCarIntegrity();
       car = applyWeaponDamage(car, 0.67, statsNoArmor);
       expect(car.integrity).toBeCloseTo(0.33, 5);
@@ -441,7 +441,7 @@ describe('CarIntegrity', () => {
     });
 
     it('is CRITICAL between 0 and 0.33', () => {
-      const statsNoArmor: VehicleStats = { ...carsByArmor.marauder, armor: 0 };
+      const statsNoArmor: VehicleStats = { ...carsByArmor['car-1'], armor: 0 };
       let car = createCarIntegrity();
       car = applyWeaponDamage(car, 0.8, statsNoArmor);
       expect(car.integrity).toBeCloseTo(0.2, 5);
@@ -450,7 +450,7 @@ describe('CarIntegrity', () => {
 
     it('is DESTROYED at exactly 0', () => {
       let car = createCarIntegrity();
-      car = applyImpactDamage(car, 500, carsByArmor.marauder);
+      car = applyImpactDamage(car, 500, carsByArmor['car-1']);
       expect(car.integrity).toBe(0);
       expect(car.condition).toBe(CAR_CONDITION.DESTROYED);
       expect(car.respawnRemaining).toBe(2.0);
@@ -463,7 +463,7 @@ describe('CarIntegrity', () => {
 
       // 40 gentle scrapes, each at 5 u/s (below the 6 u/s damage threshold).
       for (let i = 0; i < 40; i++) {
-        car = applyImpactDamage(car, 5, carsByArmor.marauder);
+        car = applyImpactDamage(car, 5, carsByArmor['car-1']);
       }
 
       // Car should still be driveable: not destroyed.
@@ -477,7 +477,7 @@ describe('CarIntegrity', () => {
 
       // 40 moderate impacts at 25 u/s.
       for (let i = 0; i < 40; i++) {
-        car = applyImpactDamage(car, 25, carsByArmor.marauder);
+        car = applyImpactDamage(car, 25, carsByArmor['car-1']);
         // Verify that repeated damage does accumulate and the condition degrades.
       }
 
@@ -491,7 +491,7 @@ describe('CarIntegrity', () => {
   describe('Integrity is always clamped to [0, 1]', () => {
     it('never goes below 0', () => {
       let car = createCarIntegrity();
-      car = applyImpactDamage(car, 1000, carsByArmor.marauder);
+      car = applyImpactDamage(car, 1000, carsByArmor['car-1']);
       expect(car.integrity).toBe(0);
       expect(car.integrity).toBeGreaterThanOrEqual(0);
     });
@@ -504,9 +504,9 @@ describe('CarIntegrity', () => {
 
     it('remains clamped after multiple operations', () => {
       let car = createCarIntegrity();
-      car = applyWeaponDamage(car, 0.5, carsByArmor.marauder);
-      car = applyImpactDamage(car, 50, carsByArmor.marauder);
-      car = applyWeaponDamage(car, 1.0, carsByArmor.marauder);
+      car = applyWeaponDamage(car, 0.5, carsByArmor['car-1']);
+      car = applyImpactDamage(car, 50, carsByArmor['car-1']);
+      car = applyWeaponDamage(car, 1.0, carsByArmor['car-1']);
       expect(car.integrity).toBeGreaterThanOrEqual(0);
       expect(car.integrity).toBeLessThanOrEqual(1);
     });
@@ -516,20 +516,20 @@ describe('CarIntegrity', () => {
     it('does not mutate input when applying impact damage', () => {
       const car = createCarIntegrity();
       const before = { ...car };
-      applyImpactDamage(car, 50, carsByArmor.marauder);
+      applyImpactDamage(car, 50, carsByArmor['car-1']);
       expect(car).toEqual(before);
     });
 
     it('does not mutate input when applying weapon damage', () => {
       const car = createCarIntegrity();
       const before = { ...car };
-      applyWeaponDamage(car, 0.5, carsByArmor.marauder);
+      applyWeaponDamage(car, 0.5, carsByArmor['car-1']);
       expect(car).toEqual(before);
     });
 
     it('does not mutate input when ticking integrity', () => {
       let car = createCarIntegrity();
-      car = applyImpactDamage(car, 500, carsByArmor.marauder);
+      car = applyImpactDamage(car, 500, carsByArmor['car-1']);
       const before = { ...car };
       tickIntegrity(car, 1.0);
       expect(car).toEqual(before);
@@ -540,7 +540,7 @@ describe('CarIntegrity', () => {
 describe('Damage arithmetic verification', () => {
   it('documents the formula: 51 u/s head-on = ~45% damage at armor 0.4', () => {
     const car = createCarIntegrity();
-    const damaged = applyImpactDamage(car, 51, carsByArmor.marauder);
+    const damaged = applyImpactDamage(car, 51, carsByArmor['car-1']);
 
     // Expected: (51 - 6)² / 2731 * (1 - 0.4) ≈ 0.45
     // So integrity ≈ 0.55
@@ -550,15 +550,15 @@ describe('Damage arithmetic verification', () => {
 
   it('documents the formula: 5 u/s scrape = 0% damage', () => {
     const car = createCarIntegrity();
-    const damaged = applyImpactDamage(car, 5, carsByArmor.marauder);
+    const damaged = applyImpactDamage(car, 5, carsByArmor['car-1']);
     expect(damaged.integrity).toBe(1);
   });
 
   it('documents armor mitigation: havac (0.6) survives better than air-blade (0.15) at 51 u/s', () => {
     const car = createCarIntegrity();
 
-    const havacHit = applyImpactDamage(car, 51, carsByArmor.havac);
-    const bladeHit = applyImpactDamage(car, 51, carsByArmor['air-blade']);
+    const havacHit = applyImpactDamage(car, 51, carsByArmor['car-8-strong']);
+    const bladeHit = applyImpactDamage(car, 51, carsByArmor['car-7-turbo']);
 
     // havac: (51 - 6)² / 2731 * (1 - 0.6) = 2025 / 2731 * 0.4 ≈ 0.296
     // blade: (51 - 6)² / 2731 * (1 - 0.15) = 2025 / 2731 * 0.85 ≈ 0.6308

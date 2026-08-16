@@ -64,7 +64,7 @@ describe('CarStatBars — real roster', () => {
   });
 
   it('air-blade has the highest SPEED fraction, exactly 1 (roster maxSpeed is 95)', () => {
-    const bars = statBars(manifest, 'air-blade');
+    const bars = statBars(manifest, 'car-7-turbo');
     const speedBar = bars.find(b => b.label === 'SPEED')!;
     expect(speedBar.value).toBe(95);
     expect(speedBar.fraction).toBe(1);
@@ -75,28 +75,27 @@ describe('CarStatBars — real roster', () => {
     }
   });
 
-  it('snow-car has the highest GRIP fraction (the roster grip king)', () => {
-    const snowGrip = statBars(manifest, 'snow-car').find(b => b.label === 'GRIP')!.fraction;
+  it('cryo-hollow cars share the highest GRIP fraction', () => {
+    const snowGrip = statBars(manifest, 'car-4').find(b => b.label === 'GRIP')!.fraction;
 
     for (const carId of carIds) {
-      if (carId === 'snow-car') continue;
       const otherGrip = statBars(manifest, carId).find(b => b.label === 'GRIP')!.fraction;
-      expect(snowGrip).toBeGreaterThan(otherGrip);
+      expect(snowGrip).toBeGreaterThanOrEqual(otherGrip);
     }
   });
 
-  it('magma-rex has the highest ARMOR fraction (the roster armor king)', () => {
-    const magmaArmor = statBars(manifest, 'magma-rex').find(b => b.label === 'ARMOR')!.fraction;
+  it('the tank has the highest ARMOR fraction (the roster armor king)', () => {
+    const magmaArmor = statBars(manifest, 'car-6-tank').find(b => b.label === 'ARMOR')!.fraction;
 
     for (const carId of carIds) {
-      if (carId === 'magma-rex') continue;
+      if (carId === 'car-6-tank') continue;
       const otherArmor = statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction;
       expect(magmaArmor).toBeGreaterThan(otherArmor);
     }
   });
 
   it('air-blade has the lowest ARMOR fraction, exactly MINIMUM_BAR_FRACTION', () => {
-    const airBladeArmor = statBars(manifest, 'air-blade').find(b => b.label === 'ARMOR')!.fraction;
+    const airBladeArmor = statBars(manifest, 'car-7-turbo').find(b => b.label === 'ARMOR')!.fraction;
     expect(airBladeArmor).toBe(MINIMUM_BAR_FRACTION);
 
     for (const carId of carIds) {

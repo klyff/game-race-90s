@@ -63,7 +63,7 @@ describe('WeaponInventory', () => {
   });
 
   it('Arsenal raises the missile refill ceiling by reloadMultiplier', () => {
-    const battle = manifest.cars.find(car => car.id === 'battle-trak')!;
+    const battle = manifest.cars.find(car => car.id === 'car-10')!;
     const arsenal = CAR_PERKS[CAR_PERK.ARSENAL];
     expect(missileCapacity(battle.stats, NEUTRAL_PERK)).toBe(15);
     expect(missileCapacity(battle.stats, arsenal)).toBe(45);
@@ -208,11 +208,11 @@ describe('RaceField weapons', () => {
     player.state = {
       ...player.state,
       position: {
-        x: frame.position.x - frame.tangent.x * 8,
-        y: frame.position.y - frame.tangent.y * 8,
+        x: frame.position.x - frame.tangent.x * 12,
+        y: frame.position.y - frame.tangent.y * 12,
       },
     };
-    player.distance = track.startLineDistance + 42;
+    player.distance = track.startLineDistance + 38;
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
     const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL && h.ownerCarId === npc.carId);
     expect(oil).toBeDefined();
@@ -270,8 +270,8 @@ describe('RaceField weapons', () => {
     expect(field.playerWeaponHits).toEqual({ missiles: 0, oil: 0, mines: 0 });
   });
 
-  it('battle-trak on the roster carries the Arsenal perk', () => {
-    const battle = manifest.cars.find(car => car.id === 'battle-trak')!;
+  it('car-10 on the roster carries the Arsenal perk', () => {
+    const battle = manifest.cars.find(car => car.id === 'car-10')!;
     expect(battle.perk).toBe(CAR_PERK.ARSENAL);
   });
 
@@ -281,8 +281,8 @@ describe('RaceField weapons', () => {
     const npc = field.racers.find(r => !r.isPlayer)!;
     const player = field.racers.find(r => r.isPlayer)!;
 
-    // Put the NPC on the track with the player 8 units behind: inside the oil-drop
-    // gap (11) but outside the tighter mine gap (6).
+    // Put the NPC on the track with the player 12 units behind: inside the oil-drop
+    // gap (16) but outside the tighter mine gap (10).
     const frame = spline.frameAt(track.startLineDistance + 50);
     npc.state = {
       ...npc.state,
@@ -293,11 +293,11 @@ describe('RaceField weapons', () => {
     player.state = {
       ...player.state,
       position: {
-        x: frame.position.x - frame.tangent.x * 8,
-        y: frame.position.y - frame.tangent.y * 8,
+        x: frame.position.x - frame.tangent.x * 12,
+        y: frame.position.y - frame.tangent.y * 12,
       },
     };
-    player.distance = track.startLineDistance + 42;
+    player.distance = track.startLineDistance + 38;
 
     const before = field.activeHazards.length;
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);

@@ -111,5 +111,21 @@ export const CAR_PERK = {
   SLIPSTREAM: 'slipstream',
   TRENCH_GRIP: 'trench-grip',
   ARSENAL: 'arsenal',
+  WAR_TANK: 'war-tank',
+  TURBO: 'turbo',
 } as const;
 export type CarPerkId = (typeof CAR_PERK)[keyof typeof CAR_PERK];
+
+/**
+ * Extra engine power and top speed a car gets on its home planet, before the
+ * 0.9 / 0.7 world-advantage fraction is applied. 0.20 × 0.9 = +18% for a
+ * titular; 0.20 × 0.7 = +14% for a reserva. Visitors get nothing.
+ */
+export const HOME_WORLD_STAT_BONUS = 0.2;
+
+/** Titular (featured) vs reserva advantage on a home planet. */
+export const WORLD_ADVANTAGE = {
+  PRIMARY: 0.9,
+  SECONDARY: 0.7,
+} as const;
+export type WorldAdvantage = (typeof WORLD_ADVANTAGE)[keyof typeof WORLD_ADVANTAGE];

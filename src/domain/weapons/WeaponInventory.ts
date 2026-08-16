@@ -18,19 +18,28 @@ export interface WeaponInventory {
   readonly mines: number;
 }
 
+function stockMultiplier(perk: CarPerkProfile | undefined): number {
+  const raw = perk?.missileStockMultiplier;
+  return Number.isFinite(raw) ? Math.max(1, raw as number) : 1;
+}
+
 /** Missiles a car may hold at most, given its authored capacity and perk. */
 export function missileCapacity(stats: VehicleStats, perk: CarPerkProfile): number {
   const authored = Number.isFinite(stats.ammoCapacity) ? Math.max(0, stats.ammoCapacity) : 0;
   const boost = Number.isFinite(perk.reloadMultiplier) ? Math.max(1, perk.reloadMultiplier) : 1;
-  // Arsenal raises the ceiling; every other perk leaves the authored capacity alone
-  // (reloadMultiplier defaults to 1 on the neutral profile).
-  return Math.round(authored * boost);
+  // Arsenal raises the ceiling; the war tank then doubles whatever that is.
+  return Math.round(authored * boost * stockMultiplier(perk));
+}
+
+/** Starting missiles for a perk: everyone gets 3, the war tank gets 6. */
+export function missileStartCount(perk?: CarPerkProfile): number {
+  return Math.round(MISSILE_START_COUNT * stockMultiplier(perk));
 }
 
 /** Fresh loadout on the grid: 3 missiles for everyone, oil and mines at their starts. */
-export function createWeaponInventory(): WeaponInventory {
+export function createWeaponInventory(perk?: CarPerkProfile): WeaponInventory {
   return {
-    missiles: MISSILE_START_COUNT,
+    missiles: missileStartCount(perk),
     oil: OIL_START_COUNT,
     mines: MINE_START_COUNT,
   };

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { CAR_PERK, SIMULATION_STEP_SECONDS } from '../../src/domain/constants.ts';
+import { CAR_PERK, HOME_WORLD_STAT_BONUS, SIMULATION_STEP_SECONDS, WORLD_ADVANTAGE } from '../../src/domain/constants.ts';
 import {
   CAR_PERKS,
   NEUTRAL_PERK,
@@ -10,7 +10,9 @@ import {
   contactStats,
   perkSurface,
   perkDamageMultiplier,
+  perkDealtDamageMultiplier,
   drivingStats,
+  homeWorldStats,
 } from '../../src/domain/vehicle/CarPerk.ts';
 import type { CarPerkProfile } from '../../src/domain/vehicle/CarPerk.ts';
 import { stepVehicle, TARMAC, OFFROAD, driftThreshold } from '../../src/domain/vehicle/ArcadeCarPhysics.ts';
@@ -41,10 +43,10 @@ const DT = SIMULATION_STEP_SECONDS;
 const carManifestJson = readFileSync('public/assets/cars/cars.json', 'utf-8');
 const carManifest = parseCarSetManifest(JSON.parse(carManifestJson));
 
-const marauderStats: VehicleStats = findCarSheet(carManifest, 'marauder').stats;
-const dirtDevilStats: VehicleStats = findCarSheet(carManifest, 'dirt-devil').stats;
-const airBladeStats: VehicleStats = findCarSheet(carManifest, 'air-blade').stats;
-const battleTrakStats: VehicleStats = findCarSheet(carManifest, 'battle-trak').stats;
+const marauderStats: VehicleStats = findCarSheet(carManifest, 'car-1').stats;
+const dirtDevilStats: VehicleStats = findCarSheet(carManifest, 'car-16').stats;
+const airBladeStats: VehicleStats = findCarSheet(carManifest, 'car-7-turbo').stats;
+const battleTrakStats: VehicleStats = findCarSheet(carManifest, 'car-10').stats;
 
 const BULLDOZER_PROFILE = CAR_PERKS[CAR_PERK.BULLDOZER];
 const OFF_ROAD_ACE_PROFILE = CAR_PERKS[CAR_PERK.OFF_ROAD_ACE];
@@ -52,6 +54,8 @@ const ANVIL_PROFILE = CAR_PERKS[CAR_PERK.ANVIL];
 const SLIPSTREAM_PROFILE = CAR_PERKS[CAR_PERK.SLIPSTREAM];
 const TRENCH_GRIP_PROFILE = CAR_PERKS[CAR_PERK.TRENCH_GRIP];
 const ARSENAL_PROFILE = CAR_PERKS[CAR_PERK.ARSENAL];
+const WAR_TANK_PROFILE = CAR_PERKS[CAR_PERK.WAR_TANK];
+const TURBO_PROFILE = CAR_PERKS[CAR_PERK.TURBO];
 
 function input(overrides: Partial<InputCommand>): InputCommand {
   return { ...IDLE_INPUT, ...overrides };
@@ -247,6 +251,58 @@ describe('CarPerk — the damage perks change how much integrity survives', () =
   });
 });
 
+describe('CarPerk — War Tank shrugs hits and rams harder', () => {
+  const IMPACT_SPEED = 60;
+
+  it('keeps more integrity than Anvil after the same victim hit', () => {
+    const anvil = applyImpactDamage(
+      createCarIntegrity(),
+      IMPACT_SPEED,
+      marauderStats,
+      DAMAGE_ROLE.VICTIM,
+      perkDamageMultiplier(ANVIL_PROFILE, DAMAGE_ROLE.VICTIM),
+    );
+    const tank = applyImpactDamage(
+      createCarIntegrity(),
+      IMPACT_SPEED,
+      marauderStats,
+      DAMAGE_ROLE.VICTIM,
+      perkDamageMultiplier(WAR_TANK_PROFILE, DAMAGE_ROLE.VICTIM),
+    );
+    expect(tank.integrity).toBeGreaterThan(anvil.integrity);
+    expect(tank.integrity).toBeGreaterThan(0.9);
+  });
+
+  it('deals more than double the damage a neutral car deals on the same hit', () => {
+    const neutralDealt = perkDealtDamageMultiplier(NEUTRAL_PERK);
+    const tankDealt = perkDealtDamageMultiplier(WAR_TANK_PROFILE);
+    expect(neutralDealt).toBe(1);
+    expect(tankDealt).toBeGreaterThan(2);
+
+    const fromNeutral = applyImpactDamage(
+      createCarIntegrity(),
+      IMPACT_SPEED,
+      marauderStats,
+      DAMAGE_ROLE.VICTIM,
+      perkDamageMultiplier(NEUTRAL_PERK, DAMAGE_ROLE.VICTIM) * neutralDealt,
+    );
+    const fromTank = applyImpactDamage(
+      createCarIntegrity(),
+      IMPACT_SPEED,
+      marauderStats,
+      DAMAGE_ROLE.VICTIM,
+      perkDamageMultiplier(NEUTRAL_PERK, DAMAGE_ROLE.VICTIM) * tankDealt,
+    );
+    expect(fromTank.integrity).toBeLessThan(fromNeutral.integrity);
+  });
+
+  it('is heavier in contact than Anvil, so it shoves more and moves less', () => {
+    const anvilEffective = contactStats(marauderStats, ANVIL_PROFILE);
+    const tankEffective = contactStats(marauderStats, WAR_TANK_PROFILE);
+    expect(tankEffective.mass).toBeGreaterThan(anvilEffective.mass);
+  });
+});
+
 describe('CarPerk — Slipstream raises TOP SPEED', () => {
   const MAX_SECONDS = 40;
   const EPSILON = 1e-6;
@@ -409,6 +465,49 @@ describe('CarPerk — structural: no perk writes velocity', () => {
 
     const violation = assignmentPattern.exec(source);
     expect(violation, `CarPerk.ts must not assign to velocity/position/heading/yawSpin. Found: ${violation?.[0]}`).toBeNull();
+  });
+});
+
+describe('CarPerk — Turbo is always-on pace', () => {
+  it('raises terminal speed without needing a draft', () => {
+    const undrafted = drivingStats(airBladeStats, TURBO_PROFILE, false, 0);
+    const expected = airBladeStats.maxSpeed * (1 + TURBO_PROFILE.turboSpeedBonus);
+    expect(undrafted.maxSpeed).toBeCloseTo(expected, 5);
+    expect(undrafted.enginePower).toBeCloseTo(airBladeStats.enginePower * (1 + TURBO_PROFILE.turboSpeedBonus), 5);
+  });
+});
+
+describe('CarPerk — home world bonus', () => {
+  it('titular at home is faster than reserva at home, and a visitor is unchanged', () => {
+    const titular = homeWorldStats(
+      marauderStats,
+      'thunder-basin',
+      WORLD_ADVANTAGE.PRIMARY,
+      'thunder-basin',
+    );
+    const reserva = homeWorldStats(
+      marauderStats,
+      'thunder-basin',
+      WORLD_ADVANTAGE.SECONDARY,
+      'thunder-basin',
+    );
+    const visitor = homeWorldStats(
+      marauderStats,
+      'thunder-basin',
+      WORLD_ADVANTAGE.PRIMARY,
+      'vulkanis',
+    );
+    expect(titular.maxSpeed).toBeCloseTo(
+      marauderStats.maxSpeed * (1 + HOME_WORLD_STAT_BONUS * WORLD_ADVANTAGE.PRIMARY),
+      5,
+    );
+    expect(reserva.maxSpeed).toBeCloseTo(
+      marauderStats.maxSpeed * (1 + HOME_WORLD_STAT_BONUS * WORLD_ADVANTAGE.SECONDARY),
+      5,
+    );
+    expect(titular.maxSpeed).toBeGreaterThan(reserva.maxSpeed);
+    expect(reserva.maxSpeed).toBeGreaterThan(marauderStats.maxSpeed);
+    expect(visitor).toEqual(marauderStats);
   });
 });
 

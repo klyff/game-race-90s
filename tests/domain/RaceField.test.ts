@@ -9,10 +9,10 @@ import { findTrack } from '../../src/data/tracks/registry.ts';
 import { parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
 import { trackFullHalfWidth } from '../../src/domain/track/TrackDefinition.ts';
-import { RACE_PHASE, SIMULATION_STEP_SECONDS } from '../../src/domain/constants.ts';
+import { CAR_PERK, RACE_PHASE, SIMULATION_STEP_SECONDS } from '../../src/domain/constants.ts';
 import { IDLE_INPUT } from '../../src/domain/input/InputCommand.ts';
 import type { InputCommand } from '../../src/domain/input/InputCommand.ts';
-import { CAR_CONDITION } from '../../src/domain/vehicle/CarIntegrity.ts';
+import { CAR_CONDITION, createCarIntegrity } from '../../src/domain/vehicle/CarIntegrity.ts';
 import { distance as vecDistance, length as vecLength, scale, subtract } from '../../src/domain/math/Vec2.ts';
 
 const testFileDir = dirname(fileURLToPath(import.meta.url));
@@ -256,6 +256,43 @@ describe('RaceField — car-to-car contact', () => {
     const rear = field.racers[1]!;
     expect(field.drainImpact(rear)).toBeGreaterThan(0);
     expect(field.drainImpact(rear)).toBe(0);
+  });
+
+  it('a war-tank ram costs the other car more integrity than a neutral ram', () => {
+    const marauder = manifest.cars.find(car => car.id === 'car-1')!;
+    const spline = freshSpline();
+    const frame = spline.frameAt(track.startLineDistance);
+    const tangent = frame.tangent;
+
+    function collideWithRearPerk(perk: typeof CAR_PERK.WAR_TANK | undefined): number {
+      const field = new RaceField(
+        [
+          { carId: 'front', stats: marauder.stats, isPlayer: true },
+          { carId: 'rear', stats: marauder.stats, isPlayer: false, perk },
+        ],
+        track,
+        spline,
+        { countdownSeconds: 0, npcWeapons: false },
+      );
+      const front = field.racers[0]!;
+      const rear = field.racers[1]!;
+      front.integrity = createCarIntegrity();
+      rear.integrity = createCarIntegrity();
+      front.state = { ...front.state, position: frame.position, velocity: scale(tangent, 10) };
+      front.distance = track.startLineDistance;
+      const behind = subtract(
+        frame.position,
+        scale(tangent, front.stats.collisionRadius + rear.stats.collisionRadius - 0.4),
+      );
+      rear.state = { ...rear.state, position: behind, velocity: scale(tangent, 70) };
+      rear.distance = track.startLineDistance - 3;
+      field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+      return front.integrity.integrity;
+    }
+
+    const afterNeutral = collideWithRearPerk(undefined);
+    const afterTank = collideWithRearPerk(CAR_PERK.WAR_TANK);
+    expect(afterTank).toBeLessThan(afterNeutral);
   });
 });
 

@@ -106,10 +106,10 @@ describe('parseCarSetManifest', () => {
     expect(manifest).toBeDefined();
   });
 
-  it('real manifest has the full 10-car roster', () => {
+  it('real manifest has the full 20-car fleet', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    expect(manifest.cars.length).toBe(10);
+    expect(manifest.cars.length).toBe(20);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -387,11 +387,20 @@ describe('parseCarSetManifest', () => {
     expect(() => parseCarSetManifest(invalid)).toThrow(CarManifestError);
   });
 
-  it('real manifest gives every one of the ten cars a perk that is a member of CAR_PERK', () => {
+  it('real manifest gives every fleet car a home planet and 0.9/0.7 advantage', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    for (const car of manifest.cars) {
+      expect(car.homePlanetId).toBeTruthy();
+      expect(car.worldAdvantage === 0.9 || car.worldAdvantage === 0.7).toBe(true);
+    }
+  });
+
+  it('real manifest gives every fleet car a perk that is a member of CAR_PERK', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(10);
+    expect(manifest.cars.length).toBe(20);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
@@ -403,8 +412,8 @@ describe('findCarSheet', () => {
   it('finds a car by known id', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    const sheet = findCarSheet(manifest, 'marauder');
-    expect(sheet.id).toBe('marauder');
+    const sheet = findCarSheet(manifest, 'car-1');
+    expect(sheet.id).toBe('car-1');
   });
 
   it('throws CarManifestError for unknown id', () => {
@@ -421,11 +430,9 @@ describe('findCarSheet', () => {
       expect.fail('Should have thrown');
     } catch (error) {
       if (error instanceof CarManifestError) {
-        expect(error.message).toContain('marauder');
-        expect(error.message).toContain('dirt-devil');
-        expect(error.message).toContain('havac');
-        expect(error.message).toContain('air-blade');
-        expect(error.message).toContain('battle-trak');
+        expect(error.message).toContain('car-1');
+        expect(error.message).toContain('car-6-tank');
+        expect(error.message).toContain('delorean');
       } else {
         throw error;
       }

@@ -1,5 +1,5 @@
-import { CAR_PERK, CAR_SPRITE_FRAMES } from '../../domain/constants.ts';
-import type { CarPerkId } from '../../domain/constants.ts';
+import { CAR_PERK, CAR_SPRITE_FRAMES, WORLD_ADVANTAGE } from '../../domain/constants.ts';
+import type { CarPerkId, WorldAdvantage } from '../../domain/constants.ts';
 import type { VehicleStats } from '../../domain/vehicle/VehicleStats.ts';
 
 /**
@@ -24,6 +24,10 @@ export interface CarSheetManifest {
   readonly shadow: { readonly width: number; readonly height: number };
   readonly stats: VehicleStats;
   readonly perk?: CarPerkId;
+  /** Planet this car is native to. Optional so a fixture can omit it. */
+  readonly homePlanetId?: string;
+  /** 0.9 titular / 0.7 reserva on the home planet. */
+  readonly worldAdvantage?: WorldAdvantage;
 }
 
 /**
@@ -89,6 +93,28 @@ function parsePerk(raw: unknown, carId: string): CarPerkId | undefined {
   return raw as CarPerkId;
 }
 
+function parseHomePlanet(raw: unknown, carId: string): string | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (typeof raw !== 'string' || raw.length === 0) {
+    throw new CarManifestError(`car "${carId}" has invalid homePlanetId ${JSON.stringify(raw)}`);
+  }
+  return raw;
+}
+
+function parseWorldAdvantage(raw: unknown, carId: string): WorldAdvantage | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (raw !== WORLD_ADVANTAGE.PRIMARY && raw !== WORLD_ADVANTAGE.SECONDARY) {
+    throw new CarManifestError(
+      `car "${carId}" has invalid worldAdvantage ${JSON.stringify(raw)}. Valid: ${WORLD_ADVANTAGE.PRIMARY}, ${WORLD_ADVANTAGE.SECONDARY}`,
+    );
+  }
+  return raw;
+}
+
 /**
  * Validates a freshly loaded `cars.json` before anything draws with it.
  *
@@ -151,6 +177,8 @@ function parseCarSheet(raw: unknown, index: number): CarSheetManifest {
     },
     stats: stats as unknown as VehicleStats,
     perk: parsePerk(source['perk'], id),
+    homePlanetId: parseHomePlanet(source['homePlanetId'], id),
+    worldAdvantage: parseWorldAdvantage(source['worldAdvantage'], id),
   };
 }
 

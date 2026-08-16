@@ -75,15 +75,15 @@ export const NPC_WEAPON_COOLDOWN_SECONDS = 1.2;
 
 /**
  * Oil slick diameter as a fraction of the dropper's car length.
- * Owner: "0.8x do tamanho de um carro".
+ * Owner: double the original 0.8× car length.
  */
-export const OIL_SIZE_OF_CAR = 0.8;
+export const OIL_SIZE_OF_CAR = 1.6;
 
 /**
  * Landmine radius as a multiple of the dropper's `collisionRadius`.
- * Owner: "half a car in size".
+ * Owner: double the original half-car radius (now a full collision radius).
  */
-export const MINE_RADIUS_FACTOR = 0.5;
+export const MINE_RADIUS_FACTOR = 1.0;
 
 /**
  * Oil lifetime as a multiple of one estimated lap on the current track.
@@ -106,18 +106,21 @@ export const OIL_LAP_REFERENCE_SPEED = 45;
  */
 export const OIL_YAW_SPIN = 14;
 
-/** How far behind the car an oil slick / mine is dropped, in car radii. */
-export const DROP_BEHIND_FACTOR = 2.2;
+/**
+ * How far behind the car an oil slick / mine is dropped, in car radii.
+ * Must clear (car radius + oil radius) so a 1.6× slick does not sit under the dropper.
+ */
+export const DROP_BEHIND_FACTOR = 3.4;
 
 /**
  * How close behind an NPC a rival must be, in world units, before the NPC drops
  * an oil slick in its path. Loose enough to be a real threat when chased.
  */
-export const NPC_OIL_DROP_GAP_UNITS = 11;
+export const NPC_OIL_DROP_GAP_UNITS = 16;
 
 /**
  * How close behind an NPC a rival must be before it drops a landmine. Tighter
  * than oil because a mine destroys outright — the AI only spends one when the
  * chaser is right on its tail.
  */
-export const NPC_MINE_DROP_GAP_UNITS = 6;
+export const NPC_MINE_DROP_GAP_UNITS = 10;

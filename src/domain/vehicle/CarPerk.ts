@@ -1,4 +1,4 @@
-import { CAR_PERK } from '../constants.ts';
+import { CAR_PERK, HOME_WORLD_STAT_BONUS, WORLD_ADVANTAGE } from '../constants.ts';
 import type { CarPerkId } from '../constants.ts';
 import { DAMAGE_ROLE } from './CarIntegrity.ts';
 import type { DamageRole } from './CarIntegrity.ts';
@@ -43,6 +43,12 @@ export interface CarPerkProfile {
   /** Multiplier on impact damage this car TAKES. Below 1 shrugs hits off. */
   readonly impactDamageMultiplier: number;
   /**
+   * Multiplier on impact damage this car DEALS to another car on contact. 1 leaves
+   * the victim's damage unchanged. Above 1 is a ram — the war tank's whole game.
+   * Walls never see this: there is no other car to charge.
+   */
+  readonly dealtImpactDamageMultiplier: number;
+  /**
    * How far off-road conditions are pulled back toward tarmac, 0..1.
    * 0 leaves the full penalty; 1 would make dirt indistinguishable from the road.
    */
@@ -60,6 +66,21 @@ export interface CarPerkProfile {
    * perk is a felt advantage once T-046's weapon system is live.
    */
   readonly reloadMultiplier: number;
+  /**
+   * Always-on fraction added to engine power AND top speed. 0 is no turbo.
+   * Same paired scaling as slipstream, but it does not need a draft.
+   */
+  readonly turboSpeedBonus: number;
+  /**
+   * Fraction of an oil-slick yaw-spin applied to the OTHER car on contact.
+   * 1 is a full oil spin; 0 leaves the victim's heading alone.
+   */
+  readonly contactYawSpin: number;
+  /**
+   * Multiplier on starting missiles and on the refill ceiling. 1 leaves the
+   * authored stock alone; 2 is the war tank's double loadout.
+   */
+  readonly missileStockMultiplier: number;
 }
 
 /** A car with no perk. Every rule below is a no-op against this. */
@@ -69,10 +90,14 @@ export const NEUTRAL_PERK: CarPerkProfile = {
   description: 'No signature advantage.',
   contactMassMultiplier: 1,
   impactDamageMultiplier: 1,
+  dealtImpactDamageMultiplier: 1,
   offroadRecovery: 0,
   brakingGripMultiplier: 1,
   slipstreamBonus: 0,
   reloadMultiplier: 1,
+  turboSpeedBonus: 0,
+  contactYawSpin: 0,
+  missileStockMultiplier: 1,
 };
 
 function profile(overrides: Partial<CarPerkProfile> & Pick<CarPerkProfile, 'id' | 'displayName' | 'description'>): CarPerkProfile {
@@ -125,6 +150,22 @@ export const CAR_PERKS: Readonly<Record<CarPerkId, CarPerkProfile>> = Object.fre
     displayName: 'Arsenal',
     description: 'Carries and reloads far more ordnance.',
     reloadMultiplier: 3,
+  }),
+  [CAR_PERK.WAR_TANK]: profile({
+    id: CAR_PERK.WAR_TANK,
+    displayName: 'War Tank',
+    description: 'A rolling bunker. Almost no damage taken; rams flatten whoever it hits.',
+    contactMassMultiplier: 4,
+    impactDamageMultiplier: 0.15,
+    dealtImpactDamageMultiplier: 2.2,
+    contactYawSpin: 1,
+    missileStockMultiplier: 2,
+  }),
+  [CAR_PERK.TURBO]: profile({
+    id: CAR_PERK.TURBO,
+    displayName: 'Turbo',
+    description: 'Always on the boil. Pulls away on the straight without needing a draft.',
+    turboSpeedBonus: 0.12,
   }),
 });
 
@@ -183,6 +224,16 @@ export function perkDamageMultiplier(perk: CarPerkProfile, _role: DamageRole): n
   return Math.max(0, perk.impactDamageMultiplier);
 }
 
+/**
+ * Multiplier on the damage this car deals to another car in a contact.
+ *
+ * Applied to the OTHER car's incoming damage, never to walls. A value of 1 is a
+ * no-op so every existing perk stays honest.
+ */
+export function perkDealtDamageMultiplier(perk: CarPerkProfile): number {
+  return Math.max(0, perk.dealtImpactDamageMultiplier);
+}
+
 /** True when this perk cares about the damage role at all. Kept for the caller's clarity. */
 export function isAggressorRole(role: DamageRole): boolean {
   return role === DAMAGE_ROLE.AGGRESSOR;
@@ -225,7 +276,54 @@ export function drivingStats(
     };
   }
 
+  const turbo = Math.max(0, perk.turboSpeedBonus);
+  if (turbo > 0) {
+    const boost = 1 + turbo;
+    result = {
+      ...result,
+      enginePower: result.enginePower * boost,
+      maxSpeed: result.maxSpeed * boost,
+    };
+  }
+
   return result;
+}
+
+/**
+ * Stats to drive with on a given planet. Only the home planet applies a bonus,
+ * and only the authored 0.9 / 0.7 fractions count — anything else is a visitor.
+ *
+ * Scales engine power AND top speed together, same reason as a draft: raising
+ * power alone just raises derived drag and the car tops out at the same speed.
+ */
+export function homeWorldStats(
+  stats: VehicleStats,
+  homePlanetId: string | undefined,
+  worldAdvantage: number | undefined,
+  racePlanetId: string | undefined,
+): VehicleStats {
+  if (
+    homePlanetId === undefined ||
+    homePlanetId.length === 0 ||
+    racePlanetId === undefined ||
+    racePlanetId.length === 0 ||
+    homePlanetId !== racePlanetId
+  ) {
+    return stats;
+  }
+  const advantage =
+    worldAdvantage === WORLD_ADVANTAGE.PRIMARY || worldAdvantage === WORLD_ADVANTAGE.SECONDARY
+      ? worldAdvantage
+      : 0;
+  if (advantage === 0) {
+    return stats;
+  }
+  const boost = 1 + HOME_WORLD_STAT_BONUS * advantage;
+  return {
+    ...stats,
+    enginePower: stats.enginePower * boost,
+    maxSpeed: stats.maxSpeed * boost,
+  };
 }
 
 function clampUnit(value: number): number {

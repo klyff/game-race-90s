@@ -9,13 +9,13 @@
   },
   "cars": [
     {
-      "id": "marauder",
-      "displayName": "Marauder",
-      "archetype": "Balanced muscle — forgiving all-rounder",
-      "image": "marauder.png",
+      "id": "car-1",
+      "displayName": "Car 1",
+      "archetype": "Balanced muscle — Thunder Basin titular",
+      "image": "car-1.png",
       "shadow": {
         "width": 43,
-        "height": 21
+        "height": 17
       },
       "stats": {
         "mass": 1000,
@@ -30,112 +30,44 @@
         "collisionRadius": 1.7,
         "aimRadius": 3.5
       },
-      "perk": "bulldozer"
+      "perk": "bulldozer",
+      "homePlanetId": "thunder-basin",
+      "worldAdvantage": 0.9
     },
     {
-      "id": "dirt-devil",
-      "displayName": "Dirt Devil",
-      "archetype": "Light dirt buggy — grip champion, nimble and fragile",
-      "image": "dirt-devil.png",
+      "id": "car-2",
+      "displayName": "Car 2",
+      "archetype": "Light muscle — Thunder Basin reserva",
+      "image": "car-2.png",
       "shadow": {
-        "width": 44,
+        "width": 43,
         "height": 22
       },
       "stats": {
-        "mass": 750,
-        "enginePower": 28,
-        "brakeForce": 40,
-        "maxSpeed": 65,
-        "grip": 35,
-        "steerRate": 3.2,
-        "steerSpeedFalloff": 0.35,
-        "armor": 0.25,
-        "ammoCapacity": 4,
-        "collisionRadius": 1.55,
-        "aimRadius": 3
-      },
-      "perk": "off-road-ace"
-    },
-    {
-      "id": "havac",
-      "displayName": "Havac",
-      "archetype": "Heavy armoured bruiser — relentless tank",
-      "image": "havac.png",
-      "shadow": {
-        "width": 53,
-        "height": 26
-      },
-      "stats": {
-        "mass": 1200,
-        "enginePower": 40,
-        "brakeForce": 42,
-        "maxSpeed": 65,
-        "grip": 18,
-        "steerRate": 1.8,
-        "steerSpeedFalloff": 0.65,
-        "armor": 0.6,
-        "ammoCapacity": 5,
-        "collisionRadius": 1.85,
-        "aimRadius": 2.5
-      },
-      "perk": "anvil"
-    },
-    {
-      "id": "air-blade",
-      "displayName": "Air Blade",
-      "archetype": "Low-slung speedster — pure acceleration, fragile at the edge",
-      "image": "air-blade.png",
-      "shadow": {
-        "width": 50,
-        "height": 25
-      },
-      "stats": {
-        "mass": 650,
-        "enginePower": 36,
-        "brakeForce": 36,
-        "maxSpeed": 95,
-        "grip": 18,
-        "steerRate": 3.1,
-        "steerSpeedFalloff": 0.68,
-        "armor": 0.15,
-        "ammoCapacity": 4,
-        "collisionRadius": 1.8,
-        "aimRadius": 3.2
-      },
-      "perk": "slipstream"
-    },
-    {
-      "id": "battle-trak",
-      "displayName": "Battle Trak",
-      "archetype": "Weapons platform — high firepower, steady all-rounder",
-      "image": "battle-trak.png",
-      "shadow": {
-        "width": 45,
-        "height": 22
-      },
-      "stats": {
-        "mass": 1080,
-        "enginePower": 32,
+        "mass": 900,
+        "enginePower": 33,
         "brakeForce": 44,
-        "maxSpeed": 74,
-        "grip": 29,
-        "steerRate": 2.4,
-        "steerSpeedFalloff": 0.45,
-        "armor": 0.42,
-        "ammoCapacity": 15,
-        "collisionRadius": 1.85,
-        "aimRadius": 5
+        "maxSpeed": 76,
+        "grip": 31,
+        "steerRate": 2.6,
+        "steerSpeedFalloff": 0.42,
+        "armor": 0.35,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.65,
+        "aimRadius": 3.4
       },
-      "perk": "arsenal"
+      "perk": "trench-grip",
+      "homePlanetId": "thunder-basin",
+      "worldAdvantage": 0.7
     },
     {
       "id": "delorean",
       "displayName": "Delorean",
-      "archetype": "Steel wedge — flat-out pace, fragile shell",
+      "archetype": "Steel wedge — Chrome Verge titular",
       "image": "delorean.png",
       "shadow": {
-        "width": 46,
-        "height": 23
+        "width": 43,
+        "height": 17
       },
       "stats": {
         "mass": 900,
@@ -150,16 +82,44 @@
         "collisionRadius": 1.75,
         "aimRadius": 3
       },
-      "perk": "slipstream"
+      "perk": "slipstream",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.9
     },
     {
-      "id": "air-boat",
-      "displayName": "Air Boat",
-      "archetype": "Marsh-runner — glides where others slide",
-      "image": "air-boat.png",
+      "id": "car-9-turbo",
+      "displayName": "Turbo 9",
+      "archetype": "Turbo reserva — Chrome Verge",
+      "image": "car-9-turbo.png",
       "shadow": {
-        "width": 44,
-        "height": 22
+        "width": 43,
+        "height": 18
+      },
+      "stats": {
+        "mass": 650,
+        "enginePower": 36,
+        "brakeForce": 36,
+        "maxSpeed": 95,
+        "grip": 18,
+        "steerRate": 3.1,
+        "steerSpeedFalloff": 0.68,
+        "armor": 0.15,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.8,
+        "aimRadius": 3.2
+      },
+      "perk": "turbo",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7
+    },
+    {
+      "id": "car-3",
+      "displayName": "Car 3",
+      "archetype": "Marsh-runner — Bogmire Deep titular",
+      "image": "car-3.png",
+      "shadow": {
+        "width": 43,
+        "height": 21
       },
       "stats": {
         "mass": 720,
@@ -174,64 +134,200 @@
         "collisionRadius": 1.7,
         "aimRadius": 3
       },
-      "perk": "off-road-ace"
+      "perk": "off-road-ace",
+      "homePlanetId": "bogmire-deep",
+      "worldAdvantage": 0.9
     },
     {
-      "id": "snow-car",
-      "displayName": "Snow Car",
-      "archetype": "Ice-crawler — grips and stops where others skate",
-      "image": "snow-car.png",
+      "id": "car-13",
+      "displayName": "Car 13",
+      "archetype": "Marsh reserva — Bogmire Deep",
+      "image": "car-13.png",
       "shadow": {
-        "width": 44,
-        "height": 22
+        "width": 43,
+        "height": 18
       },
       "stats": {
-        "mass": 980,
-        "enginePower": 32,
-        "brakeForce": 48,
-        "maxSpeed": 68,
-        "grip": 38,
-        "steerRate": 2.6,
-        "steerSpeedFalloff": 0.42,
-        "armor": 0.45,
-        "ammoCapacity": 5,
-        "collisionRadius": 1.8,
+        "mass": 720,
+        "enginePower": 30,
+        "brakeForce": 42,
+        "maxSpeed": 70,
+        "grip": 34,
+        "steerRate": 3,
+        "steerSpeedFalloff": 0.4,
+        "armor": 0.3,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.7,
         "aimRadius": 3
       },
-      "perk": "trench-grip"
+      "perk": "off-road-ace",
+      "homePlanetId": "bogmire-deep",
+      "worldAdvantage": 0.7
     },
     {
-      "id": "magma-rex",
-      "displayName": "Magma Rex",
-      "archetype": "Siege tank — unmovable through fire and rubble",
-      "image": "magma-rex.png",
+      "id": "car-4",
+      "displayName": "Car 4",
+      "archetype": "Ice-crawler — Cryo Hollow titular",
+      "image": "car-4.png",
       "shadow": {
-        "width": 49,
-        "height": 25
+        "width": 43,
+        "height": 21
       },
       "stats": {
-        "mass": 1250,
-        "enginePower": 41,
-        "brakeForce": 40,
-        "maxSpeed": 70,
-        "grip": 20,
-        "steerRate": 1.9,
-        "steerSpeedFalloff": 0.6,
-        "armor": 0.62,
+        "mass": 1320,
+        "enginePower": 36,
+        "brakeForce": 50,
+        "maxSpeed": 62,
+        "grip": 38,
+        "steerRate": 2.3,
+        "steerSpeedFalloff": 0.46,
+        "armor": 0.7,
         "ammoCapacity": 5,
-        "collisionRadius": 1.9,
-        "aimRadius": 2.6
+        "collisionRadius": 1.95,
+        "aimRadius": 3
       },
-      "perk": "anvil"
+      "perk": "trench-grip",
+      "homePlanetId": "cryo-hollow",
+      "worldAdvantage": 0.9
     },
     {
-      "id": "neon-ronin",
-      "displayName": "Neon Ronin",
-      "archetype": "Street-tuner — razor turn-in on tight circuits",
-      "image": "neon-ronin.png",
+      "id": "car-17",
+      "displayName": "Car 17",
+      "archetype": "Ice reserva — Cryo Hollow",
+      "image": "car-17.png",
       "shadow": {
-        "width": 46,
+        "width": 43,
         "height": 23
+      },
+      "stats": {
+        "mass": 1320,
+        "enginePower": 36,
+        "brakeForce": 50,
+        "maxSpeed": 62,
+        "grip": 38,
+        "steerRate": 2.3,
+        "steerSpeedFalloff": 0.46,
+        "armor": 0.7,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.95,
+        "aimRadius": 3
+      },
+      "perk": "trench-grip",
+      "homePlanetId": "cryo-hollow",
+      "worldAdvantage": 0.7
+    },
+    {
+      "id": "car-8-strong",
+      "displayName": "Strong 8",
+      "archetype": "Immovable bruiser — Ferro Rust titular",
+      "image": "car-8-strong.png",
+      "shadow": {
+        "width": 43,
+        "height": 21
+      },
+      "stats": {
+        "mass": 1200,
+        "enginePower": 40,
+        "brakeForce": 42,
+        "maxSpeed": 65,
+        "grip": 18,
+        "steerRate": 1.8,
+        "steerSpeedFalloff": 0.65,
+        "armor": 0.6,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.85,
+        "aimRadius": 2.5
+      },
+      "perk": "anvil",
+      "homePlanetId": "ferro-rust",
+      "worldAdvantage": 0.9
+    },
+    {
+      "id": "car-12-strong",
+      "displayName": "Strong 12",
+      "archetype": "Bulldozer reserva — Ferro Rust",
+      "image": "car-12-strong.png",
+      "shadow": {
+        "width": 43,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1200,
+        "enginePower": 40,
+        "brakeForce": 42,
+        "maxSpeed": 65,
+        "grip": 18,
+        "steerRate": 1.8,
+        "steerSpeedFalloff": 0.65,
+        "armor": 0.6,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.85,
+        "aimRadius": 2.5
+      },
+      "perk": "bulldozer",
+      "homePlanetId": "ferro-rust",
+      "worldAdvantage": 0.7
+    },
+    {
+      "id": "car-6-tank",
+      "displayName": "Tank",
+      "archetype": "War tank — Vulkanis titular",
+      "image": "car-6-tank.png",
+      "shadow": {
+        "width": 43,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1600,
+        "enginePower": 34,
+        "brakeForce": 36,
+        "maxSpeed": 52,
+        "grip": 16,
+        "steerRate": 1.4,
+        "steerSpeedFalloff": 0.72,
+        "armor": 0.88,
+        "ammoCapacity": 4,
+        "collisionRadius": 2.15,
+        "aimRadius": 2.4
+      },
+      "perk": "war-tank",
+      "homePlanetId": "vulkanis",
+      "worldAdvantage": 0.9
+    },
+    {
+      "id": "car-18",
+      "displayName": "Car 18",
+      "archetype": "Heavy reserva — Vulkanis",
+      "image": "car-18.png",
+      "shadow": {
+        "width": 43,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1200,
+        "enginePower": 40,
+        "brakeForce": 42,
+        "maxSpeed": 65,
+        "grip": 18,
+        "steerRate": 1.8,
+        "steerSpeedFalloff": 0.65,
+        "armor": 0.6,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.85,
+        "aimRadius": 2.5
+      },
+      "perk": "anvil",
+      "homePlanetId": "vulkanis",
+      "worldAdvantage": 0.7
+    },
+    {
+      "id": "car-11",
+      "displayName": "Car 11",
+      "archetype": "Street-tuner — Neon Kasbah titular",
+      "image": "car-11.png",
+      "shadow": {
+        "width": 43,
+        "height": 18
       },
       "stats": {
         "mass": 780,
@@ -246,7 +342,191 @@
         "collisionRadius": 1.65,
         "aimRadius": 3.4
       },
-      "perk": "bulldozer"
+      "perk": "slipstream",
+      "homePlanetId": "neon-kasbah",
+      "worldAdvantage": 0.9
+    },
+    {
+      "id": "car-15",
+      "displayName": "Car 15",
+      "archetype": "Arsenal reserva — Neon Kasbah",
+      "image": "car-15.png",
+      "shadow": {
+        "width": 43,
+        "height": 17
+      },
+      "stats": {
+        "mass": 780,
+        "enginePower": 35,
+        "brakeForce": 44,
+        "maxSpeed": 80,
+        "grip": 32,
+        "steerRate": 3.3,
+        "steerSpeedFalloff": 0.5,
+        "armor": 0.28,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.65,
+        "aimRadius": 3.4
+      },
+      "perk": "arsenal",
+      "homePlanetId": "neon-kasbah",
+      "worldAdvantage": 0.7
+    },
+    {
+      "id": "car-7-turbo",
+      "displayName": "Turbo 7",
+      "archetype": "Turbo — Ash Reach titular",
+      "image": "car-7-turbo.png",
+      "shadow": {
+        "width": 43,
+        "height": 17
+      },
+      "stats": {
+        "mass": 650,
+        "enginePower": 36,
+        "brakeForce": 36,
+        "maxSpeed": 95,
+        "grip": 18,
+        "steerRate": 3.1,
+        "steerSpeedFalloff": 0.68,
+        "armor": 0.15,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.8,
+        "aimRadius": 3.2
+      },
+      "perk": "turbo",
+      "homePlanetId": "ash-reach",
+      "worldAdvantage": 0.9
+    },
+    {
+      "id": "car-20",
+      "displayName": "Car 20",
+      "archetype": "Slipstream reserva — Ash Reach",
+      "image": "car-20.png",
+      "shadow": {
+        "width": 43,
+        "height": 17
+      },
+      "stats": {
+        "mass": 650,
+        "enginePower": 36,
+        "brakeForce": 36,
+        "maxSpeed": 95,
+        "grip": 18,
+        "steerRate": 3.1,
+        "steerSpeedFalloff": 0.68,
+        "armor": 0.15,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.8,
+        "aimRadius": 3.2
+      },
+      "perk": "slipstream",
+      "homePlanetId": "ash-reach",
+      "worldAdvantage": 0.7
+    },
+    {
+      "id": "car-10",
+      "displayName": "Car 10",
+      "archetype": "Weapons platform — Voidport titular",
+      "image": "car-10.png",
+      "shadow": {
+        "width": 43,
+        "height": 21
+      },
+      "stats": {
+        "mass": 1080,
+        "enginePower": 32,
+        "brakeForce": 44,
+        "maxSpeed": 74,
+        "grip": 29,
+        "steerRate": 2.4,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.42,
+        "ammoCapacity": 15,
+        "collisionRadius": 1.85,
+        "aimRadius": 5
+      },
+      "perk": "arsenal",
+      "homePlanetId": "voidport",
+      "worldAdvantage": 0.9
+    },
+    {
+      "id": "car-14",
+      "displayName": "Car 14",
+      "archetype": "Arsenal reserva — Voidport",
+      "image": "car-14.png",
+      "shadow": {
+        "width": 43,
+        "height": 21
+      },
+      "stats": {
+        "mass": 1080,
+        "enginePower": 32,
+        "brakeForce": 44,
+        "maxSpeed": 74,
+        "grip": 29,
+        "steerRate": 2.4,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.42,
+        "ammoCapacity": 15,
+        "collisionRadius": 1.85,
+        "aimRadius": 5
+      },
+      "perk": "arsenal",
+      "homePlanetId": "voidport",
+      "worldAdvantage": 0.7
+    },
+    {
+      "id": "car-16",
+      "displayName": "Car 16",
+      "archetype": "Dirt buggy — Verdant Fault titular",
+      "image": "car-16.png",
+      "shadow": {
+        "width": 43,
+        "height": 20
+      },
+      "stats": {
+        "mass": 750,
+        "enginePower": 28,
+        "brakeForce": 40,
+        "maxSpeed": 65,
+        "grip": 35,
+        "steerRate": 3.2,
+        "steerSpeedFalloff": 0.35,
+        "armor": 0.25,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.55,
+        "aimRadius": 3
+      },
+      "perk": "off-road-ace",
+      "homePlanetId": "verdant-fault",
+      "worldAdvantage": 0.9
+    },
+    {
+      "id": "car-19",
+      "displayName": "Car 19",
+      "archetype": "Dirt reserva — Verdant Fault",
+      "image": "car-19.png",
+      "shadow": {
+        "width": 43,
+        "height": 23
+      },
+      "stats": {
+        "mass": 750,
+        "enginePower": 28,
+        "brakeForce": 40,
+        "maxSpeed": 65,
+        "grip": 35,
+        "steerRate": 3.2,
+        "steerSpeedFalloff": 0.35,
+        "armor": 0.25,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.55,
+        "aimRadius": 3
+      },
+      "perk": "off-road-ace",
+      "homePlanetId": "verdant-fault",
+      "worldAdvantage": 0.7
     }
   ]
 }

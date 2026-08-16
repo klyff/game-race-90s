@@ -154,16 +154,26 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     // battle-trak  LAP  34.15s  top 71.3  slide 0.0%  walls 0  maxLat 9.00
 
     const bands: Record<string, { min: number; max: number }> = {
-      'marauder': { min: 24.91, max: 41.52 },      // 33.22 ± 25%
-      'dirt-devil': { min: 25.17, max: 41.96 },    // 33.57 ± 25%
-      'havac': { min: 30.65, max: 51.08 },         // 40.87 ± 25%
-      'air-blade': { min: 29.35, max: 48.92 },     // 39.13 ± 25%
-      'battle-trak': { min: 25.60, max: 42.67 },   // 34.13 ± 25%
-      'delorean': { min: 25.98, max: 43.29 },      // 34.63 ± 25%
-      'air-boat': { min: 24.77, max: 41.29 },      // 33.03 ± 25%
-      'snow-car': { min: 24.01, max: 40.02 },      // 32.02 ± 25%
-      'magma-rex': { min: 29.11, max: 48.52 },     // 38.82 ± 25%
-      'neon-ronin': { min: 24.22, max: 40.38 },    // 32.30 ± 25%
+      'car-1': { min: 24.91, max: 41.52 },
+      'car-2': { min: 24.5, max: 42.0 },
+      'delorean': { min: 25.98, max: 43.29 },
+      'car-9-turbo': { min: 29.35, max: 48.92 },
+      'car-3': { min: 24.77, max: 41.29 },
+      'car-13': { min: 24.77, max: 41.29 },
+      'car-4': { min: 24.62, max: 41.04 },
+      'car-17': { min: 24.62, max: 41.04 },
+      'car-8-strong': { min: 30.65, max: 51.08 },
+      'car-12-strong': { min: 30.65, max: 51.08 },
+      'car-6-tank': { min: 34.30, max: 57.16 },
+      'car-18': { min: 30.65, max: 51.08 },
+      'car-11': { min: 24.22, max: 40.38 },
+      'car-15': { min: 24.22, max: 40.38 },
+      'car-7-turbo': { min: 29.35, max: 48.92 },
+      'car-20': { min: 29.35, max: 48.92 },
+      'car-10': { min: 25.60, max: 42.67 },
+      'car-14': { min: 25.60, max: 42.67 },
+      'car-16': { min: 25.17, max: 41.96 },
+      'car-19': { min: 25.17, max: 41.96 },
     };
 
     const results: Array<{ id: string; lapSeconds: number }> = [];
@@ -205,8 +215,8 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     expect(spreadPercent).toBeGreaterThan(10);
 
     // Correlation: air-blade has the highest maxSpeed (89.1) but should NOT be the fastest by lap
-    const airBlade = results.find(r => r.id === 'air-blade')!;
-    const marauder = results.find(r => r.id === 'marauder')!;
+    const airBlade = results.find(r => r.id === 'car-7-turbo')!;
+    const marauder = results.find(r => r.id === 'car-1')!;
     const airBladeIsHighestMaxSpeed = results.every(r => r.maxSpeed <= airBlade.maxSpeed);
     const airBladeIsNotFastestLap = airBlade.result.lapSeconds > marauder.result.lapSeconds;
 

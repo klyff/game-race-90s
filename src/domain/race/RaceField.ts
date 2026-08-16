@@ -2,8 +2,10 @@ import { RACE_PHASE } from '../constants.ts';
 import type { InputCommand } from '../input/InputCommand.ts';
 import { IDLE_INPUT } from '../input/InputCommand.ts';
 import { add, angleOf, dot, length, normalize, scale, subtract, VEC2_ZERO } from '../math/Vec2.ts';
+import type { Vec2 } from '../math/Vec2.ts';
 import { resolveWallContact } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
+import { trackFullHalfWidth } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import { resolveCarContact } from '../vehicle/CarCollision.ts';
 import {
@@ -18,7 +20,9 @@ import type { CarIntegrity, DamageRole } from '../vehicle/CarIntegrity.ts';
 import {
   contactStats,
   drivingStats,
+  homeWorldStats,
   perkDamageMultiplier,
+  perkDealtDamageMultiplier,
   perkProfile,
   perkSurface,
 } from '../vehicle/CarPerk.ts';
@@ -87,6 +91,8 @@ export interface RacerEntry {
    * have none, in which case every perk rule is a no-op against it.
    */
   readonly perk?: CarPerkId;
+  readonly homePlanetId?: string;
+  readonly worldAdvantage?: number;
 }
 
 /**
@@ -110,6 +116,8 @@ export interface RacerRuntime {
    * downstream has to know how an id becomes numbers.
    */
   readonly perk: CarPerkProfile;
+  readonly homePlanetId: string | undefined;
+  readonly worldAdvantage: number | undefined;
   /** Grid slot this car started from, 0 = pole. */
   readonly gridIndex: number;
   state: VehicleState;
@@ -158,6 +166,8 @@ export interface RaceFieldOptions {
   readonly npcWeapons?: boolean;
   /** Searched racing lines (T-043). When present, NPCs use `AIDriver` + the line. */
   readonly trackLines?: TrackLinesManifest;
+  /** Planet this race is on; home-world bonus only applies when it matches. */
+  readonly planetId?: string;
 }
 
 const DEFAULT_COUNTDOWN_SECONDS = 3;
@@ -205,9 +215,12 @@ export class RaceField {
   private readonly gridSetbackUnits: number;
   private readonly oilLifetimeSeconds: number;
   private readonly npcWeapons: boolean;
+  private readonly planetId: string | undefined;
   private raceState: RaceState;
   private missiles: Missile[] = [];
   private hazards: TrackHazard[] = [];
+  /** Missile bursts this step (car hit or wall), for the presentation layer. */
+  private weaponBursts: Vec2[] = [];
   /** Hazard ids spawned this step — their dropper is immune until the next step. */
   private readonly freshHazardIds = new Set<number>();
   /** Player weapon hits landed on rivals this race (for the purse bounty). */
@@ -236,6 +249,7 @@ export class RaceField {
     this.oilLifetimeSeconds =
       OIL_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED);
     this.npcWeapons = options.npcWeapons ?? true;
+    this.planetId = options.planetId;
 
     // Grid slots follow entry order, so the caller decides where the player starts by
     // where it puts the player in the list. The scene puts them at the back.
@@ -261,13 +275,15 @@ export class RaceField {
         stats,
         isPlayer: entry.isPlayer,
         perk: perkProfile(entry.perk),
+        homePlanetId: entry.homePlanetId,
+        worldAdvantage: entry.worldAdvantage,
         gridIndex: slot.index,
         state: createVehicleState(slot.position, slot.heading),
         telemetry: null,
         distance: slot.distance,
         lateralOffset: slot.lateralOffset,
         integrity: createCarIntegrity(),
-        inventory: createWeaponInventory(),
+        inventory: createWeaponInventory(perkProfile(entry.perk)),
         jumps: createJumpCharges(),
         pendingImpactSpeed: 0,
         explodedThisStep: false,
@@ -309,6 +325,11 @@ export class RaceField {
     return this.playerHits;
   }
 
+  /** Missile explosion points from the step just run (car hit or wall). */
+  get weaponBurstsThisStep(): readonly Vec2[] {
+    return this.weaponBursts;
+  }
+
   /** True once every car is wrecked or rolling slower than the coast stop speed. */
   get allNearlyStopped(): boolean {
     return this.racers.every(
@@ -337,7 +358,7 @@ export class RaceField {
       racer.distance = slot.distance;
       racer.lateralOffset = slot.lateralOffset;
       racer.integrity = createCarIntegrity();
-      racer.inventory = createWeaponInventory();
+      racer.inventory = createWeaponInventory(racer.perk);
       racer.jumps = createJumpCharges();
       racer.pendingImpactSpeed = 0;
       racer.explodedThisStep = false;
@@ -370,19 +391,26 @@ export class RaceField {
      * consistent by only overwriting the role when a bigger impact arrives.
      */
     const roles: DamageRole[] = this.racers.map(() => DAMAGE_ROLE.VICTIM);
+    /**
+     * Outgoing ram scale from the OTHER car on the hardest contact this step.
+     * Walls leave this at 1; only a car-to-car hit can raise it.
+     */
+    const dealtScales = this.racers.map(() => 1);
     /** Cars a contact impulse moved, which therefore need a second wall check. */
     const nudged = this.racers.map(() => false);
     const stepped: RacerStep[] = [];
     /** Missile hits queued during stage 1, applied in stage 4 with contact damage. */
-    const missileHits: { targetIndex: number; ownerCarId: string }[] = [];
+    const missileHits: { targetIndex: number; ownerCarId: string; position: Vec2 }[] = [];
     this.freshHazardIds.clear();
+    this.weaponBursts = [];
 
-    const recordImpact = (index: number, speed: number, role: DamageRole): void => {
+    const recordImpact = (index: number, speed: number, role: DamageRole, dealtScale = 1): void => {
       if (speed <= (impacts[index] ?? 0)) {
         return;
       }
       impacts[index] = speed;
       roles[index] = role;
+      dealtScales[index] = dealtScale;
     };
 
     // 1. Every car integrates on its own, against the track only — and may fire.
@@ -416,7 +444,13 @@ export class RaceField {
       // track picks. Both are recomputed every step from the current field, so nothing
       // is cached and nothing can go stale — the trap that produced T-039.
       const draft = this.draftFor(racer);
-      const stats = drivingStats(racer.stats, racer.perk, command.brake > 0, draft);
+      const worlded = homeWorldStats(
+        racer.stats,
+        racer.homePlanetId,
+        racer.worldAdvantage,
+        this.planetId,
+      );
+      const stats = drivingStats(worlded, racer.perk, command.brake > 0, draft);
       const step = stepVehicleOnTrack(
         racer.state,
         command,
@@ -476,16 +510,27 @@ export class RaceField {
         }
         const hit = findMissileHit(advanced, targets);
         if (hit === null) {
+          const projection = this.spline.project(advanced.position);
+          const wallLimit = trackFullHalfWidth(this.track) - advanced.radius;
+          if (Math.abs(projection.lateralOffset) > wallLimit) {
+            this.weaponBursts.push(advanced.position);
+            continue;
+          }
           surviving.push(advanced);
           continue;
         }
         const targetIndex = this.racers.findIndex(racer => racer.carId === hit.targetCarId);
         if (targetIndex >= 0) {
-          missileHits.push({ targetIndex, ownerCarId: hit.ownerCarId });
+          missileHits.push({
+            targetIndex,
+            ownerCarId: hit.ownerCarId,
+            position: advanced.position,
+          });
           if (hit.ownerCarId === this.player.carId && hit.targetCarId !== this.player.carId) {
             this.playerHits.missiles += 1;
           }
         }
+        this.weaponBursts.push(advanced.position);
         // Missile is consumed on hit — if the target dies, both "explode" (stage 4).
       }
       this.missiles = surviving;
@@ -519,11 +564,33 @@ export class RaceField {
         // exactly what destroys the evidence: afterwards both cars are moving apart and
         // neither looks like the one that closed the gap.
         const aggressor = aggressorOf(a.state, b.state);
-        recordImpact(i, contact.impactSpeed, aggressor === CONTACT_SIDE.A ? DAMAGE_ROLE.AGGRESSOR : DAMAGE_ROLE.VICTIM);
-        recordImpact(j, contact.impactSpeed, aggressor === CONTACT_SIDE.B ? DAMAGE_ROLE.AGGRESSOR : DAMAGE_ROLE.VICTIM);
+        recordImpact(
+          i,
+          contact.impactSpeed,
+          aggressor === CONTACT_SIDE.A ? DAMAGE_ROLE.AGGRESSOR : DAMAGE_ROLE.VICTIM,
+          perkDealtDamageMultiplier(b.perk),
+        );
+        recordImpact(
+          j,
+          contact.impactSpeed,
+          aggressor === CONTACT_SIDE.B ? DAMAGE_ROLE.AGGRESSOR : DAMAGE_ROLE.VICTIM,
+          perkDealtDamageMultiplier(a.perk),
+        );
 
         a.state = contact.a;
         b.state = contact.b;
+        if (a.perk.contactYawSpin > 0) {
+          b.state = {
+            ...b.state,
+            yawSpin: b.state.yawSpin + oilYawSpinForArmor(b.stats.armor) * a.perk.contactYawSpin,
+          };
+        }
+        if (b.perk.contactYawSpin > 0) {
+          a.state = {
+            ...a.state,
+            yawSpin: a.state.yawSpin + oilYawSpinForArmor(a.stats.armor) * b.perk.contactYawSpin,
+          };
+        }
         nudged[i] = true;
         nudged[j] = true;
       }
@@ -560,7 +627,7 @@ export class RaceField {
         impact,
         racer.stats,
         role,
-        perkDamageMultiplier(racer.perk, role),
+        perkDamageMultiplier(racer.perk, role) * (dealtScales[index] ?? 1),
       );
       if (
         before.condition !== CAR_CONDITION.DESTROYED &&

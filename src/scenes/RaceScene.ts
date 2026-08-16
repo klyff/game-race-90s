@@ -15,6 +15,7 @@ import { findCarSheet, frameIndexForHeading } from '../data/cars/CarManifest.ts'
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
+import { planetForTrackId } from '../data/tracks/planets.ts';
 import { themeForTrackId } from '../data/tracks/planetThemes.ts';
 import { musicForTrackId } from '../data/tracks/planetMusic.ts';
 import { findTrack } from '../data/tracks/registry.ts';
@@ -110,8 +111,8 @@ interface RaceSceneData {
   /** Every track's offline lines, keyed by track id; the scene reads its own track's. */
   readonly linesByTrack?: Record<string, TrackLinesManifest>;
   /**
-   * Which car the player drives. Absent on the first entry from `BootScene`; set when
-   * the scene restarts itself to swap cars, and by the car select.
+   * Which car the player drives. Absent on the first entry from `BootScene`;
+   * set by the car select.
    */
   readonly carId?: string;
   /** Which circuit to race. Defaults to the anchor track when omitted. */
@@ -215,6 +216,7 @@ export class RaceScene extends Phaser.Scene {
 
     this.field = new RaceField(this.buildEntries(), this.track, this.spline, {
       trackLines: this.trackLines,
+      planetId: planetForTrackId(this.trackId)?.id,
     });
     this.views = this.field.racers.map(racer =>
       new VehicleView(this, this.manifest, findCarSheet(this.manifest, racer.carId), this.projection),
@@ -386,6 +388,9 @@ export class RaceScene extends Phaser.Scene {
           intensity: this.explosionIntensity(racer),
         });
       }
+    }
+    for (const position of this.field.weaponBurstsThisStep) {
+      this.pendingExplosions.push({ position, intensity: 0.4 });
     }
   }
 
@@ -580,11 +585,28 @@ export class RaceScene extends Phaser.Scene {
     // the player can feel is an advantage they must also race against.
     const npcs = npcIds.map(carId => {
       const sheet = findCarSheet(this.manifest, carId);
-      return { carId, stats: sheet.stats, perk: sheet.perk, isPlayer: false };
+      return {
+        carId,
+        stats: sheet.stats,
+        perk: sheet.perk,
+        homePlanetId: sheet.homePlanetId,
+        worldAdvantage: sheet.worldAdvantage,
+        isPlayer: false,
+      };
     });
 
     const player = findCarSheet(this.manifest, this.carId);
-    return [...npcs, { carId: this.carId, stats: player.stats, perk: player.perk, isPlayer: true }];
+    return [
+      ...npcs,
+      {
+        carId: this.carId,
+        stats: player.stats,
+        perk: player.perk,
+        homePlanetId: player.homePlanetId,
+        worldAdvantage: player.worldAdvantage,
+        isPlayer: true,
+      },
+    ];
   }
 
   private playerSheetStats() {
@@ -628,9 +650,6 @@ export class RaceScene extends Phaser.Scene {
       };
     };
 
-    // R restarts the race. Cheap to add, and the alternative while tuning handling is
-    // reloading the page after every mistake.
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R).on('down', unlessPaused(() => this.respawn()));
     keyboard
       .addKey(Phaser.Input.Keyboard.KeyCodes.M)
       .on('down', unlessPaused(() => this.audio.setMuted(!this.audio.isMuted)));
@@ -641,14 +660,7 @@ export class RaceScene extends Phaser.Scene {
     // Esc pauses the race and raises the pause menu (Return / Save / Main Menu).
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.pauseGame());
 
-    // C cycles the player's car. Driving all five back to back is the only way to judge
-    // whether the stat sets actually feel different, which is T-012's gate.
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C).on('down', unlessPaused(() => this.cycleCar()));
-
-    // X wrecks the player's own car on demand. This is a debug aid and it earns its
-    // place: destruction is otherwise reachable only by crashing hard enough, which
-    // makes the explosion, the respawn and the integrity bar tedious to look at while
-    // they are being tuned. It only ever harms the car of whoever pressed it.
+    // X wrecks the player's own car on demand. Debug only — not a player control.
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X).on('down', unlessPaused(() => this.wreckPlayer()));
 
     // Browsers start every AudioContext suspended and only honour a resume that
@@ -703,30 +715,6 @@ export class RaceScene extends Phaser.Scene {
     this.chaseCamera.snapTo(this.player.state, this.targetZoom());
   }
 
-  /**
-   * Restarts the scene on the next car in the manifest.
-   *
-   * A restart rather than an in-place swap: `BootScene` has already loaded every car's
-   * sprite sheet, so nothing needs fetching, and the existing SHUTDOWN hook already tears
-   * down the audio graph and the views. Teaching `VehicleView` and `RaceAudio` to change
-   * car mid-life would add two stateful paths that exist only for a tuning convenience.
-   */
-  private cycleCar(): void {
-    const cars = this.manifest.cars;
-    const current = cars.findIndex(car => car.id === this.carId);
-    const next = cars[(current + 1) % cars.length];
-    if (next === undefined) {
-      return;
-    }
-    this.scene.restart({
-      manifest: this.manifest,
-      linesByTrack: this.linesByTrack,
-      carId: next.id,
-      trackId: this.trackId,
-    } satisfies RaceSceneData);
-
-  }
-
   private refreshOverlay(): void {
     const player = this.player;
     this.overlay.update({
@@ -762,8 +750,8 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private releaseResources(): void {
-    // Stopped explicitly: `C` restarts this scene, and a HUD left running would be
-    // launched a second time on the next `create` and stack another copy of itself.
+    // Stopped explicitly: a HUD left running would be launched a second time on
+    // the next `create` and stack another copy of itself.
     this.scene.stop(SCENE_KEY.HUD);
     this.driver.destroy();
     this.audio.destroy();
