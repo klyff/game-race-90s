@@ -15,8 +15,8 @@ reverses, marks the tarmac, sounds like an engine, and the camera breathes with 
 ## Next step
 
 **1. T-018 `SplashScene` — DOES NOT EXIST, and the owner has twice expected to see it.**
-Art ready: `public/assets/ui/splash.jpeg`. Music ready and **never heard**:
-`src/adapters/audio/TitleMusic.ts` (needs a user gesture, like `RaceAudio.resume()`).
+Art: `public/assets/ui/splash.jpeg`. Music ready, **never heard**: `TitleMusic.ts` (needs a user
+gesture, like `RaceAudio.resume()`).
 **Draw NO title — logo and credit are painted into the art.** Text in the dark void mid-frame; scale
 art to COVER, position against the IMAGE's rect not the viewport. "PRESS SPACE TO ROCK'N THE 90s"
 blinking ~1.2 s with a **hard on/off cut, never an alpha tween**, from a pure `BlinkClock`.
@@ -64,15 +64,14 @@ handoff.** Full task detail lives there, not here.
 
 ## Decisions
 
-- Locked decisions live in WORKLOG.md under **Locked technical decisions** — several encode bugs already
+- Locked decisions are in WORKLOG.md under **Locked technical decisions** — several encode bugs already
   paid for once (23 `projectNear`, 25 the invisible HUD, 27 the pace-driver maths). Read them before
   touching projection maths, any HUD, or any AI driver.
-- Subagents: one narrow single-file task each, default Haiku 4.5; the orchestrator writes the agent rows.
-  **Check their physics and their assertions** — this round they shipped a dimensionally wrong speed law
-  and tests that passed while nothing worked.
+- Subagents: one narrow single-file task each, Haiku by default; the orchestrator writes the agent rows.
 
 ## Files
 
-- Plan: `~/.claude/plans/fa-a-um-plano-para-compressed-beaver.md` — architecture, maths, agent briefs
-- `npm run gen:preview -- --roster` / `npm run gen:track` — PNGs into `.preview/`; **read the image**
-- `WORKLOG.md` — verbose ledger, ~19k tokens. Read it in slices.
+- Plan: `~/.claude/plans/fa-a-um-plano-para-compressed-beaver.md`
+- `WORKLOG.md` — the ledger. **Read its last cleanup block first.** Read the rest in slices.
+- `docs/art-briefs/planets.md` — the three image-AI prompts and the ten planets.
+- `tools/verify/README.md` — how to see the screen. `tools/measure-impacts.ts` — damage measurement.
