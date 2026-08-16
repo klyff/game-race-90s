@@ -1,0 +1,28 @@
+{
+  "name": "concurrence-gamming",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Isometric arcade racer inspired by Rock N Roll Racing",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "gen:sprites": "node tools/spritegen/generate.ts",
+    "gen:preview": "node tools/spritegen/preview.ts",
+    "gen:track": "node tools/trackgen/preview.ts"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "@types/pngjs": "^6.0.5",
+    "pngjs": "^7.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.5",
+    "vitest": "^2.1.8"
+  }
+}

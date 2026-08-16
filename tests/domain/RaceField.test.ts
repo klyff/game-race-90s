@@ -1,0 +1,365 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { describe, it, expect } from 'vitest';
+
+import { RaceField } from '../../src/domain/race/RaceField.ts';
+import type { RacerEntry } from '../../src/domain/race/RaceField.ts';
+import { findTrack } from '../../src/data/tracks/registry.ts';
+import { parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
+import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
+import { trackFullHalfWidth } from '../../src/domain/track/TrackDefinition.ts';
+import { RACE_PHASE, SIMULATION_STEP_SECONDS } from '../../src/domain/constants.ts';
+import { IDLE_INPUT } from '../../src/domain/input/InputCommand.ts';
+import type { InputCommand } from '../../src/domain/input/InputCommand.ts';
+import { CAR_CONDITION } from '../../src/domain/vehicle/CarIntegrity.ts';
+import { distance as vecDistance, length as vecLength, scale, subtract } from '../../src/domain/math/Vec2.ts';
+
+const testFileDir = dirname(fileURLToPath(import.meta.url));
+const projectRoot = join(testFileDir, '..', '..');
+const carsJsonPath = join(projectRoot, 'public', 'assets', 'cars', 'cars.json');
+
+const manifest = parseCarSetManifest(JSON.parse(readFileSync(carsJsonPath, 'utf-8')));
+const track = findTrack('thunder-basin');
+
+function freshSpline(): TrackSpline {
+  return new TrackSpline(track.controlPoints);
+}
+
+/** The real five-car field, player last on the grid, exactly as `RaceScene` builds it. */
+function fullFieldEntries(): readonly RacerEntry[] {
+  const cars = manifest.cars;
+  const npcs = cars.slice(1).map(car => ({ carId: car.id, stats: car.stats, isPlayer: false }));
+  const player = cars[0];
+  if (player === undefined) {
+    throw new Error('manifest has no cars');
+  }
+  return [...npcs, { carId: player.id, stats: player.stats, isPlayer: true }];
+}
+
+function makeField(entries: readonly RacerEntry[] = fullFieldEntries()): RaceField {
+  return new RaceField(entries, track, freshSpline());
+}
+
+const FULL_THROTTLE: InputCommand = { ...IDLE_INPUT, throttle: 1 };
+
+/** Runs the field for `seconds` of simulated time at the real fixed step. */
+function run(field: RaceField, seconds: number, command: InputCommand = FULL_THROTTLE): void {
+  const steps = Math.round(seconds / SIMULATION_STEP_SECONDS);
+  for (let i = 0; i < steps; i += 1) {
+    field.step(command, SIMULATION_STEP_SECONDS);
+  }
+}
+
+describe('RaceField — the grid', () => {
+  it('places every car on its own grid slot with no two cars overlapping', () => {
+    const field = makeField();
+    expect(field.racers).toHaveLength(5);
+
+    for (let i = 0; i < field.racers.length; i += 1) {
+      for (let j = i + 1; j < field.racers.length; j += 1) {
+        const a = field.racers[i]!;
+        const b = field.racers[j]!;
+        const gap = vecDistance(a.state.position, b.state.position);
+        const touching = a.stats.collisionRadius + b.stats.collisionRadius;
+        expect(gap).toBeGreaterThan(touching);
+      }
+    }
+  });
+
+  it('starts every car inside the walls and at rest', () => {
+    const field = makeField();
+    const wallLimit = trackFullHalfWidth(track);
+    for (const racer of field.racers) {
+      expect(Math.abs(racer.lateralOffset)).toBeLessThan(wallLimit);
+      expect(vecLength(racer.state.velocity)).toBe(0);
+      expect(racer.integrity.integrity).toBe(1);
+    }
+  });
+
+  it('exposes the player as the single entry flagged isPlayer', () => {
+    const field = makeField();
+    expect(field.player.isPlayer).toBe(true);
+    expect(field.racers.filter(racer => racer.isPlayer)).toHaveLength(1);
+  });
+
+  it('rejects an empty field rather than racing nobody', () => {
+    expect(() => new RaceField([], track, freshSpline())).toThrow();
+  });
+});
+
+describe('RaceField — the countdown', () => {
+  it('holds every car still while the lights are on, even at full throttle', () => {
+    const field = makeField();
+    const before = field.racers.map(racer => racer.state.position);
+
+    run(field, 1.0, FULL_THROTTLE);
+
+    expect(field.race.phase).toBe(RACE_PHASE.COUNTDOWN);
+    field.racers.forEach((racer, index) => {
+      expect(vecDistance(racer.state.position, before[index]!)).toBeLessThan(1e-9);
+    });
+  });
+
+  it('scores nothing during the countdown and keeps the clock at zero', () => {
+    const field = makeField();
+    run(field, 1.0, FULL_THROTTLE);
+
+    expect(field.race.elapsedSeconds).toBe(0);
+    for (const racer of field.race.racers) {
+      expect(racer.progress.lapsCompleted).toBe(0);
+      expect(racer.progress.gatesClaimed).toBe(0);
+    }
+  });
+
+  it('goes green after the countdown and then starts the clock', () => {
+    const field = makeField();
+    run(field, 3.5, FULL_THROTTLE);
+
+    expect(field.race.phase).toBe(RACE_PHASE.RACING);
+    expect(field.race.elapsedSeconds).toBeGreaterThan(0.4);
+  });
+});
+
+describe('RaceField — racing', () => {
+  it('moves the player under its own command and the NPCs under the pace driver', () => {
+    const spline = freshSpline();
+    const field = new RaceField(fullFieldEntries(), track, spline);
+    run(field, 3.5, IDLE_INPUT); // burn the countdown with nobody asking for throttle
+    const before = field.racers.map(racer => racer.distance);
+
+    run(field, 2.0, IDLE_INPUT); // player still idle, NPCs should drive off regardless
+
+    field.racers.forEach((racer, index) => {
+      // `signedDelta`, not a subtraction: the grid sits just *before* the start line, so
+      // the first metres of the race wrap `distance` from ~1505 back to ~0 and a raw
+      // difference reads as a 1400-unit lap backwards.
+      const travelled = spline.signedDelta(before[index]!, racer.distance);
+      if (racer.isPlayer) {
+        expect(Math.abs(travelled)).toBeLessThan(1);
+      } else {
+        expect(travelled).toBeGreaterThan(5);
+      }
+    });
+  });
+
+  it('keeps every car inside the walls across twenty seconds of five-car racing', () => {
+    const field = makeField();
+    const wallLimit = trackFullHalfWidth(track);
+    const steps = Math.round(23 / SIMULATION_STEP_SECONDS);
+
+    for (let i = 0; i < steps; i += 1) {
+      field.step(FULL_THROTTLE, SIMULATION_STEP_SECONDS);
+      for (const racer of field.racers) {
+        expect(Number.isFinite(racer.state.position.x)).toBe(true);
+        expect(Number.isFinite(racer.state.position.y)).toBe(true);
+        // The wall clamp is at wallLimit - collisionRadius; allow the radius back plus
+        // a hair, because a car-to-car shove is resolved against that same limit.
+        expect(Math.abs(racer.lateralOffset)).toBeLessThanOrEqual(wallLimit + 0.001);
+      }
+    }
+  });
+
+  it('has the NPCs complete laps and produces a ranked standing per car', () => {
+    const field = makeField();
+    run(field, 40, IDLE_INPUT);
+
+    const standings = field.standings;
+    expect(standings).toHaveLength(5);
+    expect(standings.map(standing => standing.position)).toEqual([1, 2, 3, 4, 5]);
+
+    // The idle player must be last, and at least one pace car must have banked a lap.
+    expect(standings[standings.length - 1]!.carId).toBe(field.player.carId);
+    expect(Math.max(...standings.map(standing => standing.lapsCompleted))).toBeGreaterThanOrEqual(1);
+  });
+
+  it('reports a standing for the player by car id', () => {
+    const field = makeField();
+    run(field, 5, FULL_THROTTLE);
+    const standing = field.standingOf(field.player.carId);
+    expect(standing).toBeDefined();
+    expect(standing!.position).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('RaceField — car-to-car contact', () => {
+  /** Two cars nose to tail on the centreline, the rear one closing fast. */
+  function rearEndSetup(): RaceField {
+    const spline = freshSpline();
+    const entries = fullFieldEntries().slice(0, 2);
+    const field = new RaceField(entries, track, spline, { countdownSeconds: 0 });
+
+    const front = field.racers[0]!;
+    const rear = field.racers[1]!;
+    const frame = spline.frameAt(track.startLineDistance);
+    const tangent = frame.tangent;
+
+    front.state = { ...front.state, position: frame.position, velocity: scale(tangent, 10) };
+    front.distance = track.startLineDistance;
+    front.lateralOffset = 0;
+
+    const behind = subtract(frame.position, scale(tangent, front.stats.collisionRadius + rear.stats.collisionRadius - 0.4));
+    rear.state = { ...rear.state, position: behind, velocity: scale(tangent, 60) };
+    rear.distance = track.startLineDistance - 3;
+    rear.lateralOffset = 0;
+
+    return field;
+  }
+
+  it('conserves momentum along the contact normal when one car rear-ends another', () => {
+    const field = rearEndSetup();
+    const front = field.racers[0]!;
+    const rear = field.racers[1]!;
+
+    const momentumBefore =
+      front.stats.mass * front.state.velocity.x + rear.stats.mass * rear.state.velocity.x;
+
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+
+    const momentumAfter =
+      front.stats.mass * front.state.velocity.x + rear.stats.mass * rear.state.velocity.x;
+
+    // One physics step of drag and rolling resistance also acts, so this is a band,
+    // not an equality: what must not happen is momentum appearing out of nowhere.
+    expect(Math.abs(momentumAfter - momentumBefore)).toBeLessThan(Math.abs(momentumBefore) * 0.05);
+  });
+
+  it('separates two overlapping cars instead of letting them sit inside each other', () => {
+    const field = rearEndSetup();
+    const front = field.racers[0]!;
+    const rear = field.racers[1]!;
+
+    const touching = front.stats.collisionRadius + rear.stats.collisionRadius;
+    expect(vecDistance(front.state.position, rear.state.position)).toBeLessThan(touching);
+
+    for (let i = 0; i < 30; i += 1) {
+      field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    }
+
+    expect(vecDistance(front.state.position, rear.state.position)).toBeGreaterThan(touching * 0.95);
+  });
+
+  it('records the contact for the presentation layer exactly once', () => {
+    const field = rearEndSetup();
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+
+    const rear = field.racers[1]!;
+    expect(field.drainImpact(rear)).toBeGreaterThan(0);
+    expect(field.drainImpact(rear)).toBe(0);
+  });
+});
+
+describe('RaceField — damage, wrecks and respawn', () => {
+  /** Drives a car straight into the outside wall of the tightest corner. */
+  function wreckPlayer(field: RaceField): void {
+    const player = field.player;
+    // Skip the damage model's speed threshold argument entirely: the wreck path is
+    // what is under test here, not the damage curve, which CarIntegrity covers.
+    player.integrity = { integrity: 0, condition: CAR_CONDITION.DESTROYED, respawnRemaining: 2 };
+  }
+
+  it('freezes a wrecked car, stops its lap progress and respawns it on the centreline', () => {
+    const spline = freshSpline();
+    const field = new RaceField(fullFieldEntries(), track, spline);
+    run(field, 3.5, FULL_THROTTLE);
+
+    const player = field.player;
+    const wreckDistance = player.distance;
+    wreckPlayer(field);
+
+    const lapsAtWreck = field.standingOf(player.carId)!.lapsCompleted;
+    run(field, 1.0, FULL_THROTTLE);
+
+    expect(player.integrity.condition).toBe(CAR_CONDITION.DESTROYED);
+    expect(vecLength(player.state.velocity)).toBe(0);
+    expect(field.standingOf(player.carId)!.lapsCompleted).toBe(lapsAtWreck);
+
+    // Read the moment it comes back, not later: once driveable it starts covering
+    // ground again, and that distance is not what this asserts.
+    let respawnDistance: number | null = null;
+    let respawnLateralOffset: number | null = null;
+    const steps = Math.round(1.5 / SIMULATION_STEP_SECONDS);
+    for (let i = 0; i < steps; i += 1) {
+      field.step(FULL_THROTTLE, SIMULATION_STEP_SECONDS);
+      if (player.respawnedThisStep) {
+        respawnDistance = player.distance;
+        respawnLateralOffset = player.lateralOffset;
+      }
+    }
+
+    expect(respawnDistance).not.toBeNull();
+    expect(respawnLateralOffset).toBe(0);
+    expect(Math.abs(spline.signedDelta(wreckDistance, respawnDistance!))).toBeLessThan(1e-6);
+    expect(player.integrity.condition).toBe(CAR_CONDITION.HEALTHY);
+    expect(player.integrity.integrity).toBe(1);
+  });
+
+  it('raises explodedThisStep for exactly one step when a car is destroyed', () => {
+    const spline = freshSpline();
+    const entries = fullFieldEntries().slice(0, 1);
+    const field = new RaceField(
+      [{ ...entries[0]!, isPlayer: true }],
+      track,
+      spline,
+      { countdownSeconds: 0 },
+    );
+
+    const player = field.player;
+    // One hit away from destruction, then a hard wall impact finishes it.
+    player.integrity = { integrity: 0.01, condition: CAR_CONDITION.CRITICAL, respawnRemaining: 0 };
+    const frame = spline.frameAt(track.startLineDistance);
+    const wallLimit = trackFullHalfWidth(track);
+    player.state = {
+      ...player.state,
+      position: frame.position,
+      velocity: scale(frame.normal, 70),
+    };
+    player.lateralOffset = 0;
+    player.distance = track.startLineDistance;
+
+    let explodedSteps = 0;
+    for (let i = 0; i < 60; i += 1) {
+      field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+      if (player.explodedThisStep) {
+        explodedSteps += 1;
+      }
+    }
+
+    expect(explodedSteps).toBe(1);
+    expect(Math.abs(player.lateralOffset)).toBeLessThanOrEqual(wallLimit);
+  });
+
+  it('does not raise explodedThisStep on a clean lap', () => {
+    const field = makeField();
+    let exploded = false;
+    const steps = Math.round(10 / SIMULATION_STEP_SECONDS);
+    for (let i = 0; i < steps; i += 1) {
+      field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+      if (field.racers.some(racer => racer.explodedThisStep)) {
+        exploded = true;
+      }
+    }
+    expect(exploded).toBe(false);
+  });
+});
+
+describe('RaceField — reset', () => {
+  it('puts every car back on the grid and restarts the countdown', () => {
+    const field = makeField();
+    const gridPositions = field.racers.map(racer => racer.state.position);
+
+    run(field, 10, FULL_THROTTLE);
+    expect(field.race.phase).toBe(RACE_PHASE.RACING);
+
+    field.reset();
+
+    expect(field.race.phase).toBe(RACE_PHASE.COUNTDOWN);
+    expect(field.race.elapsedSeconds).toBe(0);
+    field.racers.forEach((racer, index) => {
+      expect(vecDistance(racer.state.position, gridPositions[index]!)).toBeLessThan(1e-9);
+      expect(vecLength(racer.state.velocity)).toBe(0);
+      expect(racer.integrity.integrity).toBe(1);
+      expect(racer.telemetry).toBeNull();
+    });
+  });
+});

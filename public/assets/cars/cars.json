@@ -1,0 +1,122 @@
+{
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "frameCount": 32,
+  "pixelsPerUnit": 8.143264,
+  "origin": {
+    "x": 0.5,
+    "y": 0.550512
+  },
+  "cars": [
+    {
+      "id": "marauder",
+      "displayName": "Marauder",
+      "archetype": "Balanced muscle — forgiving all-rounder",
+      "image": "marauder.png",
+      "shadow": {
+        "width": 43,
+        "height": 21
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.7
+      }
+    },
+    {
+      "id": "dirt-devil",
+      "displayName": "Dirt Devil",
+      "archetype": "Light dirt buggy — grip champion, nimble and fragile",
+      "image": "dirt-devil.png",
+      "shadow": {
+        "width": 44,
+        "height": 22
+      },
+      "stats": {
+        "mass": 750,
+        "enginePower": 28,
+        "brakeForce": 40,
+        "maxSpeed": 65,
+        "grip": 35,
+        "steerRate": 3.2,
+        "steerSpeedFalloff": 0.35,
+        "armor": 0.25,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.55
+      }
+    },
+    {
+      "id": "havac",
+      "displayName": "Havac",
+      "archetype": "Heavy armoured bruiser — relentless tank",
+      "image": "havac.png",
+      "shadow": {
+        "width": 53,
+        "height": 26
+      },
+      "stats": {
+        "mass": 1200,
+        "enginePower": 40,
+        "brakeForce": 42,
+        "maxSpeed": 65,
+        "grip": 18,
+        "steerRate": 1.8,
+        "steerSpeedFalloff": 0.65,
+        "armor": 0.6,
+        "ammoCapacity": 5,
+        "collisionRadius": 1.85
+      }
+    },
+    {
+      "id": "air-blade",
+      "displayName": "Air Blade",
+      "archetype": "Low-slung speedster — pure acceleration, fragile at the edge",
+      "image": "air-blade.png",
+      "shadow": {
+        "width": 50,
+        "height": 25
+      },
+      "stats": {
+        "mass": 650,
+        "enginePower": 36,
+        "brakeForce": 36,
+        "maxSpeed": 95,
+        "grip": 18,
+        "steerRate": 3.1,
+        "steerSpeedFalloff": 0.68,
+        "armor": 0.15,
+        "ammoCapacity": 4,
+        "collisionRadius": 1.8
+      }
+    },
+    {
+      "id": "battle-trak",
+      "displayName": "Battle Trak",
+      "archetype": "Weapons platform — high firepower, steady all-rounder",
+      "image": "battle-trak.png",
+      "shadow": {
+        "width": 45,
+        "height": 22
+      },
+      "stats": {
+        "mass": 1080,
+        "enginePower": 32,
+        "brakeForce": 44,
+        "maxSpeed": 74,
+        "grip": 29,
+        "steerRate": 2.4,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.42,
+        "ammoCapacity": 15,
+        "collisionRadius": 1.85
+      }
+    }
+  ]
+}

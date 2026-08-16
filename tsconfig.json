@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Relative imports carry an explicit .ts extension so that the same sources
+    // run under Node's native type stripping and under Vite, with no transpiler.
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    // `vite/client` supplies `import.meta.env`, which `src/main.ts` reads to gate
+    // its development-only handle on the running game.
+    "types": ["vitest/globals", "vite/client"]
+  },
+  "include": ["src", "tools", "tests"]
+}

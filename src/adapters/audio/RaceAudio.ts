@@ -1,0 +1,180 @@
+import { BrakeVoice } from './BrakeVoice.ts';
+import { EngineGearbox } from './EngineGearbox.ts';
+import { EngineVoice } from './EngineVoice.ts';
+import { ExplosionVoice } from './ExplosionVoice.ts';
+import { ImpactVoice } from './ImpactVoice.ts';
+import { NoiseSource } from './NoiseSource.ts';
+import { SkidVoice } from './SkidVoice.ts';
+import type { InputCommand } from '../../domain/input/InputCommand.ts';
+import { TARMAC, driftThreshold } from '../../domain/vehicle/ArcadeCarPhysics.ts';
+import type { VehicleTelemetry } from '../../domain/vehicle/Vehicle.ts';
+import type { VehicleStats } from '../../domain/vehicle/VehicleStats.ts';
+
+/** Master volume. Conservative: this is a game people play with headphones on. */
+const DEFAULT_MASTER_VOLUME = 0.35;
+
+/**
+ * Lateral speed, as a multiple of the car's drift threshold, at which the skid is
+ * silent and at which it is at full volume. The tyres start complaining slightly
+ * before they let go, which is why the low end is below 1.
+ */
+const SKID_SILENT_AT = 0.5;
+const SKID_FULL_AT = 2;
+
+/**
+ * The single voice of the car, driven entirely by simulation telemetry.
+ *
+ * Everything is synthesised (locked decision 20) — there is not one audio file in
+ * this project. The facade exists so the race scene never touches an `AudioNode`:
+ * it hands over the same telemetry the debug overlay reads, and this class decides
+ * what that should sound like.
+ *
+ * All of it is a no-op when the browser refuses to give us audio. `AudioContext`
+ * starts suspended until a user gesture, and some environments have no audio device
+ * at all (the headless browser used to screenshot this game, for one), so nothing
+ * here may ever throw into the game loop.
+ */
+export class RaceAudio {
+  private readonly context: AudioContext | null;
+  private readonly master: GainNode | null = null;
+  private readonly gearbox = new EngineGearbox();
+  private readonly engine: EngineVoice | null = null;
+  private readonly skid: SkidVoice | null = null;
+  private readonly brake: BrakeVoice | null = null;
+  private readonly impact: ImpactVoice | null = null;
+  private readonly explosion: ExplosionVoice | null = null;
+  private readonly noise: NoiseSource | null = null;
+  private readonly driftLimit: number;
+  private muted = false;
+
+  constructor(stats: VehicleStats, masterVolume: number = DEFAULT_MASTER_VOLUME) {
+    // Reference the TARMAC threshold rather than the current surface: this only
+    // scales how loud a slide is, and a scale that changed as the car crossed onto
+    // dirt would make the skid jump in volume for no audible reason.
+    this.driftLimit = driftThreshold(stats, TARMAC);
+
+    this.context = createAudioContext();
+    if (this.context === null) return;
+
+    this.master = this.context.createGain();
+    this.master.gain.value = masterVolume;
+    this.master.connect(this.context.destination);
+
+    this.noise = new NoiseSource(this.context);
+    this.engine = new EngineVoice(this.context, this.master);
+    this.skid = new SkidVoice(this.context, this.noise, this.master);
+    this.brake = new BrakeVoice(this.context, this.noise, this.master);
+    this.impact = new ImpactVoice(this.context, this.master);
+    this.explosion = new ExplosionVoice(this.context, this.noise, this.master);
+  }
+
+  /** True when the browser gave us a working audio graph. */
+  get available(): boolean {
+    return this.context !== null;
+  }
+
+  /**
+   * Must be called from a real user gesture (a key press), because browsers start
+   * every `AudioContext` suspended and silently ignore anything played until then.
+   * Safe to call repeatedly — the scene calls it on every key press until it takes.
+   */
+  resume(): void {
+    if (this.context === null || this.context.state !== 'suspended') return;
+    void this.context.resume().catch(() => {
+      /* Autoplay policy or no device: stay silent rather than break the game. */
+    });
+    this.noise?.start();
+  }
+
+  /** Feeds one rendered frame of simulation state to every voice. */
+  update(telemetry: VehicleTelemetry, input: InputCommand, maxSpeed: number): void {
+    if (this.context === null || this.muted) return;
+
+    // Reverse drives the engine exactly like throttle does: the driver is asking
+    // for power either way, and the gearbox already reports reverse as gear 0.
+    const drive = Math.max(input.throttle, input.reverse);
+    const gear = this.gearbox.update(telemetry.forwardSpeed, maxSpeed);
+    this.engine?.update(gear.rpmFraction, drive, drive);
+    if (gear.shifted) this.engine?.shift();
+
+    this.skid?.update(this.skidIntensity(telemetry));
+
+    const pace = maxSpeed > 0 ? Math.min(1, Math.abs(telemetry.forwardSpeed) / maxSpeed) : 0;
+    this.brake?.update(input.brake, pace);
+  }
+
+  /** A wall scrape or hit. `impactSpeed` comes straight from `resolveWallContact`. */
+  playImpact(impactSpeed: number, maxSpeed: number): void {
+    if (this.context === null || this.muted || maxSpeed <= 0) return;
+    this.impact?.play(Math.min(1, impactSpeed / (maxSpeed * 0.5)));
+  }
+
+  /**
+   * A car has been destroyed. `intensity` 0..1 carries how close it was: the player's
+   * own wreck is full volume, an NPC blowing up across the circuit is quieter, so the
+   * mix says whose race just ended.
+   */
+  playExplosion(intensity: number): void {
+    if (this.context === null || this.muted) return;
+    this.explosion?.play(intensity);
+  }
+
+  /** Silences everything without tearing the graph down, for a mute key. */
+  setMuted(muted: boolean): void {
+    this.muted = muted;
+    if (!muted) return;
+    this.engine?.update(0, 0, 0);
+    this.skid?.update(0);
+    this.brake?.update(0, 0);
+  }
+
+  get isMuted(): boolean {
+    return this.muted;
+  }
+
+  /** Silences the car without stopping the context, e.g. on respawn. */
+  reset(): void {
+    this.gearbox.reset();
+    this.skid?.update(0);
+    this.brake?.update(0, 0);
+  }
+
+  destroy(): void {
+    this.engine?.stop();
+    this.skid?.stop();
+    this.brake?.stop();
+    this.impact?.stop();
+    this.explosion?.destroy();
+    this.noise?.stop();
+    void this.context?.close().catch(() => {
+      /* Already closed. Nothing to do and nothing worth reporting. */
+    });
+  }
+
+  /**
+   * How loudly the tyres should complain, 0..1.
+   *
+   * Scaled by the car's own drift threshold rather than by an absolute speed, so a
+   * low-grip car screeches where a high-grip car is still quiet — the sound then
+   * carries the same information the handling model does.
+   */
+  private skidIntensity(telemetry: VehicleTelemetry): number {
+    if (this.driftLimit <= 0) return 0;
+    const slipRatio = Math.abs(telemetry.lateralSpeed) / this.driftLimit;
+    const normalized = (slipRatio - SKID_SILENT_AT) / (SKID_FULL_AT - SKID_SILENT_AT);
+    return Math.max(0, Math.min(1, normalized));
+  }
+}
+
+/**
+ * Returns null instead of throwing when the environment has no Web Audio at all.
+ * A missing audio device must cost the player their sound, never their game.
+ */
+function createAudioContext(): AudioContext | null {
+  try {
+    if (typeof AudioContext === 'undefined') return null;
+    return new AudioContext();
+  } catch {
+    return null;
+  }
+}
