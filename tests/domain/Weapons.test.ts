@@ -11,6 +11,8 @@ import { RaceField } from '../../src/domain/race/RaceField.ts';
 import type { RacerEntry } from '../../src/domain/race/RaceField.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
 import { CAR_CONDITION } from '../../src/domain/vehicle/CarIntegrity.ts';
+import { isAirborne } from '../../src/domain/vehicle/Vehicle.ts';
+import { JUMP_START_COUNT } from '../../src/domain/vehicle/JumpCharges.ts';
 import { CAR_PERKS, NEUTRAL_PERK } from '../../src/domain/vehicle/CarPerk.ts';
 import { decideMissileAim } from '../../src/domain/weapons/WeaponAim.ts';
 import {
@@ -301,5 +303,111 @@ describe('RaceField weapons', () => {
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
     expect(field.activeHazards.length).toBeGreaterThan(before);
     expect(field.activeHazards.some(h => h.kind === HAZARD_KIND.OIL)).toBe(true);
+  });
+});
+
+describe('RaceField hop', () => {
+  it('starts every car with 4 jumps and a hop spends one', () => {
+    const field = twoCarField();
+    expect(field.player.jumps).toBe(JUMP_START_COUNT);
+    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
+    expect(field.player.jumps).toBe(JUMP_START_COUNT - 1);
+    expect(isAirborne(field.player.state)).toBe(true);
+  });
+
+  it('refuses a hop while airborne or when the stock is empty', () => {
+    const field = twoCarField();
+    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
+    expect(field.player.jumps).toBe(3);
+    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
+    expect(field.player.jumps).toBe(3);
+
+    field.player.jumps = 0;
+    field.player.state = { ...field.player.state, height: 0, verticalVelocity: 0 };
+    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
+    expect(field.player.jumps).toBe(0);
+    expect(isAirborne(field.player.state)).toBe(false);
+  });
+
+  it('restores 4 jumps on reset', () => {
+    const field = twoCarField();
+    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
+    expect(field.player.jumps).toBe(3);
+    field.reset();
+    expect(field.player.jumps).toBe(JUMP_START_COUNT);
+  });
+
+  it('refills jumps to 4 when the car completes a lap', () => {
+    const a = manifest.cars[0]!;
+    const b = manifest.cars[1]!;
+    const entries: RacerEntry[] = [
+      { carId: a.id, stats: a.stats, isPlayer: false, perk: a.perk },
+      { carId: b.id, stats: b.stats, isPlayer: true, perk: b.perk },
+    ];
+    // One checkpoint means the start line itself completes a lap, so a short
+    // drive off the grid is enough to exercise the finish-line refill.
+    const field = new RaceField(
+      entries,
+      { ...track, checkpointCount: 1 },
+      freshSpline(),
+      { countdownSeconds: 0, npcWeapons: false },
+    );
+    field.player.jumps = 0;
+    const beforeLaps = field.standingOf(field.player.carId)?.lapsCompleted ?? 0;
+    let laps = beforeLaps;
+    for (let i = 0; i < 240 && laps === beforeLaps; i += 1) {
+      field.step({ ...IDLE_INPUT, throttle: 1 }, SIMULATION_STEP_SECONDS);
+      laps = field.standingOf(field.player.carId)?.lapsCompleted ?? 0;
+    }
+    expect(laps).toBeGreaterThan(beforeLaps);
+    expect(field.player.jumps).toBe(JUMP_START_COUNT);
+  });
+
+  it('an airborne car does not take oil; the slick stays on the track', () => {
+    const field = twoCarField();
+    field.step({ ...IDLE_INPUT, dropOil: true }, SIMULATION_STEP_SECONDS);
+    const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL)!;
+    const rival = field.racers.find(r => !r.isPlayer)!;
+    rival.state = { ...rival.state, position: oil.position, height: 2, verticalVelocity: 0 };
+    const spinBefore = rival.state.yawSpin;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(rival.state.yawSpin).toBe(spinBefore);
+    expect(field.activeHazards.some(h => h.id === oil.id)).toBe(true);
+  });
+
+  it('an airborne car does not take a mine', () => {
+    const field = twoCarField();
+    field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
+    const mine = field.activeHazards.find(h => h.kind === HAZARD_KIND.MINE)!;
+    const rival = field.racers.find(r => !r.isPlayer)!;
+    rival.state = { ...rival.state, position: mine.position, height: 2, verticalVelocity: 0 };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(rival.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
+    expect(field.activeHazards.some(h => h.id === mine.id)).toBe(true);
+  });
+
+  it('an airborne car does not take a missile; the missile keeps flying', () => {
+    const field = twoCarField();
+    const rival = field.racers.find(r => !r.isPlayer)!;
+    const before = rival.integrity.integrity;
+
+    field.step({ ...IDLE_INPUT, fire: true }, SIMULATION_STEP_SECONDS);
+    const missile = field.activeMissiles[0];
+    expect(missile).toBeDefined();
+
+    rival.state = {
+      ...rival.state,
+      height: 2,
+      verticalVelocity: 0,
+      position: {
+        x: missile!.position.x + missile!.velocity.x * SIMULATION_STEP_SECONDS,
+        y: missile!.position.y + missile!.velocity.y * SIMULATION_STEP_SECONDS,
+      },
+    };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+
+    expect(rival.integrity.integrity).toBe(before);
+    expect(field.activeMissiles.length).toBe(1);
+    expect(field.playerWeaponHits.missiles).toBe(0);
   });
 });

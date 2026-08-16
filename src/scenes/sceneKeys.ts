@@ -51,7 +51,7 @@ export const WEAPON_ASSET_DIRECTORY = 'assets/weapons';
  *
  * Each file is a 4×8 contact sheet (32 yaw frames), same convention as the cars —
  * NOT a single image. Boot loads them as spritesheets so RaceScene can show one
- * frame instead of the whole grid.
+ * frame instead of the whole grid. `npm run gen:weapons` writes the stand-in art.
  */
 export const WEAPON_SPRITES = [
   { key: 'weapon-missile', file: 'missile.png' },
@@ -59,7 +59,7 @@ export const WEAPON_SPRITES = [
   { key: 'weapon-mine', file: 'mine.png' },
 ] as const;
 
-/** Owner sheets are 1774×887; 8 columns × 4 rows leaves a few leftover pixels. */
+/** Owner missile sheet is 1774×887; 8×4 of 221 leaves a few leftover pixels. */
 export const WEAPON_SHEET = {
   columns: 8,
   rows: 4,

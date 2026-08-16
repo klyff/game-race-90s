@@ -20,7 +20,8 @@
     "gen:tracks": "node tools/trackgen/generate.ts",
     "gen:lines": "node tools/linegen/generate.ts",
     "gen:ground": "node --experimental-strip-types tools/art/generate-ground-tiles.ts",
-    "gen:planet-select": "node --experimental-strip-types tools/art/generate-planet-select.ts"
+    "gen:planet-select": "node --experimental-strip-types tools/art/generate-planet-select.ts",
+    "gen:weapons": "node --experimental-strip-types tools/art/generate-weapons.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"

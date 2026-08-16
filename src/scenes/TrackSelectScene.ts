@@ -4,6 +4,9 @@ import { planetTracks, isTrackUnlocked } from '../data/tracks/campaign.ts';
 import type { CampaignTrack } from '../data/tracks/campaign.ts';
 import { loadCleared, loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
 import { firstPlacePrize, formatCash } from '../domain/progress/Wallet.ts';
+import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
+import { MENU_KIND, MENU_PROMPT_LIST, MenuController } from '../adapters/input/MenuController.ts';
+import type { MenuResult } from '../adapters/input/MenuController.ts';
 import type { TrackSelectData } from './selectData.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
@@ -17,7 +20,7 @@ export class TrackSelectScene extends Phaser.Scene {
   private tracks: readonly CampaignTrack[] = [];
   private cleared: readonly string[] = [];
   private won: readonly string[] = [];
-  private selectedIndex = 0;
+  private menu!: MenuController;
 
   private backdrop!: Phaser.GameObjects.Rectangle;
   private titleText!: Phaser.GameObjects.Text;
@@ -34,7 +37,13 @@ export class TrackSelectScene extends Phaser.Scene {
     this.tracks = planetTracks(findPlanet(data.planetId));
     this.cleared = loadCleared();
     this.won = loadWonTracks();
-    this.selectedIndex = 0;
+    this.menu = new MenuController(
+      this.tracks.map(track => ({
+        id: track.id,
+        kind: MENU_KIND.ACTION,
+        label: track.name,
+      })),
+    );
   }
 
   create(): void {
@@ -48,7 +57,7 @@ export class TrackSelectScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
     this.rows = this.tracks.map(() => this.add.text(0, 0, '', this.rowStyle()).setOrigin(0.5, 0.5));
     this.promptText = this.add
-      .text(0, 0, '↑↓ MOVE     ENTER RACE     ESC BACK', this.promptStyle())
+      .text(0, 0, MENU_PROMPT_LIST, this.promptStyle())
       .setOrigin(0.5, 0.5);
 
     this.refresh();
@@ -62,21 +71,24 @@ export class TrackSelectScene extends Phaser.Scene {
     if (keyboard === null || keyboard === undefined) {
       return;
     }
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP).on('down', () => this.move(-1));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN).on('down', () => this.move(1));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER).on('down', () => this.choose());
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => this.choose());
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.back());
+    bindMenuKeys(keyboard, this.menu, {
+      onResult: result => this.handleResult(result),
+      onMoved: () => this.refresh(),
+    });
   }
 
-  private move(direction: number): void {
-    const count = this.tracks.length;
-    this.selectedIndex = (this.selectedIndex + direction + count) % count;
-    this.refresh();
+  private handleResult(result: MenuResult): void {
+    if (result.type === 'activate') {
+      this.choose();
+      return;
+    }
+    if (result.type === 'back') {
+      this.back();
+    }
   }
 
   private choose(): void {
-    const track = this.tracks[this.selectedIndex];
+    const track = this.tracks[this.menu.selectedIndex];
     if (track === undefined || !this.unlocked(track)) {
       return;
     }
@@ -107,7 +119,7 @@ export class TrackSelectScene extends Phaser.Scene {
         return;
       }
       const unlocked = this.unlocked(track);
-      const selected = index === this.selectedIndex;
+      const selected = index === this.menu.selectedIndex;
       const marker = selected ? '>' : ' ';
       const status = this.won.includes(track.id)
         ? '  ★ WON'

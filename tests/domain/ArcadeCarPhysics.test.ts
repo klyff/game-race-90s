@@ -415,3 +415,15 @@ describe('InputCommand reverse field', () => {
   });
 });
 
+describe('InputCommand jump field', () => {
+  it('defaults jump to false in IDLE_INPUT', () => {
+    expect(IDLE_INPUT.jump).toBe(false);
+  });
+
+  it('sanitizeInput passes jump through', () => {
+    expect(sanitizeInput(input({ jump: true })).jump).toBe(true);
+    expect(sanitizeInput(input({ jump: false })).jump).toBe(false);
+  });
+});
+
+

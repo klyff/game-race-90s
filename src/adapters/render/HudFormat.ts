@@ -29,6 +29,12 @@ export interface HudReadout {
   readonly totalLaps: number;
   readonly ammo: number;
   readonly ammoCapacity: number;
+  /** Oil slicks remaining. When set with `mines`, the HUD shows A/S/D counts. */
+  readonly oil?: number;
+  /** Landmines remaining. When set with `oil`, the HUD shows A/S/D counts. */
+  readonly mines?: number;
+  /** Hops remaining. When set with oil/mines, the HUD appends `SPC n`. */
+  readonly jumps?: number;
   readonly integrity: number; // 0..1 (0% to 100%)
   readonly standings: readonly { readonly carId: string; readonly position: number }[];
   /** The player's current speed, world units per second. */
@@ -290,13 +296,22 @@ export function formatHud(readout: HudReadout): HudText {
   // Time: "1:23.45"
   const time = formatRaceTime(readout.elapsedSeconds);
 
-  // Ammo: "AMMO 3/5"
-  // Defend against NaN by using fallback values.
+  // Ammo: "A 3  S 2  D 1" when the three-weapon loadout is present, else "AMMO 3/5".
   const ammoNum = Number.isFinite(readout.ammo) ? readout.ammo : 0;
   const ammoCap = Number.isFinite(readout.ammoCapacity) ? readout.ammoCapacity : 0;
   const clampedAmmo = Math.max(0, ammoNum);
   const clampedAmmoCap = Math.max(0, ammoCap);
-  const ammo = `AMMO ${clampedAmmo}/${clampedAmmoCap}`;
+  const oilCount = Math.max(0, Number.isFinite(readout.oil) ? readout.oil! : 0);
+  const mineCount = Math.max(0, Number.isFinite(readout.mines) ? readout.mines! : 0);
+  const jumpCount = Math.max(0, Number.isFinite(readout.jumps) ? readout.jumps! : 0);
+  const loadout =
+    readout.oil !== undefined && readout.mines !== undefined
+      ? `A ${clampedAmmo}  S ${oilCount}  D ${mineCount}`
+      : `AMMO ${clampedAmmo}/${clampedAmmoCap}`;
+  const ammo =
+    readout.oil !== undefined && readout.mines !== undefined && readout.jumps !== undefined
+      ? `${loadout}  SPC ${jumpCount}`
+      : loadout;
 
   // Countdown: "3", "2", "1", "GO!", or null
   const countdown = formatCountdown(readout.phase, readout.countdownRemaining);

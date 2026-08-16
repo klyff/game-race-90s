@@ -165,8 +165,8 @@ export class RaceScene extends Phaser.Scene {
   private weaponLayer!: Phaser.GameObjects.Graphics;
   /**
    * Reused sprite pools for weapon art, grown on demand and hidden when idle.
-   * Empty and unused until the owner's optional textures are present; the layer
-   * above draws geometric fallbacks in that case.
+   * Grown on demand from the weapon contact sheets (`npm run gen:weapons`);
+   * the graphics layer still draws geometric fallbacks if a sheet is missing.
    */
   private missileSprites: Phaser.GameObjects.Sprite[] = [];
   private hazardSprites: Phaser.GameObjects.Sprite[] = [];
@@ -345,9 +345,12 @@ export class RaceScene extends Phaser.Scene {
       // clamps it to `totalLaps`, so a finished car reads 3/3 rather than 4/3.
       lap: (standing?.lapsCompleted ?? 0) + 1,
       totalLaps: this.track.laps,
-      // Live missile count; capacity is the (Arsenal-boosted) refill ceiling.
+      // Live loadout; A/S/D on the HUD match the console weapon buttons.
       ammo: player.inventory.missiles,
       ammoCapacity: missileCapacity(player.stats, player.perk),
+      oil: player.inventory.oil,
+      mines: player.inventory.mines,
+      jumps: player.jumps,
       integrity: player.integrity.integrity,
       standings: race.standings.map(entry => ({
         carId: entry.carId,
@@ -616,29 +619,37 @@ export class RaceScene extends Phaser.Scene {
 
   private bindSceneKeys(): void {
     const keyboard = this.requireKeyboard();
+    const unlessPaused = (action: () => void): (() => void) => {
+      return () => {
+        if (this.scene.isPaused(SCENE_KEY.RACE) || this.resultsShown) {
+          return;
+        }
+        action();
+      };
+    };
 
     // R restarts the race. Cheap to add, and the alternative while tuning handling is
     // reloading the page after every mistake.
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R).on('down', () => this.respawn());
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R).on('down', unlessPaused(() => this.respawn()));
     keyboard
       .addKey(Phaser.Input.Keyboard.KeyCodes.M)
-      .on('down', () => this.audio.setMuted(!this.audio.isMuted));
+      .on('down', unlessPaused(() => this.audio.setMuted(!this.audio.isMuted)));
 
     // T hides the overlay, for looking at the game rather than at the numbers.
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T).on('down', () => this.overlay.toggle());
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T).on('down', unlessPaused(() => this.overlay.toggle()));
 
     // Esc pauses the race and raises the pause menu (Return / Save / Main Menu).
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.pauseGame());
 
     // C cycles the player's car. Driving all five back to back is the only way to judge
     // whether the stat sets actually feel different, which is T-012's gate.
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C).on('down', () => this.cycleCar());
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C).on('down', unlessPaused(() => this.cycleCar()));
 
     // X wrecks the player's own car on demand. This is a debug aid and it earns its
     // place: destruction is otherwise reachable only by crashing hard enough, which
     // makes the explosion, the respawn and the integrity bar tedious to look at while
     // they are being tuned. It only ever harms the car of whoever pressed it.
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X).on('down', () => this.wreckPlayer());
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X).on('down', unlessPaused(() => this.wreckPlayer()));
 
     // Browsers start every AudioContext suspended and only honour a resume that
     // comes from a real user gesture, so the first key press is the earliest the
@@ -655,6 +666,8 @@ export class RaceScene extends Phaser.Scene {
       manifest: this.manifest,
       linesByTrack: this.linesByTrack,
       carId: this.carId,
+      muted: this.audio.isMuted,
+      setMuted: muted => this.audio.setMuted(muted),
     } satisfies PauseSceneData);
     this.scene.pause(SCENE_KEY.HUD);
     this.scene.pause();

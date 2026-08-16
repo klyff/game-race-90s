@@ -13,6 +13,9 @@ import {
   weaponHitEarnings,
   type WeaponHits,
 } from '../domain/progress/Wallet.ts';
+import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
+import { MENU_KIND, MENU_PROMPT_LIST, MenuController } from '../adapters/input/MenuController.ts';
+import type { MenuItemSpec, MenuResult } from '../adapters/input/MenuController.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 /** One row of the final classification. */
@@ -63,6 +66,7 @@ export class ResultsScene extends Phaser.Scene {
   private balance = 0;
   /** The next campaign track, offered when the player advanced. */
   private next: CampaignTrack | null = null;
+  private menu!: MenuController;
 
   private backdrop!: Phaser.GameObjects.Rectangle;
   private headerText!: Phaser.GameObjects.Text;
@@ -71,6 +75,7 @@ export class ResultsScene extends Phaser.Scene {
   private standingsText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
   private purseText!: Phaser.GameObjects.Text;
+  private optionTexts: Phaser.GameObjects.Text[] = [];
   private promptText!: Phaser.GameObjects.Text;
 
   constructor() {
@@ -123,12 +128,17 @@ export class ResultsScene extends Phaser.Scene {
       .setOrigin(0.5, 0);
     this.scoreText = this.add.text(0, 0, this.scoreLine(), this.scoreStyle()).setOrigin(0.5, 0.5);
     this.purseText = this.add.text(0, 0, this.purseLine(), this.purseStyle()).setOrigin(0.5, 0.5);
-    this.promptText = this.add.text(0, 0, this.promptLine(), this.promptStyle()).setOrigin(0.5, 0.5);
+    this.menu = new MenuController(this.menuItems());
+    this.optionTexts = this.menu.views().map(view =>
+      this.add.text(0, 0, view.text, this.optionStyle()).setOrigin(0.5, 0.5),
+    );
+    this.promptText = this.add.text(0, 0, MENU_PROMPT_LIST, this.promptStyle()).setOrigin(0.5, 0.5);
 
     this.layout();
     this.playCeremony();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
+    this.refreshMenu();
   }
 
   private winnerName(): string {
@@ -208,9 +218,30 @@ export class ResultsScene extends Phaser.Scene {
     return `${earned}BANK ${formatCash(this.balance)}`;
   }
 
-  private promptLine(): string {
-    const next = this.next !== null ? `ENTER: NEXT (${this.next.name.toUpperCase()})     ` : '';
-    return `SPACE: RACE AGAIN     ${next}ESC: MAIN MENU`;
+  private menuItems(): readonly MenuItemSpec[] {
+    const items: MenuItemSpec[] = [
+      { id: 'again', kind: MENU_KIND.ACTION, label: 'RACE AGAIN' },
+    ];
+    if (this.next !== null) {
+      items.push({
+        id: 'next',
+        kind: MENU_KIND.ACTION,
+        label: `NEXT : ${this.next.name.toUpperCase()}`,
+      });
+    }
+    items.push({ id: 'menu', kind: MENU_KIND.ACTION, label: 'MAIN MENU' });
+    return items;
+  }
+
+  private refreshMenu(): void {
+    this.menu.views().forEach((view, index) => {
+      const text = this.optionTexts[index];
+      if (text === undefined) {
+        return;
+      }
+      text.setColor(view.selected ? '#ffd85c' : '#d8dae2');
+      text.setText(view.text);
+    });
   }
 
   private bindKeys(): void {
@@ -218,18 +249,30 @@ export class ResultsScene extends Phaser.Scene {
     if (keyboard === null || keyboard === undefined) {
       return;
     }
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => this.raceAgain());
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER).on('down', () => this.advanceOrRepeat());
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.mainMenu());
+    bindMenuKeys(keyboard, this.menu, {
+      onResult: result => this.handleResult(result),
+      onMoved: () => this.refreshMenu(),
+    });
   }
 
-  /** Enter takes the next track when the player advanced, otherwise a rematch. */
-  private advanceOrRepeat(): void {
-    if (this.next !== null) {
-      this.startRace(this.next.id);
+  private handleResult(result: MenuResult): void {
+    if (result.type === 'activate') {
+      if (result.id === 'again') {
+        this.raceAgain();
+        return;
+      }
+      if (result.id === 'next' && this.next !== null) {
+        this.startRace(this.next.id);
+        return;
+      }
+      if (result.id === 'menu') {
+        this.mainMenu();
+      }
       return;
     }
-    this.raceAgain();
+    if (result.type === 'back') {
+      this.mainMenu();
+    }
   }
 
   private raceAgain(): void {
@@ -262,9 +305,12 @@ export class ResultsScene extends Phaser.Scene {
     this.winnerText.setPosition(centreX, height * 0.24);
     this.trackText.setPosition(centreX, height * 0.34);
     this.standingsText.setPosition(centreX, height * 0.42);
-    this.scoreText.setPosition(centreX, height * 0.72);
-    this.purseText.setPosition(centreX, height * 0.8);
-    this.promptText.setPosition(centreX, height * 0.91);
+    this.scoreText.setPosition(centreX, height * 0.68);
+    this.purseText.setPosition(centreX, height * 0.74);
+    this.optionTexts.forEach((text, index) => {
+      text.setPosition(centreX, height * (0.8 + index * 0.045));
+    });
+    this.promptText.setPosition(centreX, height * 0.94);
   }
 
   private headerStyle(): Phaser.Types.GameObjects.Text.TextStyle {
@@ -325,6 +371,16 @@ export class ResultsScene extends Phaser.Scene {
       color: this.advanced ? '#8bff9b' : '#ff8b8b',
       stroke: '#101014',
       strokeThickness: 5,
+    };
+  }
+
+  private optionStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '20px',
+      color: '#d8dae2',
+      stroke: '#101014',
+      strokeThickness: 4,
     };
   }
 

@@ -59,8 +59,9 @@ export class VehicleView {
   /** Moves sprite and shadow to match `state`. Called once per rendered frame. */
   sync(state: VehicleState): void {
     const ground = this.projection.toScreen(state.position);
+    const air = this.projection.toScreen(state.position, state.height);
 
-    this.sprite.setPosition(ground.x, ground.y);
+    this.sprite.setPosition(air.x, air.y);
     this.sprite.setFrame(frameIndexForHeading(state.heading, this.manifest.frameCount));
 
     this.shadow.setPosition(ground.x, ground.y);

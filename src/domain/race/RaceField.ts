@@ -29,8 +29,14 @@ import { AIDriver } from '../vehicle/AIDriver.ts';
 import type { RivalView } from '../vehicle/AIDriver.ts';
 import { findLineForCar } from './RacingLine.ts';
 import type { TrackLinesManifest } from './RacingLine.ts';
-import { createVehicleState } from '../vehicle/Vehicle.ts';
+import { createVehicleState, isAirborne } from '../vehicle/Vehicle.ts';
 import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
+import {
+  consumeJump,
+  createJumpCharges,
+  HOP_LAUNCH_SPEED,
+  refillJumpCharges,
+} from '../vehicle/JumpCharges.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 import { decideMissileAim } from '../weapons/WeaponAim.ts';
 import {
@@ -116,6 +122,8 @@ export interface RacerRuntime {
   integrity: CarIntegrity;
   /** Missiles, oil and mines this car is carrying (T-046). */
   inventory: WeaponInventory;
+  /** Hops remaining this lap. Refills at the finish line. */
+  jumps: number;
   /**
    * Hardest contact seen since the presentation layer last read it, world units/s.
    * The scene drains this to trigger the impact sound; the damage rules have
@@ -260,6 +268,7 @@ export class RaceField {
         lateralOffset: slot.lateralOffset,
         integrity: createCarIntegrity(),
         inventory: createWeaponInventory(),
+        jumps: createJumpCharges(),
         pendingImpactSpeed: 0,
         explodedThisStep: false,
         respawnedThisStep: false,
@@ -329,6 +338,7 @@ export class RaceField {
       racer.lateralOffset = slot.lateralOffset;
       racer.integrity = createCarIntegrity();
       racer.inventory = createWeaponInventory();
+      racer.jumps = createJumpCharges();
       racer.pendingImpactSpeed = 0;
       racer.explodedThisStep = false;
       racer.respawnedThisStep = false;
@@ -398,6 +408,7 @@ export class RaceField {
 
       if (!frozen) {
         this.resolveWeaponCommand(racer, command);
+        this.resolveHopCommand(racer, command);
       }
 
       // Perks enter as DERIVED values, never as a special case inside the physics: the
@@ -450,7 +461,7 @@ export class RaceField {
     // 1b. Missiles fly in a straight line and hit-test against the just-moved field.
     if (!frozen) {
       const targets = this.racers
-        .filter(racer => this.canCollide(racer))
+        .filter(racer => this.canCollide(racer) && !isAirborne(racer.state))
         .map(racer => ({
           carId: racer.carId,
           position: racer.state.position,
@@ -591,6 +602,7 @@ export class RaceField {
       const after = this.standingOf(racer.carId)?.lapsCompleted ?? 0;
       if (after > before) {
         racer.inventory = refillWeaponInventory(racer.inventory, racer.stats, racer.perk);
+        racer.jumps = refillJumpCharges(racer.jumps);
       }
     });
   }
@@ -647,13 +659,26 @@ export class RaceField {
     }
   }
 
+  /** Impart hop velocity when grounded and a charge remains. */
+  private resolveHopCommand(racer: RacerRuntime, command: InputCommand): void {
+    if (!command.jump || isAirborne(racer.state)) {
+      return;
+    }
+    const next = consumeJump(racer.jumps);
+    if (next === null) {
+      return;
+    }
+    racer.jumps = next;
+    racer.state = { ...racer.state, verticalVelocity: HOP_LAUNCH_SPEED };
+  }
+
   /**
    * Oil → yawSpin (decision 19); mine → instant destroy. A hazard is consumed on
    * contact. The dropper is immune to a hazard on the step it was spawned.
    */
   private resolveHazardOverlaps(): void {
     const targets = this.racers
-      .filter(racer => this.canCollide(racer))
+      .filter(racer => this.canCollide(racer) && !isAirborne(racer.state))
       .map(racer => ({
         carId: racer.carId,
         position: racer.state.position,

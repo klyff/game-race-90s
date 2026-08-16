@@ -6,6 +6,9 @@ import { isPlanetUnlocked } from '../data/tracks/campaign.ts';
 import { loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
+import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
+import { MENU_KIND, MENU_PROMPT_LIST, MenuController } from '../adapters/input/MenuController.ts';
+import type { MenuResult } from '../adapters/input/MenuController.ts';
 import type { PlanetSelectData } from './selectData.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
@@ -20,7 +23,7 @@ import { SCENE_KEY } from './sceneKeys.ts';
 export class PlanetSelectScene extends Phaser.Scene {
   private payload!: PlanetSelectData;
   private wonTracks: readonly string[] = [];
-  private selectedIndex = 0;
+  private menu!: MenuController;
 
   private backdrop!: Phaser.GameObjects.Rectangle;
   private art!: Phaser.GameObjects.Image;
@@ -42,7 +45,14 @@ export class PlanetSelectScene extends Phaser.Scene {
       (acc, planet, index) => (isPlanetUnlocked(planet, this.wonTracks) ? index : acc),
       0,
     );
-    this.selectedIndex = lastUnlocked;
+    this.menu = new MenuController(
+      PLANETS.map(planet => ({
+        id: planet.id,
+        kind: MENU_KIND.ACTION,
+        label: planet.displayName,
+      })),
+      { selectedIndex: lastUnlocked },
+    );
   }
 
   create(): void {
@@ -55,7 +65,7 @@ export class PlanetSelectScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
     this.rows = PLANETS.map(() => this.add.text(0, 0, '', this.rowStyle()).setOrigin(0.5, 0.5));
     this.promptText = this.add
-      .text(0, 0, '↑↓ MOVE     ENTER SELECT     ESC BACK', this.promptStyle())
+      .text(0, 0, MENU_PROMPT_LIST, this.promptStyle())
       .setOrigin(0.5, 0.5);
 
     this.refresh();
@@ -69,21 +79,24 @@ export class PlanetSelectScene extends Phaser.Scene {
     if (keyboard === null || keyboard === undefined) {
       return;
     }
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP).on('down', () => this.move(-1));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN).on('down', () => this.move(1));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER).on('down', () => this.choose());
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => this.choose());
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.back());
+    bindMenuKeys(keyboard, this.menu, {
+      onResult: result => this.handleResult(result),
+      onMoved: () => this.refresh(),
+    });
   }
 
-  private move(direction: number): void {
-    const count = PLANETS.length;
-    this.selectedIndex = (this.selectedIndex + direction + count) % count;
-    this.refresh();
+  private handleResult(result: MenuResult): void {
+    if (result.type === 'activate') {
+      this.choose();
+      return;
+    }
+    if (result.type === 'back') {
+      this.back();
+    }
   }
 
   private choose(): void {
-    const planet = PLANETS[this.selectedIndex];
+    const planet = PLANETS[this.menu.selectedIndex];
     if (planet === undefined || !isPlanetUnlocked(planet, this.wonTracks)) {
       return;
     }
@@ -111,7 +124,7 @@ export class PlanetSelectScene extends Phaser.Scene {
       }
       const unlocked = isPlanetUnlocked(planet, this.wonTracks);
       const featured = this.carName(planet.bestCarId);
-      const selected = index === this.selectedIndex;
+      const selected = index === this.menu.selectedIndex;
       const marker = selected ? '>' : ' ';
       const lock = unlocked ? '' : '  [LOCKED]';
       row.setText(`${marker} ${planet.index}. ${planet.displayName.toUpperCase()}  ·  ${featured}${lock}`);
@@ -127,7 +140,7 @@ export class PlanetSelectScene extends Phaser.Scene {
   }
 
   private applyArt(): void {
-    const planet = PLANETS[this.selectedIndex];
+    const planet = PLANETS[this.menu.selectedIndex];
     if (planet === undefined) {
       return;
     }

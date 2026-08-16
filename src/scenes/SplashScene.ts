@@ -6,6 +6,9 @@ import type { StatBar } from '../adapters/render/CarStatBars.ts';
 import { coverRect, promptAnchor, voidRect } from '../adapters/render/SplashLayout.ts';
 import type { CarSetManifest, CarSheetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
+import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
+import { MENU_KIND, MENU_PROMPT_OPTIONS, MenuController } from '../adapters/input/MenuController.ts';
+import type { MenuResult } from '../adapters/input/MenuController.ts';
 import { PLAYER_CAR_ID, SCENE_KEY, SPLASH_ART_KEY } from './sceneKeys.ts';
 
 /** The prompt's blink period, seconds. Slow, the way a cabinet attract screen blinked. */
@@ -65,8 +68,10 @@ export class SplashScene extends Phaser.Scene {
   private nameText!: Phaser.GameObjects.Text;
   private archetypeText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
+  private hintText!: Phaser.GameObjects.Text;
   private leftArrow!: Phaser.GameObjects.Text;
   private rightArrow!: Phaser.GameObjects.Text;
+  private menu!: MenuController;
   private preview!: Phaser.GameObjects.Sprite;
   private barLabels: Phaser.GameObjects.Text[] = [];
   private barTracks: Phaser.GameObjects.Rectangle[] = [];
@@ -110,8 +115,29 @@ export class SplashScene extends Phaser.Scene {
     }
 
     this.promptText = this.add.text(0, 0, PROMPT_TEXT, this.promptStyle()).setOrigin(0.5, 0.5);
+    this.hintText = this.add
+      .text(0, 0, `${MENU_PROMPT_OPTIONS}     M MUTE`, this.hintStyle())
+      .setOrigin(0.5, 0.5);
 
     this.audio = new TitleAudio();
+    this.menu = new MenuController(
+      [
+        {
+          id: 'car',
+          kind: MENU_KIND.OPTION,
+          label: 'CAR',
+          values: this.manifest.cars.map(car => car.displayName.toUpperCase()),
+          valueIndex: this.selectedIndex,
+        },
+        { id: 'start', kind: MENU_KIND.ACTION, label: 'START' },
+      ],
+      {
+        onPreview: () => {
+          this.applySelection();
+          this.layout();
+        },
+      },
+    );
 
     this.applySelection();
     this.layout();
@@ -138,27 +164,38 @@ export class SplashScene extends Phaser.Scene {
     keyboard.on('keydown', () => this.audio.start());
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.audio.start());
 
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT).on('down', () => this.cycleCar(-1));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT).on('down', () => this.cycleCar(1));
+    bindMenuKeys(keyboard, this.menu, {
+      onResult: result => this.handleResult(result),
+      onMoved: () => this.refreshMenuHighlight(),
+      onCycled: () => this.refreshMenuHighlight(),
+      spaceActivates: false,
+    });
+    // Attract-screen mash: Space always starts with the car on screen.
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => this.startRace());
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.audio.toggleMute());
   }
 
+  private handleResult(result: MenuResult): void {
+    if (result.type === 'activate' && result.id === 'start') {
+      this.startRace();
+      return;
+    }
+    if (result.type === 'commit' || result.type === 'discard') {
+      this.applySelection();
+      this.layout();
+      this.refreshMenuHighlight();
+    }
+  }
+
   private selectedCar(): CarSheetManifest {
-    const car = this.manifest.cars[this.selectedIndex];
+    const index = this.menu !== undefined ? this.menu.valueIndex('car') : this.selectedIndex;
+    const car = this.manifest.cars[index];
     if (car === undefined) {
       // Cannot happen: the index is only ever set by modular arithmetic over this array.
       // Guarded anyway because the alternative is a blank panel with no explanation.
-      throw new Error(`SplashScene has no car at index ${this.selectedIndex}`);
+      throw new Error(`SplashScene has no car at index ${index}`);
     }
     return car;
-  }
-
-  private cycleCar(direction: number): void {
-    const count = this.manifest.cars.length;
-    this.selectedIndex = (this.selectedIndex + direction + count) % count;
-    this.applySelection();
-    this.layout();
   }
 
   /** Pushes the chosen car into every panel element. */
@@ -226,6 +263,19 @@ export class SplashScene extends Phaser.Scene {
 
     const prompt = promptAnchor(viewport, image);
     this.promptText.setPosition(prompt.x, prompt.y);
+    this.hintText.setPosition(prompt.x, prompt.y + region.height * 0.12);
+    this.refreshMenuHighlight();
+  }
+
+  private refreshMenuHighlight(): void {
+    if (this.menu === undefined) {
+      return;
+    }
+    const carSelected = this.menu.selectedId === 'car';
+    this.nameText.setColor(carSelected ? '#ffd85c' : '#c8cad2');
+    this.leftArrow.setColor(carSelected ? '#ffd85c' : '#8a8c94');
+    this.rightArrow.setColor(carSelected ? '#ffd85c' : '#8a8c94');
+    this.promptText.setColor(carSelected ? '#d0d2d8' : '#ffffff');
   }
 
   private startRace(): void {
@@ -284,6 +334,16 @@ export class SplashScene extends Phaser.Scene {
       color: '#ffffff',
       stroke: '#1a0e05',
       strokeThickness: 7,
+    };
+  }
+
+  private hintStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '13px',
+      color: '#d8dae2',
+      stroke: '#101014',
+      strokeThickness: 3,
     };
   }
 }

@@ -342,6 +342,17 @@ describe('formatHud (integration)', () => {
       const hud = formatHud(readout({ ammo: NaN, ammoCapacity: 5 }));
       expect(hud.ammo).toBe('AMMO 0/5');
     });
+
+    it('shows A/S/D counts when oil and mines are present', () => {
+      const hud = formatHud(readout({ ammo: 3, ammoCapacity: 5, oil: 2, mines: 1 }));
+      expect(hud.ammo).toBe('A 3  S 2  D 1');
+    });
+
+    it('appends SPC n when jumps are present with the weapon loadout', () => {
+      const hud = formatHud(readout({ ammo: 3, ammoCapacity: 5, oil: 2, mines: 1, jumps: 4 }));
+      expect(hud.ammo).toBe('A 3  S 2  D 1  SPC 4');
+    });
+
   });
 
   describe('countdown formatting', () => {
