@@ -5,6 +5,7 @@ import { PLANET_THEMES } from '../data/tracks/planetThemes.ts';
 import { parseTrackLinesManifest } from '../data/tracks/TrackLines.ts';
 import { TRACKS } from '../data/tracks/registry.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
+import { enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
 import {
   CAR_ASSET_DIRECTORY,
   CAR_MANIFEST_KEY,
@@ -110,6 +111,9 @@ export class BootScene extends Phaser.Scene {
     }
 
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      if (typeof location !== 'undefined') {
+        enableTourModeFromSearch(location.search);
+      }
       this.scene.start(SCENE_KEY.SPLASH, { manifest, linesByTrack });
     });
     this.load.start();

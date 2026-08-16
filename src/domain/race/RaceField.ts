@@ -38,7 +38,7 @@ import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
 import {
   consumeJump,
   createJumpCharges,
-  HOP_LAUNCH_SPEED,
+  hopLaunchSpeed,
   refillJumpCharges,
 } from '../vehicle/JumpCharges.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
@@ -736,7 +736,7 @@ export class RaceField {
       return;
     }
     racer.jumps = next;
-    racer.state = { ...racer.state, verticalVelocity: HOP_LAUNCH_SPEED };
+    racer.state = { ...racer.state, verticalVelocity: hopLaunchSpeed(racer.stats) };
   }
 
   /**

@@ -3,6 +3,7 @@ import { findCarSheet } from '../data/cars/CarManifest.ts';
 import { PLANETS } from '../data/tracks/planets.ts';
 import { themeForPlanetId } from '../data/tracks/planetThemes.ts';
 import { isPlanetUnlocked } from '../data/tracks/campaign.ts';
+import { isTourModeOn } from '../adapters/progress/TourMode.ts';
 import { loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
@@ -15,8 +16,8 @@ import { SCENE_KEY } from './sceneKeys.ts';
 /**
  * Pick a planet. Ten worlds, each with a FEATURED car and three tracks. A planet
  * is locked until the previous planet's last track is won (owner rule), and a
- * locked row cannot be entered. Enter opens the track select; Esc goes back to
- * the title.
+ * locked row cannot be entered — unless tour mode is on (`?tour=1` or TOUR on
+ * the splash). Enter opens the track select; Esc goes back to the title.
  *
  * Drawn against the viewport with a plain dark backdrop so it reads at any size.
  */
@@ -40,11 +41,14 @@ export class PlanetSelectScene extends Phaser.Scene {
   init(data: PlanetSelectData): void {
     this.payload = data;
     this.wonTracks = loadWonTracks();
-    // Start on the last unlocked planet so a returning player lands where they left off.
-    const lastUnlocked = PLANETS.reduce(
-      (acc, planet, index) => (isPlanetUnlocked(planet, this.wonTracks) ? index : acc),
-      0,
-    );
+    // Tour starts at planet 1 so a terrain walk begins at the top. Otherwise
+    // land on the last unlocked planet, where a returning player left off.
+    const lastUnlocked = isTourModeOn()
+      ? 0
+      : PLANETS.reduce(
+          (acc, planet, index) => (isPlanetUnlocked(planet, this.wonTracks) ? index : acc),
+          0,
+        );
     this.menu = new MenuController(
       PLANETS.map(planet => ({
         id: planet.id,
@@ -59,7 +63,9 @@ export class PlanetSelectScene extends Phaser.Scene {
     this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 1).setOrigin(0, 0);
     this.art = this.add.image(0, 0, '').setOrigin(0, 0).setVisible(false);
     this.dim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.55).setOrigin(0, 0);
-    this.titleText = this.add.text(0, 0, 'SELECT PLANET', this.titleStyle()).setOrigin(0.5, 0.5);
+    this.titleText = this.add
+      .text(0, 0, isTourModeOn() ? 'SELECT PLANET  ·  TOUR' : 'SELECT PLANET', this.titleStyle())
+      .setOrigin(0.5, 0.5);
     this.walletText = this.add
       .text(0, 0, `BANK ${formatCash(loadWallet())}`, this.walletStyle())
       .setOrigin(0.5, 0.5);
@@ -97,7 +103,7 @@ export class PlanetSelectScene extends Phaser.Scene {
 
   private choose(): void {
     const planet = PLANETS[this.menu.selectedIndex];
-    if (planet === undefined || !isPlanetUnlocked(planet, this.wonTracks)) {
+    if (planet === undefined || !isPlanetUnlocked(planet, this.wonTracks, isTourModeOn())) {
       return;
     }
     this.scene.start(SCENE_KEY.TRACK_SELECT, {
@@ -122,7 +128,7 @@ export class PlanetSelectScene extends Phaser.Scene {
       if (row === undefined) {
         return;
       }
-      const unlocked = isPlanetUnlocked(planet, this.wonTracks);
+      const unlocked = isPlanetUnlocked(planet, this.wonTracks, isTourModeOn());
       const featured = this.carName(planet.bestCarId);
       const selected = index === this.menu.selectedIndex;
       const marker = selected ? '>' : ' ';

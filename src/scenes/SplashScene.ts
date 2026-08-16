@@ -9,6 +9,7 @@ import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
 import { MENU_KIND, MENU_PROMPT_OPTIONS, MenuController } from '../adapters/input/MenuController.ts';
 import type { MenuResult } from '../adapters/input/MenuController.ts';
+import { enableTourMode, feedTourCode, isTourModeOn } from '../adapters/progress/TourMode.ts';
 import { PLAYER_CAR_ID, SCENE_KEY, SPLASH_ART_KEY } from './sceneKeys.ts';
 
 /** The prompt's blink period, seconds. Slow, the way a cabinet attract screen blinked. */
@@ -69,6 +70,7 @@ export class SplashScene extends Phaser.Scene {
   private archetypeText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
+  private tourText!: Phaser.GameObjects.Text;
   private leftArrow!: Phaser.GameObjects.Text;
   private rightArrow!: Phaser.GameObjects.Text;
   private menu!: MenuController;
@@ -79,6 +81,7 @@ export class SplashScene extends Phaser.Scene {
 
   private readonly blink = new BlinkClock(BLINK_PERIOD_SECONDS);
   private audio!: TitleAudio;
+  private tourBuffer = '';
 
   constructor() {
     super(SCENE_KEY.SPLASH);
@@ -118,6 +121,10 @@ export class SplashScene extends Phaser.Scene {
     this.hintText = this.add
       .text(0, 0, `${MENU_PROMPT_OPTIONS}     M MUTE`, this.hintStyle())
       .setOrigin(0.5, 0.5);
+    this.tourText = this.add
+      .text(0, 0, 'TOUR MODE · ALL MAPS OPEN', this.tourStyle())
+      .setOrigin(0.5, 0.5)
+      .setVisible(isTourModeOn());
 
     this.audio = new TitleAudio();
     this.menu = new MenuController(
@@ -161,7 +168,10 @@ export class SplashScene extends Phaser.Scene {
     // Any key is a user gesture, which is the only thing a browser will start audio on.
     // Both `resume` and `TitleMusic.start` are idempotent, so binding the bare event and
     // letting it fire on every press is simpler than tracking which press was the first.
-    keyboard.on('keydown', () => this.audio.start());
+    keyboard.on('keydown', (event: KeyboardEvent) => {
+      this.audio.start();
+      this.considerTourCode(event.key);
+    });
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.audio.start());
 
     bindMenuKeys(keyboard, this.menu, {
@@ -264,7 +274,21 @@ export class SplashScene extends Phaser.Scene {
     const prompt = promptAnchor(viewport, image);
     this.promptText.setPosition(prompt.x, prompt.y);
     this.hintText.setPosition(prompt.x, prompt.y + region.height * 0.12);
+    this.tourText.setPosition(prompt.x, prompt.y + region.height * 0.22);
     this.refreshMenuHighlight();
+  }
+
+  private considerTourCode(key: string): void {
+    if (isTourModeOn()) {
+      return;
+    }
+    const next = feedTourCode(this.tourBuffer, key);
+    this.tourBuffer = next.buffer;
+    if (!next.unlocked) {
+      return;
+    }
+    enableTourMode();
+    this.tourText.setVisible(true);
   }
 
   private refreshMenuHighlight(): void {
@@ -342,6 +366,16 @@ export class SplashScene extends Phaser.Scene {
       fontFamily: 'monospace',
       fontSize: '13px',
       color: '#d8dae2',
+      stroke: '#101014',
+      strokeThickness: 3,
+    };
+  }
+
+  private tourStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      color: '#8bff9b',
       stroke: '#101014',
       strokeThickness: 3,
     };

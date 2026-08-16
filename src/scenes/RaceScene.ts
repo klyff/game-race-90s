@@ -84,10 +84,11 @@ const CAMERA_ZOOM_STEP = 0.5;
 /**
  * How many cars line up, the player included.
  *
- * Five is the whole roster, which is what makes `assignNpcCars` a straight selection
- * with no duplicates: the player takes one car and the NPCs take the other four.
+ * Seven fits the wide circuits: two-wide rows of `gridLateralOffsets` and a
+ * last row of one. The 20-car roster is big enough that `assignNpcCars` still
+ * hands every NPC a unique model.
  */
-const RACER_COUNT = 5;
+const RACER_COUNT = 7;
 
 /**
  * World distance at which another car's explosion is inaudible.
@@ -574,7 +575,7 @@ export class RaceScene extends Phaser.Scene {
    * The grid: the NPCs first, the player LAST.
    *
    * Grid slots follow entry order, so this puts the player at the back of the field.
-   * That is a gameplay choice, not an accident — starting on pole in a five-car
+   * That is a gameplay choice, not an accident — starting on pole in a packed
    * arcade race means driving away from everyone and never seeing another car.
    */
   private buildEntries(): readonly RacerEntry[] {

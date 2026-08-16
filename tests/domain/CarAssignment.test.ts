@@ -37,6 +37,14 @@ describe('assignNpcCars', () => {
     expect(assignNpcCars(ROSTER, 'marauder', 1)).toEqual(['dirt-devil']);
   });
 
+  it('fills a seven-car grid with six unique NPCs from a larger roster', () => {
+    const fleet = [...ROSTER, 'car-6-tank', 'car-7-turbo', 'delorean'];
+    const npcs = assignNpcCars(fleet, 'marauder', 6);
+    expect(npcs).toHaveLength(6);
+    expect(new Set(npcs).size).toBe(6);
+    expect(npcs).not.toContain('marauder');
+  });
+
   it('reuses the roster rather than coming back short when the field is bigger', () => {
     const npcs = assignNpcCars(['a', 'b', 'c'], 'a', 5);
     // A short field would desync the grid, the standings and the HUD; duplicates

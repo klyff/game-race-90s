@@ -51,7 +51,11 @@ export function campaignTracks(): readonly CampaignTrack[] {
 export function isPlanetUnlocked(
   planet: PlanetDefinition,
   wonTrackIds: readonly string[],
+  unlockAll = false,
 ): boolean {
+  if (unlockAll) {
+    return true;
+  }
   if (planet.index <= 1) {
     return true;
   }
@@ -69,7 +73,11 @@ export function isTrackUnlocked(
   n: number,
   clearedTrackIds: readonly string[],
   wonTrackIds: readonly string[],
+  unlockAll = false,
 ): boolean {
+  if (unlockAll) {
+    return true;
+  }
   if (!isPlanetUnlocked(planet, wonTrackIds)) {
     return false;
   }

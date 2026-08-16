@@ -54,6 +54,11 @@ describe('campaign — track unlocks', () => {
     // planet2 not unlocked, even if its own track 1 would otherwise be free.
     expect(isTrackUnlocked(planet2, 1, [], [])).toBe(false);
   });
+
+  it('opens every planet and track when tour mode asks to unlock all', () => {
+    expect(isPlanetUnlocked(planet2, [], true)).toBe(true);
+    expect(isTrackUnlocked(planet2, 3, [], [], true)).toBe(true);
+  });
 });
 
 describe('campaign — slot lookup', () => {

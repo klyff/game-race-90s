@@ -2,10 +2,10 @@
  * Chooses which cars the NPCs drive, given the player's pick.
  *
  * The rule the project owner asked for: an NPC never drives the car the player
- * chose, and no two NPCs drive the same car. With five cars on a five-car grid
- * that makes the NPC field exactly "the rest of the roster", which is why this is
- * a selection and not a random draw — a race should be reproducible, and a shuffle
- * here would make every bug report unrepeatable.
+ * chose, and no two NPCs drive the same car. The 20-car roster is larger than
+ * the seven-car grid, so this is a walk down the list rather than "everyone
+ * else" — a race should be reproducible, and a shuffle here would make every
+ * bug report unrepeatable.
  */
 
 /**
@@ -38,8 +38,8 @@ export function assignNpcCars(
   const wanted = Math.floor(npcCount);
   const assigned: string[] = [];
   for (let index = 0; index < wanted; index += 1) {
-    // The modulo only ever bites when the roster is smaller than the field; with the
-    // v1 roster of five and a five-car grid it is a straight walk down the list.
+    // The modulo only ever bites when the roster is smaller than the field; with
+    // twenty models and a seven-car grid it is a straight walk down the list.
     const id = available[index % available.length];
     if (id !== undefined) {
       assigned.push(id);

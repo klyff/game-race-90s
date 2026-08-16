@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { findPlanet } from '../data/tracks/planets.ts';
 import { planetTracks, isTrackUnlocked } from '../data/tracks/campaign.ts';
 import type { CampaignTrack } from '../data/tracks/campaign.ts';
+import { isTourModeOn } from '../adapters/progress/TourMode.ts';
 import { loadCleared, loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
 import { firstPlacePrize, formatCash } from '../domain/progress/Wallet.ts';
 import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
@@ -109,7 +110,7 @@ export class TrackSelectScene extends Phaser.Scene {
   }
 
   private unlocked(track: CampaignTrack): boolean {
-    return isTrackUnlocked(track.planet, track.n, this.cleared, this.won);
+    return isTrackUnlocked(track.planet, track.n, this.cleared, this.won, isTourModeOn());
   }
 
   private refresh(): void {
