@@ -96,3 +96,20 @@ export const SHADE_STEP = {
   DARK: 'dark',
 } as const;
 export type ShadeStep = (typeof SHADE_STEP)[keyof typeof SHADE_STEP];
+
+/**
+ * A car's one signature advantage. Only the id travels as data (through
+ * `cars.json` and the authoring files in `tools/spritegen/cars/`); the
+ * tunable numbers behind each perk live in `src/domain/vehicle/CarPerk.ts`.
+ * Keeping the id and the tuning separate is what lets `cars.json` stay small
+ * and lets the tunables be unit-tested without touching car art at all.
+ */
+export const CAR_PERK = {
+  BULLDOZER: 'bulldozer',
+  OFF_ROAD_ACE: 'off-road-ace',
+  ANVIL: 'anvil',
+  SLIPSTREAM: 'slipstream',
+  TRENCH_GRIP: 'trench-grip',
+  ARSENAL: 'arsenal',
+} as const;
+export type CarPerkId = (typeof CAR_PERK)[keyof typeof CAR_PERK];

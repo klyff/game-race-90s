@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { formatHud } from '../adapters/render/HudFormat.ts';
 import type { HudReadout, HudText } from '../adapters/render/HudFormat.ts';
+import { SpeedoGauge } from '../adapters/render/SpeedoGauge.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 /**
@@ -69,6 +70,7 @@ export class HudScene extends Phaser.Scene {
   private standingsText!: Phaser.GameObjects.Text;
   private barBackground!: Phaser.GameObjects.Rectangle;
   private barFill!: Phaser.GameObjects.Rectangle;
+  private gauge!: SpeedoGauge;
 
   /** Last rendered values, so a pulse fires on CHANGE rather than every frame. */
   private lastPosition = '';
@@ -95,6 +97,9 @@ export class HudScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setDepth(HUD_DEPTH + 1);
 
+    this.gauge = new SpeedoGauge(this);
+    this.gauge.setDepth(HUD_DEPTH);
+
     this.countdownText = this.add
       .text(0, 0, '', this.countdownStyle())
       .setOrigin(0.5, 0.5)
@@ -103,6 +108,12 @@ export class HudScene extends Phaser.Scene {
 
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
+
+    // The gauge owns Phaser game objects (a container and its children) that Phaser
+    // will not tear down on its own; every other owned-object adapter in this codebase
+    // (`ExplosionEffect`, `TyreMarks`) is destroyed from a SHUTDOWN hook for the same
+    // reason, following the pattern `RaceScene` uses for its own owned resources.
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.gauge.destroy());
   }
 
   update(): void {
@@ -119,6 +130,7 @@ export class HudScene extends Phaser.Scene {
     this.applyPosition(text);
     this.applyLap(text);
     this.applyIntegrity(text);
+    this.applySpeed(text);
     this.applyCountdown(text);
     this.applyStandings(source, readout);
   }
@@ -146,6 +158,15 @@ export class HudScene extends Phaser.Scene {
     const fraction = text.integrityPercent / 100;
     this.barFill.width = BAR_WIDTH * fraction;
     this.barFill.setFillStyle(barColour(text.integrityPercent));
+  }
+
+  /**
+   * Speed changes every frame under normal driving, so unlike `applyPosition` and
+   * `applyLap` this never pulses: `pulse()` fires on CHANGE, and a value that changes
+   * constantly would tween constantly, which reads as broken rather than alive.
+   */
+  private applySpeed(text: HudText): void {
+    this.gauge.update(text.speedDigits, text.speedFraction);
   }
 
   /**
@@ -236,6 +257,15 @@ export class HudScene extends Phaser.Scene {
     this.barBackground.setPosition(MARGIN, barY);
     this.barFill.setPosition(MARGIN, barY);
     this.ammoText.setPosition(MARGIN, barY - 30);
+
+    // Speedometer: bottom-right, the only free corner — top corners hold position/lap
+    // and time/standings, and bottom-left is the integrity bar with the ammo readout
+    // above it. Right-aligned using the gauge's own reported size, so this scene never
+    // needs to know the arc/panel geometry inside `SpeedoGauge`.
+    const gaugeSize = this.gauge.size;
+    const gaugeX = width - MARGIN - gaugeSize.width;
+    const gaugeY = height - MARGIN - gaugeSize.height;
+    this.gauge.setPosition(gaugeX, gaugeY);
 
     // Well above centre on purpose: the chase camera keeps the player's car in the
     // middle of the screen, so a countdown at the centre sits squarely on top of the

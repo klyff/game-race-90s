@@ -1,4 +1,4 @@
-import type { PaletteRole } from '../../src/domain/constants.ts';
+import type { CarPerkId, PaletteRole } from '../../src/domain/constants.ts';
 import type { VehicleStats } from '../../src/domain/vehicle/VehicleStats.ts';
 export type { CarSetManifest, CarSheetManifest } from '../../src/data/cars/CarManifest.ts';
 
@@ -30,6 +30,8 @@ export interface CarModelDef {
   /** Drawn back-to-front is irrelevant — the rasterizer uses a depth buffer. */
   readonly parts: readonly CarPart[];
   readonly stats: VehicleStats;
+  /** This car's one signature advantage. Optional: a car may have none. */
+  readonly perk?: CarPerkId;
 }
 
 /**

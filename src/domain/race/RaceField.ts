@@ -14,10 +14,21 @@ import {
   tickIntegrity,
 } from '../vehicle/CarIntegrity.ts';
 import type { CarIntegrity, DamageRole } from '../vehicle/CarIntegrity.ts';
+import {
+  contactStats,
+  drivingStats,
+  perkDamageMultiplier,
+  perkProfile,
+  perkSurface,
+} from '../vehicle/CarPerk.ts';
+import type { CarPerkProfile } from '../vehicle/CarPerk.ts';
+import type { CarPerkId } from '../constants.ts';
 import { PaceDriver } from '../vehicle/PaceDriver.ts';
 import { createVehicleState } from '../vehicle/Vehicle.ts';
 import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
+import { slipstreamFactor } from './Slipstream.ts';
+import type { DraftCandidate } from './Slipstream.ts';
 import { advanceRace, createRaceState } from './RaceSimulation.ts';
 import type { RaceState, RacerStep } from './RaceSimulation.ts';
 import type { RacerStanding } from './PositionRanker.ts';
@@ -30,6 +41,11 @@ export interface RacerEntry {
   readonly stats: VehicleStats;
   /** Exactly one entry should be the player; the rest are driven by `PaceDriver`. */
   readonly isPlayer: boolean;
+  /**
+   * This car's one signature advantage, read from `cars.json`. Optional: a car may
+   * have none, in which case every perk rule is a no-op against it.
+   */
+  readonly perk?: CarPerkId;
 }
 
 /**
@@ -45,6 +61,14 @@ export interface RacerRuntime {
   readonly carId: string;
   readonly stats: VehicleStats;
   readonly isPlayer: boolean;
+  /**
+   * The tunables behind this car's signature advantage, resolved once at construction.
+   *
+   * Resolved here rather than looked up per step because the lookup is by string id and
+   * `step` runs five times per car at 60 Hz. Held as the PROFILE, not the id, so no rule
+   * downstream has to know how an id becomes numbers.
+   */
+  readonly perk: CarPerkProfile;
   /** Grid slot this car started from, 0 = pole. */
   readonly gridIndex: number;
   state: VehicleState;
@@ -147,6 +171,7 @@ export class RaceField {
         carId: entry.carId,
         stats: entry.stats,
         isPlayer: entry.isPlayer,
+        perk: perkProfile(entry.perk),
         gridIndex: slot.index,
         state: createVehicleState(slot.position, slot.heading),
         telemetry: null,
@@ -245,15 +270,23 @@ export class RaceField {
 
       const speedBefore = length(racer.state.velocity);
       const command = frozen ? IDLE_INPUT : this.commandFor(racer, playerCommand);
+
+      // Perks enter as DERIVED values, never as a special case inside the physics: the
+      // stats this one step is driven with, and an adjustment to whatever surface the
+      // track picks. Both are recomputed every step from the current field, so nothing
+      // is cached and nothing can go stale — the trap that produced T-039.
+      const draft = this.draftFor(racer);
+      const stats = drivingStats(racer.stats, racer.perk, command.brake > 0, draft);
       const step = stepVehicleOnTrack(
         racer.state,
         command,
-        racer.stats,
+        stats,
         this.track,
         this.spline,
         racer.distance,
         this.projectionWindow,
         stepSeconds,
+        surface => perkSurface(surface, racer.perk),
       );
 
       racer.state = step.state;
@@ -294,7 +327,17 @@ export class RaceField {
           continue;
         }
 
-        const contact = resolveCarContact(a.state, a.stats, b.state, b.stats);
+        // Contact perks are expressed as EFFECTIVE MASS, so `resolveCarContact` keeps
+        // splitting the impulse by reciprocal mass exactly as it always has: a heavier
+        // car both shoves harder and is shoved less, which is what "wins contact" and
+        // "immovable" mean, and momentum is still conserved for the masses used. The
+        // roster's authored mass is never touched — it is shared data from `cars.json`.
+        const contact = resolveCarContact(
+          a.state,
+          contactStats(a.stats, a.perk),
+          b.state,
+          contactStats(b.stats, b.perk),
+        );
         if (!contact.touched) {
           continue;
         }
@@ -338,7 +381,14 @@ export class RaceField {
       racer.pendingImpactSpeed = Math.max(racer.pendingImpactSpeed, impact);
 
       const before = racer.integrity;
-      racer.integrity = applyImpactDamage(before, impact, racer.stats, roles[index] ?? DAMAGE_ROLE.VICTIM);
+      const role = roles[index] ?? DAMAGE_ROLE.VICTIM;
+      racer.integrity = applyImpactDamage(
+        before,
+        impact,
+        racer.stats,
+        role,
+        perkDamageMultiplier(racer.perk, role),
+      );
       if (
         before.condition !== CAR_CONDITION.DESTROYED &&
         racer.integrity.condition === CAR_CONDITION.DESTROYED
@@ -358,6 +408,32 @@ export class RaceField {
     const impact = racer.pendingImpactSpeed;
     racer.pendingImpactSpeed = 0;
     return impact;
+  }
+
+  /**
+   * How much tow this car is getting from the rest of the field, 0..1.
+   *
+   * Returns 0 immediately for a car that cannot draft at all, which is four of the five
+   * cars — so the pair scan below only ever runs for the one car whose perk uses it, and
+   * the common case costs a single comparison rather than a loop over the field.
+   *
+   * Read at the top of stage 1, from positions as they stood at the END of the previous
+   * step. That is the only consistent answer available: reading them mid-stage would make
+   * a car's tow depend on where it sits in the array, which is precisely the ordering
+   * dependence stages 1 and 2 are kept apart to avoid.
+   */
+  private draftFor(racer: RacerRuntime): number {
+    if (racer.perk.slipstreamBonus <= 0) {
+      return 0;
+    }
+    const candidates: DraftCandidate[] = [];
+    for (const other of this.racers) {
+      if (other === racer || !this.canCollide(other)) {
+        continue;
+      }
+      candidates.push({ position: other.state.position, heading: other.state.heading });
+    }
+    return slipstreamFactor(racer.state, candidates);
   }
 
   private canCollide(racer: RacerRuntime): boolean {

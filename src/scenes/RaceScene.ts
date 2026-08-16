@@ -237,6 +237,8 @@ export class RaceScene extends Phaser.Scene {
         carId: entry.carId,
         position: entry.position,
       })),
+      speed: player.telemetry?.speed ?? 0,
+      maxSpeed: player.stats.maxSpeed,
     };
   }
 
@@ -358,13 +360,15 @@ export class RaceScene extends Phaser.Scene {
     const rosterIds = this.manifest.cars.map(car => car.id);
     const npcIds = assignNpcCars(rosterIds, this.carId, RACER_COUNT - 1);
 
-    const npcs = npcIds.map(carId => ({
-      carId,
-      stats: findCarSheet(this.manifest, carId).stats,
-      isPlayer: false,
-    }));
+    // The perk travels with the car, for the NPCs exactly as for the player: an advantage
+    // the player can feel is an advantage they must also race against.
+    const npcs = npcIds.map(carId => {
+      const sheet = findCarSheet(this.manifest, carId);
+      return { carId, stats: sheet.stats, perk: sheet.perk, isPlayer: false };
+    });
 
-    return [...npcs, { carId: this.carId, stats: this.playerSheetStats(), isPlayer: true }];
+    const player = findCarSheet(this.manifest, this.carId);
+    return [...npcs, { carId: this.carId, stats: player.stats, perk: player.perk, isPlayer: true }];
   }
 
   private playerSheetStats() {

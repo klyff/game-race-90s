@@ -7,7 +7,7 @@ import {
   findCarSheet,
   CarManifestError,
 } from '../../src/data/cars/CarManifest.ts';
-import { CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/domain/constants.ts';
+import { CAR_PERK, CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/domain/constants.ts';
 
 const testFileDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(testFileDir, '..', '..');
@@ -294,6 +294,108 @@ describe('parseCarSetManifest', () => {
       ],
     };
     expect(() => parseCarSetManifest(invalid)).toThrow(CarManifestError);
+  });
+
+  it('parses and exposes a valid perk on a car', () => {
+    const withPerk = {
+      frameWidth: 64,
+      frameHeight: 64,
+      frameCount: 32,
+      pixelsPerUnit: 8.0,
+      origin: { x: 0.5, y: 0.5 },
+      cars: [
+        {
+          id: 'test',
+          image: 'test.png',
+          shadow: { width: 10, height: 10 },
+          stats: {},
+          perk: CAR_PERK.BULLDOZER,
+        },
+      ],
+    };
+    const manifest = parseCarSetManifest(withPerk);
+    expect(manifest.cars[0]?.perk).toBe(CAR_PERK.BULLDOZER);
+  });
+
+  it('parses a car with no perk key, leaving perk undefined', () => {
+    const withoutPerk = {
+      frameWidth: 64,
+      frameHeight: 64,
+      frameCount: 32,
+      pixelsPerUnit: 8.0,
+      origin: { x: 0.5, y: 0.5 },
+      cars: [
+        {
+          id: 'test',
+          image: 'test.png',
+          shadow: { width: 10, height: 10 },
+          stats: {},
+        },
+      ],
+    };
+    const manifest = parseCarSetManifest(withoutPerk);
+    expect(manifest.cars[0]?.perk).toBeUndefined();
+  });
+
+  it('rejects a car with an unrecognised perk value, naming it in the message', () => {
+    const invalid = {
+      frameWidth: 64,
+      frameHeight: 64,
+      frameCount: 32,
+      pixelsPerUnit: 8.0,
+      origin: { x: 0.5, y: 0.5 },
+      cars: [
+        {
+          id: 'test',
+          image: 'test.png',
+          shadow: { width: 10, height: 10 },
+          stats: {},
+          perk: 'nonsense',
+        },
+      ],
+    };
+    expect(() => parseCarSetManifest(invalid)).toThrow(CarManifestError);
+    try {
+      parseCarSetManifest(invalid);
+      expect.fail('Should have thrown');
+    } catch (error) {
+      if (error instanceof CarManifestError) {
+        expect(error.message).toContain('nonsense');
+      } else {
+        throw error;
+      }
+    }
+  });
+
+  it.each([7, null, {}])('rejects a car with a non-string perk value %p', perk => {
+    const invalid = {
+      frameWidth: 64,
+      frameHeight: 64,
+      frameCount: 32,
+      pixelsPerUnit: 8.0,
+      origin: { x: 0.5, y: 0.5 },
+      cars: [
+        {
+          id: 'test',
+          image: 'test.png',
+          shadow: { width: 10, height: 10 },
+          stats: {},
+          perk,
+        },
+      ],
+    };
+    expect(() => parseCarSetManifest(invalid)).toThrow(CarManifestError);
+  });
+
+  it('real manifest gives every one of the five cars a perk that is a member of CAR_PERK', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    const knownPerks: readonly string[] = Object.values(CAR_PERK);
+    expect(manifest.cars.length).toBe(5);
+    for (const car of manifest.cars) {
+      expect(car.perk).toBeDefined();
+      expect(knownPerks).toContain(car.perk);
+    }
   });
 });
 

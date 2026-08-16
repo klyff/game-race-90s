@@ -183,6 +183,7 @@ export function renderCar(def: CarModelDef, fit: ProjectionFit): RenderedCar {
         height: Math.round(footprint * 2 * ISO_Y),
       },
       stats: def.stats,
+      perk: def.perk,
     },
   };
 }

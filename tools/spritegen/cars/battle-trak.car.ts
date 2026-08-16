@@ -1,4 +1,4 @@
-import { PALETTE_ROLE } from '../../../src/domain/constants.ts';
+import { CAR_PERK, PALETTE_ROLE } from '../../../src/domain/constants.ts';
 import type { CarModelDef } from '../schema.ts';
 
 /**
@@ -191,4 +191,11 @@ export const battleTrak: CarModelDef = {
     ammoCapacity: 15,     // DEFINING STAT: 3× marauder's 5
     collisionRadius: 1.85, // Sized to match actual footprint with side pods
   },
+  // Tracks bite under braking, so it can brake later into a corner than anything else.
+  //
+  // NOT `ARSENAL`, which is what this car's identity really promises: there is no weapon,
+  // no ammo consumption and no reload anywhere in the simulation until T-016, so an
+  // Arsenal perk would be a flag that changes nothing a driver can feel. `ARSENAL` stays
+  // defined and inert for that day; this car needs an advantage it can use today.
+  perk: CAR_PERK.TRENCH_GRIP,
 };

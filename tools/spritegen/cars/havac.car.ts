@@ -1,4 +1,4 @@
-import { PALETTE_ROLE } from '../../../src/domain/constants.ts';
+import { CAR_PERK, PALETTE_ROLE } from '../../../src/domain/constants.ts';
 import type { CarModelDef } from '../schema.ts';
 
 /**
@@ -176,4 +176,6 @@ export const havac: CarModelDef = {
     ammoCapacity: 5,      // Mid
     collisionRadius: 1.85, // Matches ~half-length
   },
+  // Barely flinches from collisions and weapon hits that would stagger others.
+  perk: CAR_PERK.ANVIL,
 };

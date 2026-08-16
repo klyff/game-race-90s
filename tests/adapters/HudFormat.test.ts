@@ -4,12 +4,16 @@
  * Covers: position ordinals (1-25, 101-113 with special 11/12/13 handling), race time formatting
  * (0, 5.5, 59.99, 60, 83.456, 611.5 seconds), countdown state transitions and "GO!" display,
  * lap clamping (never showing LAP 4/3), ammo at edge cases, integrity at 0/0.5/1 and out of range,
- * NaN/Infinity handling in all numeric fields, and no trailing whitespace in any output.
+ * speed formatting and the speed bar fraction (including overspeed clamping and a zero/negative
+ * maxSpeed guard), NaN/Infinity handling in all numeric fields, and no trailing whitespace in any
+ * output.
  */
 
 import { describe, it, expect } from 'vitest';
 import {
   formatHud,
+  formatSpeed,
+  formatSpeedDigits,
   positionOrdinal,
   formatRaceTime,
   type HudReadout,
@@ -33,6 +37,8 @@ function readout(overrides?: Partial<HudReadout>): HudReadout {
     ammoCapacity: 5,
     integrity: 1.0,
     standings: [],
+    speed: 0,
+    maxSpeed: 78,
     ...overrides,
   };
 }
@@ -501,10 +507,20 @@ describe('formatHud (integration)', () => {
           ammo: NaN,
           countdownRemaining: Infinity,
           integrity: -Infinity,
+          speed: NaN,
+          maxSpeed: Infinity,
         }),
       );
 
-      const allStrings = [hud.position, hud.lap, hud.time, hud.ammo, hud.countdown ?? ''].join('|');
+      const allStrings = [
+        hud.position,
+        hud.lap,
+        hud.time,
+        hud.ammo,
+        hud.speed,
+        hud.speedDigits,
+        hud.countdown ?? '',
+      ].join('|');
       expect(allStrings).not.toContain('NaN');
       expect(allStrings).not.toContain('Infinity');
     });
@@ -517,6 +533,11 @@ describe('formatHud (integration)', () => {
       expect(hud.lap).not.toMatch(/\s$/);
       expect(hud.time).not.toMatch(/\s$/);
       expect(hud.ammo).not.toMatch(/\s$/);
+      expect(hud.speed).not.toMatch(/\s$/);
+      // speedDigits is deliberately LEFT-padded ("  0", " 78"), so it is allowed to
+      // have leading whitespace. Only a TRAILING space would be a bug (it would shift
+      // the three seven-segment cells the field is meant to fill exactly).
+      expect(hud.speedDigits).not.toMatch(/\s$/);
       if (hud.countdown !== null) {
         expect(hud.countdown).not.toMatch(/\s$/);
       }
@@ -532,12 +553,16 @@ describe('formatHud (integration)', () => {
           ammo: NaN,
           ammoCapacity: -1,
           integrity: -Infinity,
+          speed: -Infinity,
+          maxSpeed: NaN,
         }),
       );
       expect(hud.position).not.toMatch(/\s$/);
       expect(hud.lap).not.toMatch(/\s$/);
       expect(hud.time).not.toMatch(/\s$/);
       expect(hud.ammo).not.toMatch(/\s$/);
+      expect(hud.speed).not.toMatch(/\s$/);
+      expect(hud.speedDigits).not.toMatch(/\s$/);
       if (hud.countdown !== null) {
         expect(hud.countdown).not.toMatch(/\s$/);
       }
@@ -554,9 +579,200 @@ describe('formatHud (integration)', () => {
       expect(hud.lap).not.toMatch(/\s$/);
       expect(hud.time).not.toMatch(/\s$/);
       expect(hud.ammo).not.toMatch(/\s$/);
+      expect(hud.speed).not.toMatch(/\s$/);
+      expect(hud.speedDigits).not.toMatch(/\s$/);
       if (hud.countdown !== null) {
         expect(hud.countdown).not.toMatch(/\s$/);
       }
+    });
+
+    it('speedDigits is allowed leading whitespace but is always exactly 3 characters', () => {
+      const hud = formatHud(readout({ speed: 0 }));
+      expect(hud.speedDigits).toBe('  0');
+      expect(hud.speedDigits).toHaveLength(3);
+    });
+  });
+
+  describe('formatSpeed', () => {
+    it('formats 0 as "0 MPH"', () => {
+      expect(formatSpeed(0)).toBe('0 MPH');
+    });
+
+    it('formats 78 u/s (marauder maxSpeed) as "195 MPH"', () => {
+      expect(formatSpeed(78)).toBe('195 MPH');
+    });
+
+    it('formats 95 u/s (air-blade maxSpeed) as "237 MPH"', () => {
+      expect(formatSpeed(95)).toBe('237 MPH');
+    });
+
+    it('always ends in " MPH"', () => {
+      expect(formatSpeed(12.3)).toMatch(/ MPH$/);
+      expect(formatSpeed(0)).toMatch(/ MPH$/);
+      expect(formatSpeed(-40)).toMatch(/ MPH$/);
+    });
+
+    describe('rounding', () => {
+      it('rounds 31.2 u/s to a whole MPH number', () => {
+        expect(formatSpeed(31.2)).toBe('78 MPH');
+      });
+
+      it('rounds 31.3 u/s to a whole MPH number', () => {
+        expect(formatSpeed(31.3)).toBe('78 MPH');
+      });
+    });
+
+    describe('non-finite input', () => {
+      it('returns a finite "0 MPH"-shaped string for NaN, never "NaN MPH"', () => {
+        const result = formatSpeed(NaN);
+        expect(result).toBe('0 MPH');
+        expect(result).not.toContain('NaN');
+      });
+
+      it('returns a finite "0 MPH"-shaped string for Infinity, never "Infinity MPH"', () => {
+        const result = formatSpeed(Infinity);
+        expect(result).toBe('0 MPH');
+        expect(result).not.toContain('Infinity');
+      });
+
+      it('returns a finite "0 MPH"-shaped string for -Infinity, never "-Infinity MPH"', () => {
+        const result = formatSpeed(-Infinity);
+        expect(result).toBe('0 MPH');
+        expect(result).not.toContain('Infinity');
+      });
+    });
+
+    it('formats a negative speed (reversing) as its magnitude', () => {
+      expect(formatSpeed(-78)).toBe('195 MPH');
+    });
+  });
+
+  describe('formatSpeedDigits', () => {
+    it('formats 0 as "  0"', () => {
+      expect(formatSpeedDigits(0)).toBe('  0');
+    });
+
+    it('formats 78 u/s (marauder maxSpeed) as "195"', () => {
+      expect(formatSpeedDigits(78)).toBe('195');
+    });
+
+    it('formats 95 u/s (air-blade maxSpeed) as "237"', () => {
+      expect(formatSpeedDigits(95)).toBe('237');
+    });
+
+    it('space-pads a two-digit result to three characters', () => {
+      // 31.2 u/s * 2.5 MPH_PER_WORLD_UNIT = 78, which is two digits.
+      expect(formatSpeedDigits(31.2)).toBe(' 78');
+    });
+
+    describe('always exactly 3 characters', () => {
+      const inputs = [0, 1, 31.2, 78, 95, 399.6, 999, 1000, 1e9, -78, -1e9, NaN, Infinity, -Infinity];
+
+      inputs.forEach(input => {
+        it(`is exactly 3 characters for input ${input}`, () => {
+          expect(formatSpeedDigits(input)).toHaveLength(3);
+        });
+      });
+    });
+
+    describe('clamping', () => {
+      it('clamps a value that would exceed 999 to "999"', () => {
+        // 1000 u/s * 2.5 = 2500 MPH, far past the three-cell display's ceiling.
+        expect(formatSpeedDigits(1000)).toBe('999');
+      });
+
+      it('clamps a huge value to "999"', () => {
+        expect(formatSpeedDigits(1e9)).toBe('999');
+      });
+    });
+
+    describe('non-finite input', () => {
+      it('returns "  0" for NaN', () => {
+        expect(formatSpeedDigits(NaN)).toBe('  0');
+      });
+
+      it('returns "  0" for Infinity', () => {
+        expect(formatSpeedDigits(Infinity)).toBe('  0');
+      });
+
+      it('returns "  0" for -Infinity', () => {
+        expect(formatSpeedDigits(-Infinity)).toBe('  0');
+      });
+    });
+
+    it('formats a negative speed (reversing) as its magnitude', () => {
+      expect(formatSpeedDigits(-78)).toBe('195');
+    });
+
+    describe('agreement with formatSpeed', () => {
+      // The number embedded in formatSpeed's "<n> MPH" string must always match the
+      // digits from formatSpeedDigits, parsed back to a number. If these two ever
+      // disagreed, the seven-segment gauge and the text readout would show different
+      // speeds for the same car at the same instant.
+      const speeds = [0, 1, 12.3, 31.2, 31.3, 39, 78, 95, 100, 500, 999.4, 1000, 1e6, -40, -78, NaN, Infinity, -Infinity];
+
+      speeds.forEach(speed => {
+        it(`agrees with formatSpeed for speed=${speed}`, () => {
+          const fromSpeedText = formatSpeed(speed);
+          const parsedFromSpeed = Number(fromSpeedText.replace(' MPH', ''));
+          const parsedFromDigits = Number(formatSpeedDigits(speed).trim());
+
+          // Only compare when formatSpeed's value itself is below the digits' clamp
+          // ceiling; above 999 formatSpeedDigits intentionally caps while formatSpeed
+          // does not, so the two are allowed to diverge only in that guarded range.
+          if (parsedFromSpeed <= 999) {
+            expect(parsedFromDigits).toBe(parsedFromSpeed);
+          } else {
+            expect(parsedFromDigits).toBe(999);
+          }
+        });
+      });
+    });
+  });
+
+  describe('speedFraction (via formatHud)', () => {
+    it('is 0 at rest', () => {
+      const hud = formatHud(readout({ speed: 0, maxSpeed: 78 }));
+      expect(hud.speedFraction).toBe(0);
+    });
+
+    it('is 1 at maxSpeed', () => {
+      const hud = formatHud(readout({ speed: 78, maxSpeed: 78 }));
+      expect(hud.speedFraction).toBe(1);
+    });
+
+    it('is clamped to 1, not above, during a post-collision overspeed of 1.2x maxSpeed', () => {
+      const hud = formatHud(readout({ speed: 78 * 1.2, maxSpeed: 78 }));
+      expect(hud.speedFraction).toBe(1);
+    });
+
+    it('is exactly 0.5 at half of maxSpeed', () => {
+      const hud = formatHud(readout({ speed: 39, maxSpeed: 78 }));
+      expect(hud.speedFraction).toBe(0.5);
+    });
+
+    it('is finite and 0 when maxSpeed is 0', () => {
+      const hud = formatHud(readout({ speed: 50, maxSpeed: 0 }));
+      expect(hud.speedFraction).toBe(0);
+      expect(Number.isFinite(hud.speedFraction)).toBe(true);
+    });
+
+    it('is finite and 0 when maxSpeed is negative', () => {
+      const hud = formatHud(readout({ speed: 50, maxSpeed: -78 }));
+      expect(hud.speedFraction).toBe(0);
+      expect(Number.isFinite(hud.speedFraction)).toBe(true);
+    });
+
+    it('is finite and 0 when maxSpeed is NaN', () => {
+      const hud = formatHud(readout({ speed: 50, maxSpeed: NaN }));
+      expect(hud.speedFraction).toBe(0);
+      expect(Number.isFinite(hud.speedFraction)).toBe(true);
+    });
+
+    it('is finite and 0 when maxSpeed is Infinity', () => {
+      const hud = formatHud(readout({ speed: 50, maxSpeed: Infinity }));
+      expect(hud.speedFraction).toBe(0);
+      expect(Number.isFinite(hud.speedFraction)).toBe(true);
     });
   });
 

@@ -151,6 +151,7 @@ export function applyImpactDamage(
   impactSpeed: number,
   stats: VehicleStats,
   role: DamageRole = DAMAGE_ROLE.VICTIM,
+  damageScale: number = 1,
 ): CarIntegrity {
   // Guard against NaN; Infinity is treated as catastrophic damage.
   const safeSpeed = Number.isNaN(impactSpeed) ? 0 : impactSpeed;
@@ -178,6 +179,14 @@ export function applyImpactDamage(
   if (role === DAMAGE_ROLE.AGGRESSOR) {
     finalDamage *= AGGRESSOR_DAMAGE_SHARE;
   }
+
+  // A car's signature advantage may make it tougher still (T-037's Anvil and Bulldozer).
+  //
+  // Applied as a multiplier on the DAMAGE rather than as a bump to `armor`, because
+  // `armor` is clamped into 0..1 and saturates: havac already carries 0.6, so expressing
+  // "shrugs off damage" as extra armour would do almost nothing for exactly the car whose
+  // whole identity is taking hits. Defaults to 1, so every existing call site is unchanged.
+  finalDamage *= Number.isFinite(damageScale) ? Math.max(0, damageScale) : 1;
 
   // Apply damage, clamped to [0, 1].
   const newIntegrity = Math.max(0, current.integrity - finalDamage);

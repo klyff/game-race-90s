@@ -28,7 +28,8 @@
         "armor": 0.4,
         "ammoCapacity": 5,
         "collisionRadius": 1.7
-      }
+      },
+      "perk": "bulldozer"
     },
     {
       "id": "dirt-devil",
@@ -50,7 +51,8 @@
         "armor": 0.25,
         "ammoCapacity": 4,
         "collisionRadius": 1.55
-      }
+      },
+      "perk": "off-road-ace"
     },
     {
       "id": "havac",
@@ -72,7 +74,8 @@
         "armor": 0.6,
         "ammoCapacity": 5,
         "collisionRadius": 1.85
-      }
+      },
+      "perk": "anvil"
     },
     {
       "id": "air-blade",
@@ -94,7 +97,8 @@
         "armor": 0.15,
         "ammoCapacity": 4,
         "collisionRadius": 1.8
-      }
+      },
+      "perk": "slipstream"
     },
     {
       "id": "battle-trak",
@@ -116,7 +120,8 @@
         "armor": 0.42,
         "ammoCapacity": 15,
         "collisionRadius": 1.85
-      }
+      },
+      "perk": "trench-grip"
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { PALETTE_ROLE } from '../../../src/domain/constants.ts';
+import { CAR_PERK, PALETTE_ROLE } from '../../../src/domain/constants.ts';
 import type { CarModelDef } from '../schema.ts';
 
 /**
@@ -153,4 +153,6 @@ export const dirtDevil: CarModelDef = {
     ammoCapacity: 4,
     collisionRadius: 1.55,
   },
+  // Shrugs off the off-road grip and speed penalty that punishes other cars.
+  perk: CAR_PERK.OFF_ROAD_ACE,
 };

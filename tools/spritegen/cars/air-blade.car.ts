@@ -1,4 +1,4 @@
-import { PALETTE_ROLE } from '../../../src/domain/constants.ts';
+import { CAR_PERK, PALETTE_ROLE } from '../../../src/domain/constants.ts';
 import type { CarModelDef } from '../schema.ts';
 
 /**
@@ -140,4 +140,6 @@ export const airBlade: CarModelDef = {
     ammoCapacity: 4,
     collisionRadius: 1.8,
   },
+  // Gets a speed boost drafting close behind another car.
+  perk: CAR_PERK.SLIPSTREAM,
 };

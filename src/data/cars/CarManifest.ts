@@ -1,4 +1,5 @@
-import { CAR_SPRITE_FRAMES } from '../../domain/constants.ts';
+import { CAR_PERK, CAR_SPRITE_FRAMES } from '../../domain/constants.ts';
+import type { CarPerkId } from '../../domain/constants.ts';
 import type { VehicleStats } from '../../domain/vehicle/VehicleStats.ts';
 
 /**
@@ -22,6 +23,7 @@ export interface CarSheetManifest {
   /** Ground shadow footprint in pixels, centred on the sprite origin. */
   readonly shadow: { readonly width: number; readonly height: number };
   readonly stats: VehicleStats;
+  readonly perk?: CarPerkId;
 }
 
 /**
@@ -65,6 +67,26 @@ function requireObject(value: unknown, what: string): Record<string, unknown> {
     throw new CarManifestError(`${what} must be an object, received ${String(value)}`);
   }
   return value as Record<string, unknown>;
+}
+
+const KNOWN_CAR_PERKS: readonly string[] = Object.values(CAR_PERK);
+
+/**
+ * A `perk` key is optional, but if it is present it must name a real perk.
+ * Unlike the other fields on `CarSheetManifest`, a typo here cannot be let
+ * through as "no perk": that would silently take a car's advantage away
+ * instead of failing at load time where it is cheap to notice.
+ */
+function parsePerk(raw: unknown, carId: string): CarPerkId | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (typeof raw !== 'string' || !KNOWN_CAR_PERKS.includes(raw)) {
+    throw new CarManifestError(
+      `car "${carId}" has unknown perk ${JSON.stringify(raw)}. Valid perks: ${KNOWN_CAR_PERKS.join(', ')}`,
+    );
+  }
+  return raw as CarPerkId;
 }
 
 /**
@@ -128,6 +150,7 @@ function parseCarSheet(raw: unknown, index: number): CarSheetManifest {
       height: requirePositiveNumber(shadow, 'height'),
     },
     stats: stats as unknown as VehicleStats,
+    perk: parsePerk(source['perk'], id),
   };
 }
 

@@ -3,7 +3,7 @@ import type { TrackDefinition } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import { stepVehicle } from '../vehicle/ArcadeCarPhysics.ts';
 import type { InputCommand } from '../input/InputCommand.ts';
-import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
+import type { VehicleState, VehicleTelemetry, SurfaceConditions } from '../vehicle/Vehicle.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 
 /**
@@ -24,6 +24,16 @@ export interface OnTrackStepResult {
   /** Speed component INTO the wall, world units/s. Zero if no contact. */
   readonly impactSpeed: number;
 }
+
+/**
+ * Turns the surface the track chose into the surface THIS car experiences.
+ *
+ * Injected as a strategy rather than resolved here, because the surface is picked inside
+ * this function and a car-specific rule would otherwise have to reach in. Keeping it a
+ * plain function means `OnTrackStep` knows nothing about perks, cars or any future reason
+ * a surface might differ per car — it only knows that something may adjust it.
+ */
+export type SurfaceAdjuster = (surface: SurfaceConditions) => SurfaceConditions;
 
 /**
  * One 60 Hz simulation step, in the order that makes the track authoritative:
@@ -50,6 +60,8 @@ export interface OnTrackStepResult {
  * @param hintDistance The previous frame's distance, used to narrow the projection search.
  * @param searchWindow Arc length to search left and right of hintDistance, world units.
  * @param stepSeconds Elapsed time for this step, normally 1/60.
+ * @param surfaceAdjust Optional per-car adjustment of the chosen surface. Omitted means
+ *        the car experiences exactly what the track dictates.
  *
  * @returns Wall-corrected state, telemetry, new distance for next step's hint,
  *          and wall-contact flags.
@@ -63,12 +75,14 @@ export function stepVehicleOnTrack(
   hintDistance: number,
   searchWindow: number,
   stepSeconds: number,
+  surfaceAdjust?: SurfaceAdjuster,
 ): OnTrackStepResult {
   // 1. Project the car onto the centreline; use the previous frame's distance as a hint.
   const before = spline.projectNear(state.position, hintDistance, searchWindow);
 
   // 2. Pick the surface from the lateral offset: tarmac inside halfWidth, offroad outside.
-  const surface = surfaceAt(before.lateralOffset, track);
+  const chosen = surfaceAt(before.lateralOffset, track);
+  const surface = surfaceAdjust === undefined ? chosen : surfaceAdjust(chosen);
 
   // 3. Integrate the physics on that surface for the full timestep.
   const stepped = stepVehicle(state, command, stats, surface, stepSeconds);

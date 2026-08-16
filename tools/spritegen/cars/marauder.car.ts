@@ -1,4 +1,4 @@
-import { PALETTE_ROLE } from '../../../src/domain/constants.ts';
+import { CAR_PERK, PALETTE_ROLE } from '../../../src/domain/constants.ts';
 import type { CarModelDef } from '../schema.ts';
 
 /**
@@ -146,4 +146,6 @@ export const marauder: CarModelDef = {
     ammoCapacity: 5,
     collisionRadius: 1.7,
   },
+  // Shoves lighter cars aside on contact instead of bouncing off them.
+  perk: CAR_PERK.BULLDOZER,
 };

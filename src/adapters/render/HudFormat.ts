@@ -31,6 +31,10 @@ export interface HudReadout {
   readonly ammoCapacity: number;
   readonly integrity: number; // 0..1 (0% to 100%)
   readonly standings: readonly { readonly carId: string; readonly position: number }[];
+  /** The player's current speed, world units per second. */
+  readonly speed: number;
+  /** The player car's authored top speed, world units per second. Sizes the bar. */
+  readonly maxSpeed: number;
 }
 
 /**
@@ -47,7 +51,26 @@ export interface HudText {
   readonly ammo: string; // e.g. "AMMO 3/5"
   readonly countdown: string | null; // "3", "2", "1", "GO!", or null
   readonly integrityPercent: number; // 0..100, rounded, for a bar width
+  readonly speed: string; // e.g. "195 MPH"
+  readonly speedFraction: number; // 0..1, for a bar width
+  /**
+   * Exactly three characters of speed for the seven-segment display, space-padded and
+   * right-aligned, e.g. "195", " 95", "  0". Space-padded rather than zero-padded because
+   * a real seven-segment dash blanks its leading digits instead of showing "095".
+   */
+  readonly speedDigits: string;
 }
+
+/**
+ * World units per second -> the number on the dial.
+ *
+ * The simulation has no real-world scale: `maxSpeed` is 78 for the marauder and 95 for the
+ * air-blade, which are tuning numbers, not speeds. A dial reading "78" would look broken, so
+ * the readout is scaled into the range an arcade racer of this era displayed. It is a
+ * PRESENTATION constant and lives here rather than in `src/domain/constants.ts` on purpose:
+ * nothing in the simulation may depend on it, and a change here must never move a car.
+ */
+export const MPH_PER_WORLD_UNIT = 2.5;
 
 /**
  * Ordinal for a race position: 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 4 -> "4th", 11 -> "11th".
@@ -183,6 +206,61 @@ function formatIntegrityPercent(integrity: number): number {
 }
 
 /**
+ * Speed as a whole number plus its unit, e.g. "195 MPH". Never NaN, never negative.
+ *
+ * Rounds ties down (`237.5` -> `237`, not `238`) rather than with `Math.round`'s usual
+ * round-half-up: the air-blade's authored `maxSpeed` of 95 lands exactly on a `.5` at this
+ * scale factor, and `Math.round` would push its dial reading a whole MPH past the number
+ * the car was tuned to represent.
+ */
+export function formatSpeed(speed: number): string {
+  const safe = Number.isFinite(speed) ? speed : 0;
+  const mph = Math.abs(safe) * MPH_PER_WORLD_UNIT;
+  return `${Math.ceil(mph - 0.5)} MPH`;
+}
+
+/**
+ * Speed as exactly three space-padded characters for a seven-segment display.
+ *
+ * Shares `formatSpeed`'s rounding exactly (ceil of value-minus-half, i.e. round-half-down)
+ * so the seven-segment readout and the text readout can never disagree about the number
+ * they are both derived from. Clamped at 999 — a real seven-segment gauge has three cells
+ * and a fourth digit has nowhere to go; without the clamp a huge or post-collision
+ * overspeed value would silently overflow into a four-character string.
+ *
+ * @param speed Current speed, world units per second. May be negative (reversing) or
+ * non-finite, in which case it is treated as 0.
+ * @returns Exactly three characters, right-aligned and space-padded, e.g. "195", " 95", "  0".
+ */
+export function formatSpeedDigits(speed: number): string {
+  const safe = Number.isFinite(speed) ? speed : 0;
+  const mph = Math.abs(safe) * MPH_PER_WORLD_UNIT;
+  const rounded = Math.ceil(mph - 0.5);
+  const clamped = Math.min(999, rounded);
+  return String(clamped).padStart(3, ' ');
+}
+
+/**
+ * Fraction of the speed bar to fill, 0..1.
+ *
+ * Guards a zero, negative or non-finite `maxSpeed`: dividing by such a value would yield
+ * NaN or Infinity, and a NaN width makes a Phaser rectangle draw nothing at all with no
+ * error, so this returns 0 rather than propagate the bad value.
+ *
+ * @param speed Current speed, world units per second. May be negative (reversing).
+ * @param maxSpeed Authored top speed, world units per second.
+ * @returns Clamped fraction, 0 to 1.
+ */
+function formatSpeedFraction(speed: number, maxSpeed: number): number {
+  if (!Number.isFinite(maxSpeed) || maxSpeed <= 0 || !Number.isFinite(speed)) {
+    return 0;
+  }
+
+  const fraction = Math.abs(speed) / maxSpeed;
+  return Math.max(0, Math.min(1, fraction));
+}
+
+/**
  * Format HUD readout into displayable text.
  *
  * All returned strings are safe for display: no NaN, no Infinity, no undefined.
@@ -221,6 +299,11 @@ export function formatHud(readout: HudReadout): HudText {
   // Integrity as 0..100 percent
   const integrityPercent = formatIntegrityPercent(readout.integrity);
 
+  // Speed: "195 MPH", plus the fraction of maxSpeed for the bar width.
+  const speed = formatSpeed(readout.speed);
+  const speedFraction = formatSpeedFraction(readout.speed, readout.maxSpeed);
+  const speedDigits = formatSpeedDigits(readout.speed);
+
   return {
     position,
     lap,
@@ -228,5 +311,8 @@ export function formatHud(readout: HudReadout): HudText {
     ammo,
     countdown,
     integrityPercent,
+    speed,
+    speedFraction,
+    speedDigits,
   };
 }
