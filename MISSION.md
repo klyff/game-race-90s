@@ -50,12 +50,15 @@ T-029 (tyre marks halved) still wants the user's eye.
 - **An agent session cannot run `npm run dev`** (`listen EPERM`, any port, sandbox on or off). When the
   user wants to play, ask them to run
   `cd /Users/klyffharlley/scm/concurrence-gamming && npm run dev` and open http://localhost:5173.
-- **A headless browser cannot reach `localhost`** — the proxy answers 502. To see the screen yourself:
-  `npm run build`, then load over `file://`.
+- **A headless browser cannot reach `localhost`** — the proxy answers 502. To see the screen yourself
+  use `tools/verify/screenshot.mjs` over `file://` and **read its README first**; system Chrome cannot
+  be used (`SingletonSocket` bind fails) and `--allow-file-access-from-files` is mandatory.
 - **Verify rendering by READING THE IMAGE, never object state.** A HUD sat off-viewport for two tasks
   while reporting `visible: true` with correct text (WORKLOG decision 25).
 - **Trust the repo over any status text**, here or in WORKLOG.md. Run `npm test` and `npm run typecheck`.
-- Git is on `main` with **zero commits**; every file untracked. Do not commit unless asked.
+- **The user asked for commit + push at the end of every iteration** (2026-08-15). Three commits are in
+  on `main`. **`git remote` is EMPTY, so push is blocked** — see Next step for the exact command to ask
+  for.
 
 ## Discarded
 
