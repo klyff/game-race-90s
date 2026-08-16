@@ -18,36 +18,42 @@ reverses, marks the tarmac, sounds like an engine, and the camera breathes with 
 screenshots). **The ONE thing still unclosed: nobody has ever heard `TitleMusic` in the game.** An
 agent cannot hear; ask the owner to run `npm run dev`.
 
-**1. T-037 + T-038 — the difficulty. Owner: "hoje está muito fácil para o jogador." Ship together.**
-- **T-037**: one FELT advantage per car, not a stat delta — marauder wins contact, dirt-devil ignores
-  dirt, havac is immovable, air-blade drafts. Perk ID as DATA in `tools/spritegen/cars/*.car.ts` ->
-  `renderCar.ts`'s literal -> `cars.json` -> `parseCarSheet` -> `RacerEntry`/`RacerRuntime`; the
-  tunables stay in code. Apply as DERIVED values at `RaceField`'s existing call sites (effective mass
-  for contact, adjusted surface for dirt, raised `enginePower` for the draft). **No perk writes
-  velocity.** **battle-trak's Arsenal cannot be felt — T-016 weapons do not exist**; ship it inert and
-  give it a braking-grip perk for now.
-- **T-038**: NPCs must RACE, not commute. Measured cause — `PaceDriver` follows the CENTRELINE inside
-  the grip limit and never drifts (33 s lap), so any drifting human beats it. Extract its proven maths
-  into shared `PursuitSteering`/`CornerSpeed` FIRST so decision 27 cannot be re-broken in a copy, then
-  compose an `AIDriver`: curvature-offset racing line, overtaking, defending, bounded rubber-banding.
-  `commandFor` must hand it a distilled rival view built from LIVE stage-1 distances, never the
-  stage-5 standings, which are one step stale. `LapTimes.test.ts` drives ONE car with no `RaceField`
-  and cannot show an overtake — a new multi-car harness is required.
-  **Gate: the owner races and does NOT win first try.**
+**1. T-046 WEAPONS — the biggest lever on the owner's standing "muito fácil" complaint, and it
+unblocks T-037's `ARSENAL`, which is defined and PINNED INERT by a test today.** Owner's spec, keys
+`1`/`2`/`3`, inventory refills on crossing the finish line. **Missiles**: straight line along the car's
+heading at launch, 1.4x car max velocity, 50% of a car's energy per hit, so a car under half dies and
+BOTH missile and car explode; **3 on the grid for every car, refilling to that car's own
+`ammoCapacity` at the line** (owner confirmed 2026-08-16 — battle-trak reloads to 15, air-blade to 4,
+and Arsenal makes that faster / raises the ceiling). NPCs aim with an invisible cone ~300 ft in scale
+and **every NPC prioritises a Player in range**. **Oil**: 1.9x car footprint, 2 per car, lifetime =
+the time of a 1.6-lap run ON THAT TRACK (derived, not a constant), a car crossing it spins out and
+loses >=4 s of control — use `yawSpin`, which decision 19 reserved for exactly this. **Landmines**:
+half a car, instant destruction. Rules PURE in `src/domain/`, hazards placed by ARC LENGTH, resolved
+INSIDE `RaceField`'s locked five-stage order.
 
-**2.** T-041 (results screen: victory, total time, best-lap record) then T-042 (3 tracks per world +
-an 80-point gate) — **new owner scope, 2026-08-16.** T-042's SCORING IS SETTLED and confirmed by the
-owner: ONE 0–100 world score where 80 means 80%, position paying 1st 10 / 2nd 6 / 3rd 4 / 4th 2 / 5th 1
-for 70 of it and mean `parTime/playerTime` for the other 30. **Do not re-open the design; the owner
-deferred only the BUILD ("isso é para o próximo plano").**
+**2. T-043 SEARCH the racing line, then T-038.** Owner confirmed 2026-08-16: an **offline
+`npm run gen:lines`** writing `public/assets/lines/<track>.json`, same philosophy as `gen:sprites` /
+`gen:track`, printing a report to read. >=5 candidate lines per track (centreline, outside-apex,
+late apex, early apex, drift entry) driven through the REAL pipeline, fastest with zero wall contacts
+wins. `driveLap` in `tests/tuning/LapTimes.test.ts` already has the evaluator's shape. T-047's
+`parTime` falls out of the same run. Then T-038: extract `PaceDriver`'s maths into shared
+`PursuitSteering`/`CornerSpeed` FIRST so decision 27 cannot be re-broken in a copy, feed the driver
+the searched line, and hand it a rival view built from LIVE stage-1 distances, never stage-5
+standings. **Gate: the owner races and does NOT win first try.**
 
-**3.** Then T-035's `CookieStore` + slot screen, then T-036 (`theme` on `TrackDefinition`, or all ten
-planets render in Thunder Basin's colours).
+**3. T-044** three more cars — AirBoat, SnowCar, Delorean (unlockable, occasional rival, needs a
+stated weakness or it is strictly dominant). One agent per `*.car.ts`, judged in `.preview/roster.png`,
+never one car alone. **Re-read T-031: `assignNpcCars` assumes the NPC field is "the rest of the
+roster", which changes at 8 cars on a 5-car grid.**
 
-**T-037 IS DONE** — five felt perks, each proved by an outcome test (dirt covers 1.73x the distance,
-Anvil halves its own contact ΔV, a full draft lifts terminal speed 95.0 -> 108.3). **A speedometer in
-Top Gear's style is mid-flight** (`SpeedoGauge` + `SevenSegment`); it has never been seen on screen —
-build and read the bottom-right corner, holding `ArrowUp` or the dial reads 0.
+**4.** T-041 results screen, then T-042 (scoring SETTLED: one 0-100 score, 80 means 80%, position pays
+1st 10 / 2nd 6 / 3rd 4 / 4th 2 / 5th 1 for 70 of it, mean `parTime/playerTime` for the other 30 —
+**do not re-open the design, only the build was deferred**), then T-035's `CookieStore`, then T-036.
+
+**T-018, T-037 and T-045 are DONE.** Splash + car select ships; five felt perks, each proved by an
+outcome test; the speedometer is Top Gear's shape (tight circular knee then a flat run) and has been
+READ in a screenshot. **Use `tools/verify/drive.mjs` to see the road — `screenshot.mjs` holds one key
+and cannot get past the splash.**
 
 **854 tests / 32 files, typecheck and build clean. Pushed to
 `https://github.com/klyff/game-race-90s`.** **Read WORKLOG.md's LAST cleanup block first — it is the

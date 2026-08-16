@@ -19,26 +19,38 @@ import { SEGMENT_LAYOUT, segmentsForText } from './SevenSegment.ts';
  * anything on an entity at all.
  */
 
-/** Default block count along the curved bar. */
-const DEFAULT_SEGMENT_COUNT = 28;
+/**
+ * Fraction of the bar's width over which the climb happens — the "knee".
+ *
+ * The reference gauge climbs through a tight quarter-circle over roughly the first
+ * FIFTH of the bar's length and is dead flat for the rest. Spreading that same climb
+ * across the WHOLE bar (the old quarter-sine profile) was the defect: on screen it
+ * read as a straight diagonal line of dashes, not an arc, which is exactly what the
+ * owner rejected ("if you don't do an arc exactly, you made a almost half
+ * round-square"). Confining the rise to one fifth and flattening the rest is what
+ * produces that round-square knee followed by a long flat run.
+ */
+const KNEE_FRACTION = 0.2;
+
+/** Default block count along the curved bar. Fewer, bigger blocks read as chunkier
+ * squares than many thin ones. */
+const DEFAULT_SEGMENT_COUNT = 24;
 
 /** Default side length of one square block, pixels. */
-const DEFAULT_SEGMENT_SIZE = 12;
+const DEFAULT_SEGMENT_SIZE = 14;
 
 /** Default gap between adjacent blocks, pixels. */
-const DEFAULT_SEGMENT_GAP = 4;
+const DEFAULT_SEGMENT_GAP = 3;
 
 /**
  * Default height the bar climbs from its left end to its (flat) right end, pixels.
  *
- * Sized against the bar's WIDTH, not picked for looks: the reference gauge rises about
- * 0.19 of its own length, and at a shallower ratio the quarter-sine flattens into what
- * reads on screen as a straight diagonal line of dashes rather than a curve. Measured on
- * a build at ratio 0.14 and it was indistinguishable from a straight line, so the two
- * numbers here are deliberately kept in that proportion: 28 blocks at a 16 px pitch give
- * a 432 px bar, and 80/432 is 0.185.
+ * This is the full drop of the knee's quarter-circle (see `barProfileAt`), not a
+ * height spread over the whole bar — the climb now happens entirely within the first
+ * `KNEE_FRACTION` of the width, so this constant only needs to look right against the
+ * knee's own (much narrower) span, not against the bar's full length.
  */
-const DEFAULT_ARC_HEIGHT = 80;
+const DEFAULT_ARC_HEIGHT = 58;
 
 /** Default width of one seven-segment digit cell, pixels. */
 const DEFAULT_DIGIT_WIDTH = 30;
@@ -99,22 +111,27 @@ const MPH_LABEL_GAP = 4;
 const PANEL_OVERLAP_FRACTION = 0.6;
 
 /**
- * Where the panel's top edge sits, as a fraction of the arc's own bounding-box height.
- * The arc's right end is near the TOP of its box (see the curve derivation below), so
- * starting the panel partway down leaves the bar's flat tip visible above the panel
- * while the panel's body still overlaps the bar's lower-right curve, as the reference
- * does.
+ * Fixed pixel gap between the bottom edge of the arc's FLAT run and the top edge of
+ * the digit panel.
+ *
+ * This used to be a FRACTION of the arc's bounding-box height, back when the curve
+ * sloped all the way across and "partway down the box" landed somewhere on that slope.
+ * Now the flat run pins the blocks to `y ∈ [0, segmentSize]` in the arc's local box for
+ * the whole tail (four fifths of the width), so "just below the flat run" is simply
+ * that bottom edge (`segmentSize`) plus a small constant gap — a fraction of the box
+ * height no longer means anything sensible once most of the box height is knee, not
+ * flat run.
  */
-const PANEL_VERTICAL_START_FRACTION = 0.55;
+const PANEL_TOP_GAP = 6;
 
 export interface SpeedoGaugeOptions {
-  /** Number of blocks in the curved bar. Default 28. */
+  /** Number of blocks in the curved bar. Default 24. */
   readonly segmentCount?: number;
-  /** Side length of one square block, pixels. Default 9. */
+  /** Side length of one square block, pixels. Default 14. */
   readonly segmentSize?: number;
   /** Gap between adjacent blocks, pixels. Default 3. */
   readonly segmentGap?: number;
-  /** Height the bar climbs from left to right, pixels. Default 46. */
+  /** Height the bar's knee climbs from its base to flat, pixels. Default 58. */
   readonly arcHeight?: number;
   /** Width of one seven-segment digit cell, pixels. Default 26. */
   readonly digitWidth?: number;
@@ -167,24 +184,75 @@ function dimColour(colour: number): number {
 }
 
 /**
- * Rotation for the block at curve parameter `t` (0..1), in radians.
- *
- * The bar's blocks sit on `y = arcHeight * (1 - sin(t * PI / 2))`, and `t` is itself
- * `x / xMax`. Differentiating analytically gives the exact local slope:
- *
- *   dy/dx = -(arcHeight * PI) / (2 * xMax) * cos(t * PI / 2)
- *
- * This is deliberately NOT computed by comparing a block to its neighbours (a finite
- * difference): that version stays correct only for the `segmentSize`/`segmentGap`/
- * `arcHeight` it happened to be tuned against, and silently drifts wrong the moment any
- * of those constants change. The analytic slope is correct for any combination of them.
+ * The knee's tangent is vertical at its own base (`u = 0`, see `barProfileAt`), so its
+ * analytic slope is unbounded there. Rotating a block by an unbounded angle is
+ * rotating it to nothing usable on screen, so the angle is clamped to something steep
+ * but finite — 80 degrees leans the first block hard without spinning it past
+ * vertical, which is what the owner's reference shows for the tightest part of the
+ * knee.
  */
-function slopeAngle(t: number, arcHeight: number, xMax: number): number {
-  if (xMax <= 0) {
-    return 0;
+const MAX_KNEE_ANGLE_RAD = (80 * Math.PI) / 180;
+
+/** One block's position and rotation, in the arc's own local coordinate space. */
+export interface BarPoint {
+  /** Height climbed above the flat baseline, pixels. 0 on the flat run. */
+  readonly y: number;
+  /** Local tangent angle, radians, for rotating a block to follow the curve. */
+  readonly angleRad: number;
+}
+
+/**
+ * The bar's shape at curve parameter `t` (0 at the left end, 1 at the right end):
+ * a quarter-circle climb through the first `KNEE_FRACTION` of the width, then dead
+ * flat for the rest. That piecewise shape — steep knee, then flat — is what the
+ * reference actually shows; spreading the same climb across the whole width (the old
+ * `y = arcHeight * (1 - sin(t * PI / 2))` profile) read on screen as a straight
+ * diagonal line of dashes instead of an arc.
+ *
+ * Within the knee, let `u = t / KNEE_FRACTION` run 0..1. The profile
+ * `y = arcHeight * (1 - sqrt(1 - (1 - u)^2))` is a genuine quarter circle: at `u = 0`
+ * it gives `y = arcHeight` (the knee's base) and at `u = 1` it gives `y = 0` (where it
+ * meets the flat run), with a vertical tangent at the base and a horizontal one at the
+ * top — the "almost half round-square" the owner described.
+ *
+ * Differentiating that quarter circle analytically (rather than by comparing a block
+ * to its neighbours, which would stay correct only for the `segmentSize`/`segmentGap`/
+ * `arcHeight` it was tuned against and silently drift wrong the moment any of those
+ * constants change) gives, with `kneeWidth = KNEE_FRACTION * xMax`:
+ *
+ *   dy/dx = -(arcHeight * (1 - u)) / (kneeWidth * sqrt(1 - (1 - u)^2))
+ *
+ * The sign is deliberately negative: the bar climbs left-to-right in a y-DOWN screen
+ * space, so `y` FALLS as `x` rises through the knee (leaning like the left side of a
+ * rising slope). Getting this backwards would mirror the lean of every knee block.
+ *
+ * Pure and Phaser-free so the geometry can be unit-tested and printed as a table
+ * without touching a scene.
+ */
+export function barProfileAt(t: number, arcHeight: number, xMax: number): BarPoint {
+  if (t >= KNEE_FRACTION) {
+    return { y: 0, angleRad: 0 };
   }
-  const dydx = -((arcHeight * Math.PI) / (2 * xMax)) * Math.cos((t * Math.PI) / 2);
-  return Math.atan(dydx);
+
+  const u = t / KNEE_FRACTION;
+  const oneMinusU = 1 - u;
+  // Guards against floating-point error pushing the argument slightly negative near
+  // u=1 (e.g. -1e-17): Math.sqrt of a negative number is NaN, and a NaN y or angle
+  // makes the block vanish from the screen with no error.
+  const sqrtArg = Math.max(0, 1 - oneMinusU * oneMinusU);
+  const y = arcHeight * (1 - Math.sqrt(sqrtArg));
+
+  const kneeWidth = KNEE_FRACTION * xMax;
+  if (kneeWidth <= 0) {
+    return { y, angleRad: 0 };
+  }
+
+  const dydx = -(arcHeight * oneMinusU) / (kneeWidth * Math.sqrt(sqrtArg));
+  // At u=0 the denominator is 0 and dydx is -Infinity; Math.atan(-Infinity) is a
+  // well-defined -PI/2 (not NaN), and the clamp below pulls it in to the finite
+  // MAX_KNEE_ANGLE_RAD anyway.
+  const angleRad = Math.max(-MAX_KNEE_ANGLE_RAD, Math.min(MAX_KNEE_ANGLE_RAD, Math.atan(dydx)));
+  return { y, angleRad };
 }
 
 /** `0xRRGGBB` -> `'#rrggbb'`, for a Phaser text colour string. */
@@ -220,10 +288,10 @@ export class SpeedoGauge {
     this.container = scene.add.container(0, 0);
 
     // ---- The curved bar ----
-    // A quarter sine profile is used because its slope is steepest at t=0 and exactly
-    // zero at t=1: the bar climbs hardest right at the start and flattens out completely
-    // by the end, which is exactly the reference's "steep then flat" silhouette. A
-    // straight ramp cannot flatten, and a full sine wave would climb, then descend again.
+    // A tight quarter-circle knee over the first KNEE_FRACTION of the width, then dead
+    // flat for the rest — see `barProfileAt` for the derivation. This replaced a
+    // quarter-sine spread across the WHOLE bar, which flattened out visually into a
+    // straight diagonal line of dashes instead of reading as an arc.
     const xMax = segmentCount > 1 ? (segmentCount - 1) * (segmentSize + segmentGap) : 0;
     const arcWidth = xMax + segmentSize;
     const arcBoxHeight = arcHeight + segmentSize;
@@ -235,7 +303,7 @@ export class SpeedoGauge {
     for (let i = 0; i < segmentCount; i += 1) {
       const t = segmentCount > 1 ? i / (segmentCount - 1) : 0;
       const x = i * (segmentSize + segmentGap);
-      const y = arcHeight * (1 - Math.sin((t * Math.PI) / 2));
+      const { y, angleRad } = barProfileAt(t, arcHeight, xMax);
 
       const litColour = colourAtT(t);
       const unlitColour = dimColour(litColour);
@@ -252,7 +320,7 @@ export class SpeedoGauge {
         segmentSize,
         unlitColour,
       );
-      rect.setRotation(slopeAngle(t, arcHeight, xMax));
+      rect.setRotation(angleRad);
       this.container.add(rect);
       segmentRects.push(rect);
     }
@@ -266,10 +334,12 @@ export class SpeedoGauge {
     const panelWidth = digitsWidth + PANEL_PADDING * 2 + MPH_LABEL_GAP + MPH_LABEL_WIDTH;
     const panelHeight = digitHeight + PANEL_PADDING * 2;
 
-    // Pulled left into the arc's own width and dropped partway down its height, so the
-    // panel overlaps the bar's flattened right-hand tail rather than sitting clear of it.
+    // Pulled left into the arc's own width so the panel overlaps the bar's flattened
+    // right-hand tail rather than sitting clear of it, and dropped down to just below
+    // that flat run — which now sits pinned at the TOP of the arc's box
+    // (`y ∈ [0, segmentSize]`) for the whole tail, not partway down a slope.
     const panelX = arcWidth - panelWidth * PANEL_OVERLAP_FRACTION;
-    const panelY = arcBoxHeight * PANEL_VERTICAL_START_FRACTION;
+    const panelY = segmentSize + PANEL_TOP_GAP;
 
     const panelBackground = scene.add.rectangle(
       panelX + panelWidth / 2,
