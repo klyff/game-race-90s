@@ -40,17 +40,16 @@ handoff.** Full task detail lives there, not here.
 
 ## Constraints
 
-- **An agent session cannot run `npm run dev`** (`listen EPERM`, any port, sandbox on or off). When the
-  user wants to play, ask them to run
-  `cd /Users/klyffharlley/scm/concurrence-gamming && npm run dev` and open http://localhost:5173.
-- **A headless browser cannot reach `localhost`** — the proxy answers 502. To see the screen yourself
-  use `tools/verify/screenshot.mjs` over `file://` and **read its README first**; system Chrome cannot
-  be used (`SingletonSocket` bind fails) and `--allow-file-access-from-files` is mandatory.
+- **An agent session cannot run `npm run dev`** (`listen EPERM`). When the owner wants to play, ask
+  them to run `npm run dev` → http://localhost:5173.
+- **To see the screen yourself:** `npm run build`, then `tools/verify/screenshot.mjs` over `file://`.
+  **Read `tools/verify/README.md` first** — system Chrome fails and two flags are load-bearing.
 - **Verify rendering by READING THE IMAGE, never object state.** A HUD sat off-viewport for two tasks
-  while reporting `visible: true` with correct text (WORKLOG decision 25).
-- **Trust the repo over any status text**, here or in WORKLOG.md. Run `npm test` and `npm run typecheck`.
-- **Commit AND push at the end of every iteration** (owner, 2026-08-15). Remote is
-  `https://github.com/klyff/game-race-90s`; local and `origin/main` are in sync. No longer blocked.
+  reporting `visible: true` with correct text.
+- **Subagent reports are claims.** Run the suite; check physics dimensionally; verify numbers yourself.
+- **`Date.now()`, `new Date()`, `Math.random()` are forbidden** — pass time and seeds in.
+- **Assets live under `public/`, loaded by key, never `import`ed** — Vite inlines them.
+- **Commit AND push at the end of every iteration.** Remote is set and in sync.
 
 ## Discarded
 
