@@ -84,6 +84,8 @@ describe('CarCollision', () => {
       velocity: vec2(10, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -91,6 +93,8 @@ describe('CarCollision', () => {
       velocity: vec2(-10, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, MARAUDER_STATS, b, DIRT_DEVIL_STATS);
@@ -120,6 +124,8 @@ describe('CarCollision', () => {
       velocity: vec2(5, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const light: VehicleState = {
@@ -127,6 +133,8 @@ describe('CarCollision', () => {
       velocity: vec2(-5, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(heavy, HAVAC_STATS, light, AIR_BLADE_STATS);
@@ -155,6 +163,8 @@ describe('CarCollision', () => {
       velocity: vec2(5, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -162,6 +172,8 @@ describe('CarCollision', () => {
       velocity: vec2(10, 0), // Moving faster in the same direction — separating
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, MARAUDER_STATS, b, DIRT_DEVIL_STATS);
@@ -182,6 +194,8 @@ describe('CarCollision', () => {
       velocity: vec2(0, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -189,6 +203,8 @@ describe('CarCollision', () => {
       velocity: vec2(0, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, MARAUDER_STATS, b, DIRT_DEVIL_STATS);
@@ -210,6 +226,8 @@ describe('CarCollision', () => {
       velocity: vec2(10, 5),
       heading: 1.234,
       yawSpin: 0.5,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -217,6 +235,8 @@ describe('CarCollision', () => {
       velocity: vec2(-10, -5),
       heading: 3.14159,
       yawSpin: -0.3,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, MARAUDER_STATS, b, DIRT_DEVIL_STATS);
@@ -256,6 +276,8 @@ describe('CarCollision', () => {
       velocity: vec2(10, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -263,6 +285,8 @@ describe('CarCollision', () => {
       velocity: vec2(-10, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const aOriginal = { ...a, position: { ...a.position }, velocity: { ...a.velocity } };
@@ -282,6 +306,8 @@ describe('CarCollision', () => {
       velocity: vec2(10, 10), // Moving diagonally
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -289,6 +315,8 @@ describe('CarCollision', () => {
       velocity: vec2(0, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, MARAUDER_STATS, b, DIRT_DEVIL_STATS);
@@ -309,6 +337,8 @@ describe('CarCollision', () => {
       velocity: vec2(8, 3),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -316,6 +346,8 @@ describe('CarCollision', () => {
       velocity: vec2(-4, -2),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, MARAUDER_STATS, b, DIRT_DEVIL_STATS);
@@ -353,6 +385,8 @@ describe('CarCollision', () => {
       velocity: vec2(20, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -360,6 +394,8 @@ describe('CarCollision', () => {
       velocity: vec2(0, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, MARAUDER_STATS, b, DIRT_DEVIL_STATS);
@@ -382,6 +418,8 @@ describe('CarCollision', () => {
       velocity: vec2(30, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const heavy: VehicleState = {
@@ -389,6 +427,8 @@ describe('CarCollision', () => {
       velocity: vec2(-10, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(light, AIR_BLADE_STATS, heavy, HAVAC_STATS);
@@ -408,6 +448,8 @@ describe('CarCollision', () => {
       velocity: vec2(5, 5),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const b: VehicleState = {
@@ -415,6 +457,8 @@ describe('CarCollision', () => {
       velocity: vec2(-5, -5),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, MARAUDER_STATS, b, MARAUDER_STATS);

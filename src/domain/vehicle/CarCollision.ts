@@ -91,17 +91,13 @@ export function resolveCarContact(
     const impulseB = scale(normal, -impulseMagnitude / bStats.mass);
 
     resultA = {
-      position: a.position,
+      ...a,
       velocity: add(a.velocity, impulseA),
-      heading: a.heading,
-      yawSpin: a.yawSpin,
     };
 
     resultB = {
-      position: b.position,
+      ...b,
       velocity: add(b.velocity, impulseB),
-      heading: b.heading,
-      yawSpin: b.yawSpin,
     };
   }
 
@@ -127,17 +123,13 @@ export function resolveCarContact(
     const positionCorrection_b = scale(normal, fractionB * overlap);
 
     resultA = {
+      ...resultA,
       position: add(resultA.position, positionCorrection_a),
-      velocity: resultA.velocity,
-      heading: resultA.heading,
-      yawSpin: resultA.yawSpin,
     };
 
     resultB = {
+      ...resultB,
       position: add(resultB.position, positionCorrection_b),
-      velocity: resultB.velocity,
-      heading: resultB.heading,
-      yawSpin: resultB.yawSpin,
     };
   }
 

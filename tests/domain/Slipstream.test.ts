@@ -182,6 +182,8 @@ describe('Slipstream', () => {
       velocity: vec2(3, 4),
       heading: 0.7,
       yawSpin: 0.1,
+      height: 0,
+      verticalVelocity: 0,
     };
     const candidate: DraftCandidate = { position: vec2(1 + peakGap, 2), heading: 0.7 };
 

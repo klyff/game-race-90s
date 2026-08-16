@@ -31,7 +31,7 @@ const WALL_LIMIT = trackFullHalfWidth(track) - CAR_RADIUS;
 const anchor: TrackProjection = spline.project({ x: -60, y: -162 });
 
 function buildState(position: Vec2, velocity: Vec2): VehicleState {
-  return { position, velocity, heading: 1.23, yawSpin: 0.45 };
+  return { position, velocity, heading: 1.23, yawSpin: 0.45, height: 0, verticalVelocity: 0 };
 }
 
 /** A projection at `anchor`'s frame but with an overridden lateral offset. */

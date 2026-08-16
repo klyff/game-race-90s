@@ -138,12 +138,21 @@ describe('CarPerk — Bulldozer and Anvil change who gets moved', () => {
     const bEffective = contactStats(bStatsBase, bPerk);
     const touchDistance = aEffective.collisionRadius + bEffective.collisionRadius;
 
-    const a: VehicleState = { position: vec2(0, 0), velocity: vec2(10, 0), heading: 0, yawSpin: 0 };
+    const a: VehicleState = {
+      position: vec2(0, 0),
+      velocity: vec2(10, 0),
+      heading: 0,
+      yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
+    };
     const b: VehicleState = {
       position: vec2(touchDistance, 0),
       velocity: vec2(-10, 0),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
 
     const result = resolveCarContact(a, aEffective, b, bEffective);
@@ -339,6 +348,8 @@ describe('CarPerk — Trench Grip changes when the car lets go', () => {
       velocity: vec2(0, midLateralSpeed),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
     const neutralStep = stepVehicle(neutralState, brakingInput, battleTrakStats, TARMAC, DT);
 
@@ -347,6 +358,8 @@ describe('CarPerk — Trench Grip changes when the car lets go', () => {
       velocity: vec2(0, midLateralSpeed),
       heading: 0,
       yawSpin: 0,
+      height: 0,
+      verticalVelocity: 0,
     };
     const perkStep = stepVehicle(perkState, brakingInput, brakingPerkStats, TARMAC, DT);
 
