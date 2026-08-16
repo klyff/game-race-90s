@@ -4,10 +4,12 @@ import {
   DRUM_PATTERN,
   LEAD_LICK,
   BAR_COUNT,
+  LICK_INTERVAL_BARS,
+  TITLE_SCORE,
+} from '../../src/adapters/audio/TitleMusic.ts';
+import {
   BEATS_PER_BAR,
   STEPS_PER_BAR,
-  TOTAL_STEPS,
-  LICK_INTERVAL_BARS,
   barHasLick,
   wrapStepIndex,
   barIndexForStep,
@@ -15,7 +17,10 @@ import {
   noteFrequency,
   beatsToSeconds,
   totalBeats,
-} from '../../src/adapters/audio/TitleMusic.ts';
+  totalSteps,
+} from '../../src/adapters/audio/MusicScore.ts';
+
+const TOTAL_STEPS = totalSteps(TITLE_SCORE);
 
 const MIN_SANE_HZ = 40;
 const MAX_SANE_HZ = 2000;
@@ -78,7 +83,7 @@ describe('TitleMusic composition', () => {
   it('marks the lick on every LICK_INTERVAL_BARS-th bar and no other', () => {
     for (let bar = 0; bar < BAR_COUNT; bar += 1) {
       const expected = (bar + 1) % LICK_INTERVAL_BARS === 0;
-      expect(barHasLick(bar)).toBe(expected);
+      expect(barHasLick(TITLE_SCORE, bar)).toBe(expected);
     }
   });
 
@@ -101,7 +106,7 @@ describe('TitleMusic composition', () => {
   it('maps global step indices to the correct bar index across the whole loop', () => {
     for (let step = 0; step < TOTAL_STEPS; step += 1) {
       const expectedBar = Math.floor(step / STEPS_PER_BAR);
-      expect(barIndexForStep(step)).toBe(expectedBar);
+      expect(barIndexForStep(TITLE_SCORE, step)).toBe(expectedBar);
     }
   });
 
