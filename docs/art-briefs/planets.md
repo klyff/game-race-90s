@@ -70,23 +70,56 @@ smooth anti-aliased vector art.
 
 ## Prompt B — seamless ground tile (one per planet)
 
+**Correction to an earlier version of this file: a ground tile must be drawn FLAT TOP-DOWN, with no
+isometric projection at all.** `TrackRenderer` projects world coordinates to the screen itself, so a
+texture that arrives already deitada in 2:1 gets projected a second time and the ground comes out
+stretched. Ask for the texture as if photographed straight down; the engine does the rest.
+
 ```
 Seamless tileable texture of {SURFACE}, drawn as 16-bit SNES-era pixel art.
 
-Projection: true 2:1 dimetric isometric — every horizontal line rises or falls
-exactly 1 pixel for every 2 across, 26.57 degrees from horizontal.
-Orthographic: no perspective, no vanishing point, no camera tilt.
+Viewpoint: straight down, flat, orthographic, like a texture swatch or a
+top-down map tile. No isometric angle, no perspective, no horizon, no sky, no
+vanishing point, no tilt.
 
-Flat, even, directionless lighting with NO cast shadows and no baked highlights,
-so the tile repeats without visible seams or a false sun direction. Detail scale
-coarse: nothing finer than about 4 pixels, since this is viewed at a distance
-behind moving sprites. Limited palette of roughly 16 colours, dithered.
+Lighting: completely flat and even, with NO cast shadows, NO highlights and NO
+light direction, so the tile repeats without seams or a false sun.
 
-Must tile seamlessly on all four edges. 512x512.
+Detail scale coarse: nothing finer than about 4 pixels, because it is seen at a
+distance behind moving sprites. Limited palette of roughly 16 colours, hard
+edges, dithering instead of smooth gradients.
 
-Do not include: any text, any cars, any track, any road, any road markings, any
-barriers, any objects that imply a fixed position, any vignette, any shadows,
-any lighting direction, any border.
+Must tile seamlessly on all four edges. Square, 1024x1024.
+
+Do not include: any text, any cars, any road, any road markings, any barriers,
+any large landmark or hero object, any single feature that implies a fixed
+position, any vignette, any shadow, any lighting direction, any border or frame.
+```
+
+## Prompt C — props and objects in the world (this is where the 2:1 angle matters)
+
+Anything that is a discrete OBJECT standing in the scene — a boulder, a barrier, a pylon, a hangar —
+is drawn once and placed, so it must already agree with the camera. This is the prompt that carries
+the projection constraint.
+
+```
+A single {OBJECT}, 16-bit SNES-era pixel art game asset, on a fully transparent
+background.
+
+Projection: true 2:1 dimetric isometric — every horizontal edge rises or falls
+exactly 1 pixel for every 2 pixels across, which is 26.57 degrees from
+horizontal. NOT 30 degrees. Orthographic: no perspective, no vanishing point,
+no lens distortion. Viewed from a fixed high angle.
+
+Lighting from the upper left, with one soft contact shadow directly beneath the
+object. Hard-edged pixels, limited palette, dithered shading, strong silhouette
+that reads clearly at small size.
+
+Centred, with a little empty margin. Transparent background, PNG.
+
+Do not include: any ground, any terrain, any road, any background, any text, any
+other objects, any perspective distortion, any 30-degree isometric grid, any
+soft anti-aliased edges, any drop shadow beyond the contact shadow.
 ```
 
 ---
