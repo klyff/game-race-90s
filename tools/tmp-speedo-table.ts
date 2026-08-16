@@ -1,34 +1,13 @@
 // Throwaway verification script — NOT part of the shipped codebase, deleted after use.
 //
-// SpeedoGauge.ts does `import Phaser from 'phaser'` at module scope, and Phaser's own
-// device-detection code dereferences `window`/`document`/`navigator`/`screen` as a side
-// effect of that import. There is no DOM in plain Node, so importing anything from that
-// file — even a pure, Phaser-free function — throws `ReferenceError: window is not
-// defined` unless something shims those globals first. This shim exists ONLY so this
-// throwaway script can import the real exported helper (rather than re-implementing its
-// maths and risking drift); it is not a fix and is not part of the shipped change.
-function makeBrowserStub(): any {
-  const fn: any = () => stub;
-  const stub: any = new Proxy(fn, {
-    get: () => stub,
-    has: () => false,
-    apply: () => stub,
-  });
-  return stub;
-}
+// SpeedoGauge.ts does `import Phaser from 'phaser'` at module scope, and importing the
+// real Phaser package runs browser device-detection as a side effect, which throws
+// outside a browser/jsdom. `tmp-phaser-stub-hooks.mjs` redirects that one import to an
+// empty stub so this script can call the real, pure, Phaser-free `barProfileAt` export
+// (rather than re-implementing its maths here and risking drift from the shipped code).
+import { register } from 'node:module';
 
-function setGlobal(name: string, value: unknown): void {
-  Object.defineProperty(globalThis, name, {
-    value,
-    configurable: true,
-    writable: true,
-  });
-}
-
-setGlobal('window', makeBrowserStub());
-setGlobal('document', makeBrowserStub());
-setGlobal('navigator', makeBrowserStub());
-setGlobal('screen', makeBrowserStub());
+register('./tmp-phaser-stub-hooks.mjs', import.meta.url);
 
 const { barProfileAt } = await import('../src/adapters/render/SpeedoGauge.ts');
 

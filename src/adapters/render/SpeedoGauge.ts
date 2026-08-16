@@ -8,7 +8,7 @@ import { SEGMENT_LAYOUT, segmentsForText } from './SevenSegment.ts';
  *
  * Like `ExplosionEffect` and `TyreMarks`, this owns its Phaser game objects and redraws
  * them every frame rather than creating or destroying anything after construction — the
- * bar is always 28 (or however many) blocks and the panel is always 3 digit cells, so
+ * bar is always 18 (or however many) blocks and the panel is always 3 digit cells, so
  * there is nothing to allocate once the gauge exists.
  *
  * **No per-entity state.** There is exactly one speedometer in this game, and this class
@@ -34,10 +34,10 @@ const KNEE_FRACTION = 0.2;
 
 /** Default block count along the curved bar. Fewer, bigger blocks read as chunkier
  * squares than many thin ones. */
-const DEFAULT_SEGMENT_COUNT = 24;
+const DEFAULT_SEGMENT_COUNT = 18;
 
 /** Default side length of one square block, pixels. */
-const DEFAULT_SEGMENT_SIZE = 14;
+const DEFAULT_SEGMENT_SIZE = 11;
 
 /** Default gap between adjacent blocks, pixels. */
 const DEFAULT_SEGMENT_GAP = 3;
@@ -49,14 +49,20 @@ const DEFAULT_SEGMENT_GAP = 3;
  * height spread over the whole bar — the climb now happens entirely within the first
  * `KNEE_FRACTION` of the width, so this constant only needs to look right against the
  * knee's own (much narrower) span, not against the bar's full length.
+ *
+ * Kept close to the knee's own width so the quarter circle stays roughly square and
+ * therefore still reads as a corner: at 18 blocks on a 14 px pitch the bar is 252 px, its
+ * knee is about 50 px, and a 40 px drop over that span is the tight round-square the reference
+ * shows. Raising this without widening the knee turns the corner into a near-vertical
+ * cliff; lowering it flattens the corner back into the diagonal line the owner rejected.
  */
-const DEFAULT_ARC_HEIGHT = 58;
+const DEFAULT_ARC_HEIGHT = 40;
 
 /** Default width of one seven-segment digit cell, pixels. */
-const DEFAULT_DIGIT_WIDTH = 30;
+const DEFAULT_DIGIT_WIDTH = 24;
 
 /** Default height of one seven-segment digit cell, pixels. */
-const DEFAULT_DIGIT_HEIGHT = 46;
+const DEFAULT_DIGIT_HEIGHT = 36;
 
 /** Default gap between adjacent digit cells, pixels. */
 const DEFAULT_DIGIT_GAP = 6;
@@ -108,7 +114,7 @@ const MPH_LABEL_GAP = 4;
  * of the bar, overlapping only the bar's flattened right-hand tail — this fraction
  * controls how much of that overlap there is.
  */
-const PANEL_OVERLAP_FRACTION = 0.6;
+const PANEL_OVERLAP_FRACTION = 0.88;
 
 /**
  * Fixed pixel gap between the bottom edge of the arc's FLAT run and the top edge of
@@ -122,20 +128,20 @@ const PANEL_OVERLAP_FRACTION = 0.6;
  * height no longer means anything sensible once most of the box height is knee, not
  * flat run.
  */
-const PANEL_TOP_GAP = 6;
+const PANEL_TOP_GAP = 2;
 
 export interface SpeedoGaugeOptions {
-  /** Number of blocks in the curved bar. Default 24. */
+  /** Number of blocks in the curved bar. Default 18. */
   readonly segmentCount?: number;
-  /** Side length of one square block, pixels. Default 14. */
+  /** Side length of one square block, pixels. Default 11. */
   readonly segmentSize?: number;
   /** Gap between adjacent blocks, pixels. Default 3. */
   readonly segmentGap?: number;
-  /** Height the bar's knee climbs from its base to flat, pixels. Default 58. */
+  /** Height the bar's knee climbs from its base to flat, pixels. Default 40. */
   readonly arcHeight?: number;
-  /** Width of one seven-segment digit cell, pixels. Default 26. */
+  /** Width of one seven-segment digit cell, pixels. Default 24. */
   readonly digitWidth?: number;
-  /** Height of one seven-segment digit cell, pixels. Default 40. */
+  /** Height of one seven-segment digit cell, pixels. Default 36. */
   readonly digitHeight?: number;
   /** Gap between adjacent digit cells, pixels. Default 6. */
   readonly digitGap?: number;

@@ -1596,3 +1596,71 @@ nothing is half-wired.
    5-car grid.
 4. **Still open and only the owner can close them: the title music has never been heard in the game,
    and the five perks have never been felt at the wheel.** Ask them to run `npm run dev`.
+
+---
+
+### Final handoff — 2026-08-16 01:05 — the owner called the end of the session ("logo vao acabar os tokens")
+
+**This is the block to resume from. Everything below was verified by running the commands, not by
+trusting a number written anywhere: 854 tests across 32 files, `npm run typecheck` clean,
+`npm run build` clean, working tree clean, everything pushed to
+`https://github.com/klyff/game-race-90s`. No agent is mid-flight and nothing is half-wired.**
+
+#### Shipped this session
+
+| Task | Outcome |
+| --- | --- |
+| **T-018 splash + car select** | DONE (`768e377`). `boot -> splash -> race`. No drawn title (painted into the art), hard-cut blink from `BlinkClock`, LEFT/RIGHT car select with roster-normalised stat bars, SPACE starts with the chosen car. Verified across five screenshots. |
+| **T-037 five felt perks** | DONE (`23dedfd`). Perk id as data, tunables in code, applied as derived values at `RaceField`'s three existing hooks. Every perk proved by an OUTCOME test. |
+| **T-045 speedometer** | DONE (`2494be1`, then retuned). Top Gear shape, twice corrected on the owner's eye. |
+| Scope recording | T-041..T-047 written down with the owner's own numbers (`63fface`). |
+
+#### The two owner decisions, settled — do not re-open either
+
+1. **Missiles: 3 on the grid for EVERY car, refilling to that car's own `ammoCapacity` at the line.**
+   battle-trak reloads to 15, air-blade to 4; Arsenal makes that faster or raises the ceiling. Asked
+   because a flat "3 for everyone" would have made battle-trak's whole identity decorative.
+2. **The racing-line search is an OFFLINE `npm run gen:lines`** writing `public/assets/lines/<track>.json`,
+   never an in-browser computation at boot.
+3. (Also settled earlier, from T-042.) **One 0–100 world score, 80 means 80%**: position pays
+   1st 10 / 2nd 6 / 3rd 4 / 4th 2 / 5th 1 for 70 of it, mean `parTime/playerTime` for the other 30.
+
+#### Start here next session, in this order
+
+1. **T-046 weapons.** Biggest lever on the standing "muito fácil" complaint and it unblocks `ARSENAL`,
+   which is defined and PINNED INERT by a test — that test is the reminder. Rules pure in
+   `src/domain/`, hazards placed by ARC LENGTH, resolved INSIDE `RaceField`'s locked five-stage order.
+   **`yawSpin` is the spinout channel for oil** — decision 19 reserved it for weapon hits and
+   explicitly forbade walls from using it.
+2. **T-043** the offline line generator (>=5 candidates driven through the REAL pipeline; `driveLap` in
+   `tests/tuning/LapTimes.test.ts` already has the evaluator's shape), then **T-038**'s driver, which
+   consumes it. **T-047's `parTime` falls out of the same run** — never hand-author it.
+3. **T-044** three cars: AirBoat, SnowCar, Delorean. One agent per `*.car.ts`, judged in
+   `.preview/roster.png`, never one car alone.
+4. **T-041** results screen, then **T-042**, then T-035's `CookieStore`, then T-036.
+
+#### Two questions put to the owner and NOT yet answered
+
+- **The Delorean is "good at everything", which makes it strictly dominant once unlocked** and ends the
+  car select as a choice. Recommended: give it fragile armour — fastest, but punished for contact.
+- **`assignNpcCars` assumes the NPC field is "the rest of the roster"**, true at 5 cars on a 5-car grid
+  and false at 8. Re-read T-031 before T-044 lands.
+
+#### Two gates only the owner can close
+
+**Nobody has ever heard `TitleMusic` in the game**, and **the five perks have never been felt at the
+wheel.** An agent cannot hear, and the headless browser has no audio device. Ask them to run
+`npm run dev` and open http://localhost:5173.
+
+#### Tooling added this session — do not re-derive it
+
+- **`tools/verify/drive.mjs <url> <out.png> [throttleMs]`** — presses SPACE to leave the splash, waits
+  out the countdown, then holds the throttle and shoots. **`screenshot.mjs` holds exactly ONE key and
+  therefore can no longer reach the road at all; a capture without the SPACE sits on the title screen,
+  which reads exactly like a broken race.**
+- **`tools/verify/probe.mjs <url> [sceneKey] [waitMs]`** — now takes a scene key and dumps every object
+  with position, size and visibility. It used to hardcode `'race'` and reported the splash as a boot
+  failure.
+- **Check `git status` for a subagent's scratch files before staging.** One leaked
+  `tools/tmp-speedo-table.ts` into a commit this session and broke typecheck; "touch nothing else" does
+  not stop a temp file.

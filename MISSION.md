@@ -51,9 +51,11 @@ roster", which changes at 8 cars on a 5-car grid.**
 **do not re-open the design, only the build was deferred**), then T-035's `CookieStore`, then T-036.
 
 **T-018, T-037 and T-045 are DONE.** Splash + car select ships; five felt perks, each proved by an
-outcome test; the speedometer is Top Gear's shape (tight circular knee then a flat run) and has been
-READ in a screenshot. **Use `tools/verify/drive.mjs` to see the road — `screenshot.mjs` holds one key
-and cannot get past the splash.**
+outcome test; the speedometer is Top Gear's shape and was retuned TWICE on the owner's eye — tight
+circular knee then a flat run (`KNEE_FRACTION` 0.2), then made smaller and pulled close to the digits
+(18 blocks at 11 px, `PANEL_TOP_GAP` 2, `PANEL_OVERLAP_FRACTION` 0.88). Every version was READ in a
+screenshot. **Use `tools/verify/drive.mjs` to see the road — `screenshot.mjs` holds one key and cannot
+get past the splash.**
 
 **854 tests / 32 files, typecheck and build clean. Pushed to
 `https://github.com/klyff/game-race-90s`.** **Read WORKLOG.md's LAST cleanup block first — it is the
