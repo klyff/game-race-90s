@@ -40,8 +40,9 @@ const WALL_THICKNESS_UNITS = 2.5;
 /** How far a rock lip may wander off the authored edge, world units. */
 const ROCK_EDGE_JITTER_UNITS = 1.1;
 
-/** Typical flagstone width across the bed, world units. */
-const SLAB_WIDTH_UNITS = 5.5;
+/** Typical flagstone width across the bed, world units. Large on purpose so
+ * the path reads as separate stones, not a sprayed grey ribbon. */
+const SLAB_WIDTH_UNITS = 8;
 
 /**
  * Length of the start/finish chequered band along the direction of travel,
@@ -233,8 +234,8 @@ export class TrackRenderer {
 
     this.fillRockyBed(frames, track.halfWidth, this.theme.tarmac);
 
-    this.fillJaggedBand(frames, track.halfWidth + 0.9, track.halfWidth - 0.4, shade(this.theme.tarmac, 0.55), 31);
-    this.fillJaggedBand(frames, -(track.halfWidth - 0.4), -(track.halfWidth + 0.9), shade(this.theme.tarmac, 0.55), 32);
+    this.fillJaggedBand(frames, track.halfWidth + 1.2, track.halfWidth - 0.6, shade(this.theme.wall, 0.65), 31);
+    this.fillJaggedBand(frames, -(track.halfWidth - 0.6), -(track.halfWidth + 1.2), shade(this.theme.wall, 0.65), 32);
 
     this.drawStoneThreshold(track, spline);
     this.drawRockRamps(track, spline);
@@ -307,25 +308,28 @@ export class TrackRenderer {
    * reads as rock, not a sprayed ribbon of tarmac.
    */
   private fillRockyBed(frames: readonly TrackFrame[], halfWidth: number, color: number): void {
-    this.fillBand(frames, halfWidth, -halfWidth, shade(color, 0.72));
+    // Dark grout first — the cracks between stones. A flat mid-grey fill here
+    // is exactly the highway look we are killing.
+    this.fillBand(frames, halfWidth, -halfWidth, shade(color, 0.38));
     const count = frames.length;
+    const grout = 0.45;
     for (let i = 0; i < count; i += 1) {
       const next = (i + 1) % count;
       let lateral = -halfWidth;
       let slab = 0;
       while (lateral < halfWidth - 0.4) {
-        const width = SLAB_WIDTH_UNITS * (0.65 + propHash(i, 40 + slab) * 0.7);
+        const width = SLAB_WIDTH_UNITS * (0.7 + propHash(i, 40 + slab) * 0.8);
         const far = Math.min(halfWidth, lateral + width);
-        const jitterA = (propHash(i, 50 + slab) - 0.5) * 0.7;
-        const jitterB = (propHash(next, 50 + slab) - 0.5) * 0.7;
-        const tone = 0.78 + propHash(i, 60 + slab) * 0.28;
+        const jitterA = (propHash(i, 50 + slab) - 0.5) * 1.2;
+        const jitterB = (propHash(next, 50 + slab) - 0.5) * 1.2;
+        const tone = 0.7 + propHash(i, 60 + slab) * 0.55;
         this.graphics.fillStyle(shade(color, tone), 1);
         this.graphics.fillPoints(
           [
-            this.edgeScreen(frames[i]!, lateral + jitterA),
-            this.edgeScreen(frames[next]!, lateral + jitterB),
-            this.edgeScreen(frames[next]!, far + jitterB),
-            this.edgeScreen(frames[i]!, far + jitterA),
+            this.edgeScreen(frames[i]!, lateral + grout + jitterA),
+            this.edgeScreen(frames[next]!, lateral + grout + jitterB),
+            this.edgeScreen(frames[next]!, far - grout + jitterB),
+            this.edgeScreen(frames[i]!, far - grout + jitterA),
           ],
           true,
         );
@@ -406,7 +410,7 @@ export class TrackRenderer {
       const outer = track.halfWidth - column * cellWidth;
       const inner = outer - cellWidth;
       const pale = propHash(column, 90) > 0.45;
-      this.graphics.fillStyle(pale ? this.theme.marking : shade(this.theme.tarmac, 1.15), 1);
+      this.graphics.fillStyle(pale ? shade(this.theme.tarmac, 1.25) : shade(this.theme.wall, 0.85), 1);
       const inset = 0.15 + propHash(column, 91) * 0.25;
       this.graphics.fillPoints(
         [
