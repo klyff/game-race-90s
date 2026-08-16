@@ -25,6 +25,21 @@ export interface PlanetTheme {
   readonly artKey: string;
   readonly groundFile: string;
   readonly artFile: string;
+  /**
+   * Trackside decoration standing along the wall (T-048): a squat rounded
+   * `blob` (boulders, scrap, debris) or a standing `spike` (pipes, reeds,
+   * pylons). Drawn with the projection's height parameter, so this is what
+   * actually replaces a flat colour band with something that reads as each
+   * world's terrain, per the owner's "só aquela faixa branca não tá bom" ask.
+   */
+  readonly propShape: 'blob' | 'spike';
+  /** World units, base to tip. */
+  readonly propHeight: number;
+  /** World units, half-width at the base. */
+  readonly propWidth: number;
+  readonly propColor: number;
+  /** Tip/highlight colour — a glow, a metal fleck, a chevron stripe. */
+  readonly propAccent: number;
 }
 
 function theme(
@@ -50,6 +65,11 @@ export const DEFAULT_THEME: PlanetTheme = theme('thunder-basin', {
   marking: 0xf2f2f2,
   chequerDark: 0x101010,
   ground: 0x5a3018,
+  propShape: 'blob',
+  propHeight: 1.2,
+  propWidth: 1.4,
+  propColor: 0x8a5030,
+  propAccent: 0xe8b070,
 });
 
 export const PLANET_THEMES: readonly PlanetTheme[] = [
@@ -62,6 +82,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0xe8e0d0,
     chequerDark: 0x101010,
     ground: 0x2a2a28,
+    propShape: 'spike',
+    propHeight: 3.2,
+    propWidth: 0.5,
+    propColor: 0x52524c,
+    propAccent: 0xff8a1a,
   }),
   theme('bogmire-deep', {
     wall: 0x3a4a28,
@@ -71,6 +96,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0xc8e8a0,
     chequerDark: 0x081008,
     ground: 0x0e1a0c,
+    propShape: 'spike',
+    propHeight: 1.6,
+    propWidth: 0.25,
+    propColor: 0x1a2a14,
+    propAccent: 0x7cff4a,
   }),
   theme('cryo-hollow', {
     wall: 0xd8e8f0,
@@ -80,6 +110,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0xf4fbff,
     chequerDark: 0x102028,
     ground: 0xb8d4e0,
+    propShape: 'spike',
+    propHeight: 2,
+    propWidth: 0.6,
+    propColor: 0xc8e4f0,
+    propAccent: 0xffffff,
   }),
   theme('ferro-rust', {
     wall: 0xb86a3a,
@@ -89,6 +124,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0xf0d0a0,
     chequerDark: 0x140804,
     ground: 0x8a3a18,
+    propShape: 'blob',
+    propHeight: 1.5,
+    propWidth: 1.6,
+    propColor: 0x9a4a20,
+    propAccent: 0xffe0b0,
   }),
   theme('vulkanis', {
     wall: 0x4a3a30,
@@ -98,6 +138,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0xffc080,
     chequerDark: 0x080404,
     ground: 0x1a0c0c,
+    propShape: 'spike',
+    propHeight: 2.4,
+    propWidth: 0.8,
+    propColor: 0x2e1a16,
+    propAccent: 0xff6a10,
   }),
   theme('neon-kasbah', {
     wall: 0xc8a060,
@@ -107,6 +152,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0x80ffff,
     chequerDark: 0x100818,
     ground: 0xc8a878,
+    propShape: 'spike',
+    propHeight: 2.8,
+    propWidth: 0.4,
+    propColor: 0x6a4a2a,
+    propAccent: 0xff40c8,
   }),
   theme('ash-reach', {
     wall: 0x8a8a88,
@@ -116,6 +166,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0xe8e8e4,
     chequerDark: 0x101010,
     ground: 0x6a6a68,
+    propShape: 'blob',
+    propHeight: 1,
+    propWidth: 1.3,
+    propColor: 0x8a8a86,
+    propAccent: 0xe8e8e0,
   }),
   theme('voidport', {
     wall: 0x4a5a68,
@@ -125,6 +180,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0xc0d8ff,
     chequerDark: 0x08080c,
     ground: 0x1a2030,
+    propShape: 'spike',
+    propHeight: 2.2,
+    propWidth: 0.5,
+    propColor: 0x3a4a5a,
+    propAccent: 0xffe060,
   }),
   theme('verdant-fault', {
     wall: 0x6a8a40,
@@ -134,6 +194,11 @@ export const PLANET_THEMES: readonly PlanetTheme[] = [
     marking: 0xe8f0c0,
     chequerDark: 0x081008,
     ground: 0x2a4a22,
+    propShape: 'spike',
+    propHeight: 2.6,
+    propWidth: 0.7,
+    propColor: 0x1a3016,
+    propAccent: 0xe8d060,
   }),
 ];
 

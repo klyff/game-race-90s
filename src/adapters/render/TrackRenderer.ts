@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { add, scale } from '../../domain/math/Vec2.ts';
+import { add, lerp, scale } from '../../domain/math/Vec2.ts';
 import type { TrackDefinition } from '../../domain/track/TrackDefinition.ts';
 import type { TrackFrame } from '../../domain/track/TrackSpline.ts';
 import { TrackSpline } from '../../domain/track/TrackSpline.ts';
@@ -41,7 +41,6 @@ const KERB_WIDTH_UNITS = 0.6;
 
 /** Length of one painted centreline dash, world units. */
 const CENTERLINE_DASH_PAINT_UNITS = 6;
-
 /** Length of the gap between centreline dashes, world units. */
 const CENTERLINE_DASH_GAP_UNITS = 10;
 
@@ -59,6 +58,20 @@ const START_LINE_LENGTH_UNITS = 3;
 
 /** Side length of one chequer square across the start line, world units. */
 const CHEQUER_SIZE_UNITS = 2.5;
+
+/**
+ * Arc-length spacing between trackside props (T-048), world units. Wide
+ * enough that props read as scattered decoration, not a fence.
+ */
+const PROP_SPACING_UNITS = 26;
+
+/** How far a prop's position along the track may jitter from its slot, as a
+ * fraction of `PROP_SPACING_UNITS`, so a straight line of props does not look
+ * like a picket fence. */
+const PROP_JITTER_FRACTION = 0.35;
+
+/** How far outward from the wall's outer edge a prop's base sits, world units. */
+const PROP_SETBACK_UNITS = 1.2;
 
 /**
  * Screen-space padding added around the projected outer wall footprint when
@@ -92,6 +105,26 @@ interface ScreenBounds {
   readonly y: number;
   readonly width: number;
   readonly height: number;
+}
+
+/** Darkens a 0xRRGGBB colour by `factor` (0..1), for a prop's outline/shadow
+ * so its silhouette reads against a similarly-toned wall or ground. */
+function shade(color: number, factor: number): number {
+  const r = Math.round(((color >> 16) & 0xff) * factor);
+  const g = Math.round(((color >> 8) & 0xff) * factor);
+  const b = Math.round((color & 0xff) * factor);
+  return (r << 16) | (g << 8) | b;
+}
+
+/**
+ * Deterministic pseudo-random value in [0, 1) for a prop slot. `Math.random`
+ * is avoided so the circuit renders identically every time (screenshots,
+ * tests, and a track drawn once in the constructor must never reroll).
+ */
+function propHash(index: number, salt: number): number {
+  const n = Math.imul(index + salt * 13, 374761393) ^ Math.imul(salt + 7, 668265263);
+  const mixed = (n ^ (n >>> 13)) * 1274126177;
+  return ((mixed ^ (mixed >>> 16)) >>> 0) / 4294967296;
 }
 
 /**
@@ -215,6 +248,7 @@ export class TrackRenderer {
 
     this.drawCenterline(frames, spacing);
     this.drawStartLine(track, spline);
+    this.drawBorderProps(spline, wallOuter);
   }
 
   /**
@@ -333,5 +367,73 @@ export class TrackRenderer {
       ];
       this.graphics.fillPoints(quad, true);
     }
+  }
+
+  /**
+   * Stamps a row of trackside decoration along both walls, one per
+   * `PROP_SPACING_UNITS` of arc length (T-048). Shape, height and colour come
+   * from `theme.propShape/propHeight/propWidth/propColor/propAccent`, so a
+   * new world's look is a data change here, not a new render pass — this is
+   * what actually varies by planet, rather than the wall band's flat colour.
+   * Drawn once, like everything else in this constructor, using a
+   * deterministic hash instead of `Math.random` so the circuit never rerolls.
+   */
+  private drawBorderProps(spline: TrackSpline, wallOuterOffset: number): void {
+    const propCount = Math.max(1, Math.round(spline.totalLength / PROP_SPACING_UNITS));
+    const slotLength = spline.totalLength / propCount;
+
+    for (let i = 0; i < propCount; i += 1) {
+      for (const side of [1, -1] as const) {
+        const jitter = (propHash(i, side === 1 ? 1 : 2) - 0.5) * PROP_JITTER_FRACTION * slotLength;
+        const distance = i * slotLength + jitter;
+        const frame = spline.frameAt(distance);
+        const lateralOffset = side * (wallOuterOffset + PROP_SETBACK_UNITS);
+        this.drawStandingProp(frame, lateralOffset, i * 2 + (side === 1 ? 0 : 1));
+      }
+    }
+  }
+
+  /**
+   * One prop: a squat rounded `blob` (an ellipse, for boulders/scrap/debris)
+   * or a standing `spike` (a triangle from the ground to `propHeight`, for
+   * pipes/reeds/pylons). The spike's apex is projected WITH height —
+   * `IsoProjection.toScreen`'s height parameter, proven by `ExplosionEffect`'s
+   * rising fireball — which is what makes it read as standing rather than a
+   * flat shape painted on the ground.
+   */
+  private drawStandingProp(frame: Pick<TrackFrame, 'position' | 'normal' | 'tangent'>, lateralOffset: number, seed: number): void {
+    const base = add(frame.position, scale(frame.normal, lateralOffset));
+    const sizeScale = 0.75 + propHash(seed, 3) * 0.5;
+    const halfWidth = this.theme.propWidth * sizeScale;
+
+    const baseScreen = this.edgeScreen(frame, lateralOffset);
+
+    if (this.theme.propShape === 'blob') {
+      const px = this.projection.pixelsPerUnit;
+      const outlineColor = shade(this.theme.propColor, 0.55);
+      this.graphics.fillStyle(outlineColor, 1);
+      this.graphics.fillEllipse(baseScreen.x, baseScreen.y, halfWidth * px * 2.3, halfWidth * px * 1.25);
+      this.graphics.fillStyle(this.theme.propColor, 1);
+      this.graphics.fillEllipse(baseScreen.x, baseScreen.y, halfWidth * px * 2, halfWidth * px);
+      this.graphics.fillStyle(this.theme.propAccent, 1);
+      this.graphics.fillEllipse(baseScreen.x, baseScreen.y - halfWidth * px * 0.32, halfWidth * px * 0.9, halfWidth * px * 0.45);
+      return;
+    }
+
+    const height = this.theme.propHeight * sizeScale;
+    const leftBase = add(base, scale(frame.tangent, halfWidth));
+    const rightBase = add(base, scale(frame.tangent, -halfWidth));
+    const leftScreen = this.projection.toScreen(leftBase);
+    const rightScreen = this.projection.toScreen(rightBase);
+    const tipScreen = this.projection.toScreen(base, height);
+
+    this.graphics.fillStyle(this.theme.propColor, 1);
+    this.graphics.fillTriangle(leftScreen.x, leftScreen.y, rightScreen.x, rightScreen.y, tipScreen.x, tipScreen.y);
+
+    const tipHeight = height * 0.82;
+    const tipLeft = this.projection.toScreen(lerp(leftBase, rightBase, 0.35), tipHeight * 0.9);
+    const tipRight = this.projection.toScreen(lerp(leftBase, rightBase, 0.65), tipHeight * 0.9);
+    this.graphics.fillStyle(this.theme.propAccent, 1);
+    this.graphics.fillTriangle(tipLeft.x, tipLeft.y, tipRight.x, tipRight.y, tipScreen.x, tipScreen.y);
   }
 }
