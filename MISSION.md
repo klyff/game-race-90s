@@ -32,7 +32,7 @@ IMAGE's rect, not the viewport.
 gives every NPC a different car, and the explosion is wired end to end. **Damage is now asymmetric:
 the car that takes the hit takes full damage, the one that deals it takes 40%.** Wall damage now
 reads TOTAL SPEED LOST in the step, not just the normal component — that was T-033's fix.
-**599 tests across 25 files, typecheck and build clean. First commit landed: `01c9b04`.**
+**599 tests across 25 files, typecheck and build clean. First commit landed: `fde7654`.**
 
 **PUSH IS BLOCKED:** the user asked for commit + push each iteration, but `git remote -v` is EMPTY.
 Ask them to run `git remote add origin <url> && git push -u origin main`, or
