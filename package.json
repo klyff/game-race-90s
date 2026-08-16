@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Isometric arcade racer inspired by Rock N Roll Racing",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "vite",
