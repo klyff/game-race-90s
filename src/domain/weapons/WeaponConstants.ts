@@ -74,10 +74,10 @@ export const DEFAULT_AIM_RADIUS = 3;
 export const NPC_WEAPON_COOLDOWN_SECONDS = 1.2;
 
 /**
- * Oil slick radius as a multiple of the dropper's `collisionRadius`.
- * Owner: "1.9x car size".
+ * Oil slick diameter as a fraction of the dropper's car length.
+ * Owner: "0.8x do tamanho de um carro".
  */
-export const OIL_RADIUS_FACTOR = 1.9;
+export const OIL_SIZE_OF_CAR = 0.8;
 
 /**
  * Landmine radius as a multiple of the dropper's `collisionRadius`.

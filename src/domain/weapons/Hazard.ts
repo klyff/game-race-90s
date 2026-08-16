@@ -1,9 +1,10 @@
 import { add, distance, fromAngle, scale } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
 import {
+  CAR_LENGTH_PER_COLLISION_RADIUS,
   DROP_BEHIND_FACTOR,
   MINE_RADIUS_FACTOR,
-  OIL_RADIUS_FACTOR,
+  OIL_SIZE_OF_CAR,
   OIL_YAW_SPIN,
 } from './WeaponConstants.ts';
 
@@ -58,7 +59,8 @@ export function dropOil(
   distanceAlongTrack: number,
   lifetimeSeconds: number,
 ): TrackHazard {
-  const radius = Math.max(0.1, collisionRadius * OIL_RADIUS_FACTOR);
+  const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * collisionRadius;
+  const radius = Math.max(0.1, (carLength * OIL_SIZE_OF_CAR) / 2);
   return {
     id: nextHazardId++,
     kind: HAZARD_KIND.OIL,
