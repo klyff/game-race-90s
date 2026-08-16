@@ -1046,3 +1046,53 @@ reached the user or nearly did — the invisible HUD, the wrong reverse, the pac
 softened harness, the lap-tracker collapse — passed a green test suite. Subagent reports of "all tests
 pass" mean the tests they wrote pass. Check the physics dimensionally, check that assertions can fail,
 and for anything visual, read the image.
+
+---
+
+### Context cleanup — 2026-08-15 22:55 — context reached 297k, past the 290k ceiling
+
+Verified by running the commands, not by trusting any status text: **599 tests pass across 25 files,
+`npm run typecheck` clean, `npm run build` clean.** **Four commits are in on `main`**
+(`fde7654`, `1b2dfbb`, `38e7dfe`, `77dcd9d`). **`git remote` is still EMPTY — the push the user asked
+for cannot happen until they give a remote URL.** That ask is the first thing to put in front of them.
+
+#### Agents involved this round
+
+| Agent | Task | State at cleanup |
+| --- | --- | --- |
+| main (orchestrator) | T-013, T-015, T-030, T-031, T-033, T-034 | Wired `RaceField` into `RaceScene` (five cars), wrote `HudScene` + `CarAssignment`, made wall damage read total speed lost, added victim/aggressor blame, wired explosion effect + voice, solved headless verification (`tools/verify/`), wrote `docs/art-briefs/planets.md`, committed four times. **Next action: T-018 splash + car select, wiring `TitleMusic` into it.** |
+| explosion-voice | T-030 | `done`. `ExplosionVoice.ts`, wired into `RaceAudio.playExplosion`. **Never heard by anyone.** |
+| explosion-effect | T-030 | `done`, then judged too weak on screen and superseded by `explosion-polish`. |
+| damage-asymmetry | T-030, T-033 | `done`. Threshold 12 → 6, denominator 5808 → 2731, `DAMAGE_ROLE` + `AGGRESSOR_DAMAGE_SHARE = 0.4`. 48 tests. |
+| title-music, title-music-2 | T-018 | **both `failed`** to API stream idle timeouts having written nothing. Not code problems. |
+| title-music-3 | T-018 | `done` on Haiku with a tighter brief. 172 BPM E minor, 11 tests. **NOT wired to anything, never heard.** |
+| explosion-polish | T-030 | `done`. Three layers: iso shockwave ellipse, lumpy rising fireball (~11 units peak), 18 arcing sparks, deterministic seeding instead of `Math.random()`. **Seen on screen (`/tmp/boom2.png`, `/tmp/boom3.png`) and it is BETTER but still not right** — see below. |
+
+#### How the next agent continues
+
+1. **T-018, the splash screen — the live task.** Full spec is in the T-018 row and in the plan file.
+   `TitleMusic` (`src/adapters/audio/TitleMusic.ts`) exists and must be started from it; it needs a
+   user gesture first, exactly like `RaceAudio.resume()`. The art must MOVE to
+   `public/assets/ui/splash.jpeg`. **The logo and credit are already painted into the image — draw no
+   title of your own.** Blink is a HARD on/off cut, never an alpha tween.
+2. **The explosion still does not match the game's art.** It is smooth vector circles in a pixel-art
+   game, and the sparks render as dull brown rather than bright embers. If the user wants it fixed,
+   the shape is right and only the RENDERING style is wrong: quantise the geometry to a pixel grid
+   and use a hot palette (`0xfff3c4`, `0xffe066`) for the sparks. `X` in-game wrecks the player's own
+   car on demand, which is how to look at it without crashing.
+3. **The ten planet images are in the WRONG PLACE to be used**: `src/assets/planets/Planet-1..10.png`.
+   They are area-select illustrations (Prompt A), not ground tiles. Move to
+   `public/assets/ui/planets/<slug>.png` and rename to the planet slug before writing any loader.
+   **Never `import` them** — Vite inlines them into the bundle.
+4. **Do not re-derive headless verification.** `tools/verify/README.md` records the two dead ends
+   already paid for (system Chrome's `SingletonSocket` bind failure, and the Playwright browser
+   revision having to match the installed version) and the two load-bearing flags. Timing matters:
+   shoot before 3 s to catch the grid, because the NPCs drive off the instant the countdown ends and
+   an empty grid looks exactly like a rendering bug.
+5. Remaining after T-018: T-032 (per-track rival, handling edge only), T-016/T-017 (weapons),
+   T-034's remaining parts (area-select screen + per-track `theme` colours), T-019 (README).
+
+**Standing lesson, reinforced twice this round:** the screenshot is the only honest verifier. Reading
+the image is what caught the HUD sitting under the debug overlay and the countdown covering the
+player's car — both of which reported perfectly healthy object state. And two subagents died to
+infrastructure timeouts having written nothing, so a task is only done when its FILES exist.

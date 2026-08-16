@@ -1,75 +1,132 @@
-import { describe, it, expect } from 'vitest';
 import {
   RIFF,
+  GUITAR_STRUM_PATTERN,
   DRUM_PATTERN,
+  LEAD_LICK,
+  BAR_COUNT,
+  BEATS_PER_BAR,
+  STEPS_PER_BAR,
+  TOTAL_STEPS,
+  LICK_INTERVAL_BARS,
+  barHasLick,
+  wrapStepIndex,
+  barIndexForStep,
+  eighthInBarForStep,
   noteFrequency,
   beatsToSeconds,
   totalBeats,
-} from '../../src/adapters/audio/TitleMusic';
+} from '../../src/adapters/audio/TitleMusic.ts';
 
-describe('TitleMusic', () => {
-  describe('totalBeats', () => {
-    it('sums 16 bars of 4 beats each', () => {
-      expect(totalBeats(RIFF)).toBe(64);
-    });
+const MIN_SANE_HZ = 40;
+const MAX_SANE_HZ = 2000;
+
+describe('TitleMusic composition', () => {
+  it('sums the chord progression to BAR_COUNT full bars of BEATS_PER_BAR', () => {
+    expect(totalBeats(RIFF)).toBe(BAR_COUNT * BEATS_PER_BAR);
   });
 
-  describe('noteFrequency', () => {
-    it('returns 440 Hz for A4 (reference pitch)', () => {
-      expect(noteFrequency('A4')).toBe(440);
-    });
-
-    it('returns 220 Hz for A3 (one octave below A4)', () => {
-      expect(noteFrequency('A3')).toBe(220);
-    });
-
-    it('returns ~82.41 Hz for E2 within 0.5 Hz tolerance', () => {
-      const e2 = noteFrequency('E2');
-      expect(e2).toBeCloseTo(82.41, 1);
-    });
-
-    it('throws on invalid note letter H', () => {
-      expect(() => noteFrequency('H9')).toThrow();
-    });
-
-    it('throws on empty string', () => {
-      expect(() => noteFrequency('')).toThrow();
-    });
+  it('sums the guitar strum pattern to exactly one bar of beats', () => {
+    expect(totalBeats(GUITAR_STRUM_PATTERN)).toBe(BEATS_PER_BAR);
   });
 
-  describe('RIFF notes', () => {
-    it('all notes resolve to frequencies between 40 and 2000 Hz', () => {
-      RIFF.forEach((step) => {
-        const freq = noteFrequency(step.note);
-        expect(freq).toBeGreaterThanOrEqual(40);
-        expect(freq).toBeLessThanOrEqual(2000);
-      });
-    });
+  it('every chord in RIFF resolves to a frequency in the sane instrument range', () => {
+    for (const step of RIFF) {
+      const freq = noteFrequency(step.note);
+      expect(freq).toBeGreaterThanOrEqual(MIN_SANE_HZ);
+      expect(freq).toBeLessThanOrEqual(MAX_SANE_HZ);
+    }
   });
 
-  describe('beatsToSeconds', () => {
-    it('converts 4 beats at 172 BPM to ~1.3953 seconds', () => {
-      const result = beatsToSeconds(4, 172);
-      expect(result).toBeCloseTo(1.3953, 3);
-    });
+  it('every lead lick note resolves to a frequency in the sane instrument range', () => {
+    for (const note of LEAD_LICK) {
+      const freq = noteFrequency(note.note);
+      expect(freq).toBeGreaterThanOrEqual(MIN_SANE_HZ);
+      expect(freq).toBeLessThanOrEqual(MAX_SANE_HZ);
+    }
   });
 
-  describe('DRUM_PATTERN', () => {
-    it('has exactly 8 steps (one bar of eighths)', () => {
-      expect(DRUM_PATTERN.length).toBe(8);
-    });
+  it('resolves a known reference pitch (A4 = 440 Hz) exactly', () => {
+    expect(noteFrequency('A4')).toBe(440);
+  });
 
-    it('has snare on exactly steps 2 and 6 (beats 2 and 4)', () => {
-      const snareSteps = DRUM_PATTERN.map((step, i) => (step.snare ? i : null)).filter(
-        (i) => i !== null,
-      );
-      expect(snareSteps).toEqual([2, 6]);
-    });
+  it('resolves a note one octave below the reference to half the frequency', () => {
+    expect(noteFrequency('A3')).toBeCloseTo(220, 5);
+  });
 
-    it('has hat on every step', () => {
-      DRUM_PATTERN.forEach((step) => {
-        expect(step.hat).toBe(true);
-      });
-    });
+  it('throws on a note letter outside A-G', () => {
+    expect(() => noteFrequency('H4')).toThrow();
+  });
+
+  it('throws on malformed input with no octave', () => {
+    expect(() => noteFrequency('E')).toThrow();
+  });
+
+  it('has the expected total pattern length in bars', () => {
+    expect(BAR_COUNT).toBe(16);
+    expect(RIFF.length).toBe(BAR_COUNT);
+  });
+
+  it('has TOTAL_STEPS equal to bars times steps-per-bar', () => {
+    expect(TOTAL_STEPS).toBe(BAR_COUNT * STEPS_PER_BAR);
+  });
+
+  it('converts beats to seconds using tempo (4 beats at 172 BPM)', () => {
+    const seconds = beatsToSeconds(4, 172);
+    expect(seconds).toBeCloseTo((4 * 60) / 172, 6);
+  });
+
+  it('marks the lick on every LICK_INTERVAL_BARS-th bar and no other', () => {
+    for (let bar = 0; bar < BAR_COUNT; bar += 1) {
+      const expected = (bar + 1) % LICK_INTERVAL_BARS === 0;
+      expect(barHasLick(bar)).toBe(expected);
+    }
+  });
+
+  it('wraps a step index that lands exactly on the pattern length back to zero', () => {
+    expect(wrapStepIndex(TOTAL_STEPS, TOTAL_STEPS)).toBe(0);
+  });
+
+  it('wraps a step index one past the pattern length to one', () => {
+    expect(wrapStepIndex(TOTAL_STEPS + 1, TOTAL_STEPS)).toBe(1);
+  });
+
+  it('wraps a negative step index into range', () => {
+    expect(wrapStepIndex(-1, TOTAL_STEPS)).toBe(TOTAL_STEPS - 1);
+  });
+
+  it('leaves an in-range step index untouched', () => {
+    expect(wrapStepIndex(5, TOTAL_STEPS)).toBe(5);
+  });
+
+  it('maps global step indices to the correct bar index across the whole loop', () => {
+    for (let step = 0; step < TOTAL_STEPS; step += 1) {
+      const expectedBar = Math.floor(step / STEPS_PER_BAR);
+      expect(barIndexForStep(step)).toBe(expectedBar);
+    }
+  });
+
+  it('maps global step indices to the correct eighth-in-bar across the whole loop', () => {
+    for (let step = 0; step < TOTAL_STEPS; step += 1) {
+      const expectedEighth = step % STEPS_PER_BAR;
+      expect(eighthInBarForStep(step)).toBe(expectedEighth);
+    }
+  });
+});
+
+describe('TitleMusic drum pattern', () => {
+  it('sums to exactly one bar of beats', () => {
+    expect(DRUM_PATTERN.length).toBe(STEPS_PER_BAR);
+  });
+
+  it('places the snare on beats 2 and 4 (eighth-note slots 2 and 6)', () => {
+    const snareSlots = DRUM_PATTERN.reduce<number[]>((acc, step, index) => {
+      if (step.snare) acc.push(index);
+      return acc;
+    }, []);
+    expect(snareSlots).toEqual([2, 6]);
+  });
+
+  it('plays the hi-hat on every eighth-note slot', () => {
+    expect(DRUM_PATTERN.every((step) => step.hat)).toBe(true);
   });
 });
