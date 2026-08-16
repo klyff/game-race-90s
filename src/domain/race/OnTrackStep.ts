@@ -1,7 +1,10 @@
 import { resolveWallContact, surfaceAt } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
-import { stepVehicle } from '../vehicle/ArcadeCarPhysics.ts';
+import { rampZoneAt } from '../track/RampZone.ts';
+import { AIRBORNE_SURFACE, stepVehicle } from '../vehicle/ArcadeCarPhysics.ts';
+import { integrateAirborne } from '../vehicle/Airborne.ts';
+import { isAirborne } from '../vehicle/Vehicle.ts';
 import type { InputCommand } from '../input/InputCommand.ts';
 import type { VehicleState, VehicleTelemetry, SurfaceConditions } from '../vehicle/Vehicle.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
@@ -80,29 +83,39 @@ export function stepVehicleOnTrack(
   // 1. Project the car onto the centreline; use the previous frame's distance as a hint.
   const before = spline.projectNear(state.position, hintDistance, searchWindow);
 
-  // 2. Pick the surface from the lateral offset: tarmac inside halfWidth, offroad outside.
-  const chosen = surfaceAt(before.lateralOffset, track);
+  // A ramp launches a grounded car by imparting vertical speed; a car already
+  // airborne re-entering the same zone (a long ramp) does not re-launch.
+  const zone = rampZoneAt(before.distance, track);
+  const launched: VehicleState =
+    zone !== null && !isAirborne(state)
+      ? { ...state, verticalVelocity: zone.launchSpeed }
+      : state;
+
+  // 2. Pick the surface from the lateral offset: tarmac inside halfWidth, offroad
+  //    outside — unless the car is airborne, which touches nothing at all (T-050).
+  const chosen = isAirborne(launched) ? AIRBORNE_SURFACE : surfaceAt(before.lateralOffset, track);
   const surface = surfaceAdjust === undefined ? chosen : surfaceAdjust(chosen);
 
-  // 3. Integrate the physics on that surface for the full timestep.
-  const stepped = stepVehicle(state, command, stats, surface, stepSeconds);
+  // 3. Integrate the physics on that surface for the full timestep, then gravity —
+  //    the two are orthogonal, which is why `integrateAirborne` is a separate pass.
+  const stepped = stepVehicle(launched, command, stats, surface, stepSeconds);
+  const airborne = integrateAirborne(stepped.state, stepSeconds);
 
   // 4. Re-project the car's new position, using the old projection's distance as a hint
   //    (the car has moved continuously, so it is still nearby in arc length).
   const after = spline.projectNear(
-    stepped.state.position,
+    airborne.position,
     before.distance,
     searchWindow,
   );
 
   // 5. Resolve wall contact: clamp the car inside the wall and reflect/scrub velocity
-  //    if it tried to go past.
-  const wall = resolveWallContact(
-    stepped.state,
-    after,
-    track,
-    stats.collisionRadius,
-  );
+  //    if it tried to go past. Skipped entirely while airborne — a jump flies OVER
+  //    the wall rather than scraping it, an explicit exception to decision 19, not a
+  //    repurposing of the wall-scrape code.
+  const wall = isAirborne(airborne)
+    ? { state: airborne, touchedWall: false, impactSpeed: 0, lateralOffset: after.lateralOffset }
+    : resolveWallContact(airborne, after, track, stats.collisionRadius);
 
   return {
     state: wall.state,

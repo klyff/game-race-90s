@@ -109,6 +109,8 @@ export function resolveWallContact(
     velocity,
     heading: state.heading,
     yawSpin: state.yawSpin,
+    height: state.height,
+    verticalVelocity: state.verticalVelocity,
   };
 
   return { state: nextState, touchedWall: true, impactSpeed, lateralOffset: targetOffset };

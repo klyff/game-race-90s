@@ -30,6 +30,14 @@ export const OFFROAD: SurfaceConditions = {
   rollingResistance: OFFROAD_ROLLING_RESISTANCE,
 };
 
+/** A car mid-jump touches nothing: no tyre grip, no rolling resistance
+ * (T-050). Steering and drag (a function of the car alone, decision 11)
+ * still apply — only what the ground would have supplied is zeroed. */
+export const AIRBORNE_SURFACE: SurfaceConditions = {
+  gripMultiplier: 0,
+  rollingResistance: 0,
+};
+
 /**
  * Quadratic drag coefficient that makes a car's authored `maxSpeed` its actual
  * terminal speed on the racing surface.
@@ -189,6 +197,11 @@ export function stepVehicle(
     velocity,
     heading,
     yawSpin,
+    // Height and verticalVelocity are gravity's job, not this function's —
+    // `integrateAirborne` (called around this from `stepVehicleOnTrack`)
+    // owns them so a car's airtime is orthogonal to its ground physics.
+    height: state.height,
+    verticalVelocity: state.verticalVelocity,
   };
 
   const telemetry: VehicleTelemetry = {

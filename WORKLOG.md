@@ -1815,3 +1815,102 @@ screenshot the result to judge it, was judged not worth the risk of a silent, un
 2. Only then revisit `planetThemes.ts` palettes against the actual dropped art, and verify with
    `npm run typecheck && npm run build`, then a real screenshot per `tools/verify/README.md`.
 3. Prompt C props (2:1 dimetric) are lowest priority per the handoff ("if usable").
+
+---
+
+### Context cleanup — 2026-08-16 06:20 — context reached 408k, past the 290k ceiling, owner restarting for mobile
+
+**Agent involved:** `main` (orchestrator, this Claude session, started ~05:30 picking up the Cursor
+handoff). No sub-agents were spawned this round — every edit below was done directly by the
+orchestrator after two earlier exploration agents were killed by the owner.
+
+**What shipped and is COMMITTED (not yet pushed — see blocker below):**
+- **T-040 done** (`25bd7a9`, `a118775`): `MusicPlayer` extracted from `TitleMusic`, ten per-planet
+  `MusicScore`s in `src/data/tracks/planetMusic.ts`, wired into `RaceAudio`/`RaceScene`.
+- **T-048 done** (`b6af9ed`, `429ce13`, `bef2f16`, `e715d25`): ground tiles v2 (Worley cracks,
+  blotches, grating, plating) in `tools/art/generate-ground-tiles.ts`; placeholder select
+  illustrations for the 9 planets missing real art via new `tools/art/generate-planet-select.ts`
+  (`npm run gen:planet-select`); trackside props (`PlanetTheme.propShape/propHeight/propWidth/
+  propColor/propAccent` + `TrackRenderer.drawBorderProps`), verified by reading real screenshots.
+  WORKLOG rows for T-036 and T-048 both corrected/closed.
+
+**BLOCKER, escalated to the owner, not yet resolved:** `git push origin main` fails with
+`CONNECT tunnel failed, response 403` — the session's Apple sandbox domain allowlist is blocking
+`github.com`, after three successful pushes earlier in this same session. Commits `bef2f16` and
+`e715d25` are LOCAL ONLY. Fix is one of: open `http://localhost:4475` → Domains → Add `github.com`;
+or add `github.com` to `/Users/klyffharlley/.claude/apple/dangerous_allowed_domains.csv` (user) or
+`.claude/apple/dangerous_allowed_domains.csv` (project). **Do not edit that allowlist as the agent —
+it is the owner's security-boundary call.** Per the owner's own instruction, do NOT write `deploy.now`
+until a push actually succeeds.
+
+**IN PROGRESS, UNCOMMITTED, TYPECHECK CURRENTLY RED — this is the part to pick up:**
+
+T-050 (jump ramps). Design is settled (see the plan file and the T-050 WORKLOG row above) and mostly
+implemented:
+- ✅ `src/domain/track/RampZone.ts` (new) — `RampZone`, `RAMP_GRAVITY`, `rampPeakHeight`,
+  `rampAirtimeSeconds`, `rampZoneAt`.
+- ✅ `TrackDefinition.rampZones?: readonly RampZone[]` added.
+- ✅ `VehicleState` gained `height`/`verticalVelocity`; `createVehicleState` and a new `isAirborne`
+  predicate added in `src/domain/vehicle/Vehicle.ts`.
+- ✅ `src/domain/vehicle/Airborne.ts` (new) — `integrateAirborne` (gravity + landing clamp).
+- ✅ `AIRBORNE_SURFACE` (grip 0, rolling resistance 0) added next to `TARMAC`/`OFFROAD` in
+  `ArcadeCarPhysics.ts`; `stepVehicle`'s `nextState` now passes `height`/`verticalVelocity` through
+  unchanged (gravity is `integrateAirborne`'s job, not this function's).
+- ✅ `OnTrackStep.stepVehicleOnTrack` rewritten: detects `rampZoneAt`, launches a grounded car,
+  swaps to `AIRBORNE_SURFACE` while airborne, calls `integrateAirborne` after `stepVehicle`, and
+  SKIPS `resolveWallContact` entirely while airborne (explicit exception to decision 19, not a
+  repurposing of it).
+- ✅ `src/domain/track/TrackCollision.ts`'s `resolveWallContact` — its `nextState` literal (~line
+  107) now carries `height`/`verticalVelocity` through from the input `state`. Fixed.
+
+**NOT YET FIXED — exactly what breaks `npm run typecheck` right now**, all the same mechanical
+change (every literal `VehicleState`/`{position, velocity, heading, yawSpin}` object needs
+`height`/`verticalVelocity` added, normally by passing the source state's own values through):
+- `src/domain/vehicle/CarCollision.ts` — FOUR object literals inside `resolveCarContact` build
+  `resultA`/`resultB` (~lines 93, 100, 129, 136). Each needs `height: a.height, verticalVelocity:
+  a.verticalVelocity` (or `b.`/`resultA.`/`resultB.` respectively, matching whichever variable's
+  `heading`/`yawSpin` line sits right above it in that literal — READ each one, don't guess which
+  source object it's copying from).
+- Test files with hand-built `VehicleState` literals missing the two fields: `tests/domain/
+  CarCollision.test.ts` (many, ~lines 82,89,118,125,153,160,180,187,208,215,254,261,280,287,307,314,
+  351,358,380,387,406,413), `tests/domain/CarPerk.test.ts` (lines 141,142,337,345), `tests/domain/
+  Slipstream.test.ts` (line 180), `tests/domain/TrackCollision.test.ts` (line 34). Simplest fix per
+  site: add `height: 0, verticalVelocity: 0,` to each literal (none of these tests care about
+  airtime) — a global search-and-replace of `yawSpin: 0,\n  }` → `yawSpin: 0,\n    height: 0,\n
+  verticalVelocity: 0,\n  }` will NOT be safe blindly (indentation/exact trailing text varies per
+  call site) — read each and edit individually, or write a small codemod that parses each object
+  literal rather than guessing on whitespace.
+
+**NOT STARTED YET** (per the design in the plan file / T-050's WORKLOG row):
+- `RaceField.ts` stage 2 (car-to-car contact loop, ~line 484-519): add `|| isAirborne(a.state) ||
+  isAirborne(b.state)` to the existing skip condition so a jumping car flies over traffic.
+- `VehicleView.sync()` (`src/adapters/render/VehicleView.ts`): change `toScreen(state.position)` to
+  `toScreen(state.position, state.height)` for the SPRITE only — keep the shadow projected at height
+  0 always (same trick `ExplosionEffect` already uses), so the rise reads on screen.
+- `TrackRenderer.ts`: a `drawRampZones` pass (new `PlanetTheme.rampDeck` colour, a band between
+  `triggerDistance` and `+triggerLength`, sloped silhouette via `toScreen(point, height)` on the exit
+  edge) — cosmetic, can ship after the physics works.
+- Author one ramp on `thunder-basin.track.ts` (`rampZones: [{ triggerDistance: ~180, triggerLength:
+  10, launchSpeed: 18 }]` was the plan's suggestion — pick the exact distance by reading `npm run
+  gen:track`'s report for the bottom straight's span, not by guessing).
+- New tests: `tests/domain/Airborne.test.ts` (analytic peak height/airtime vs frame-stepped
+  simulation), extend `OnTrackStep`/`RaceField` tests for wall-skip and car-contact-skip while
+  airborne.
+- `RaceField.ts` — double-check whether `createVehicleState`'s two new defaults (0, 0) are correctly
+  inherited everywhere a `RacerRuntime` is constructed (grep for other direct `VehicleState` object
+  constructions in `src/domain/race/` beyond what typecheck already caught — typecheck is the
+  authority here, not this list).
+
+**Exact next step for whoever resumes:** run `npm run typecheck`, fix every error it reports (all are
+the same mechanical `height`/`verticalVelocity`-missing shape, per the file/line list above), re-run
+until clean, then `npm test` (watch for any test that constructs `VehicleState` and asserts exact
+equality — those may need the two new fields added to their expectations too, not just their
+inputs), then `npm run build`, then continue with the NOT STARTED list, then verify by reading a real
+screenshot of a car mid-jump (per this repo's own decision 25/16 — never trust object state), then
+commit (locally is fine, push is still blocked — see BLOCKER above) and update T-050's WORKLOG row
+from `in_progress` to `done`.
+
+**Do NOT re-litigate the design** — VehicleState carrying height/verticalVelocity directly (not a
+sibling object), airborne skipping wall resolution entirely, and gravity as one shared `RAMP_GRAVITY`
+constant were all deliberate calls already reasoned through (see the plan file). The only remaining
+work is finishing the mechanical rollout and the NOT STARTED items above.

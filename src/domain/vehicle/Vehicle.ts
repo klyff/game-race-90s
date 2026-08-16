@@ -16,6 +16,11 @@ export interface VehicleState {
    * Set by weapon hits to produce a spinout; decays on its own.
    */
   readonly yawSpin: number;
+  /** World units above the track surface. 0 when grounded. Set by a jump
+   * ramp (T-050) and integrated by `integrateAirborne`, never by `stepVehicle`. */
+  readonly height: number;
+  /** World units/s. Positive is rising. 0 when grounded. */
+  readonly verticalVelocity: number;
 }
 
 /** Ground conditions under the car, supplied by whoever knows about the track. */
@@ -50,5 +55,12 @@ export interface VehicleStepResult {
 }
 
 export function createVehicleState(position: Vec2, heading: number): VehicleState {
-  return { position, velocity: { x: 0, y: 0 }, heading, yawSpin: 0 };
+  return { position, velocity: { x: 0, y: 0 }, heading, yawSpin: 0, height: 0, verticalVelocity: 0 };
+}
+
+/** A car is airborne exactly when its height is above the ground — derived
+ * rather than a stored flag, so the two can never disagree (mirrors
+ * `Coast.ts`'s `isNearlyStopped`, a pure predicate over a number). */
+export function isAirborne(state: VehicleState): boolean {
+  return state.height > 0;
 }

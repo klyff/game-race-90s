@@ -1,4 +1,5 @@
 import type { Vec2 } from '../math/Vec2.ts';
+import type { RampZone } from './RampZone.ts';
 
 /**
  * Everything that defines a circuit, as plain data.
@@ -45,6 +46,11 @@ export interface TrackDefinition {
    * Optional; absent means 1 (unchanged tarmac).
    */
   readonly surfaceGrip?: number;
+  /**
+   * Jump-ramp zones along the centreline (T-050). Optional; absent means no
+   * ramps on this circuit. See `RampZone.ts` for the shape and the physics.
+   */
+  readonly rampZones?: readonly RampZone[];
 }
 
 /** The track's surface grip multiplier, defaulting to 1 when unset. */
