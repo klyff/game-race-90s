@@ -3,6 +3,8 @@ import { EngineGearbox } from './EngineGearbox.ts';
 import { EngineVoice } from './EngineVoice.ts';
 import { ExplosionVoice } from './ExplosionVoice.ts';
 import { ImpactVoice } from './ImpactVoice.ts';
+import { MusicPlayer } from './MusicPlayer.ts';
+import type { MusicScore } from './MusicScore.ts';
 import { NoiseSource } from './NoiseSource.ts';
 import { SkidVoice } from './SkidVoice.ts';
 import type { InputCommand } from '../../domain/input/InputCommand.ts';
@@ -12,6 +14,10 @@ import type { VehicleStats } from '../../domain/vehicle/VehicleStats.ts';
 
 /** Master volume. Conservative: this is a game people play with headphones on. */
 const DEFAULT_MASTER_VOLUME = 0.35;
+
+/** Music send level, quieter than the title screen's since it now shares the
+ * mix with engine, tyres and impacts. */
+const MUSIC_VOLUME = 0.4;
 
 /**
  * Lateral speed, as a multiple of the car's drift threshold, at which the skid is
@@ -44,10 +50,18 @@ export class RaceAudio {
   private readonly impact: ImpactVoice | null = null;
   private readonly explosion: ExplosionVoice | null = null;
   private readonly noise: NoiseSource | null = null;
+  private readonly musicGain: GainNode | null = null;
+  private readonly music: MusicPlayer | null = null;
   private readonly driftLimit: number;
   private muted = false;
 
-  constructor(stats: VehicleStats, masterVolume: number = DEFAULT_MASTER_VOLUME) {
+  /**
+   * `score` is the current world's theme (T-040) — optional so tests and any
+   * caller that has not resolved a planet yet still get a working SFX rig.
+   * It plays through its own gain, not `master`, so it can be muted/mixed
+   * independently of the car's engine/tyre/impact voices.
+   */
+  constructor(stats: VehicleStats, score?: MusicScore, masterVolume: number = DEFAULT_MASTER_VOLUME) {
     // Reference the TARMAC threshold rather than the current surface: this only
     // scales how loud a slide is, and a scale that changed as the car crossed onto
     // dirt would make the skid jump in volume for no audible reason.
@@ -66,6 +80,13 @@ export class RaceAudio {
     this.brake = new BrakeVoice(this.context, this.noise, this.master);
     this.impact = new ImpactVoice(this.context, this.master);
     this.explosion = new ExplosionVoice(this.context, this.noise, this.master);
+
+    if (score !== undefined) {
+      this.musicGain = this.context.createGain();
+      this.musicGain.gain.value = MUSIC_VOLUME;
+      this.musicGain.connect(this.context.destination);
+      this.music = new MusicPlayer(this.context, this.noise, this.musicGain, score);
+    }
   }
 
   /** True when the browser gave us a working audio graph. */
@@ -84,6 +105,7 @@ export class RaceAudio {
       /* Autoplay policy or no device: stay silent rather than break the game. */
     });
     this.noise?.start();
+    this.music?.start();
   }
 
   /** Feeds one rendered frame of simulation state to every voice. */
@@ -122,6 +144,7 @@ export class RaceAudio {
   /** Silences everything without tearing the graph down, for a mute key. */
   setMuted(muted: boolean): void {
     this.muted = muted;
+    this.music?.setMuted(muted);
     if (!muted) return;
     this.engine?.update(0, 0, 0);
     this.skid?.update(0);
@@ -145,6 +168,7 @@ export class RaceAudio {
     this.brake?.stop();
     this.impact?.stop();
     this.explosion?.destroy();
+    this.music?.destroy();
     this.noise?.stop();
     void this.context?.close().catch(() => {
       /* Already closed. Nothing to do and nothing worth reporting. */

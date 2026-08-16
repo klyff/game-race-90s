@@ -16,6 +16,7 @@ import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
 import { themeForTrackId } from '../data/tracks/planetThemes.ts';
+import { musicForTrackId } from '../data/tracks/planetMusic.ts';
 import { findTrack } from '../data/tracks/registry.ts';
 import { CEREMONY_HOLD_SECONDS } from '../domain/race/Coast.ts';
 import { loadWallet } from '../adapters/progress/ProgressStore.ts';
@@ -210,7 +211,7 @@ export class RaceScene extends Phaser.Scene {
     this.zoomPolicy = new CameraZoomPolicy({ zoomStep: CAMERA_ZOOM_STEP });
     this.driver = new KeyboardDriver(this.requireKeyboard());
     this.loop = new FixedStepLoop(SIMULATION_STEP_SECONDS);
-    this.audio = new RaceAudio(this.playerSheetStats());
+    this.audio = new RaceAudio(this.playerSheetStats(), musicForTrackId(this.track.id));
 
     this.field = new RaceField(this.buildEntries(), this.track, this.spline, {
       trackLines: this.trackLines,
