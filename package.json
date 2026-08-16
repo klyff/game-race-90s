@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Isometric arcade racer inspired by Rock N Roll Racing",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
