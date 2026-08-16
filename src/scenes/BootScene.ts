@@ -1,16 +1,27 @@
 import Phaser from 'phaser';
 import { parseCarSetManifest } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
-import { CAR_ASSET_DIRECTORY, CAR_MANIFEST_KEY, SCENE_KEY } from './sceneKeys.ts';
+import {
+  CAR_ASSET_DIRECTORY,
+  CAR_MANIFEST_KEY,
+  SCENE_KEY,
+  SPLASH_ART_FILE,
+  SPLASH_ART_KEY,
+  UI_ASSET_DIRECTORY,
+} from './sceneKeys.ts';
 
 /**
- * Loads the generated car assets, then hands the parsed manifest to the race.
+ * Loads the generated car assets, then hands the parsed manifest to the splash screen.
  *
  * Loading happens in two passes on purpose: the sprite strips are listed IN the
  * manifest, so their filenames are not known until `cars.json` has been read.
  * The first pass fetches the manifest, `create` validates it, and only then are
  * the strips queued. That also means a broken or stale manifest fails here, with
  * a message on screen, instead of surfacing later as an invisible car.
+ *
+ * The splash artwork joins the second pass rather than the first. It is a megabyte of
+ * JPEG that nothing needs until the title is drawn, and putting it behind the manifest
+ * check means a failed boot reports the real problem instead of stalling on artwork.
  */
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -41,8 +52,10 @@ export class BootScene extends Phaser.Scene {
       });
     }
 
+    this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
+
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
-      this.scene.start(SCENE_KEY.RACE, { manifest });
+      this.scene.start(SCENE_KEY.SPLASH, { manifest });
     });
     this.load.start();
   }

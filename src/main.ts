@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.ts';
 import { HudScene } from './scenes/HudScene.ts';
 import { RaceScene } from './scenes/RaceScene.ts';
+import { SplashScene } from './scenes/SplashScene.ts';
 
 /**
  * Browser entry point. Everything interesting happens in the scenes; this file
@@ -22,9 +23,11 @@ const game = new Phaser.Game({
     width: '100%',
     height: '100%',
   },
-  // `HudScene` is registered but not started: it declares `active: false` and is
-  // launched by `RaceScene` once the race exists to report on.
-  scene: [BootScene, RaceScene, HudScene],
+  // Order here is registration, not sequence: `BootScene` is first so it auto-starts,
+  // and each scene names the next one itself (boot -> splash -> race). `HudScene`
+  // declares `active: false` and is launched by `RaceScene` once there is a race to
+  // report on.
+  scene: [BootScene, SplashScene, RaceScene, HudScene],
 });
 
 /**

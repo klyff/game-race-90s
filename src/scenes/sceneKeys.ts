@@ -8,6 +8,7 @@
  */
 export const SCENE_KEY = {
   BOOT: 'boot',
+  SPLASH: 'splash',
   RACE: 'race',
   HUD: 'hud',
 } as const;
@@ -19,9 +20,21 @@ export const CAR_MANIFEST_KEY = 'cars-manifest';
 /** Where `npm run gen:sprites` writes its output, relative to the served root. */
 export const CAR_ASSET_DIRECTORY = 'assets/cars';
 
+/** Where the authored (non-generated) interface art lives, relative to the served root. */
+export const UI_ASSET_DIRECTORY = 'assets/ui';
+
+/** Texture key of the splash artwork. */
+export const SPLASH_ART_KEY = 'splash-art';
+
+/** Filename of the splash artwork inside `UI_ASSET_DIRECTORY`. */
+export const SPLASH_ART_FILE = 'splash.jpeg';
+
 /**
- * The car the player drives until the car-select screen exists (T-018).
- * `marauder` is the balanced baseline, so it is the right default to tune against.
+ * Which car the player drives when nobody chose one.
+ *
+ * `SplashScene` now picks the car and passes it on, so this is the fallback for entering
+ * `RaceScene` directly — which the screenshot harness does. `marauder` is the balanced
+ * baseline, so it is the right car to land on by default.
  */
 export const PLAYER_CAR_ID = 'marauder';
 
