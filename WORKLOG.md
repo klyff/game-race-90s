@@ -1555,3 +1555,44 @@ keeps the diff readable. Fold them in on the next edit.
 | T-045 | **Speedometer shape: a tight circular knee then a long flat run, close above the digits** | `todo` | — | — | **Owner, 2026-08-16, with a second reference image, rejecting the first build:** *"a little big and thin at same moment; if you dont do an arc exactly, you made a almost half round-square starting close the number."* The current profile is `y = arcHeight * (1 - sin(t*PI/2))` across the WHOLE width, which spreads the rise out and reads on screen as a straight diagonal line of dashes. The reference is different: the bar climbs through a **tight quarter-circle in roughly the first fifth of its length** and is then **flat for the rest**, and that flat run sits **immediately above the digit panel**. Fix: split the profile at a `KNEE_FRACTION` (~0.2) — for `t < knee`, `u = t/knee` and `y = arcHeight * (1 - sqrt(1 - (1-u)^2))`, a true quarter circle, steep at `u=0` and flat at `u=1`; for `t >= knee`, `y = 0`. **The tangent rotation must be re-derived from the new profile** or the blocks will lean by the old curve's slope — the existing code derives the angle analytically precisely so this stays correct. Also: **blocks CHUNKIER and the whole gauge NARROWER** ("big and thin at same moment") — fewer, larger blocks, and move the panel up so the flat run is close above it. Verify with `tools/verify/drive.mjs` and READ the image. |
 | T-046 | **Weapons: missiles, oil slicks and landmines. This is T-016, finally specified** | `todo` | — | T-030 | **Owner's full spec, 2026-08-16.** Keys: **missile `1`, oil `2`, landmine `3`. Inventory refills when a car crosses the finish line.** (a) **Missiles** — travel in a STRAIGHT line along the direction the car's front is heading at launch, at **1.4x the max velocity of cars**; each hit costs **50% of a car's energy**, so a car already below half is destroyed by one, and when that happens **the missile explodes AND the car explodes**. Everyone starts with **3**. **NPC aiming is a decision, not a hitscan**: an NPC scans for cars ahead within about **300 ft in scale** (convert to world units and record the conversion) using an invisible aim test, and fires if a target is in the cone. **If a Player is in range, every NPC prioritises the Player.** (b) **Oil slicks** — dropped behind the car, footprint **1.9x car size**, persist for **the time of a 1.6-lap run on that track** (so the lifetime is derived per track, not a constant), **2 per car**; a car crossing one **spins out / skids and loses at least 4 seconds** before it has full control again. (c) **Landmines** — **half a car in size**, dropped by NPCs or players, and **hitting one destroys you outright**. **Where things go:** `VehicleState.yawSpin` already exists and decays via `YAW_SPIN_DECAY_PER_SECOND`, which is exactly the spinout channel for oil — locked decision 19 deliberately reserved it for weapon hits and forbade walls from using it. `applyWeaponDamage` already exists in `CarIntegrity`. Keep projectile and hazard rules PURE in `src/domain/`, place hazards by ARC LENGTH along the spline the way T-017 planned pickups, and resolve them inside `RaceField`'s locked five-stage step order rather than beside it. **`ammoCapacity` is already per-car and the HUD already reads it** (battle-trak 15, air-blade 4) — reconcile that with "everyone starts with 3 missiles" before coding: the likely answer is 3 missiles as the shared start with `ammoCapacity` as the refill ceiling, but ASK if it matters. **This also unblocks T-037's `ARSENAL` perk, which is defined and pinned INERT by a test today.** |
 | T-047 | **A `parTime` per track, needed by T-042's scoring** | `todo` | — | T-043 | Split out because T-042's confirmed 0–100 score needs a `parTime` on every `TrackDefinition` and nothing produces one yet. **T-043's search is the honest source**: the fastest simulated lap for a mid-pack car IS the par time, so generate it alongside the racing line rather than hand-authoring a number that will drift out of date the moment handling is re-tuned. |
+
+---
+
+### Context cleanup — 2026-08-16 01:00 — context reached 375k, past the 290k ceiling
+
+Increment on the 00:25 dump, which still holds for everything before it. **Verified state: 854 tests
+across 32 files, typecheck clean, build clean, all pushed (`df01f90`).** No agent is mid-flight and
+nothing is half-wired.
+
+#### What changed since the 00:25 dump
+
+| Item | State |
+| --- | --- |
+| **T-045 speedometer shape** | **DONE and READ in a screenshot** (`2494be1`). The owner rejected the first build; they were right. The old profile spread a quarter-sine across the whole bar, which renders as a straight diagonal line of dashes. The climb is now a true quarter circle confined to `KNEE_FRACTION = 0.2` of the bar — vertical at its base, horizontal where it meets the tail — and the tail is dead flat. Blocks are fewer and larger (24 at 14 px), the bar is narrower, and **the tangent rotation was re-derived from the new piecewise profile** with the knee's infinite slope clamped, because inheriting the old curve's slope would have leaned every block subtly wrong. |
+| **The owner's two decisions** | **Recorded in MISSION.md and in T-046's row so they survive any session change.** (1) Missiles: **3 on the grid for every car, refilling to that car's own `ammoCapacity` at the line** — battle-trak to 15, air-blade to 4, and Arsenal makes that faster / raises the ceiling. This was asked because "everyone starts with 3" would have made battle-trak's 15-round capacity and its whole identity decorative. (2) The racing-line search runs as an **offline `npm run gen:lines`** committed as data, NOT in the browser at boot — the boot would stall, and this matches `gen:sprites`/`gen:track`. |
+| A leaked throwaway | `tools/tmp-speedo-table.ts`, left by a subagent after printing the gauge's block table, was committed by accident and broke typecheck (top-level await in a non-module). Removed in `df01f90`. **Lesson: check `git status` for a subagent's scratch files before staging — "touch nothing else" does not stop a temp file.** |
+
+#### Agents involved this round
+
+| Agent | Task | State at cleanup |
+| --- | --- | --- |
+| main (orchestrator) | T-045, scope recording | Shipped the gauge reshape, recorded T-043..T-047, updated MISSION's whole Next step, asked the owner the two questions above and wrote the answers down, cleaned up the leaked file. |
+| speedo-shape | T-045 | `done`. Replaced the profile, re-derived the rotation analytically, retuned the sizes. **Left a throwaway script behind** — see above. |
+| statusline-setup | — | Spawned at the owner's request via `/statusline`. **Unrelated to the game**; it configures the Claude Code status line from their shell PS1 and touches nothing in this repo. |
+
+#### How the next agent continues — unchanged order, now with the decisions settled
+
+1. **T-046 weapons.** Full spec in its row and summarised in MISSION. It is the biggest lever on the
+   owner's standing "muito fácil" complaint and it unblocks `ARSENAL`, which is pinned inert by a test.
+   Keep the rules pure in `src/domain/`, place hazards by ARC LENGTH, resolve them INSIDE `RaceField`'s
+   locked five-stage order. `yawSpin` is the spinout channel for oil — decision 19 reserved it for
+   exactly this and forbade walls from using it.
+2. **T-043** the offline line generator, then **T-038**'s driver, which consumes it. **T-047's `parTime`
+   falls out of the same run** — do not hand-author one, it would drift the moment handling is re-tuned.
+3. **T-044** three cars. One agent per `*.car.ts`, judged in `.preview/roster.png`, never one car alone.
+   Two open judgement calls flagged to the owner and not yet answered: **the Delorean needs a stated
+   weakness or it is strictly dominant once unlocked** (recommended: fragile armour), and
+   **`assignNpcCars` assumes the NPC field is "the rest of the roster"**, which is false at 8 cars on a
+   5-car grid.
+4. **Still open and only the owner can close them: the title music has never been heard in the game,
+   and the five perks have never been felt at the wheel.** Ask them to run `npm run dev`.
