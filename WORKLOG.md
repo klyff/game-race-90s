@@ -1470,3 +1470,88 @@ at exactly 95.0, so the trap cannot be reintroduced silently.
 - **An adapter caching per-entity state breaks the day there is more than one entity** (T-039).
 - **`Date.now()`, `new Date()`, `Math.random()` are forbidden.** Assets live under `public/`, loaded by
   key, never `import`ed.
+
+---
+
+### Context cleanup — 2026-08-16 00:25 — context reached 344k, past the 290k ceiling
+
+**Verified state: 854 tests across 32 files, typecheck clean, build clean, everything pushed
+(`23dedfd`).** No agent is mid-flight. T-018 and T-037 are both DONE and shipped.
+
+#### The owner opened a LOT of new scope this turn. All of it is recorded below as T-043..T-047
+
+Verbatim intent, so nobody re-interprets it:
+
+1. **NPC racing lines are to be SEARCHED, not heuristic** — *"you need to give NPC's the trajectory of
+   each track, but you do the maths of all tracks at the beginning, of at least 5 ways to run on each
+   track (speed more, drift in the right time, where put more gas in straight lines, where drift to
+   have a curve). Once you have the best track path with velocity, the right moment to slow down and
+   curve/drift -> the best run way you will give to the NPC of that planet."* **This supersedes the
+   curvature-offset heuristic previously planned for T-038.** See T-043.
+2. **Three new cars**: an **AirBoat**, a **SnowCar**, and a **Delorean** — *"special car, good in all,
+   you need money and records to buy it, but sometimes it will appear on the track against you"*.
+   See T-044.
+3. **The speedometer shape is wrong** — *"a little big and thin at same moment; if you don't do an arc
+   exactly, you made a almost half round-square starting close the number"*, with a second reference
+   image. The arc must be a TIGHT circular knee then a long FLAT run, sitting close above the digits.
+   See T-045.
+4. **Three weapons, which is T-016 finally being specified.** Full spec in T-046. Keys 1/2/3, inventory
+   refills on crossing the finish line.
+
+#### Agents involved this round
+
+| Agent | Task | State at cleanup |
+| --- | --- | --- |
+| main (orchestrator) | T-018, T-037, speedo | Shipped T-018 (`768e377`) and T-037 + the speedometer (`23dedfd`). Wrote `CarPerk.ts`, wired all three perk hooks into `RaceField`'s locked step order, added `SurfaceAdjuster` to `OnTrackStep`, added an optional `damageScale` to `applyImpactDamage`, added `CAR_PERK.TRENCH_GRIP`, reassigned battle-trak, regenerated `cars.json` (zero pixels changed), and built `tools/verify/drive.mjs`. |
+| blinkclock-test / splash-layout / car-stat-bars | T-018 | `done`. 64 tests between them. |
+| perk-plumbing / slipstream / perk-outcome-tests | T-037 | `done`. Perk id flows end to end; 12 + 25 tests; every perk proved by outcome. |
+| hud-speed / seven-segment / speedo-gauge | speedo | `done`. `SpeedoGauge` + `SevenSegment` (45 tests) on screen and READ in a screenshot — **but the owner has now rejected its shape.** See T-045. |
+
+#### A new verification tool exists — do not re-derive it
+
+**`tools/verify/drive.mjs <url> <out.png> [throttleMs]`.** `screenshot.mjs` can hold exactly ONE key,
+which was enough while the game booted into the race. It no longer is: reaching the road needs SPACE on
+the splash FIRST and then the throttle, and **a capture without the SPACE sits on the title screen
+forever, which is very easy to misread as a broken race.** `probe.mjs` now takes a scene key argument
+for the same reason.
+
+#### How the next agent continues
+
+1. **T-045 speedometer shape** — smallest and the owner gave a reference. Do it first.
+2. **T-046 weapons** is the largest and best-specified piece of new work, and it also makes the NPCs
+   genuinely dangerous, which serves the owner's standing "muito fácil" complaint. Keep every rule pure
+   in `src/domain/`, exactly like every other rule. **It finally unblocks T-037's `ARSENAL`, which is
+   currently defined and pinned INERT by a test — that test is the reminder to wire it.**
+3. **T-043 trajectory search** replaces the racing-line heuristic in T-038. Read T-038's row too: the
+   `PaceDriver` maths extraction and the rival view still stand, only the LINE now comes from a search.
+4. **T-044** three new cars — art-pipeline work, and the four-agent pattern from T-005 is the one that
+   worked (one agent per `tools/spritegen/cars/<id>.car.ts`, never a shared file, judged in
+   `.preview/roster.png` and never one car alone).
+5. **Still open and only the owner can close it: nobody has ever heard `TitleMusic` in the game.**
+
+#### Standing lessons, all already paid for here
+
+- **Read the screenshot, never object state** — and this session proved BOTH are needed: the splash
+  prompt looked missing until a probe found it visible at (699, 449), and two captures 400 ms apart
+  showed it was simply mid-blink. State alone calls a feature a bug; the image alone calls a bug a
+  feature.
+- **Subagent reports are claims.** One agent found a real contradiction in its own brief and was right
+  to override it.
+- **An adapter caching per-entity state breaks the day there is more than one entity** (T-039).
+- **`Date.now()`, `new Date()`, `Math.random()` are forbidden.** Assets live under `public/`, loaded by
+  key, never `import`ed.
+
+---
+
+## New tasks opened 2026-08-16 by the owner (T-043..T-047)
+
+These rows belong in the main task table; they are appended here because the table is long and this
+keeps the diff readable. Fold them in on the next edit.
+
+| ID | Title | Status | Owner | Blocked by | Next step |
+| --- | --- | --- | --- | --- | --- |
+| T-043 | **Search the racing line: compute >=5 candidate ways round every track up front, simulate each, give the NPCs the fastest** | `todo` | — | T-038 | **Owner, 2026-08-16, and this SUPERSEDES the curvature-offset heuristic previously planned inside T-038:** *"you do the maths of all tracks at the beginning, of at least 5 ways to run on each track — speed more, drift in the right time, where put more gas in straight lines, where drift to have a curve — once you have the best track path with velocity, the right moment to slow down and curve/drift, the best run way you will give to the NPC of that planet."* So the line is the output of a SEARCH, not of a formula. Shape: (a) a **candidate generator** producing N distinct lateral-offset profiles along the spline (centreline; classic outside-apex-outside; late apex; early apex; a wide-entry drift line), each as data — a small set of control offsets, interpolated, bounded inside `trackFullHalfWidth - collisionRadius`; (b) an **evaluator** that drives each candidate through the REAL pipeline (`stepVehicleOnTrack` + a driver that follows an offset line) and returns lap time plus wall contacts and slide fraction — reuse `driveLap`'s shape from `tests/tuning/LapTimes.test.ts`, which already does exactly this for one car; (c) pick the fastest candidate that does not touch a wall; (d) **cache the winner as data per (track, car)**, because a five-candidate search per car per track is far too slow to run inside a frame. **Decide and record WHERE it runs**: doing it "at the beginning" in the browser would stall the boot, so the honest options are an offline `npm run gen:lines` writing `public/assets/lines/<track>.json` (matching how sprites and tracks are already generated) or a one-off warmup during the countdown. **Recommend the offline generator** — it is the same philosophy as `gen:sprites`, it is reproducible, and it can be checked by reading its report like `gen:track` already is. Everything pure, no `Math.random()`; if the candidate set needs jitter, pass a seed. |
+| T-044 | **Three more cars: AirBoat, SnowCar, and the Delorean (unlockable, and an occasional rival)** | `todo` | — | T-037 | **Owner, 2026-08-16:** *"create more cars, more 3 at least, one like a AirBoat, One like a Snow Car, and a Delorean — special car, Delorean is good in all, you need money and records to play buy it, but sometimes it will appear on the track against you."* Roster goes 5 -> 8. Each is one new `tools/spritegen/cars/<id>.car.ts` and nothing else (locked decision 9), then the orchestrator wires `registry`/`generate.ts`. **The T-005 pattern is the one that worked: one agent per car, no shared files, and judge the result in `.preview/roster.png` — never one car alone**, because agents optimise a car in isolation and cannot see it is the weakest of the set. Each needs a `perk` too (T-037's field already exists): the AirBoat suggests something over dirt/water, the SnowCar something about grip. **The Delorean is NOT just a car**: it is *good at everything*, so it needs (a) a bound so it is not simply strictly better — give it a real weakness, e.g. fragile armour or expensive to keep, and state it; (b) an **unlock condition** — money and records, which means T-042's progression and T-035's save must carry currency and a purchase flag; (c) **it appears as a surprise rival sometimes**, which needs a deterministic rule, NOT `Math.random()` — e.g. it joins when the save's race count hits certain values, seeded from the slot. Also note **`assignNpcCars` sizes the NPC field from "the rest of the roster"**; with 8 cars and a 5-car grid that assumption changes, so re-read T-031 before touching it. |
+| T-045 | **Speedometer shape: a tight circular knee then a long flat run, close above the digits** | `todo` | — | — | **Owner, 2026-08-16, with a second reference image, rejecting the first build:** *"a little big and thin at same moment; if you dont do an arc exactly, you made a almost half round-square starting close the number."* The current profile is `y = arcHeight * (1 - sin(t*PI/2))` across the WHOLE width, which spreads the rise out and reads on screen as a straight diagonal line of dashes. The reference is different: the bar climbs through a **tight quarter-circle in roughly the first fifth of its length** and is then **flat for the rest**, and that flat run sits **immediately above the digit panel**. Fix: split the profile at a `KNEE_FRACTION` (~0.2) — for `t < knee`, `u = t/knee` and `y = arcHeight * (1 - sqrt(1 - (1-u)^2))`, a true quarter circle, steep at `u=0` and flat at `u=1`; for `t >= knee`, `y = 0`. **The tangent rotation must be re-derived from the new profile** or the blocks will lean by the old curve's slope — the existing code derives the angle analytically precisely so this stays correct. Also: **blocks CHUNKIER and the whole gauge NARROWER** ("big and thin at same moment") — fewer, larger blocks, and move the panel up so the flat run is close above it. Verify with `tools/verify/drive.mjs` and READ the image. |
+| T-046 | **Weapons: missiles, oil slicks and landmines. This is T-016, finally specified** | `todo` | — | T-030 | **Owner's full spec, 2026-08-16.** Keys: **missile `1`, oil `2`, landmine `3`. Inventory refills when a car crosses the finish line.** (a) **Missiles** — travel in a STRAIGHT line along the direction the car's front is heading at launch, at **1.4x the max velocity of cars**; each hit costs **50% of a car's energy**, so a car already below half is destroyed by one, and when that happens **the missile explodes AND the car explodes**. Everyone starts with **3**. **NPC aiming is a decision, not a hitscan**: an NPC scans for cars ahead within about **300 ft in scale** (convert to world units and record the conversion) using an invisible aim test, and fires if a target is in the cone. **If a Player is in range, every NPC prioritises the Player.** (b) **Oil slicks** — dropped behind the car, footprint **1.9x car size**, persist for **the time of a 1.6-lap run on that track** (so the lifetime is derived per track, not a constant), **2 per car**; a car crossing one **spins out / skids and loses at least 4 seconds** before it has full control again. (c) **Landmines** — **half a car in size**, dropped by NPCs or players, and **hitting one destroys you outright**. **Where things go:** `VehicleState.yawSpin` already exists and decays via `YAW_SPIN_DECAY_PER_SECOND`, which is exactly the spinout channel for oil — locked decision 19 deliberately reserved it for weapon hits and forbade walls from using it. `applyWeaponDamage` already exists in `CarIntegrity`. Keep projectile and hazard rules PURE in `src/domain/`, place hazards by ARC LENGTH along the spline the way T-017 planned pickups, and resolve them inside `RaceField`'s locked five-stage step order rather than beside it. **`ammoCapacity` is already per-car and the HUD already reads it** (battle-trak 15, air-blade 4) — reconcile that with "everyone starts with 3 missiles" before coding: the likely answer is 3 missiles as the shared start with `ammoCapacity` as the refill ceiling, but ASK if it matters. **This also unblocks T-037's `ARSENAL` perk, which is defined and pinned INERT by a test today.** |
+| T-047 | **A `parTime` per track, needed by T-042's scoring** | `todo` | — | T-043 | Split out because T-042's confirmed 0–100 score needs a `parTime` on every `TrackDefinition` and nothing produces one yet. **T-043's search is the honest source**: the fastest simulated lap for a mid-pack car IS the par time, so generate it alongside the racing line rather than hand-authoring a number that will drift out of date the moment handling is re-tuned. |
