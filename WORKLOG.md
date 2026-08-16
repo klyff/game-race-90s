@@ -6,13 +6,13 @@
 | Field | Value |
 | --- | --- |
 | Repository | `/Users/klyffharlley/scm/concurrence-gamming` |
-| Branch | `main`, **first commit landed** (`fde7654`). No remote is configured, so nothing is pushed — see **Blocked work**. |
+| Branch | `main`, **pushed to `https://github.com/klyff/game-race-90s`**. Local and `origin/main` are in sync. |
 | Plan file | `/Users/klyffharlley/.claude/plans/fa-a-um-plano-para-compressed-beaver.md` |
 | Product | Isometric arcade racer inspired by Rock N Roll Racing (web) |
 | Created | 2026-08-15 16:24 PDT |
 | Last updated | 2026-08-15 22:35 PDT |
 | Compactions so far | 2 |
-| Git | on `main` with the first commit in. **The user asked for commit + push on every iteration; `git remote` is empty, so push is blocked on a remote URL.** |
+| Git | on `main`, remote `origin` = `https://github.com/klyff/game-race-90s`. **The owner wants commit + push at the end of every iteration.** No longer blocked. |
 
 ## Current state in one line
 
@@ -574,6 +574,8 @@ Plan phases map 1:1 onto these IDs. Status values: `todo`, `in_progress`, `block
 | T-034 | Ten planets / areas as commissioned art | `review` | user (art) + main | — | **The user generated all ten images from the briefs in `docs/art-briefs/planets.md` and they are in `src/assets/planets/Planet-1..10.png`.** Planet-1 was reviewed and is exactly right: Thunder Basin as red mesas under a violet lightning storm, with the left third kept calm for UI, which is what the brief asked for. These are **Prompt A output — area-select illustrations, not iso ground planes**, so the next steps are: (a) move them to `public/assets/ui/planets/<slug>.png` and rename from `Planet-N` to the planet slug, because assets are served from `public/` and never imported (a 1 MB+ `import` gets inlined into the bundle); (b) build the area-select screen that shows them; (c) pull each image's palette into a `theme` on `TrackDefinition` (road, shoulder, wall, line colours) so the procedurally drawn road agrees with the art instead of fighting it. **Do NOT try to use these as the track surface** — `TrackRenderer` derives the road from the spline every frame, which is what lets a circuit be authored from control points alone. A seamless iso ground tile (Prompt B in the briefs) is the separate, still-ungenerated deliverable for that. |
 | T-035 | Save progress in a browser cookie, **three slots per player, like a 90s memory card** | `in_progress` | save-slots | — | **New scope from the owner, 2026-08-15.** Pure model in `src/domain/progress/SaveSlots.ts` (3 slots, 3-letter arcade name, chosen car, tracks won, best lap per track), plus a cookie adapter. **The hard constraint is that a cookie holds ~4 KB TOTAL**, so the encoding is compact short keys + `encodeURIComponent`, with a `SAVE_BYTE_BUDGET` and a `fitsInCookie` guard so an oversized save is REFUSED rather than silently lost. `parseSave` must be paranoid — a cookie is user-editable text and can be truncated or left over from an older build, so corruption costs the player their progress and never their ability to load the game. `Date.now()` stays forbidden: every mutating function takes `nowMillis`. **Remaining after the domain lands: the cookie adapter (`src/adapters/storage/CookieStore.ts`), a slot-select screen, and deciding WHEN a race writes a slot.** |
 | T-036 | Per-planet look: `theme` on `TrackDefinition`, and the area-select screen | `todo` | — | T-034 | Split out of T-034 now that the art exists. `TrackRenderer` currently holds the road, shoulder, wall and line colours as constants, so every planet would look identical. Give `TrackDefinition` a `theme` (those four colours + an optional ground tile key), read it in the renderer, and pull each planet's palette out of its illustration so the procedural road agrees with the art. Then the area-select screen that shows the illustrations. |
+| T-037 | **Every car gets one signature advantage** — a felt mechanic, not a stat delta | `todo` | — | — | **Owner's call, 2026-08-15: "cada um deve ter uma vantagem, hoje está muito fácil para o jogador."** A player cannot feel `grip: 30` vs `grip: 35` while driving, but they can feel a mechanic. One perk per car, each falling out of the identity the art and stats already promise: `marauder` **Bulldozer** (wins contact — extra push, further cut to the aggressor damage it already takes); `dirt-devil` **Off-road Ace** (much smaller off-road penalty, so it can cut where nobody else can); `havac` **Anvil** (barely moved by contact, shrugs off wall damage); `air-blade` **Slipstream** (a real draft bonus sitting behind another car — the one thing a fragile fast car can safely do); `battle-trak` **Arsenal** (3× ammo already, plus a faster reload once T-016 exists). Author the perk as DATA in `tools/spritegen/cars/*.car.ts` so it flows into `cars.json` like every other stat, and keep the rules as pure functions applied inside `RaceField`'s existing step order. **No perk may write velocity directly** — the same rule that keeps the AI honest. Every perk needs a test that measures it changes the OUTCOME, not that a flag is set. |
+| T-038 | **Make the NPCs race instead of commute** — racing line, overtaking, defending | `todo` | — | T-014, T-037 | **This is why the player wins easily, and it is measured rather than guessed:** `PaceDriver` follows the CENTRELINE at a grip-limited speed and never drifts, so the tuning harness laps Thunder Basin in 33 s while deliberately staying inside the grip limit — any human who drifts beats it. Upgrade it into T-014's `AIDriver`: (a) **a racing line, not the centreline** — offset the aim point by curvature, outside on entry, apex, outside on exit, which alone makes them faster and less predictable; (b) **overtaking and defending** — pick a gap when the car ahead is slower, hold the inside line when being caught; `RaceField` already has every racer's position, so no new plumbing; (c) **let them use the grip they have**, and let T-032's rival run slightly past it; (d) **bounded rubber-banding**, a few percent of engine force, so the pack stays on screen without the cheating being visible. **Gate: the owner races and does NOT win on the first attempt.** Difficulty is the deliverable, and a human at the wheel is the only honest test of it. |
 | T-033 | Wall impacts almost never cross the damage threshold, so the explosion the user asked for would never fire | `todo` | — | T-030 | **Measured, not suspected** — this is the risk flagged on T-030's row, now confirmed with `tools/measure-impacts.ts` over the real pipeline: driving the marauder flat out for 20–30 s produced `contacts=716 over12=1 max=13.0` ploughing into the first corner, `contacts=1598 over12=1 max=42.5` on a drifting line, and integrity only fell 1.00 → 0.90 in the worst case. **Zero explosions in any run.** The cause is the one predicted: `resolveWallContact` reports `impactSpeed` as the NORMAL component into the wall, and normal driving glances off walls tangentially, so the 12 u/s threshold is crossed once or twice a lap at most and the quadratic curve then makes those hits nearly free. Options: lower `IMPACT_DAMAGE_THRESHOLD`, raise the damage per hit, or feed damage from total speed change over the step rather than the normal component (probably the truthful fix — a car that loses 40 u/s in one step has crashed, whatever the geometry). Do NOT tune this blind: re-run the measurement tool after each change. |
 | T-019 | README, delivery report, `npm run build` verified | `todo` | — | T-018 | `npm run build` already verified clean during T-009; README and the delivery report remain. |
 | T-020 | Adaptive camera zoom: in on fast straights, out in corners | `done` | camera-zoom + main | T-009 | **Done and verified numerically over the whole lap.** Sampling `targetZoom` every 25 units at 70 u/s: mean 1.933 on straights (R > 400) and 1.518 in tight corners (R < 90), min 1.500, max 1.949 — inside the requested 1.5…2 band. See decision 21 for why the direction looks inverted. |
@@ -715,23 +717,10 @@ the weakest of the set. Judge art in `roster.png`, never one car alone.
 
 **Bounded retry is 2 attempts, then escalate with the exact action needed. Do not stall silently.**
 
-### `git push` — blocked on a remote, 2026-08-15 22:35
+### `git push` — RESOLVED, 2026-08-15 23:40
 
-The user asked for **commit + push on every iteration**. The commit is done (`fde7654`); the push
-cannot be. `git remote -v` is empty — this repository has no remote at all, and a remote URL is not
-something an agent can invent.
-
-**Exact action needed from the owner**, whichever they prefer:
-
-```bash
-# if the GitHub repo already exists
-git remote add origin git@github.com:<user>/<repo>.git && git push -u origin main
-
-# if it does not, and the gh CLI is authenticated
-gh repo create <repo> --private --source=. --remote=origin --push
-```
-
-Everything else in the iteration is committed and green, so this blocks nothing but the push itself.
+The owner created the repository and supplied the remote: `https://github.com/klyff/game-race-90s`.
+`origin/main` is in sync with local. Nothing is blocked. Push at the end of every iteration.
 
 ### Headless verification — solved, but read this before re-solving it
 
@@ -1178,3 +1167,55 @@ The pure model is done. Still needed:
    so it can be judged without crashing.
 4. `tools/verify/README.md` before attempting to see the screen. Do not re-derive it.
 
+---
+
+### Context cleanup — 2026-08-15 23:40 — the owner is clearing the session to start clean
+
+**This dump is the handoff. The next session starts with no transcript at all — assume it knows
+nothing except this file, MISSION.md and the plan.**
+
+**Verified state: 640 tests across 26 files, `npm run typecheck` clean, `npm run build` clean, nine
+commits on `main`, and everything is PUSHED to `https://github.com/klyff/game-race-90s`.**
+
+#### What the owner said this turn, verbatim in intent
+
+1. **"hoje está muito fácil para o jogador"** — the difficulty is the problem to solve. Two new tasks
+   carry it: **T-037** (every car gets one felt advantage) and **T-038** (the NPCs must race, not
+   commute). Read both rows; the diagnosis in T-038 is measured, not guessed.
+2. **The git remote is resolved** — no longer an ask.
+3. **"não vi o splash"** — correct, and not a bug: **`SplashScene` does not exist yet.** T-018 was
+   planned and specced but never built. The art and the music are both sitting ready and unused. If
+   the owner expected to see it, this is the gap.
+
+#### Agents involved this round
+
+| Agent | Task | State at cleanup |
+| --- | --- | --- |
+| main (orchestrator) | T-034…T-038, push | Pushed to the new remote, wrote T-037 and T-038 into the plan and this table, retired the blocked-push entry. **No agent is mid-flight. The board is clean for a fresh session.** |
+| save-slots | T-035 | `done` and independently re-verified (1803 bytes for a full save, zero throws across 1804 truncations). |
+| title-music-2 / -3 | T-018 | `done`. `TitleMusic` exists, 21 tests, **never heard by anyone.** |
+| explosion-polish | T-030 | `done`, seen on screen, still smooth-vector art in a pixel-art game. |
+
+#### The next session should do this, in this order
+
+1. **T-018 `SplashScene`** — the owner has now twice expected to see it. Art at
+   `public/assets/ui/splash.jpeg`, music at `src/adapters/audio/TitleMusic.ts` (needs a user gesture
+   before it sounds, exactly like `RaceAudio.resume()`). **Draw NO title — the logo and credit are
+   painted into the art.** Blink is a HARD on/off cut, never an alpha tween. LEFT/RIGHT choose the
+   car, SPACE starts. Verify by BUILDING and READING THE SCREENSHOT.
+2. **T-037 + T-038 together** — they are the same complaint from two sides, and shipping only one will
+   not move the difficulty. T-038's gate needs the owner at the wheel.
+3. **T-035's adapter** — `CookieStore`, a slot screen, and writing a slot when a race finishes.
+4. **T-036** — `theme` on `TrackDefinition`, or all ten planets render in Thunder Basin's colours.
+
+#### Traps that have each already cost this project a task or more
+
+- **Read the screenshot, never object state.** A HUD reported `visible: true` with correct text while
+  sitting off-viewport for two tasks. `tools/verify/README.md` has the working recipe and the two dead
+  ends (system Chrome's `SingletonSocket` failure; Playwright's browser revision must match).
+- **Subagent reports are claims, not facts.** This round alone: two agents died to API timeouts having
+  written nothing, one shipped tests that passed while nothing worked, one shipped a dimensionally
+  wrong speed law, and one shipped an inverted label. Run the suite; check the physics dimensionally;
+  verify the numbers yourself.
+- **`Date.now()`, `new Date()` and `Math.random()` are forbidden** ��� pass time and seeds in.
+- **Assets live under `public/` and are loaded by key, never `import`ed** — Vite inlines them.

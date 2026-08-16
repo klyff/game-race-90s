@@ -14,36 +14,34 @@ reverses, marks the tarmac, sounds like an engine, and the camera breathes with 
 
 ## Next step
 
-**T-018: the splash screen with car select on it**, then T-032 (per-track rival), then T-016/T-017
-(weapons). `TitleMusic` already exists (172 BPM E-minor punk/metal loop, 11 tests) but has **never
-been heard** — the splash is what plays it.
+**1. T-018 `SplashScene` — the owner has now twice expected to see it and it DOES NOT EXIST.** Art is
+ready at `public/assets/ui/splash.jpeg`; `src/adapters/audio/TitleMusic.ts` is ready (172 BPM E-minor
+punk/metal, 21 tests) and **has never been heard**. Needs a user gesture before it sounds, like
+`RaceAudio.resume()`. **Draw NO title — the logo and credit are painted into the art.** Text goes in
+the dark explosion void mid-frame; scale the art to COVER and position against the IMAGE's rect, not
+the viewport. Prompt "PRESS SPACE TO ROCK'N THE 90s" blinking ~1.0–1.4 s with a **hard on/off cut,
+never an alpha tween**, from a pure `BlinkClock`. LEFT/RIGHT pick the car, SPACE starts.
 
-T-018 spec, all from the user: background is `src/assets/spash.jpeg` → **move to
-`public/assets/ui/splash.jpeg`** and load in `BootScene` (a Vite `import` would inline 1 MB).
-**The logo and credit are already painted into the top of the art — draw no title.** The dark
-explosion void mid-frame is the only high-contrast area for text. Prompt "PRESS SPACE TO ROCK'N THE
-90s" blinking slowly, ~1.0–1.4 s, **hard on/off cut, never an alpha tween**, from a pure `BlinkClock`.
-LEFT/RIGHT pick the player's car; SPACE starts. Scale the art to COVER and place text against the
-IMAGE's rect, not the viewport.
+**2. T-037 + T-038 — the difficulty. Owner, 2026-08-15: "hoje está muito fácil para o jogador."**
+Ship them together; one alone will not move it.
+- **T-037** every car gets ONE FELT advantage, not a stat delta: marauder Bulldozer (wins contact),
+  dirt-devil Off-road Ace (small off-road penalty), havac Anvil (immovable, shrugs off damage),
+  air-blade Slipstream (draft bonus), battle-trak Arsenal. Author as DATA in
+  `tools/spritegen/cars/*.car.ts`; rules pure in `src/domain/`; **no perk writes velocity directly.**
+- **T-038** the NPCs must RACE, not commute. Measured cause: `PaceDriver` follows the CENTRELINE
+  inside the grip limit and never drifts, lapping in 33 s, so any drifting human beats it. Give it a
+  curvature-offset racing line (outside-apex-outside), overtaking and defending, permission to use its
+  grip, and bounded rubber-banding. **Gate: the owner races and does NOT win first try.**
 
-**DONE this iteration — five cars race, and the HUD is real.** `RaceField` is wired into `RaceScene`
-(one `VehicleView` per car, player starts at the back), `HudScene` is its own scene at zoom 1
-(position, lap, timer, ammo, integrity bar, animated countdown, live standings), `assignNpcCars`
-gives every NPC a different car, and the explosion is wired end to end. **Damage is now asymmetric:
-the car that takes the hit takes full damage, the one that deals it takes 40%.** Wall damage now
-reads TOTAL SPEED LOST in the step, not just the normal component — that was T-033's fix.
-**599 tests across 25 files, typecheck and build clean. First commit landed: `fde7654`.**
+**3.** Then T-035's `CookieStore` + slot screen, then T-036 (`theme` on `TrackDefinition`, or all ten
+planets render in Thunder Basin's colours).
 
-**PUSH IS BLOCKED:** the user asked for commit + push each iteration, but `git remote -v` is EMPTY.
-Ask them to run `git remote add origin <url> && git push -u origin main`, or
-`gh repo create <repo> --private --source=. --remote=origin --push`.
+**State: 640 tests / 26 files, typecheck and build clean. Nine commits, all PUSHED to
+`https://github.com/klyff/game-race-90s`.** Read WORKLOG.md's last cleanup block first — it is the
+handoff and it lists the traps that have each already cost this project a task.
 
-**An agent CAN now see the screen — use `tools/verify/` and READ ITS README.** Do not re-derive this:
-system Chrome fails (`SingletonSocket` bind), Playwright's cached headless shell works, and
-`--allow-file-access-from-files` is mandatory or the game silently never boots on `file://`.
-
-**Still unseen/unheard by anyone:** `TitleMusic`, and the polished `ExplosionEffect`.
-T-029 (tyre marks halved) still wants the user's eye.
+**Unseen/unheard by anyone:** `TitleMusic`, and the polished `ExplosionEffect` (which is still
+smooth-vector art in a pixel-art game; `X` in-game wrecks the player's car so it can be judged).
 
 ## Constraints
 
@@ -56,9 +54,8 @@ T-029 (tyre marks halved) still wants the user's eye.
 - **Verify rendering by READING THE IMAGE, never object state.** A HUD sat off-viewport for two tasks
   while reporting `visible: true` with correct text (WORKLOG decision 25).
 - **Trust the repo over any status text**, here or in WORKLOG.md. Run `npm test` and `npm run typecheck`.
-- **The user asked for commit + push at the end of every iteration** (2026-08-15). Three commits are in
-  on `main`. **`git remote` is EMPTY, so push is blocked** — see Next step for the exact command to ask
-  for.
+- **Commit AND push at the end of every iteration** (owner, 2026-08-15). Remote is
+  `https://github.com/klyff/game-race-90s`; local and `origin/main` are in sync. No longer blocked.
 
 ## Discarded
 
