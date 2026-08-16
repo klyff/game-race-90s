@@ -1141,3 +1141,40 @@ inlines megabytes into the bundle.
    `TrackDefinition` every circuit renders in Thunder Basin's colours.
 4. Do not re-derive headless verification: `tools/verify/README.md`.
 
+---
+
+### Context cleanup — 2026-08-15 23:25 — context reached 329k, past the 290k ceiling
+
+**640 tests across 26 files, typecheck and build clean. Eight commits on `main`.**
+**`git remote` is STILL EMPTY. The push the owner asked for on every iteration has never happened.
+Lead every reply with that ask until it is resolved.**
+
+#### Agents involved this round
+
+| Agent | Task | State at cleanup |
+| --- | --- | --- |
+| main (orchestrator) | T-034, T-035, T-036 | Reviewed the new art, moved it to real homes, corrected the art briefs, opened T-035/T-036, then **independently re-verified `save-slots`' claims rather than trusting its report**. |
+| save-slots | T-035 | `done`, and **checked**. `src/domain/progress/SaveSlots.ts` + 31 tests. Verified by the orchestrator with a throwaway script, not by reading the report: a genuinely full save (3 slots × 10 tracks) serialises to **1803 bytes, 51% of the 3500 budget**, contains no `;` `,` `"` or whitespace, round-trips losslessly, and **truncating it at all 1804 possible lengths throws zero exceptions and always yields a valid 3-slot shape**. Junk input (`''`, `'not json'`, `'{}'`, `'[]'`, `'%%%'`, a broken percent-escape, `'null'`, a 4-element array) is all absorbed. |
+
+#### T-035, what is left
+
+The pure model is done. Still needed:
+1. `src/adapters/storage/CookieStore.ts` — read/write ONE named cookie, `SameSite=Lax`, long `Max-Age`,
+   and a graceful no-op when cookies are disabled (private browsing, or a `file://` page, which is how
+   this project screenshots itself — **the save will silently not persist over `file://`, so do not
+   read that as a bug**).
+2. A slot-select screen, and a decision on when a race writes a slot. Finishing a race is the obvious
+   write point; writing every lap would burn the 4 KB budget for nothing.
+3. `Date.now()` is forbidden in the domain, so the CALLER supplies `nowMillis` — the adapter is the
+   right place to read the clock.
+
+#### How the next agent continues
+
+1. **T-018 splash is the headline task**, art now at `public/assets/ui/splash.jpeg`, `TitleMusic` ready
+   and still never heard. **Draw no title — the logo is painted into the art.**
+2. Then T-035's adapter + slot screen, then T-036 (`theme` on `TrackDefinition`, or every planet
+   renders in Thunder Basin's colours).
+3. The explosion is still smooth-vector art in a pixel-art game; `X` in-game wrecks the player's car
+   so it can be judged without crashing.
+4. `tools/verify/README.md` before attempting to see the screen. Do not re-derive it.
+
