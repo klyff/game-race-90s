@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import { findCarSheet } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
-import { campaignTracks, highestUnlockedPlanetIndex } from '../data/tracks/campaign.ts';
+import { PLANETS } from '../data/tracks/planets.ts';
+import { highestUnlockedPlanetIndex } from '../data/tracks/campaign.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import {
@@ -16,6 +17,10 @@ import {
 } from '../domain/progress/GarageCatalog.ts';
 import { cashInValue } from '../domain/progress/SeasonPoints.ts';
 import { PLAYER_NAME_LENGTH } from '../domain/progress/SaveSlots.ts';
+import { perkProfile } from '../domain/vehicle/CarPerk.ts';
+import { missileCapacity } from '../domain/weapons/WeaponInventory.ts';
+import { MINE_START_COUNT, OIL_START_COUNT } from '../domain/weapons/WeaponConstants.ts';
+import { TURBO_START_COUNT } from '../domain/vehicle/TurboCharges.ts';
 import { isTourModeOn } from '../adapters/progress/TourMode.ts';
 import {
   activateSlot,
@@ -29,27 +34,40 @@ import {
   loadCleared,
   loadSave,
   loadWonTracks,
-  occupiedNames,
   saveNow,
   sellCar,
 } from '../adapters/progress/ProgressStore.ts';
-import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
-import { MENU_KIND, MENU_PROMPT_LIST, MenuController } from '../adapters/input/MenuController.ts';
+import { MENU_KIND, MenuController } from '../adapters/input/MenuController.ts';
 import type { MenuResult } from '../adapters/input/MenuController.ts';
-import { GARAGE_ART_KEY, SCENE_KEY } from './sceneKeys.ts';
+import {
+  GARAGE_ART_KEY,
+  MINE_SPRITE_KEY,
+  MISSILE_SPRITE_KEY,
+  OIL_SPRITE_KEY,
+  SCENE_KEY,
+  TURBO_SPRITE_KEY,
+} from './sceneKeys.ts';
 
 export interface GarageSceneData {
   readonly manifest: CarSetManifest;
   readonly linesByTrack: Record<string, TrackLinesManifest>;
 }
 
-const PREVIEW_SCALE = 3;
+const PREVIEW_SCALE = 4.2;
+const PREVIEW_FRAME = 20;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const HUB_FOCUS = ['sell', 'buy', 'save', 'race'] as const;
+const PLAQUE = 0x1a120c;
+const PLAQUE_EDGE = 0xf4e6c4;
+const GOLD = '#ffd85c';
+const IVORY = '#f4f0e4';
+const MUTED = '#8a8376';
 
 type Mode = 'slots' | 'name' | 'hub';
 
 /**
- * Career hub: three save slots, buy/sell, cash-in points, race or exit.
+ * Career hub painted onto the garage floor: stats, car carousel, ranking,
+ * buy/sell. Mouse, Tab, arrows and Enter all drive the same actions.
  */
 export class GarageScene extends Phaser.Scene {
   private payload!: GarageSceneData;
@@ -61,14 +79,33 @@ export class GarageScene extends Phaser.Scene {
   private status = '';
 
   private art!: Phaser.GameObjects.Image;
-  private dim!: Phaser.GameObjects.Rectangle;
+  private titleBox!: Phaser.GameObjects.Rectangle;
   private titleText!: Phaser.GameObjects.Text;
-  private bankText!: Phaser.GameObjects.Text;
-  private hintText!: Phaser.GameObjects.Text;
-  private statusText!: Phaser.GameObjects.Text;
-  private sheetText!: Phaser.GameObjects.Text;
-  private optionTexts: Phaser.GameObjects.Text[] = [];
+  private arsenalBox!: Phaser.GameObjects.Rectangle;
+  private arsenalIcons: Phaser.GameObjects.Sprite[] = [];
+  private arsenalCounts: Phaser.GameObjects.Text[] = [];
+  private moneyBox!: Phaser.GameObjects.Rectangle;
+  private moneyText!: Phaser.GameObjects.Text;
+  private pointsBox!: Phaser.GameObjects.Rectangle;
+  private pointsText!: Phaser.GameObjects.Text;
+  private worldBox!: Phaser.GameObjects.Rectangle;
+  private worldText!: Phaser.GameObjects.Text;
+  private profileBox!: Phaser.GameObjects.Rectangle;
+  private profileText!: Phaser.GameObjects.Text;
+  private rankingBox!: Phaser.GameObjects.Rectangle;
+  private rankingText!: Phaser.GameObjects.Text;
   private preview!: Phaser.GameObjects.Sprite;
+  private arrowLeft!: Phaser.GameObjects.Text;
+  private arrowRight!: Phaser.GameObjects.Text;
+  private carNameText!: Phaser.GameObjects.Text;
+  private valueText!: Phaser.GameObjects.Text;
+  private btnSave!: Phaser.GameObjects.Text;
+  private btnSell!: Phaser.GameObjects.Text;
+  private btnBuy!: Phaser.GameObjects.Text;
+  private btnRace!: Phaser.GameObjects.Text;
+  private statusText!: Phaser.GameObjects.Text;
+  private hintText!: Phaser.GameObjects.Text;
+  private overlayTexts: Phaser.GameObjects.Text[] = [];
 
   constructor() {
     super(SCENE_KEY.GARAGE);
@@ -83,18 +120,68 @@ export class GarageScene extends Phaser.Scene {
 
   create(): void {
     this.art = this.add.image(0, 0, GARAGE_ART_KEY).setOrigin(0, 0);
-    this.dim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.28).setOrigin(0, 0);
-    this.titleText = this.add.text(0, 0, 'GARAGE', this.titleStyle()).setOrigin(0.5, 0.5);
-    this.bankText = this.add.text(0, 0, '', this.bankStyle()).setOrigin(0.5, 0.5);
-    this.hintText = this.add.text(0, 0, MENU_PROMPT_LIST, this.hintStyle()).setOrigin(0.5, 0.5);
+    this.titleBox = this.plaque(280, 44);
+    this.titleText = this.add.text(0, 0, '', this.titleStyle()).setOrigin(0.5, 0.5);
+    this.arsenalBox = this.plaque(300, 40);
+    this.arsenalIcons = [MISSILE_SPRITE_KEY, MINE_SPRITE_KEY, OIL_SPRITE_KEY, TURBO_SPRITE_KEY].map(key => {
+      const sprite = this.add.sprite(0, 0, key, 0).setVisible(this.textures.exists(key));
+      sprite.setDisplaySize(18, 18);
+      return sprite;
+    });
+    this.arsenalCounts = [0, 1, 2, 3].map(() => this.add.text(0, 0, '', this.smallStyle()).setOrigin(0, 0.5));
+    this.moneyBox = this.plaque(200, 48);
+    this.moneyText = this.add.text(0, 0, '', this.statStyle('#8bff9b')).setOrigin(0.5, 0.5);
+    this.pointsBox = this.plaque(200, 48);
+    this.pointsText = this.add.text(0, 0, '', this.statStyle(GOLD)).setOrigin(0.5, 0.5);
+    this.worldBox = this.plaque(200, 48);
+    this.worldText = this.add.text(0, 0, '', this.statStyle(IVORY)).setOrigin(0.5, 0.5);
+    this.profileBox = this.plaque(88, 88);
+    this.profileText = this.add.text(0, 0, '', this.profileStyle()).setOrigin(0.5, 0.5);
+    this.rankingBox = this.plaque(220, 220);
+    this.rankingText = this.add.text(0, 0, '', this.rankStyle()).setOrigin(0.5, 0);
+    this.preview = this.add.sprite(0, 0, this.previewCarId(), PREVIEW_FRAME).setScale(PREVIEW_SCALE);
+    this.arrowLeft = this.add.text(0, 0, '◀', this.arrowStyle()).setOrigin(0.5, 0.5);
+    this.arrowRight = this.add.text(0, 0, '▶', this.arrowStyle()).setOrigin(0.5, 0.5);
+    this.carNameText = this.add.text(0, 0, '', this.carTitleStyle()).setOrigin(0.5, 0.5);
+    this.valueText = this.add.text(0, 0, '', this.statStyle(GOLD)).setOrigin(0.5, 0.5);
+    this.btnSave = this.add.text(0, 0, 'SAVE AND QUIT', this.buttonStyle()).setOrigin(0.5, 0.5);
+    this.btnSell = this.add.text(0, 0, 'SELL CAR', this.buttonStyle()).setOrigin(0.5, 0.5);
+    this.btnBuy = this.add.text(0, 0, 'BUY CAR', this.buttonStyle()).setOrigin(0.5, 0.5);
+    this.btnRace = this.add.text(0, 0, 'GO RACING ROLL!', this.buttonStyle()).setOrigin(0.5, 0.5);
     this.statusText = this.add.text(0, 0, '', this.statusStyle()).setOrigin(0.5, 0.5);
-    this.sheetText = this.add.text(0, 0, '', this.sheetStyle()).setOrigin(0.5, 0);
-    this.preview = this.add.sprite(0, 0, this.previewCarId(), 0).setScale(PREVIEW_SCALE);
-    this.rebuildOptions();
+    this.hintText = this.add.text(0, 0, '', this.hintStyle()).setOrigin(0.5, 0.5);
+
+    this.wireClick(this.arrowLeft, () => this.nudgeShop(-1));
+    this.wireClick(this.arrowRight, () => this.nudgeShop(1));
+    this.wireClick(this.btnSell, () => this.handleHub('sell'));
+    this.wireClick(this.btnBuy, () => this.handleHub('buy'));
+    this.wireClick(this.btnSave, () => this.handleHub('save'));
+    this.wireClick(this.btnRace, () => this.handleHub('race'));
+    this.wireClick(this.pointsText, () => this.handleHub('cash'));
+    this.wireClick(this.preview, () => this.handleHub('equip'));
+
+    this.rebuildOverlay();
     this.refresh();
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
+  }
+
+  private plaque(width: number, height: number): Phaser.GameObjects.Rectangle {
+    return this.add
+      .rectangle(0, 0, width, height, PLAQUE, 0.72)
+      .setStrokeStyle(2, PLAQUE_EDGE, 0.85)
+      .setOrigin(0.5, 0.5);
+  }
+
+  private wireClick(target: Phaser.GameObjects.GameObject, action: () => void): void {
+    target.setInteractive({ useHandCursor: true });
+    target.on(Phaser.Input.Events.POINTER_DOWN, () => {
+      if (this.mode !== 'hub') {
+        return;
+      }
+      action();
+    });
   }
 
   private bindKeys(): void {
@@ -102,26 +189,57 @@ export class GarageScene extends Phaser.Scene {
     if (keyboard === null || keyboard === undefined) {
       return;
     }
-    const liveMenu = {
-      move: (delta: number) => this.menu.move(delta),
-      cycle: (delta: number) => this.menu.cycle(delta),
-      confirm: () => this.menu.confirm(),
-      cancel: () => this.menu.cancel(),
+    const add = (code: number, repeat: boolean, fn: () => void): void => {
+      keyboard.addKey(code, true, repeat).on('down', fn);
     };
-    bindMenuKeys(keyboard, liveMenu as unknown as MenuController, {
-      onResult: result => this.handleResult(result),
-      onMoved: () => this.refresh(),
-      onCycled: () => this.onCycled(),
+    add(Phaser.Input.Keyboard.KeyCodes.UP, true, () => this.moveFocus(-1));
+    add(Phaser.Input.Keyboard.KeyCodes.DOWN, true, () => this.moveFocus(1));
+    add(Phaser.Input.Keyboard.KeyCodes.LEFT, true, () => this.onLeftRight(-1));
+    add(Phaser.Input.Keyboard.KeyCodes.RIGHT, true, () => this.onLeftRight(1));
+    add(Phaser.Input.Keyboard.KeyCodes.ENTER, false, () => this.confirmFocus());
+    add(Phaser.Input.Keyboard.KeyCodes.SPACE, false, () => this.confirmFocus());
+    add(Phaser.Input.Keyboard.KeyCodes.ESC, false, () => this.back());
+    keyboard.on('keydown-TAB', (event: KeyboardEvent) => {
+      event.preventDefault();
+      this.moveFocus(event.shiftKey ? -1 : 1);
     });
+  }
+
+  private moveFocus(delta: number): void {
+    this.menu.move(delta);
+    this.refresh();
+  }
+
+  private onLeftRight(delta: number): void {
+    if (this.mode === 'hub') {
+      this.nudgeShop(delta);
+      return;
+    }
+    if (this.menu.cycle(delta)) {
+      this.onCycled();
+    }
+  }
+
+  private confirmFocus(): void {
+    this.handleResult(this.menu.confirm());
+  }
+
+  private nudgeShop(delta: number): void {
+    if (this.mode !== 'hub') {
+      return;
+    }
+    const shop = this.shopCars();
+    if (shop.length === 0) {
+      return;
+    }
+    this.shopIndex = (this.shopIndex + delta + shop.length) % shop.length;
+    this.refresh();
   }
 
   private onCycled(): void {
     if (this.mode === 'name') {
       const index = this.menu.valueIndex('letter');
       this.nameLetters[this.nameCursor] = LETTERS[index] ?? 'A';
-    }
-    if (this.mode === 'hub') {
-      this.shopIndex = this.menu.valueIndex('car');
     }
     this.refresh();
   }
@@ -149,9 +267,7 @@ export class GarageScene extends Phaser.Scene {
       }
       return;
     }
-    if (this.mode === 'hub') {
-      this.handleHub(result.id);
-    }
+    this.handleHub(result.id);
   }
 
   private pickSlot(index: number): void {
@@ -163,8 +279,9 @@ export class GarageScene extends Phaser.Scene {
       this.nameLetters = ['A', 'A', 'A', 'A', 'A'];
       this.nameCursor = 0;
       this.buildNameMenu();
-      this.rebuildOptions();
+      this.rebuildOverlay();
       this.refresh();
+      this.layout();
       return;
     }
     this.enterHub();
@@ -184,19 +301,31 @@ export class GarageScene extends Phaser.Scene {
   private enterHub(): void {
     this.mode = 'hub';
     this.status = '';
+    const career = loadActiveCareer();
+    const shop = this.shopCars();
+    const equipped = career?.equippedCarId ?? '';
+    const equippedIndex = shop.indexOf(equipped);
+    this.shopIndex = equippedIndex >= 0 ? equippedIndex : 0;
     this.buildHubMenu();
-    this.rebuildOptions();
+    this.rebuildOverlay();
     this.refresh();
+    this.layout();
   }
 
   private handleHub(id: string): void {
+    if (this.mode !== 'hub') {
+      return;
+    }
     const career = loadActiveCareer();
     if (career === null) {
       return;
     }
-    const shop = this.shopCars();
-    const carId = shop[this.shopIndex] ?? career.equippedCarId;
+    const carId = this.previewCarId();
     if (id === 'buy') {
+      if (career.ownedCarIds.includes(carId)) {
+        this.handleHub('equip');
+        return;
+      }
       this.tryBuy(carId);
       return;
     }
@@ -206,16 +335,16 @@ export class GarageScene extends Phaser.Scene {
       } else {
         this.status = `SOLD ${this.carName(carId)}`;
       }
-      this.reloadHub();
+      this.refresh();
       return;
     }
     if (id === 'equip') {
       if (equipCar(carId) === null) {
-        this.status = 'NOT OWNED';
+        this.status = career.ownedCarIds.includes(carId) ? 'EQUIPPED' : 'NOT OWNED';
       } else {
         this.status = `EQUIPPED ${this.carName(carId)}`;
       }
-      this.reloadHub();
+      this.refresh();
       return;
     }
     if (id === 'cash') {
@@ -224,24 +353,19 @@ export class GarageScene extends Phaser.Scene {
       } else {
         this.status = 'POINTS CASHED';
       }
-      this.reloadHub();
+      this.refresh();
       return;
     }
     if (id === 'save') {
       saveNow(career.equippedCarId);
-      this.status = 'SAVED';
-      this.refresh();
-      return;
-    }
-    if (id === 'race') {
-      this.goRace();
-      return;
-    }
-    if (id === 'exit') {
       this.scene.start(SCENE_KEY.SPLASH, {
         manifest: this.payload.manifest,
         linesByTrack: this.payload.linesByTrack,
       });
+      return;
+    }
+    if (id === 'race') {
+      this.goRace();
     }
   }
 
@@ -271,12 +395,6 @@ export class GarageScene extends Phaser.Scene {
       this.fadeToWorlds();
       return;
     }
-    this.reloadHub();
-  }
-
-  private reloadHub(): void {
-    this.buildHubMenu();
-    this.rebuildOptions();
     this.refresh();
   }
 
@@ -305,8 +423,9 @@ export class GarageScene extends Phaser.Scene {
       this.mode = 'slots';
       this.status = '';
       this.buildSlotMenu();
-      this.rebuildOptions();
+      this.rebuildOverlay();
       this.refresh();
+      this.layout();
       return;
     }
     this.scene.start(SCENE_KEY.SPLASH, {
@@ -338,36 +457,17 @@ export class GarageScene extends Phaser.Scene {
         },
         { id: 'confirm', kind: MENU_KIND.ACTION, label: 'CONFIRM NAME' },
       ],
-      {
-        onPreview: () => this.onCycled(),
-      },
+      { onPreview: () => this.onCycled() },
     );
   }
 
   private buildHubMenu(): void {
-    const shop = this.shopCars();
-    this.shopIndex = Math.min(this.shopIndex, Math.max(0, shop.length - 1));
     this.menu = new MenuController(
-      [
-        {
-          id: 'car',
-          kind: MENU_KIND.OPTION,
-          label: 'CAR',
-          values: shop.map(id => this.carLabel(id)),
-          valueIndex: this.shopIndex,
-        },
-        { id: 'buy', kind: MENU_KIND.ACTION, label: 'BUY' },
-        { id: 'sell', kind: MENU_KIND.ACTION, label: 'SELL' },
-        { id: 'equip', kind: MENU_KIND.ACTION, label: 'EQUIP' },
-        { id: 'cash', kind: MENU_KIND.ACTION, label: 'CASH IN PTS' },
-        { id: 'save', kind: MENU_KIND.ACTION, label: 'SAVE' },
-        { id: 'race', kind: MENU_KIND.ACTION, label: 'RACE' },
-        { id: 'exit', kind: MENU_KIND.ACTION, label: 'EXIT' },
-      ],
-      {
-        selectedIndex: 0,
-        onPreview: () => this.onCycled(),
-      },
+      HUB_FOCUS.map(id => ({
+        id,
+        kind: MENU_KIND.ACTION,
+        label: id.toUpperCase(),
+      })),
     );
   }
 
@@ -397,16 +497,6 @@ export class GarageScene extends Phaser.Scene {
     return `SLOT ${index + 1}  ·  ${slot.name}  ${formatCash(career.cash)}`;
   }
 
-  private carLabel(carId: string): string {
-    const career = loadActiveCareer();
-    const owned = career?.ownedCarIds.includes(carId) === true;
-    const won = loadWonTracks();
-    const cleared = loadCleared();
-    const unlocked = isCarUnlocked(carId, highestUnlockedPlanetIndex(won, isTourModeOn()), cleared.length);
-    const tag = owned ? 'OWNED' : unlocked ? formatCash(listPrice(carId)) : 'LOCKED';
-    return `${this.carName(carId)}  ${tag}`;
-  }
-
   private carName(carId: string): string {
     try {
       return findCarSheet(this.payload.manifest, carId).displayName.toUpperCase();
@@ -423,53 +513,164 @@ export class GarageScene extends Phaser.Scene {
     return career?.equippedCarId || 'car-1';
   }
 
-  private rebuildOptions(): void {
-    this.optionTexts.forEach(text => text.destroy());
-    this.optionTexts = this.menu.views().map(view =>
-      this.add.text(0, 0, view.text, this.optionStyle()).setOrigin(0.5, 0.5),
-    );
+  private rebuildOverlay(): void {
+    this.overlayTexts.forEach(text => text.destroy());
+    this.overlayTexts = [];
+    if (this.mode === 'hub') {
+      return;
+    }
+    this.overlayTexts = this.menu.views().map((view, index) => {
+      const text = this.add.text(0, 0, view.text, this.buttonStyle()).setOrigin(0.5, 0.5);
+      text.setInteractive({ useHandCursor: true });
+      text.on(Phaser.Input.Events.POINTER_DOWN, () => {
+        if (this.mode === 'slots') {
+          this.pickSlot(index);
+          return;
+        }
+        if (view.id === 'letter') {
+          this.nameCursor = (this.nameCursor + 1) % PLAYER_NAME_LENGTH;
+          this.refresh();
+          return;
+        }
+        this.confirmName();
+      });
+      return text;
+    });
   }
 
   private refresh(): void {
+    const hub = this.mode === 'hub';
+    this.setHubVisible(hub);
     const career = loadActiveCareer();
     const name = loadActiveName();
+
     if (this.mode === 'slots') {
       this.titleText.setText('SELECT SAVE');
-      this.bankText.setText(occupiedNames().length === 0 ? '3 SLOTS' : occupiedNames().join('  ·  '));
-      this.hintText.setText(MENU_PROMPT_LIST);
+      this.hintText.setText('CLICK A SLOT     TAB / ↑↓     ENTER');
     } else if (this.mode === 'name') {
-      this.titleText.setText('Type your Name and Buy your Car!');
+      this.titleText.setText('TYPE YOUR NAME AND BUY YOUR CAR!');
       const shown = this.nameLetters
         .map((letter, index) => (index === this.nameCursor ? `[${letter}]` : letter))
         .join(' ');
-      this.bankText.setText(shown);
-      this.hintText.setText('←→ LETTER     ENTER NEXT / CONFIRM');
+      this.hintText.setText(`${shown}     ←→ LETTER     ENTER NEXT / CONFIRM`);
     } else {
-      this.titleText.setText(name || 'GARAGE');
+      this.titleText.setText(`${name || 'PILOT'}'S GARAGE`);
+      this.moneyText.setText(`$  ${formatCash(career?.cash ?? 0)}`);
       const deal = cashInValue(career?.points ?? 0);
-      this.bankText.setText(
-        `BANK ${formatCash(career?.cash ?? 0)}   PTS ${career?.points ?? 0}   CASH-IN x${deal.batches}`,
+      this.pointsText.setText(
+        deal.batches > 0
+          ? `PTS  ${career?.points ?? 0}   CASH ×${deal.batches}`
+          : `PTS  ${career?.points ?? 0}`,
       );
+      this.worldText.setText(this.worldLine(career?.lastPlanetId));
+      this.profileText.setText((name || '?').slice(0, 1));
+      this.rankingText.setText(this.rankingBlock(name));
       const carId = this.previewCarId();
-      const extra = career?.ownedCarIds.includes(carId)
-        ? `SELL ${formatCash(sellPrice(carId))}`
-        : `BUY ${formatCash(listPrice(carId))}`;
-      this.hintText.setText(`${MENU_PROMPT_LIST}     ${extra}`);
+      const owned = career?.ownedCarIds.includes(carId) === true;
+      const unlocked = this.carUnlocked(carId);
+      this.carNameText.setText(this.carName(carId));
+      this.valueText.setText(
+        owned ? `OWNED  ·  SELL ${formatCash(sellPrice(carId))}` : unlocked ? formatCash(listPrice(carId)) : 'LOCKED',
+      );
+      this.btnBuy.setText(owned ? 'EQUIP CAR' : 'BUY CAR');
+      this.paintArsenal(carId);
+      this.hintText.setText('CLICK OR TAB  ·  ←→ CARS  ·  ENTER');
+      if (this.textures.exists(carId)) {
+        this.preview.setTexture(carId, PREVIEW_FRAME).setVisible(true);
+      }
+      this.paintFocus();
     }
+
     this.statusText.setText(this.status);
-    this.sheetText.setText(this.mode === 'hub' ? this.sheetBlock() : '');
-    this.sheetText.setVisible(this.mode === 'hub');
-    if (this.textures.exists(this.previewCarId())) {
-      this.preview.setTexture(this.previewCarId(), 0).setVisible(true);
-    }
     this.menu.views().forEach((view, index) => {
-      const text = this.optionTexts[index];
+      const text = this.overlayTexts[index];
       if (text === undefined) {
         return;
       }
-      text.setColor(view.selected ? '#ffd85c' : '#d8dae2');
+      text.setColor(view.selected ? GOLD : IVORY);
       text.setText(view.text);
     });
+  }
+
+  private setHubVisible(hub: boolean): void {
+    const nodes: Phaser.GameObjects.GameObject[] = [
+      this.arsenalBox,
+      this.moneyBox,
+      this.moneyText,
+      this.pointsBox,
+      this.pointsText,
+      this.worldBox,
+      this.worldText,
+      this.profileBox,
+      this.profileText,
+      this.rankingBox,
+      this.rankingText,
+      this.preview,
+      this.arrowLeft,
+      this.arrowRight,
+      this.carNameText,
+      this.valueText,
+      this.btnSave,
+      this.btnSell,
+      this.btnBuy,
+      this.btnRace,
+      ...this.arsenalIcons,
+      ...this.arsenalCounts,
+    ];
+    nodes.forEach(node => {
+      (node as unknown as { setVisible: (value: boolean) => void }).setVisible(hub);
+    });
+  }
+
+  private paintFocus(): void {
+    const focus = this.menu.selectedId;
+    this.btnSell.setColor(focus === 'sell' ? GOLD : IVORY);
+    this.btnBuy.setColor(focus === 'buy' ? GOLD : IVORY);
+    this.btnSave.setColor(focus === 'save' ? GOLD : IVORY);
+    this.btnRace.setColor(focus === 'race' ? GOLD : IVORY);
+    this.arrowLeft.setColor(IVORY);
+    this.arrowRight.setColor(IVORY);
+  }
+
+  private paintArsenal(carId: string): void {
+    try {
+      const sheet = findCarSheet(this.payload.manifest, carId);
+      const missiles = missileCapacity(sheet.stats, perkProfile(sheet.perk));
+      const counts = [missiles, MINE_START_COUNT, OIL_START_COUNT, TURBO_START_COUNT];
+      this.arsenalCounts.forEach((text, index) => text.setText(String(counts[index] ?? 0)));
+    } catch {
+      this.arsenalCounts.forEach(text => text.setText(''));
+    }
+  }
+
+  private carUnlocked(carId: string): boolean {
+    return isCarUnlocked(carId, highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn()), loadCleared().length);
+  }
+
+  private worldLine(planetId: string | undefined): string {
+    const planet = PLANETS.find(entry => entry.id === planetId) ?? PLANETS[0];
+    if (planet === undefined) {
+      return 'WORLD  1';
+    }
+    return `W${planet.index}  ${planet.displayName.toUpperCase()}`;
+  }
+
+  private rankingBlock(playerName: string): string {
+    const career = loadActiveCareer();
+    const rows: { name: string; points: number }[] = [];
+    if (career !== null) {
+      career.rivalNames.forEach((name, index) => {
+        rows.push({ name, points: career.rivalPoints[index] ?? 0 });
+      });
+      rows.push({ name: playerName || 'YOU', points: career.points });
+    }
+    const ranked = rows.sort((a, b) => b.points - a.points).slice(0, 10);
+    const lines = ['RANKING'];
+    ranked.forEach((row, index) => {
+      const marker = row.name === playerName ? '>' : ' ';
+      lines.push(`${marker}${String(index + 1).padStart(2)} ${row.name.padEnd(8)} ${String(row.points).padStart(4)}`);
+    });
+    return lines.join('\n');
   }
 
   private layout(): void {
@@ -482,73 +683,94 @@ export class GarageScene extends Phaser.Scene {
     } else {
       this.art.setVisible(false);
     }
-    this.dim.setSize(width, height);
-    this.titleText.setPosition(width / 2, height * 0.08);
-    this.bankText.setPosition(width / 2, height * 0.14);
-    this.preview.setPosition(width / 2, height * 0.42);
-    this.optionTexts.forEach((text, index) => {
-      text.setPosition(width / 2, height * (0.58 + index * 0.04));
+
+    const left = width * 0.16;
+    const right = width * 0.84;
+    const floorY = height * 0.5;
+    this.titleBox.setPosition(width / 2, height * 0.07).setSize(Math.min(420, width * 0.42), 44);
+    this.titleText.setPosition(width / 2, height * 0.07);
+    this.arsenalBox.setPosition(width / 2, height * 0.145).setSize(320, 40);
+    this.arsenalIcons.forEach((icon, index) => {
+      const x = width / 2 - 130 + index * 76;
+      icon.setPosition(x, height * 0.145);
+      this.arsenalCounts[index]?.setPosition(x + 14, height * 0.145);
     });
-    this.sheetText.setPosition(width * 0.82, height * 0.2);
-    this.statusText.setPosition(width / 2, height * 0.9);
+
+    this.moneyBox.setPosition(left, height * 0.26);
+    this.moneyText.setPosition(left, height * 0.26);
+    this.pointsBox.setPosition(left, height * 0.36);
+    this.pointsText.setPosition(left, height * 0.36);
+    this.worldBox.setPosition(left, height * 0.46);
+    this.worldText.setPosition(left, height * 0.46);
+
+    this.profileBox.setPosition(right, height * 0.2);
+    this.profileText.setPosition(right, height * 0.2);
+    this.rankingBox.setPosition(right, height * 0.5).setSize(240, height * 0.36);
+    this.rankingText.setPosition(right, height * 0.33);
+
+    this.preview.setPosition(width / 2, floorY);
+    this.arrowLeft.setPosition(width * 0.34, floorY);
+    this.arrowRight.setPosition(width * 0.66, floorY);
+    this.carNameText.setPosition(width / 2, height * 0.64);
+    this.valueText.setPosition(width / 2, height * 0.69);
+
+    this.btnSave.setPosition(width * 0.16, height * 0.88);
+    this.btnSell.setPosition(width * 0.42, height * 0.88);
+    this.btnBuy.setPosition(width * 0.58, height * 0.88);
+    this.btnRace.setPosition(width * 0.84, height * 0.88);
+    this.statusText.setPosition(width / 2, height * 0.8);
     this.hintText.setPosition(width / 2, height * 0.95);
+
+    this.overlayTexts.forEach((text, index) => {
+      text.setPosition(width / 2, height * (0.42 + index * 0.07));
+    });
   }
 
   private titleStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return { fontFamily: 'monospace', fontSize: '28px', color: '#ffffff', stroke: '#1a0e05', strokeThickness: 7 };
+    return { fontFamily: 'monospace', fontSize: '26px', color: IVORY, stroke: '#1a0e05', strokeThickness: 6 };
   }
 
-  private bankStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return { fontFamily: 'monospace', fontSize: '18px', color: '#8bff9b', stroke: '#101014', strokeThickness: 4 };
+  private statStyle(color: string): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '16px', color, stroke: '#101014', strokeThickness: 4 };
   }
 
-  private optionStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return { fontFamily: 'monospace', fontSize: '16px', color: '#d8dae2', stroke: '#101014', strokeThickness: 4 };
+  private smallStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '14px', color: IVORY, stroke: '#101014', strokeThickness: 3 };
   }
 
-  private hintStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return { fontFamily: 'monospace', fontSize: '13px', color: '#ffffff', stroke: '#1a0e05', strokeThickness: 4 };
+  private profileStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '40px', color: GOLD, stroke: '#1a0e05', strokeThickness: 6 };
   }
 
-  private sheetStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+  private rankStyle(): Phaser.Types.GameObjects.Text.TextStyle {
     return {
       fontFamily: 'monospace',
       fontSize: '13px',
-      color: '#d8dae2',
+      color: IVORY,
       align: 'left',
       stroke: '#101014',
       strokeThickness: 3,
     };
   }
 
-  private sheetBlock(): string {
-    const career = loadActiveCareer();
-    const save = loadSave().slots[activeSlotSafe()];
-    if (career === null || save === null || save === undefined) {
-      return '';
-    }
-    const lines = ['TRACK     PTS    BEST'];
-    for (const track of campaignTracks()) {
-      const points = career.trackPoints[track.id];
-      const lap = save.bestLaps[track.id];
-      if (points === undefined && lap === undefined) {
-        continue;
-      }
-      const lapText = lap !== undefined ? lap.toFixed(2) : '—';
-      lines.push(
-        `W${track.planet.index}-${track.n}  ${String(points ?? 0).padStart(4)}  ${lapText}`,
-      );
-    }
-    if (lines.length === 1) {
-      return 'NO LAPS YET';
-    }
-    const header = lines[0]!;
-    const rows = lines.slice(1).slice(-8);
-    return [header, ...rows].join('\n');
+  private carTitleStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '22px', color: IVORY, stroke: '#1a0e05', strokeThickness: 6 };
+  }
+
+  private arrowStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '42px', color: IVORY, stroke: '#1a0e05', strokeThickness: 6 };
+  }
+
+  private buttonStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '16px', color: IVORY, stroke: '#1a0e05', strokeThickness: 5 };
+  }
+
+  private hintStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '12px', color: MUTED, stroke: '#101014', strokeThickness: 3 };
   }
 
   private statusStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return { fontFamily: 'monospace', fontSize: '16px', color: '#ffd85c', stroke: '#101014', strokeThickness: 4 };
+    return { fontFamily: 'monospace', fontSize: '16px', color: GOLD, stroke: '#101014', strokeThickness: 4 };
   }
 }
 
