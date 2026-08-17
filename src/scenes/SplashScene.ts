@@ -7,6 +7,7 @@ import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { enableTourMode, feedTourCode, isTourModeOn } from '../adapters/progress/TourMode.ts';
 import { SCENE_KEY, SPLASH_ART_KEY } from './sceneKeys.ts';
+import { SplashAttractShow } from './SplashAttractShow.ts';
 
 const BLINK_PERIOD_SECONDS = 1.2;
 const PROMPT_TEXT = 'press space bar to start';
@@ -17,8 +18,8 @@ interface SplashSceneData {
 }
 
 /**
- * Attract screen. The void in the middle stays empty for future art.
- * Space plays the guitar solo and opens the garage.
+ * Attract screen. After 7s the void plays the four family cards, then
+ * they settle in the corners. Space plays the guitar solo and opens the garage.
  */
 export class SplashScene extends Phaser.Scene {
   private manifest!: CarSetManifest;
@@ -27,6 +28,7 @@ export class SplashScene extends Phaser.Scene {
   private art!: Phaser.GameObjects.Image;
   private promptText!: Phaser.GameObjects.Text;
   private tourText!: Phaser.GameObjects.Text;
+  private attract!: SplashAttractShow;
 
   private readonly blink = new BlinkClock(BLINK_PERIOD_SECONDS);
   private audio!: TitleAudio;
@@ -52,14 +54,21 @@ export class SplashScene extends Phaser.Scene {
       .setVisible(isTourModeOn());
 
     this.audio = new TitleAudio();
+    this.attract = new SplashAttractShow(this);
     this.layout();
+    this.attract.start();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.audio.destroy());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.attract.destroy();
+      this.audio.destroy();
+    });
   }
 
   update(_time: number, deltaMilliseconds: number): void {
-    this.blink.advance(deltaMilliseconds / 1000);
+    const deltaSeconds = deltaMilliseconds / 1000;
+    this.blink.advance(deltaSeconds);
+    this.attract.update(deltaSeconds);
     this.promptText.setVisible(this.leaving ? false : this.blink.isOn);
   }
 
@@ -84,8 +93,9 @@ export class SplashScene extends Phaser.Scene {
     this.art.setPosition(art.x, art.y).setDisplaySize(art.width, art.height);
     const region = voidRect(viewport, image);
     const prompt = promptAnchor(viewport, image);
-    this.promptText.setPosition(prompt.x, prompt.y);
-    this.tourText.setPosition(prompt.x, prompt.y + region.height * 0.18);
+    this.promptText.setPosition(prompt.x, prompt.y).setDepth(8);
+    this.tourText.setPosition(prompt.x, prompt.y + region.height * 0.18).setDepth(8);
+    this.attract?.layout(viewport, image);
   }
 
   private considerTourCode(key: string): void {
@@ -106,6 +116,7 @@ export class SplashScene extends Phaser.Scene {
       return;
     }
     this.leaving = true;
+    this.attract.destroy();
     this.audio.destroy();
     const wait = playGuitarSolo();
     const delay = Math.max(0, wait) * 1000;

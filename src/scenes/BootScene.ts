@@ -6,6 +6,7 @@ import { parseTrackLinesManifest } from '../data/tracks/TrackLines.ts';
 import { TRACKS } from '../data/tracks/registry.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
+import { SPLASH_CARDS, splashCardUrl } from '../data/cards/SplashCards.ts';
 import {
   CAR_ASSET_DIRECTORY,
   CAR_MANIFEST_KEY,
@@ -98,6 +99,9 @@ export class BootScene extends Phaser.Scene {
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
     this.load.image(GARAGE_ART_KEY, `${UI_ASSET_DIRECTORY}/${GARAGE_ART_FILE}`);
+    for (const card of SPLASH_CARDS) {
+      this.load.image(card.key, splashCardUrl(card));
+    }
 
     for (const theme of PLANET_THEMES) {
       this.load.image(theme.artKey, `${PLANET_ART_DIRECTORY}/${theme.artFile}`);

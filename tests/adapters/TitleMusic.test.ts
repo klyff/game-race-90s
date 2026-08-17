@@ -71,13 +71,19 @@ describe('TitleMusic composition', () => {
     expect(RIFF.length).toBe(BAR_COUNT);
   });
 
+  it('opens in A major, the sunny California home chord', () => {
+    expect(RIFF[0]?.note).toBe('A3');
+    expect(TITLE_SCORE.bpm).toBe(186);
+    expect(TITLE_SCORE.timbre.rhythmDrive).toBeLessThan(2);
+  });
+
   it('has TOTAL_STEPS equal to bars times steps-per-bar', () => {
     expect(TOTAL_STEPS).toBe(BAR_COUNT * STEPS_PER_BAR);
   });
 
-  it('converts beats to seconds using tempo (4 beats at 172 BPM)', () => {
-    const seconds = beatsToSeconds(4, 172);
-    expect(seconds).toBeCloseTo((4 * 60) / 172, 6);
+  it('converts beats to seconds using tempo (4 beats at 186 BPM)', () => {
+    const seconds = beatsToSeconds(4, 186);
+    expect(seconds).toBeCloseTo((4 * 60) / 186, 6);
   });
 
   it('marks the lick on every LICK_INTERVAL_BARS-th bar and no other', () => {

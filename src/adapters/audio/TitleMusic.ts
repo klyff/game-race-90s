@@ -2,81 +2,77 @@ import type { NoiseSource } from './NoiseSource.ts';
 import { MusicPlayer } from './MusicPlayer.ts';
 import type { ChordStep, DrumStep, LeadNote, MusicScore, StrumStep } from './MusicScore.ts';
 
-export const BPM = 172;
+export const BPM = 186;
 export const LICK_INTERVAL_BARS = 4;
 
 /**
- * 16-bar chord progression in E minor, two 8-bar halves.
- * Half 1: Em - Em - G - D - Em - C - D - D  (the "Em-Em-G-D" hook, twice).
- * Half 2: Em - Em - G - D - Em - C - A#(b5) - Em  — the last four bars swap
- * the plain D-D turnaround for a tritone (A#, the flatted fifth of E) before
- * resolving to Em, the metal "devil's interval" flourish, then straight back
- * into bar 1's Em so the loop seam is inaudible.
+ * 16-bar sunny California rock in A major / A mixolydian.
+ *
+ * Half 1: A - A - G - D - A - E - F#m - D  (I–I–bVII–IV, then I–V–vi–IV).
+ * Half 2: A - A - G - D - A - E - D - A   — the last four bars walk home
+ * so the loop seam lands on A and disappears.
+ *
+ * This replaced the E-minor punk/metal title riff: same 16-bar shape and
+ * the same MusicPlayer graph, but a brighter, more animated SoCal feel
+ * that matches the splash art (palms, explosion, Santa Monica energy).
  */
 export const RIFF: readonly ChordStep[] = [
-  { note: 'E3', beats: 4, accent: false },
-  { note: 'E3', beats: 4, accent: true },
+  { note: 'A3', beats: 4, accent: false },
+  { note: 'A3', beats: 4, accent: true },
   { note: 'G3', beats: 4, accent: false },
   { note: 'D3', beats: 4, accent: false },
-  { note: 'E3', beats: 4, accent: true },
-  { note: 'C3', beats: 4, accent: false },
-  { note: 'D3', beats: 4, accent: false },
-  { note: 'D3', beats: 4, accent: false },
+  { note: 'A3', beats: 4, accent: true },
   { note: 'E3', beats: 4, accent: false },
-  { note: 'E3', beats: 4, accent: true },
+  { note: 'F#3', beats: 4, accent: false },
+  { note: 'D3', beats: 4, accent: false },
+  { note: 'A3', beats: 4, accent: false },
+  { note: 'A3', beats: 4, accent: true },
   { note: 'G3', beats: 4, accent: false },
   { note: 'D3', beats: 4, accent: false },
-  { note: 'E3', beats: 4, accent: true },
-  { note: 'C3', beats: 4, accent: false },
-  { note: 'A#2', beats: 4, accent: true },
+  { note: 'A3', beats: 4, accent: true },
   { note: 'E3', beats: 4, accent: false },
+  { note: 'D3', beats: 4, accent: true },
+  { note: 'A3', beats: 4, accent: false },
 ];
 
 export const BAR_COUNT = RIFF.length;
 
 /**
- * One bar of eighth-note guitar strumming: accented stabs on beats 1 and 3,
- * palm-muted chugs everywhere else. Reused for every bar — the chord changes
- * (from `RIFF`), the strum feel does not, which is exactly how a punk/metal
- * rhythm guitarist plays a progression.
+ * Open, ringing strums on every downbeat — less palm-mute chug than the
+ * old metal riff, more California bounce.
  */
 export const GUITAR_STRUM_PATTERN: readonly StrumStep[] = [
   { beats: 0.5, accent: true },
   { beats: 0.5, accent: false },
-  { beats: 0.5, accent: false },
+  { beats: 0.5, accent: true },
   { beats: 0.5, accent: false },
   { beats: 0.5, accent: true },
   { beats: 0.5, accent: false },
-  { beats: 0.5, accent: false },
+  { beats: 0.5, accent: true },
   { beats: 0.5, accent: false },
 ];
 
-/** One bar of eighth-note drums: straight hats, snare on 2 and 4, a
- * syncopated kick that pushes ahead of the beat for drive. */
+/** Snare still on 2 and 4; extra kicks on the "and"s for a skate-punk push. */
 export const DRUM_PATTERN: readonly DrumStep[] = [
   { kick: true, snare: false, hat: true },
   { kick: false, snare: false, hat: true },
   { kick: false, snare: true, hat: true },
+  { kick: true, snare: false, hat: true },
+  { kick: true, snare: false, hat: true },
   { kick: false, snare: false, hat: true },
-  { kick: true, snare: false, hat: true },
-  { kick: true, snare: false, hat: true },
   { kick: false, snare: true, hat: true },
-  { kick: false, snare: false, hat: true },
+  { kick: true, snare: false, hat: true },
 ];
 
-/** A short E-minor-pentatonic descending lick that fills the back half of
- * every 4th bar (see `LICK_INTERVAL_BARS`) so the loop has a hook, not just a
- * repeating chug. */
+/** A-major pentatonic run that fills the back half of every 4th bar. */
 export const LEAD_LICK: readonly LeadNote[] = [
-  { eighthInBar: 4, note: 'E5', beats: 0.5 },
-  { eighthInBar: 5, note: 'D5', beats: 0.5 },
-  { eighthInBar: 6, note: 'B4', beats: 0.5 },
-  { eighthInBar: 7, note: 'G4', beats: 0.5 },
+  { eighthInBar: 4, note: 'A5', beats: 0.5 },
+  { eighthInBar: 5, note: 'C#5', beats: 0.5 },
+  { eighthInBar: 6, note: 'E5', beats: 0.5 },
+  { eighthInBar: 7, note: 'A5', beats: 0.5 },
 ];
 
-/** The title screen's theme: an 80s punk/metal riff. This is the score that
- * proved the `MusicPlayer` node graph and the pattern every world's theme in
- * `src/data/tracks/planetMusic.ts` follows. */
+/** The title screen's theme: sunny California rock. */
 export const TITLE_SCORE: MusicScore = {
   id: 'title',
   bpm: BPM,
@@ -86,17 +82,17 @@ export const TITLE_SCORE: MusicScore = {
   leadLick: LEAD_LICK,
   lickIntervalBars: LICK_INTERVAL_BARS,
   timbre: {
-    rhythmFilterHz: 3000,
-    rhythmFilterQ: 0.8,
-    rhythmDrive: 3,
-    bassFilterHz: 500,
-    bassFilterQ: 0.9,
-    leadWaveform: 'square',
+    rhythmFilterHz: 5200,
+    rhythmFilterQ: 0.55,
+    rhythmDrive: 1.5,
+    bassFilterHz: 620,
+    bassFilterQ: 0.7,
+    leadWaveform: 'triangle',
   },
 };
 
 /**
- * Looping 80s punk/metal title-screen instrumental. Exactly `MusicPlayer`
+ * Looping California title-screen instrumental. Exactly `MusicPlayer`
  * played with `TITLE_SCORE` — kept as its own tiny class only so
  * `TitleAudio.ts` can keep constructing a named type, per this project's
  * locked decision that every sound is procedural (decision 20).
