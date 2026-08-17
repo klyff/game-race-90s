@@ -3,8 +3,7 @@ import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { creditWallet, loadActiveCareer, loadPoints, recordProgress } from '../adapters/progress/ProgressStore.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
-import { planetForTrackId } from '../data/tracks/planets.ts';
-import { themeForPlanetId } from '../data/tracks/planetThemes.ts';
+import { pickPubBackground, PUB_BACKGROUNDS, pubBackgroundKey } from '../data/ui/PubBackgrounds.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
@@ -105,8 +104,8 @@ export class ResultsScene extends Phaser.Scene {
     this.balance = creditWallet(this.prize + this.hitBonus);
 
     this.art = this.add.image(0, 0, '').setOrigin(0, 0).setVisible(false);
-    this.dim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.62).setOrigin(0, 0);
-    this.applyPlanetArt();
+    this.dim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.22).setOrigin(0, 0);
+    this.applyPubArt();
 
     this.headerText = this.add.text(0, 0, 'WINNER IS', this.headerStyle()).setOrigin(0.5, 0.5);
     this.winnerText = this.add.text(0, 0, this.winnerName(), this.winnerStyle()).setOrigin(0.5, 0.5);
@@ -202,16 +201,13 @@ export class ResultsScene extends Phaser.Scene {
     return `${parts.join('  +  ')}   BANK ${formatCash(this.balance)}   TOTAL PTS ${loadPoints()}`;
   }
 
-  private applyPlanetArt(): void {
-    const planet = planetForTrackId(this.payload.trackId);
-    if (planet === undefined) {
+  private applyPubArt(): void {
+    const loaded = PUB_BACKGROUNDS.filter(pub => this.textures.exists(pubBackgroundKey(pub)));
+    const picked = pickPubBackground(loaded);
+    if (picked === undefined) {
       return;
     }
-    const theme = themeForPlanetId(planet.id);
-    if (!this.textures.exists(theme.artKey)) {
-      return;
-    }
-    this.art.setTexture(theme.artKey).setVisible(true);
+    this.art.setTexture(pubBackgroundKey(picked)).setVisible(true);
   }
 
   private bindKeys(): void {

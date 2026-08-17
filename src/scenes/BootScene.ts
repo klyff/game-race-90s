@@ -7,6 +7,7 @@ import { TRACKS } from '../data/tracks/registry.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
 import { SPLASH_CARDS, splashCardUrl } from '../data/cards/SplashCards.ts';
+import { PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/PubBackgrounds.ts';
 import {
   CAR_ASSET_DIRECTORY,
   CAR_MANIFEST_KEY,
@@ -58,6 +59,7 @@ export class BootScene extends Phaser.Scene {
       ...WEAPON_SPRITES.map(sprite => sprite.key),
       ...PLANET_THEMES.map(theme => theme.artKey),
       ...PLANET_THEMES.map(theme => theme.groundKey),
+      ...PUB_BACKGROUNDS.map(pub => pubBackgroundKey(pub)),
     ]);
     this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
       if (optionalKeys.has(file.key)) {
@@ -99,6 +101,9 @@ export class BootScene extends Phaser.Scene {
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
     this.load.image(GARAGE_ART_KEY, `${UI_ASSET_DIRECTORY}/${GARAGE_ART_FILE}`);
+    for (const pub of PUB_BACKGROUNDS) {
+      this.load.image(pubBackgroundKey(pub), pubBackgroundUrl(pub));
+    }
     for (const card of SPLASH_CARDS) {
       this.load.image(card.key, splashCardUrl(card));
     }
