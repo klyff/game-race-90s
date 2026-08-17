@@ -37,7 +37,11 @@ import { TrackSpline } from '../domain/track/TrackSpline.ts';
 import { CAR_CONDITION } from '../domain/vehicle/CarIntegrity.ts';
 import { missileCapacity } from '../domain/weapons/WeaponInventory.ts';
 import { HAZARD_KIND } from '../domain/weapons/Hazard.ts';
-import { CAR_LENGTH_PER_COLLISION_RADIUS } from '../domain/weapons/WeaponConstants.ts';
+import {
+  BURN_MARK_LIFETIME_LAPS,
+  CAR_LENGTH_PER_COLLISION_RADIUS,
+  OIL_LAP_REFERENCE_SPEED,
+} from '../domain/weapons/WeaponConstants.ts';
 import type { ResultsEntry, ResultsSceneData } from './ResultsScene.ts';
 import type { PauseSceneData } from './PauseScene.ts';
 import {
@@ -126,6 +130,8 @@ interface RaceSceneData {
 interface PendingExplosion {
   readonly position: Vec2;
   readonly intensity: number;
+  /** Car wrecks stamp a dark asphalt scorch; weapon puffs do not. */
+  readonly leaveBurnMark?: boolean;
 }
 
 /**
@@ -216,7 +222,10 @@ export class RaceScene extends Phaser.Scene {
       theme: themeForTrackId(this.track.id),
     });
     this.tyreMarks = new TyreMarks(this, this.projection);
-    this.explosions = new ExplosionEffect(this, this.projection);
+    this.explosions = new ExplosionEffect(this, this.projection, {
+      burnMarkLifetimeSeconds:
+        BURN_MARK_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED),
+    });
     this.chaseCamera = new ChaseCamera(this.cameras.main, this.projection);
     this.zoomPolicy = new CameraZoomPolicy({ zoomStep: CAMERA_ZOOM_STEP });
     this.driver = new KeyboardDriver(this.requireKeyboard());
@@ -402,6 +411,7 @@ export class RaceScene extends Phaser.Scene {
         this.pendingExplosions.push({
           position: racer.state.position,
           intensity: this.explosionIntensity(racer),
+          leaveBurnMark: true,
         });
       }
     }
@@ -533,7 +543,9 @@ export class RaceScene extends Phaser.Scene {
 
   private presentExplosions(): void {
     for (const explosion of this.pendingExplosions) {
-      this.explosions.burst(explosion.position, explosion.intensity);
+      this.explosions.burst(explosion.position, explosion.intensity, {
+        leaveBurnMark: explosion.leaveBurnMark === true,
+      });
       this.audio.playExplosion(explosion.intensity);
     }
     this.pendingExplosions = [];
@@ -724,7 +736,7 @@ export class RaceScene extends Phaser.Scene {
       condition: CAR_CONDITION.DESTROYED,
       respawnRemaining: DEBUG_RESPAWN_SECONDS,
     };
-    this.pendingExplosions.push({ position: player.state.position, intensity: 1 });
+    this.pendingExplosions.push({ position: player.state.position, intensity: 1, leaveBurnMark: true });
   }
 
   /** Puts the whole field back on the grid and restarts the countdown. */

@@ -61,11 +61,14 @@ beforeEach(() => {
 });
 
 describe('scaledWeaponDamage', () => {
-  it('halves catalog damage for everyone except the war tank (30% off)', () => {
-    expect(scaledWeaponDamage(0.5, undefined)).toBeCloseTo(0.25, 5);
-    expect(scaledWeaponDamage(0.5, 'arsenal')).toBeCloseTo(0.25, 5);
+  it('cuts catalog damage to 30% for everyone except the war tank cannon (70%)', () => {
+    expect(scaledWeaponDamage(0.5, undefined)).toBeCloseTo(0.15, 5);
+    expect(scaledWeaponDamage(0.5, 'arsenal')).toBeCloseTo(0.15, 5);
     expect(scaledWeaponDamage(0.5, 'war-tank')).toBeCloseTo(0.35, 5);
     expect(scaledWeaponDamage(1, 'war-tank')).toBeCloseTo(0.7, 5);
+    expect(scaledWeaponDamage(MINE_RAW_DAMAGE, 'war-tank')).toBeGreaterThan(
+      scaledWeaponDamage(MINE_RAW_DAMAGE, 'arsenal'),
+    );
   });
 });
 
@@ -245,7 +248,7 @@ describe('RaceField weapons', () => {
     rival.state = { ...rival.state, position: mine.position };
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
     const lost = before - rival.integrity.integrity;
-    const expected = scaledWeaponDamage(MINE_RAW_DAMAGE, rival.perk.id) * (1 - rival.stats.armor);
+    const expected = scaledWeaponDamage(MINE_RAW_DAMAGE, field.player.perk.id) * (1 - rival.stats.armor);
     expect(lost).toBeCloseTo(expected, 5);
     expect(rival.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
   });
@@ -284,7 +287,7 @@ describe('RaceField weapons', () => {
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
 
     const lost = before - rival.integrity.integrity;
-    const expected = scaledWeaponDamage(MISSILE_RAW_DAMAGE, rival.perk.id) * (1 - rival.stats.armor);
+    const expected = scaledWeaponDamage(MISSILE_RAW_DAMAGE, field.player.perk.id) * (1 - rival.stats.armor);
     expect(lost).toBeCloseTo(expected, 5);
     expect(field.playerWeaponHits.missiles).toBe(1);
   });

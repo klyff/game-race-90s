@@ -203,7 +203,7 @@ const DEFAULT_GRID_SETBACK_UNITS = 14;
  *  2. only THEN is car-to-car contact resolved, pair by pair;
  *  3. any car a contact moved is re-checked against the wall;
  *  4. damage is applied from the hardest contact of the step, then weapon hits
- *     and hazard overlaps resolve (oil ? yawSpin, mine ? destroy, missile ? 50%);
+ *     and hazard overlaps resolve (oil ? yawSpin, mine/missile ? scaled weapon damage);
  *  5. lap progress and standings advance last; a finish-line crossing refills ammo.
  *
  * Steps 1 and 2 must not interleave. Resolving contact inside the per-car loop
@@ -674,7 +674,7 @@ export class RaceField {
       const before = racer.integrity;
       racer.integrity = applyWeaponDamage(
         before,
-        scaledWeaponDamage(MISSILE_RAW_DAMAGE, racer.perk.id),
+        scaledWeaponDamage(MISSILE_RAW_DAMAGE, this.perkIdOf(hit.ownerCarId)),
         racer.stats,
       );
       if (
@@ -838,7 +838,7 @@ export class RaceField {
       const before = racer.integrity;
       racer.integrity = applyWeaponDamage(
         before,
-        scaledWeaponDamage(MINE_RAW_DAMAGE, racer.perk.id),
+        scaledWeaponDamage(MINE_RAW_DAMAGE, this.perkIdOf(hazard?.ownerCarId)),
         racer.stats,
       );
       if (
@@ -853,6 +853,14 @@ export class RaceField {
     if (consumed.size > 0) {
       this.hazards = this.hazards.filter(hazard => !consumed.has(hazard.id));
     }
+  }
+
+  /** Perk id of the car that fired or dropped, used for outgoing weapon scale. */
+  private perkIdOf(carId: string | undefined): string | undefined {
+    if (carId === undefined) {
+      return undefined;
+    }
+    return this.racers.find(racer => racer.carId === carId)?.perk.id;
   }
 
   /** Reads and clears the impact the presentation layer owes a sound. */

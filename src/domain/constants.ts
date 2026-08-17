@@ -116,7 +116,7 @@ export const CAR_PERK = {
 } as const;
 export type CarPerkId = (typeof CAR_PERK)[keyof typeof CAR_PERK];
 
-/** True when this perk id is the war tank (the only car with a milder weapon nerf). */
+/** True when this perk id is the war tank (the only car whose weapons skip the 30% scale). */
 export function isWarTankPerk(id: string | undefined): boolean {
   return id === CAR_PERK.WAR_TANK;
 }

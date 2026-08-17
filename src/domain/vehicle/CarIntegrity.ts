@@ -63,15 +63,15 @@ const IMPACT_DAMAGE_THRESHOLD = 6;
  *   rawDamage = max(0, (impactSpeed - IMPACT_DAMAGE_THRESHOLD)²) / IMPACT_DAMAGE_DENOMINATOR
  *   finalDamage = rawDamage * (1 - armor) * roleShare
  *
- * A full-speed 70 u/s head-on hit as a victim against armor 0.4 (marauder) deals ~90% integrity loss.
+ * A full-speed 70 u/s head-on hit as a victim against armor 0.4 (marauder) deals ~77% integrity loss.
  * This constant was tuned so that:
  * - A glancing 5 u/s scrape deals 0 damage (below threshold).
- * - A 70 u/s victim impact scales quadratically, leaving the car nearly destroyed.
- * - One genuine head-on crash is nearly lethal, enforcing that crashes matter.
+ * - A 70 u/s victim impact scales quadratically, leaving the car badly hurt.
+ * - A 78 u/s head-on is nearly lethal without always being an instant wreck.
  *
  * See `tests/domain/CarIntegrity.test.ts` for the arithmetic.
  */
-const IMPACT_DAMAGE_DENOMINATOR = 2731;
+const IMPACT_DAMAGE_DENOMINATOR = 3200;
 
 /**
  * Integrity threshold above which the car is HEALTHY, otherwise it's DAMAGED.

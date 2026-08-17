@@ -59,10 +59,10 @@ describe('CarIntegrity', () => {
     it('applies severe damage on a high-speed head-on wall hit (78 u/s)', () => {
       const car = createCarIntegrity();
       const damaged = applyImpactDamage(car, 78, carsByArmor['car-1']);
-      // Damage is catastrophic at 78 u/s: (78 - 6)² / 2731 * (1 - 0.4) ≈ 1.139
-      // This destroys the car.
-      expect(damaged.integrity).toBe(0);
-      expect(damaged.condition).toBe(CAR_CONDITION.DESTROYED);
+      // (78 - 6)² / 3200 * (1 - 0.4) = 5184 / 3200 * 0.6 = 0.972
+      // Leaves the car critical, not an automatic wreck.
+      expect(damaged.integrity).toBeCloseTo(0.028, 3);
+      expect(damaged.condition).toBe(CAR_CONDITION.CRITICAL);
     });
 
     it('scales damage monotonically with impact speed', () => {
@@ -85,10 +85,10 @@ describe('CarIntegrity', () => {
       const fragileBlade = applyImpactDamage(car, impact78, carsByArmor['car-7-turbo']);
 
       // Both should take damage, havac might survive better if not destroyed.
-      // havac: (78 - 6)² / 2731 * (1 - 0.6) = 5184 / 2731 * 0.4 ≈ 0.7591
-      // blade: (78 - 6)² / 2731 * (1 - 0.15) = 5184 / 2731 * 0.85 ≈ 1.6132
-      // havac: 1 - 0.7591 ≈ 0.2409
-      // blade: max(0, 1 - 1.6132) = 0 (destroyed)
+      // havac: (78 - 6)² / 3200 * (1 - 0.6) = 5184 / 3200 * 0.4 = 0.648
+      // blade: (78 - 6)² / 3200 * (1 - 0.15) = 5184 / 3200 * 0.85 = 1.377
+      // havac: 1 - 0.648 = 0.352
+      // blade: max(0, 1 - 1.377) = 0 (destroyed)
       expect(denseHavac.integrity).toBeGreaterThan(0);
       expect(fragileBlade.integrity).toBe(0);
       expect(denseHavac.integrity).toBeGreaterThan(fragileBlade.integrity);
@@ -226,7 +226,7 @@ describe('CarIntegrity', () => {
         expect(defaultResult.respawnRemaining).toBe(explicitResult.respawnRemaining);
       });
 
-      it('a single 70 u/s victim impact on armor 0.4 leaves integrity at or below 0.15', () => {
+      it('a single 70 u/s victim impact on armor 0.4 leaves the car badly hurt', () => {
         const car = createCarIntegrity();
         const damaged = applyImpactDamage(
           car,
@@ -235,10 +235,10 @@ describe('CarIntegrity', () => {
           DAMAGE_ROLE.VICTIM,
         );
 
-        // Expected: (70 - 6)² / 2731 * (1 - 0.4) = 4096 / 2731 * 0.6 ≈ 0.89956
-        // So integrity ≈ 0.10044
-        expect(damaged.integrity).toBeLessThanOrEqual(0.15);
-        expect(damaged.integrity).toBeCloseTo(0.10044, 3);
+        // Expected: (70 - 6)² / 3200 * (1 - 0.4) = 4096 / 3200 * 0.6 = 0.768
+        // So integrity = 0.232
+        expect(damaged.integrity).toBeLessThanOrEqual(0.25);
+        expect(damaged.integrity).toBeCloseTo(0.232, 3);
       });
 
       it('a scrape at 5 u/s costs exactly zero, at victim role', () => {
@@ -481,8 +481,8 @@ describe('CarIntegrity', () => {
         // Verify that repeated damage does accumulate and the condition degrades.
       }
 
-      // Each hit: (25 - 6)² / 2731 * (1 - 0.4) = 361 / 2731 * 0.6 ≈ 0.0793
-      // 40 hits ≈ 3.172 damage, but clamped, so car is destroyed
+      // Each hit: (25 - 6)² / 3200 * (1 - 0.4) = 361 / 3200 * 0.6 ≈ 0.0677
+      // 40 hits ≈ 2.71 damage, but clamped, so car is destroyed
       expect(car.condition).toBe(CAR_CONDITION.DESTROYED);
       expect(car.integrity).toBe(0);
     });
@@ -538,14 +538,14 @@ describe('CarIntegrity', () => {
 });
 
 describe('Damage arithmetic verification', () => {
-  it('documents the formula: 51 u/s head-on = ~45% damage at armor 0.4', () => {
+  it('documents the formula: 51 u/s head-on = ~38% damage at armor 0.4', () => {
     const car = createCarIntegrity();
     const damaged = applyImpactDamage(car, 51, carsByArmor['car-1']);
 
-    // Expected: (51 - 6)² / 2731 * (1 - 0.4) ≈ 0.45
-    // So integrity ≈ 0.55
-    expect(damaged.integrity).toBeCloseTo(0.55, 1);
-    expect(1 - damaged.integrity).toBeCloseTo(0.45, 1);
+    // Expected: (51 - 6)² / 3200 * (1 - 0.4) = 2025 / 3200 * 0.6 = 0.3797
+    // So integrity ≈ 0.620
+    expect(damaged.integrity).toBeCloseTo(0.62, 2);
+    expect(1 - damaged.integrity).toBeCloseTo(0.38, 2);
   });
 
   it('documents the formula: 5 u/s scrape = 0% damage', () => {
@@ -560,10 +560,10 @@ describe('Damage arithmetic verification', () => {
     const havacHit = applyImpactDamage(car, 51, carsByArmor['car-8-strong']);
     const bladeHit = applyImpactDamage(car, 51, carsByArmor['car-7-turbo']);
 
-    // havac: (51 - 6)² / 2731 * (1 - 0.6) = 2025 / 2731 * 0.4 ≈ 0.296
-    // blade: (51 - 6)² / 2731 * (1 - 0.15) = 2025 / 2731 * 0.85 ≈ 0.6308
-    expect(havacHit.integrity).toBeCloseTo(0.704, 2);
-    expect(bladeHit.integrity).toBeCloseTo(0.3692, 2);
+    // havac: (51 - 6)² / 3200 * (1 - 0.6) = 2025 / 3200 * 0.4 = 0.2531
+    // blade: (51 - 6)² / 3200 * (1 - 0.15) = 2025 / 3200 * 0.85 = 0.5379
+    expect(havacHit.integrity).toBeCloseTo(0.747, 2);
+    expect(bladeHit.integrity).toBeCloseTo(0.462, 2);
     expect(havacHit.integrity).toBeGreaterThan(bladeHit.integrity);
   });
 });

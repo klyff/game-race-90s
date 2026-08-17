@@ -6,82 +6,145 @@ import { ROAD_DEPTH } from './TrackRenderer.ts';
 
 /**
  * Short-lived visual explosion bursts drawn at a car's world position when
- * destroyed. Each burst is a three-layer effect:
+ * destroyed. Each burst is a four-layer effect:
  *   1. Ground shockwave: expanding ellipse (2:1 isometric ratio)
- *   2. Rising fireball: 5–8 lumpy overlapping circles drifting upward
- *   3. Debris/sparks: 12–18 particles thrown outward with arcing trajectories
+ *   2. Rising fireball: lumpy overlapping circles drifting upward
+ *   3. Sparks: small embers thrown outward with arcing trajectories
+ *   4. Metal debris: rotating steel shards that fly, bounce, and settle
  *
- * Like `TyreMarks`, this owns a `Phaser.GameObjects.Graphics` object and
- * redraws it every frame. All geometry is kept in world units and projected to
- * screen space via `IsoProjection`.
+ * Car wrecks also stamp a dark asphalt burn mark that lives for ~1.5 laps.
+ * Burn marks sit on their own graphics object under the burst so cars drive
+ * over the scorch rather than through it.
+ *
+ * Like `TyreMarks`, this owns `Phaser.GameObjects.Graphics` objects and
+ * redraws them every frame. All geometry is kept in world units and projected
+ * to screen space via `IsoProjection`.
  */
 
-/** Depth at which to draw explosions, above tyre marks. */
+/** Depth at which to draw explosions, above tyre marks and burn marks. */
 const EXPLOSION_DEPTH = ROAD_DEPTH + 2;
+
+/** Depth for asphalt scorch — above tyre marks, under cars and bursts. */
+const BURN_MARK_DEPTH = ROAD_DEPTH + 1.5;
 
 /** Cap on simultaneous live bursts to prevent unbounded memory growth. */
 const MAX_BURSTS = 32;
 
-/** Ground shockwave: expands from this radius in world units. */
-const SHOCKWAVE_MIN_RADIUS_UNITS = 0.5;
+/** Cap on live burn marks. A busy wreck-fest should not grow forever. */
+const MAX_BURN_MARKS = 40;
 
-/** Ground shockwave: maximum radius in world units. Peak ~10 units. */
-const SHOCKWAVE_MAX_RADIUS_UNITS = 10;
+/** Fallback burn-mark life when the caller does not pass a lap-derived time. */
+const DEFAULT_BURN_MARK_LIFETIME_SECONDS = 50;
+
+/** Ground shockwave: expands from this radius in world units. */
+const SHOCKWAVE_MIN_RADIUS_UNITS = 0.6;
+
+/** Ground shockwave: maximum radius in world units. */
+const SHOCKWAVE_MAX_RADIUS_UNITS = 12;
 
 /** Ground shockwave: lifetime in seconds. */
-const SHOCKWAVE_LIFETIME_SECONDS = 0.35;
+const SHOCKWAVE_LIFETIME_SECONDS = 0.4;
 
-/** Fireball: starting peak radius in world units. Grows to ~8–14 units. */
-const FIREBALL_START_RADIUS_UNITS = 2.0;
+/** Fireball: starting peak radius in world units. */
+const FIREBALL_START_RADIUS_UNITS = 2.2;
 
 /** Fireball: maximum peak radius in world units at intensity 1. */
-const FIREBALL_MAX_RADIUS_UNITS = 7.0;
+const FIREBALL_MAX_RADIUS_UNITS = 8.5;
 
 /** Fireball: base lifetime in seconds. */
-const FIREBALL_LIFETIME_SECONDS = 0.8;
+const FIREBALL_LIFETIME_SECONDS = 0.95;
 
 /** Fireball: how fast it drifts upward on screen, in world Y units per second. */
-const FIREBALL_DRIFT_SPEED_UNITS_PER_SEC = 4.0;
+const FIREBALL_DRIFT_SPEED_UNITS_PER_SEC = 4.4;
 
 /** Fireball: count of overlapping lumpy circles per burst. */
-const FIREBALL_LUMP_COUNT = 6;
+const FIREBALL_LUMP_COUNT = 8;
 
-/** Debris/sparks: starting size in world units. */
-const DEBRIS_MIN_SIZE_UNITS = 0.25;
+/** Sparks: starting size in world units. */
+const SPARK_MIN_SIZE_UNITS = 0.18;
 
-/** Debris/sparks: maximum size in world units. */
-const DEBRIS_MAX_SIZE_UNITS = 0.6;
+/** Sparks: maximum size in world units. */
+const SPARK_MAX_SIZE_UNITS = 0.45;
 
-/** Debris/sparks: outward speed in world units per second at intensity 1. */
-const MAX_DEBRIS_SPEED_UNITS_PER_SEC = 14;
+/** Sparks: outward speed in world units per second at intensity 1. */
+const MAX_SPARK_SPEED_UNITS_PER_SEC = 16;
 
-/** Debris/sparks: count per burst at intensity 1. Scaled by intensity. */
-const MAX_DEBRIS_PER_BURST = 18;
+/** Sparks: count per burst at intensity 1. */
+const MAX_SPARKS_PER_BURST = 16;
 
-/** Debris/sparks: downward screen acceleration to make them arc. */
-const DEBRIS_GRAVITY_UNITS_PER_SEC_SQ = 3.0;
+/** Sparks: downward acceleration to make them arc. */
+const SPARK_GRAVITY_UNITS_PER_SEC_SQ = 18;
 
-/** Debris/sparks: starting upward velocity in world units per second. */
-const DEBRIS_UPWARD_VELOCITY_UNITS_PER_SEC = 6.0;
+/** Sparks: starting upward velocity in world units per second. */
+const SPARK_UPWARD_VELOCITY_UNITS_PER_SEC = 10;
 
-/**
- * Base debris lifetime in seconds. Varies by particle with deterministic hash.
- */
-const DEBRIS_LIFETIME_BASE_SECONDS = 0.7;
+/** Sparks: base lifetime in seconds. */
+const SPARK_LIFETIME_BASE_SECONDS = 0.65;
+
+/** Metal shards: count per burst at intensity 1. */
+const MAX_SHARDS_PER_BURST = 12;
+
+/** Metal shards: outward speed in world units per second at intensity 1. */
+const MAX_SHARD_SPEED_UNITS_PER_SEC = 11;
+
+/** Metal shards: starting upward velocity in world units per second. */
+const SHARD_UPWARD_VELOCITY_UNITS_PER_SEC = 9;
+
+/** Metal shards: gravity pulling shards back to the asphalt. */
+const SHARD_GRAVITY_UNITS_PER_SEC_SQ = 22;
+
+/** Metal shards: bounce restitution when they hit the ground. */
+const SHARD_BOUNCE = 0.32;
+
+/** Metal shards: base lifetime in seconds. */
+const SHARD_LIFETIME_BASE_SECONDS = 1.35;
+
+/** How many irregular blotches make up one asphalt scorch. */
+const BURN_BLOTCH_COUNT = 7;
 
 /** Fireball colour gradient: hot white → orange → dark red → smoke grey. */
 const FIREBALL_COLORS: readonly number[] = [
-  0xfff3c4, // White-hot
-  0xffb028, // Bright orange
-  0xff6a1a, // Warm orange-red
-  0xb03a10, // Dark red-brown
-  0x4a4a52, // Smoke grey
+  0xfff3c4,
+  0xffb028,
+  0xff6a1a,
+  0xb03a10,
+  0x4a4a52,
 ];
 
-/** One debris particle: position, velocity, lifetime tracking, and lift acceleration. */
-interface Particle {
+/** Steel / gunmetal palette for flying wreckage. */
+const METAL_COLORS: readonly number[] = [
+  0xd0d4dc,
+  0x9aa0aa,
+  0x6e7380,
+  0x4a4e58,
+  0x8a7060,
+];
+
+/** Near-black asphalt scorch colours. */
+const BURN_COLORS: readonly number[] = [
+  0x0a0a0c,
+  0x161618,
+  0x1e1c1a,
+  0x2a2622,
+  0x121214,
+];
+
+export interface ExplosionEffectOptions {
+  /** How long a car-wreck burn mark stays on the road, seconds. */
+  readonly burnMarkLifetimeSeconds?: number;
+}
+
+export interface BurstOptions {
+  /** Stamp a dark asphalt scorch that outlives the fireball. Car wrecks only. */
+  readonly leaveBurnMark?: boolean;
+}
+
+/** One spark: world position, planar velocity, height arc, and colour fade. */
+interface Spark {
   positionWorld: Vec2;
   velocityWorldPerSec: Vec2;
+  height: number;
+  verticalVelocity: number;
   lifetimeSeconds: number;
   ageSeconds: number;
   size: number;
@@ -89,11 +152,45 @@ interface Particle {
   endColor: number;
 }
 
-/** One instantaneous burst: ground shockwave, fireball, and particles. */
+/** One metallic shard: rotates, arcs, and bounces on the asphalt. */
+interface MetalShard {
+  positionWorld: Vec2;
+  velocityWorldPerSec: Vec2;
+  height: number;
+  verticalVelocity: number;
+  rotationRadians: number;
+  spinRadiansPerSec: number;
+  length: number;
+  width: number;
+  color: number;
+  lifetimeSeconds: number;
+  ageSeconds: number;
+  kind: 'rect' | 'triangle';
+}
+
+/** One irregular blotch inside a burn mark. */
+interface BurnBlotch {
+  offsetWorld: Vec2;
+  radiusUnits: number;
+  color: number;
+  alpha: number;
+}
+
+/** Persistent asphalt scorch left by a car wreck. */
+interface BurnMark {
+  positionWorld: Vec2;
+  intensity: number;
+  blotches: BurnBlotch[];
+  ageSeconds: number;
+  lifetimeSeconds: number;
+}
+
+/** One instantaneous burst: shockwave, fireball, sparks, and metal. */
 interface Burst {
   positionWorld: Vec2;
   intensity: number;
-  particles: Particle[];
+  sparks: Spark[];
+  shards: MetalShard[];
   ageSeconds: number;
   burstId: number;
 }
@@ -102,20 +199,13 @@ interface Burst {
  * Deterministic seeded pseudo-random generator. Uses a simple sine-based hash
  * to produce values in [0, 1) from an integer seed. This replaces Math.random()
  * to preserve determinism during resume/playback.
- *
- * @param seed Integer seed value derived from burst and particle indices
- * @returns Pseudo-random value in [0, 1)
  */
 function seededRandom(seed: number): number {
-  // Sine-based hash: produces a repeatable float from an integer seed.
   const x = Math.sin(seed * 12.9898) * 43758.5453;
   return x - Math.floor(x);
 }
 
-/**
- * Linearly interpolates between two colours in RGB space, returning a hex value.
- * Both inputs and output are 24-bit hex colours (no alpha channel).
- */
+/** Linearly interpolates between two 24-bit hex colours. */
 function lerpColor(fromHex: number, toHex: number, t: number): number {
   const fromR = (fromHex >> 16) & 0xff;
   const fromG = (fromHex >> 8) & 0xff;
@@ -132,17 +222,12 @@ function lerpColor(fromHex: number, toHex: number, t: number): number {
   return (r << 16) | (g << 8) | b;
 }
 
-/**
- * Samples the fireball colour gradient at a given progress through life (0 to 1).
- * Returns the colour and alpha at that point, interpolating between colours.
- */
+/** Samples the fireball colour gradient at a given progress through life (0 to 1). */
 function sampleFireballColor(progress: number): { color: number; alpha: number } {
-  // Progress goes from 0 (hot white) to 1 (smoke grey).
   const clamped = Math.max(0, Math.min(1, progress));
   let before = FIREBALL_COLORS[0]!;
   let after = FIREBALL_COLORS[FIREBALL_COLORS.length - 1]!;
 
-  // Find the bracketing pair of colours.
   const segmentSize = 1 / (FIREBALL_COLORS.length - 1);
   const segment = Math.floor(clamped / segmentSize);
   if (segment < FIREBALL_COLORS.length - 1) {
@@ -150,34 +235,40 @@ function sampleFireballColor(progress: number): { color: number; alpha: number }
     after = FIREBALL_COLORS[segment + 1]!;
   }
 
-  // Interpolate within this colour segment.
   const t = segment >= 0 ? (clamped - segment * segmentSize) / segmentSize : 0;
   const color = lerpColor(before, after, t);
-
-  // Alpha: starts opaque, fades to transparent.
   const alpha = 1 - clamped * clamped;
 
   return { color, alpha };
 }
 
 export class ExplosionEffect {
-  private readonly graphics: Phaser.GameObjects.Graphics;
+  private readonly burstGraphics: Phaser.GameObjects.Graphics;
+  private readonly burnGraphics: Phaser.GameObjects.Graphics;
   private readonly projection: IsoProjection;
+  private readonly burnMarkLifetimeSeconds: number;
   private readonly bursts: Burst[] = [];
+  private readonly burnMarks: BurnMark[] = [];
   private nextBurstId: number = 0;
 
-  constructor(scene: Phaser.Scene, projection: IsoProjection) {
+  constructor(scene: Phaser.Scene, projection: IsoProjection, options: ExplosionEffectOptions = {}) {
     this.projection = projection;
-    this.graphics = scene.add.graphics();
-    this.graphics.setDepth(EXPLOSION_DEPTH);
+    this.burnMarkLifetimeSeconds = Number.isFinite(options.burnMarkLifetimeSeconds)
+      ? Math.max(1, options.burnMarkLifetimeSeconds!)
+      : DEFAULT_BURN_MARK_LIFETIME_SECONDS;
+
+    this.burnGraphics = scene.add.graphics();
+    this.burnGraphics.setDepth(BURN_MARK_DEPTH);
+
+    this.burstGraphics = scene.add.graphics();
+    this.burstGraphics.setDepth(EXPLOSION_DEPTH);
   }
 
   /**
    * Spawns one explosion at the given world position, scaled by intensity.
-   * Clamps non-finite intensity to [0, 1].
+   * Clamps non-finite intensity to [0, 1]. Car wrecks pass `leaveBurnMark`.
    */
-  burst(position: Vec2, intensity: number): void {
-    // Clamp intensity to [0, 1], treating non-finite as 0.
+  burst(position: Vec2, intensity: number, options: BurstOptions = {}): void {
     let clampedIntensity = intensity;
     if (!Number.isFinite(clampedIntensity)) {
       clampedIntensity = 0;
@@ -185,237 +276,360 @@ export class ExplosionEffect {
       clampedIntensity = Math.max(0, Math.min(1, clampedIntensity));
     }
 
-    // Evict the oldest burst if already at capacity.
     if (this.bursts.length >= MAX_BURSTS) {
       this.bursts.shift();
     }
 
-    // Spawn particles: count and speed scale with intensity.
-    const particleCount = Math.round(clampedIntensity * MAX_DEBRIS_PER_BURST);
-    const particles: Particle[] = [];
     const burstIdSeed = this.nextBurstId;
     this.nextBurstId += 1;
 
-    for (let i = 0; i < particleCount; i += 1) {
-      // Deterministic randomness seeded from burst ID and particle index.
+    const sparks = this.spawnSparks(position, clampedIntensity, burstIdSeed);
+    const shards = this.spawnShards(position, clampedIntensity, burstIdSeed);
+
+    this.bursts.push({
+      positionWorld: position,
+      intensity: clampedIntensity,
+      sparks,
+      shards,
+      ageSeconds: 0,
+      burstId: burstIdSeed,
+    });
+
+    if (options.leaveBurnMark) {
+      this.stampBurnMark(position, clampedIntensity, burstIdSeed);
+    }
+  }
+
+  /** Ages all bursts, shards, and burn marks; redraws everything still alive. */
+  update(deltaSeconds: number): void {
+    this.ageBursts(deltaSeconds);
+    this.ageBurnMarks(deltaSeconds);
+    this.redrawBurns();
+    this.redrawBursts();
+  }
+
+  /** Clears all live bursts, shards, and burn marks. */
+  clear(): void {
+    this.bursts.length = 0;
+    this.burnMarks.length = 0;
+    this.burstGraphics.clear();
+    this.burnGraphics.clear();
+  }
+
+  /** Destroys the graphics objects and all internal state. */
+  destroy(): void {
+    this.burstGraphics.destroy();
+    this.burnGraphics.destroy();
+  }
+
+  private spawnSparks(position: Vec2, intensity: number, burstIdSeed: number): Spark[] {
+    const count = Math.round(intensity * MAX_SPARKS_PER_BURST);
+    const sparks: Spark[] = [];
+
+    for (let i = 0; i < count; i += 1) {
       const baseSeed = burstIdSeed * 73856093 ^ (i * 19349663);
       const angleRand = seededRandom(baseSeed);
       const speedRand = seededRandom(baseSeed + 1);
       const lifeRand = seededRandom(baseSeed + 2);
       const sizeRand = seededRandom(baseSeed + 3);
+      const upRand = seededRandom(baseSeed + 4);
 
-      // Spread particles outward with deterministic jitter.
-      const angle = (i / Math.max(1, particleCount)) * 2 * Math.PI + angleRand * 0.4;
-      const speedVariance = 0.9 + speedRand * 0.2; // 0.9 to 1.1
-      const speed = clampedIntensity * MAX_DEBRIS_SPEED_UNITS_PER_SEC * speedVariance;
-
-      // Velocity is outward in world space.
+      const angle = (i / Math.max(1, count)) * 2 * Math.PI + angleRand * 0.45;
+      const speed = intensity * MAX_SPARK_SPEED_UNITS_PER_SEC * (0.85 + speedRand * 0.3);
       const direction = fromAngle(angle);
-      const velocityWorld = scale(direction, speed);
 
-      // Lifetime varies deterministically.
-      const lifetimeVariance = 0.8 + lifeRand * 0.4; // 0.8 to 1.2
-      const lifetime = DEBRIS_LIFETIME_BASE_SECONDS * lifetimeVariance;
-
-      // Size and colour vary deterministically.
-      const size = DEBRIS_MIN_SIZE_UNITS + sizeRand * (DEBRIS_MAX_SIZE_UNITS - DEBRIS_MIN_SIZE_UNITS);
-
-      particles.push({
+      sparks.push({
         positionWorld: position,
-        velocityWorldPerSec: velocityWorld,
-        lifetimeSeconds: lifetime,
+        velocityWorldPerSec: scale(direction, speed),
+        height: 0.2,
+        verticalVelocity: SPARK_UPWARD_VELOCITY_UNITS_PER_SEC * (0.7 + upRand * 0.6),
+        lifetimeSeconds: SPARK_LIFETIME_BASE_SECONDS * (0.75 + lifeRand * 0.5),
         ageSeconds: 0,
-        size,
-        startColor: 0xffffcc, // Bright yellow-white
-        endColor: 0x8b2a00,   // Dark ember red
+        size: SPARK_MIN_SIZE_UNITS + sizeRand * (SPARK_MAX_SIZE_UNITS - SPARK_MIN_SIZE_UNITS),
+        startColor: 0xffffcc,
+        endColor: 0x8b2a00,
       });
     }
 
-    this.bursts.push({
+    return sparks;
+  }
+
+  private spawnShards(position: Vec2, intensity: number, burstIdSeed: number): MetalShard[] {
+    const count = Math.round(intensity * MAX_SHARDS_PER_BURST);
+    const shards: MetalShard[] = [];
+
+    for (let i = 0; i < count; i += 1) {
+      const baseSeed = burstIdSeed * 83492791 ^ (i * 29765779);
+      const angleRand = seededRandom(baseSeed);
+      const speedRand = seededRandom(baseSeed + 1);
+      const lifeRand = seededRandom(baseSeed + 2);
+      const lengthRand = seededRandom(baseSeed + 3);
+      const widthRand = seededRandom(baseSeed + 4);
+      const spinRand = seededRandom(baseSeed + 5);
+      const upRand = seededRandom(baseSeed + 6);
+      const colorRand = seededRandom(baseSeed + 7);
+      const kindRand = seededRandom(baseSeed + 8);
+
+      const angle = (i / Math.max(1, count)) * 2 * Math.PI + angleRand * 0.55;
+      const speed = intensity * MAX_SHARD_SPEED_UNITS_PER_SEC * (0.7 + speedRand * 0.5);
+      const direction = fromAngle(angle);
+      const colorIndex = Math.min(METAL_COLORS.length - 1, Math.floor(colorRand * METAL_COLORS.length));
+
+      shards.push({
+        positionWorld: position,
+        velocityWorldPerSec: scale(direction, speed),
+        height: 0.35,
+        verticalVelocity: SHARD_UPWARD_VELOCITY_UNITS_PER_SEC * (0.65 + upRand * 0.7),
+        rotationRadians: angleRand * Math.PI * 2,
+        spinRadiansPerSec: (spinRand - 0.5) * 14,
+        length: 0.45 + lengthRand * 0.85,
+        width: 0.12 + widthRand * 0.28,
+        color: METAL_COLORS[colorIndex]!,
+        lifetimeSeconds: SHARD_LIFETIME_BASE_SECONDS * (0.85 + lifeRand * 0.4),
+        ageSeconds: 0,
+        kind: kindRand < 0.45 ? 'triangle' : 'rect',
+      });
+    }
+
+    return shards;
+  }
+
+  private stampBurnMark(position: Vec2, intensity: number, burstIdSeed: number): void {
+    if (this.burnMarks.length >= MAX_BURN_MARKS) {
+      this.burnMarks.shift();
+    }
+
+    const blotches: BurnBlotch[] = [];
+    const size = 1.6 + intensity * 2.4;
+
+    for (let i = 0; i < BURN_BLOTCH_COUNT; i += 1) {
+      const seed = burstIdSeed * 6271 ^ (i * 1543);
+      const ox = (seededRandom(seed) - 0.5) * size * 1.4;
+      const oy = (seededRandom(seed + 1) - 0.5) * size * 1.4;
+      const radius = size * (0.35 + seededRandom(seed + 2) * 0.7);
+      const colorIndex = Math.min(BURN_COLORS.length - 1, Math.floor(seededRandom(seed + 3) * BURN_COLORS.length));
+
+      blotches.push({
+        offsetWorld: { x: ox, y: oy },
+        radiusUnits: radius,
+        color: BURN_COLORS[colorIndex]!,
+        alpha: 0.42 + seededRandom(seed + 4) * 0.38,
+      });
+    }
+
+    this.burnMarks.push({
       positionWorld: position,
-      intensity: clampedIntensity,
-      particles,
+      intensity,
+      blotches,
       ageSeconds: 0,
-      burstId: burstIdSeed,
+      lifetimeSeconds: this.burnMarkLifetimeSeconds,
     });
   }
 
-  /** Ages all bursts and particles, removing dead ones; redraws all live effects. */
-  update(deltaSeconds: number): void {
-    // Age bursts and evict dead ones.
+  private ageBursts(deltaSeconds: number): void {
     let writeIndex = 0;
     for (let readIndex = 0; readIndex < this.bursts.length; readIndex += 1) {
       const burst = this.bursts[readIndex]!;
       burst.ageSeconds += deltaSeconds;
 
-      // Age particles within this burst and remove dead ones.
-      let particleWriteIndex = 0;
-      for (let pReadIndex = 0; pReadIndex < burst.particles.length; pReadIndex += 1) {
-        const particle = burst.particles[pReadIndex]!;
-        particle.ageSeconds += deltaSeconds;
-
-        if (particle.ageSeconds < particle.lifetimeSeconds) {
-          // Particle still alive: update position.
-          // Add upward velocity and apply downward acceleration.
-          const yVelocity = DEBRIS_UPWARD_VELOCITY_UNITS_PER_SEC - DEBRIS_GRAVITY_UNITS_PER_SEC_SQ * particle.ageSeconds;
-          const upwardDisplacement = { x: 0, y: yVelocity * deltaSeconds };
-
-          particle.positionWorld = add(
-            particle.positionWorld,
-            scale(particle.velocityWorldPerSec, deltaSeconds),
-          );
-          particle.positionWorld = add(particle.positionWorld, upwardDisplacement);
-
-          burst.particles[particleWriteIndex] = particle;
-          particleWriteIndex += 1;
+      let sparkWrite = 0;
+      for (let i = 0; i < burst.sparks.length; i += 1) {
+        const spark = burst.sparks[i]!;
+        spark.ageSeconds += deltaSeconds;
+        if (spark.ageSeconds >= spark.lifetimeSeconds) {
+          continue;
         }
+        spark.positionWorld = add(spark.positionWorld, scale(spark.velocityWorldPerSec, deltaSeconds));
+        spark.verticalVelocity -= SPARK_GRAVITY_UNITS_PER_SEC_SQ * deltaSeconds;
+        spark.height = Math.max(0, spark.height + spark.verticalVelocity * deltaSeconds);
+        burst.sparks[sparkWrite] = spark;
+        sparkWrite += 1;
       }
-      burst.particles.length = particleWriteIndex;
+      burst.sparks.length = sparkWrite;
 
-      // Burst is alive while shockwave or fireball is alive, or if particles remain.
+      let shardWrite = 0;
+      for (let i = 0; i < burst.shards.length; i += 1) {
+        const shard = burst.shards[i]!;
+        shard.ageSeconds += deltaSeconds;
+        if (shard.ageSeconds >= shard.lifetimeSeconds) {
+          continue;
+        }
+        shard.positionWorld = add(shard.positionWorld, scale(shard.velocityWorldPerSec, deltaSeconds));
+        shard.verticalVelocity -= SHARD_GRAVITY_UNITS_PER_SEC_SQ * deltaSeconds;
+        shard.height += shard.verticalVelocity * deltaSeconds;
+        shard.rotationRadians += shard.spinRadiansPerSec * deltaSeconds;
+        if (shard.height <= 0) {
+          shard.height = 0;
+          if (Math.abs(shard.verticalVelocity) > 1.2) {
+            shard.verticalVelocity *= -SHARD_BOUNCE;
+            shard.velocityWorldPerSec = scale(shard.velocityWorldPerSec, 0.55);
+            shard.spinRadiansPerSec *= 0.6;
+          } else {
+            shard.verticalVelocity = 0;
+            shard.velocityWorldPerSec = scale(shard.velocityWorldPerSec, 0.2);
+            shard.spinRadiansPerSec *= 0.35;
+          }
+        }
+        burst.shards[shardWrite] = shard;
+        shardWrite += 1;
+      }
+      burst.shards.length = shardWrite;
+
       const maxAge = Math.max(SHOCKWAVE_LIFETIME_SECONDS, FIREBALL_LIFETIME_SECONDS);
-      const hasLiveParticles = burst.particles.length > 0;
-      if (burst.ageSeconds < maxAge || hasLiveParticles) {
+      const hasLivePieces = burst.sparks.length > 0 || burst.shards.length > 0;
+      if (burst.ageSeconds < maxAge || hasLivePieces) {
         this.bursts[writeIndex] = burst;
         writeIndex += 1;
       }
     }
     this.bursts.length = writeIndex;
-
-    this.redraw();
   }
 
-  /** Clears all live bursts and their particles. */
-  clear(): void {
-    this.bursts.length = 0;
-    this.graphics.clear();
+  private ageBurnMarks(deltaSeconds: number): void {
+    let writeIndex = 0;
+    for (let readIndex = 0; readIndex < this.burnMarks.length; readIndex += 1) {
+      const mark = this.burnMarks[readIndex]!;
+      mark.ageSeconds += deltaSeconds;
+      if (mark.ageSeconds < mark.lifetimeSeconds) {
+        this.burnMarks[writeIndex] = mark;
+        writeIndex += 1;
+      }
+    }
+    this.burnMarks.length = writeIndex;
   }
 
-  /** Destroys the graphics object and all internal state. */
-  destroy(): void {
-    this.graphics.destroy();
+  private redrawBurns(): void {
+    this.burnGraphics.clear();
+    if (this.burnMarks.length === 0) return;
+
+    for (const mark of this.burnMarks) {
+      const life = mark.ageSeconds / mark.lifetimeSeconds;
+      // Hold full darkness for most of the 1.5 laps, then fade the last third.
+      const fade = life < 0.66 ? 1 : 1 - (life - 0.66) / 0.34;
+
+      for (const blotch of mark.blotches) {
+        const world = add(mark.positionWorld, blotch.offsetWorld);
+        const screen = this.projection.toScreen(world);
+        const width = blotch.radiusUnits * 2 * this.projection.pixelsPerUnit;
+        const height = blotch.radiusUnits * this.projection.pixelsPerUnit;
+        this.burnGraphics.fillStyle(blotch.color, blotch.alpha * fade);
+        this.burnGraphics.fillEllipseShape(
+          new Phaser.Geom.Ellipse(screen.x, screen.y, width, height),
+        );
+      }
+    }
   }
 
-  /**
-   * Redraws every live burst in three layers:
-   *   1. Ground shockwave (expanding ellipse, drawn first, under everything)
-   *   2. Rising fireball (5–8 lumpy overlapping circles)
-   *   3. Debris/sparks (12–18 particles, drawn last, on top)
-   */
-  private redraw(): void {
-    this.graphics.clear();
+  private redrawBursts(): void {
+    this.burstGraphics.clear();
     if (this.bursts.length === 0) return;
 
-    // Layer 1: Draw ground shockwaves first (under everything).
     for (const burst of this.bursts) {
       this.drawShockwave(burst);
     }
-
-    // Layer 2: Draw fireballs.
     for (const burst of this.bursts) {
       this.drawFireball(burst);
     }
-
-    // Layer 3: Draw debris/sparks last (on top).
     for (const burst of this.bursts) {
-      this.drawDebris(burst);
+      this.drawSparks(burst);
+    }
+    for (const burst of this.bursts) {
+      this.drawShards(burst);
     }
   }
 
-  /**
-   * Draws the ground shockwave: a filled ellipse (2:1 wide-to-tall ratio for
-   * isometric view) that expands from ~1 to ~10 world units and fades over 0.35s.
-   */
+  /** Expanding isometric ellipse that fades as it grows. */
   private drawShockwave(burst: Burst): void {
     const progress = burst.ageSeconds / SHOCKWAVE_LIFETIME_SECONDS;
-    if (progress > 1) return; // Shockwave is dead.
+    if (progress > 1) return;
 
-    // Expand from min to max radius.
     const radius = SHOCKWAVE_MIN_RADIUS_UNITS
       + (SHOCKWAVE_MAX_RADIUS_UNITS - SHOCKWAVE_MIN_RADIUS_UNITS) * progress;
-
-    // Fade out as it expands.
     const fade = 1 - progress * progress;
-
-    // In isometric projection, a circle on the ground becomes an ellipse.
-    // For a 2:1 aspect ratio (wide-to-tall), width = 2 * height in screen pixels.
     const screenCenter = this.projection.toScreen(burst.positionWorld);
-    const screenWidth = radius * 2 * this.projection.pixelsPerUnit; // 2x for 2:1 ratio
+    const screenWidth = radius * 2 * this.projection.pixelsPerUnit;
     const screenHeight = radius * this.projection.pixelsPerUnit;
 
-    const shockColor = 0x4a4a52; // Smoke grey
-    const shockAlpha = 0.5 * fade;
-    this.graphics.fillStyle(shockColor, shockAlpha);
-    this.graphics.fillEllipseShape(
+    this.burstGraphics.fillStyle(0x3a3a42, 0.45 * fade);
+    this.burstGraphics.fillEllipseShape(
       new Phaser.Geom.Ellipse(screenCenter.x, screenCenter.y, screenWidth, screenHeight),
     );
+
+    // Brief white flash at the blast centre so the wreck reads as a hit, not a puff.
+    if (progress < 0.18) {
+      const flash = 1 - progress / 0.18;
+      const flashRadius = (1.2 + burst.intensity * 2.2) * this.projection.pixelsPerUnit;
+      this.burstGraphics.fillStyle(0xfff6d8, 0.7 * flash);
+      this.burstGraphics.fillCircleShape(
+        new Phaser.Geom.Circle(screenCenter.x, screenCenter.y, flashRadius),
+      );
+    }
   }
 
-  /**
-   * Draws the rising fireball: 5–8 overlapping circles with offset centres
-   * that are lumpy/organic, growing and drifting upward on screen.
-   */
+  /** Rising lumpy fireball that cools from white-hot to smoke. */
   private drawFireball(burst: Burst): void {
     const progress = burst.ageSeconds / FIREBALL_LIFETIME_SECONDS;
-    if (progress > 1) return; // Fireball is dead.
+    if (progress > 1) return;
 
-    // Radius grows from start to max then shrinks.
+    const grow = progress < 0.35 ? progress / 0.35 : 1 - (progress - 0.35) / 0.65 * 0.45;
     const radiusAtProgress = FIREBALL_START_RADIUS_UNITS
-      + (burst.intensity * FIREBALL_MAX_RADIUS_UNITS - FIREBALL_START_RADIUS_UNITS) * progress;
-
-    // Drift upward on screen: increase height as time progresses.
+      + (burst.intensity * FIREBALL_MAX_RADIUS_UNITS - FIREBALL_START_RADIUS_UNITS) * grow;
     const driftHeight = FIREBALL_DRIFT_SPEED_UNITS_PER_SEC * burst.ageSeconds;
-
-    // Colour gradient from hot white to smoke.
     const { color, alpha } = sampleFireballColor(progress);
 
-    // Draw 5–8 lumpy overlapping circles with offset centres.
-    const lumpCount = FIREBALL_LUMP_COUNT;
-    for (let i = 0; i < lumpCount; i += 1) {
-      // Deterministic jitter for each lump using burst ID and lump index.
+    for (let i = 0; i < FIREBALL_LUMP_COUNT; i += 1) {
       const seed = burst.burstId * 92837 ^ (i * 31337);
-      const offsetXRand = seededRandom(seed);
-      const offsetYRand = seededRandom(seed + 1);
-      const sizeRand = seededRandom(seed + 2);
-
-      // Offset each lump from the centre to create a lumpy silhouette.
-      const offsetX = (offsetXRand - 0.5) * 0.6 * radiusAtProgress;
-      const offsetY = (offsetYRand - 0.5) * 0.6 * radiusAtProgress;
-
-      // Size varies per lump.
-      const lumpRadius = radiusAtProgress * (0.6 + sizeRand * 0.5);
-
-      // Project this lump's position to screen space (including the drifting height).
+      const offsetX = (seededRandom(seed) - 0.5) * 0.65 * radiusAtProgress;
+      const offsetY = (seededRandom(seed + 1) - 0.5) * 0.65 * radiusAtProgress;
+      const lumpRadius = radiusAtProgress * (0.55 + seededRandom(seed + 2) * 0.55);
       const lumpWorldPos = add(burst.positionWorld, { x: offsetX, y: offsetY });
       const screenPos = this.projection.toScreen(lumpWorldPos, driftHeight);
-
       const screenRadius = lumpRadius * this.projection.pixelsPerUnit;
-      this.graphics.fillStyle(color, alpha);
-      this.graphics.fillCircleShape(
+      this.burstGraphics.fillStyle(color, alpha);
+      this.burstGraphics.fillCircleShape(
         new Phaser.Geom.Circle(screenPos.x, screenPos.y, screenRadius),
       );
     }
   }
 
-  /**
-   * Draws debris/sparks as small filled circles with deterministic colour
-   * gradient from bright yellow-white to dark ember red. Drawn last, on top.
-   */
-  private drawDebris(burst: Burst): void {
-    for (const particle of burst.particles) {
-      const particleProgress = particle.ageSeconds / particle.lifetimeSeconds;
-      const particleAlpha = (1 - particleProgress) * 0.85;
-
-      // Colour fades from bright yellow-white to dark ember red.
-      const particleColor = lerpColor(particle.startColor, particle.endColor, particleProgress);
-
-      const screenPos = this.projection.toScreen(particle.positionWorld);
-      const screenRadius = particle.size * this.projection.pixelsPerUnit;
-
-      this.graphics.fillStyle(particleColor, particleAlpha);
-      this.graphics.fillCircleShape(
+  /** Small ember sparks with a real height arc. */
+  private drawSparks(burst: Burst): void {
+    for (const spark of burst.sparks) {
+      const progress = spark.ageSeconds / spark.lifetimeSeconds;
+      const alpha = (1 - progress) * 0.9;
+      const color = lerpColor(spark.startColor, spark.endColor, progress);
+      const screenPos = this.projection.toScreen(spark.positionWorld, spark.height);
+      const screenRadius = spark.size * this.projection.pixelsPerUnit;
+      this.burstGraphics.fillStyle(color, alpha);
+      this.burstGraphics.fillCircleShape(
         new Phaser.Geom.Circle(screenPos.x, screenPos.y, screenRadius),
       );
+    }
+  }
+
+  /** Rotating steel shards that fly out and bounce on the road. */
+  private drawShards(burst: Burst): void {
+    for (const shard of burst.shards) {
+      const progress = shard.ageSeconds / shard.lifetimeSeconds;
+      const alpha = progress < 0.7 ? 0.95 : 0.95 * (1 - (progress - 0.7) / 0.3);
+      const screen = this.projection.toScreen(shard.positionWorld, shard.height);
+      const lengthPx = shard.length * this.projection.pixelsPerUnit;
+      const widthPx = shard.width * this.projection.pixelsPerUnit;
+
+      this.burstGraphics.save();
+      this.burstGraphics.translateCanvas(screen.x, screen.y);
+      this.burstGraphics.rotateCanvas(shard.rotationRadians);
+      this.burstGraphics.fillStyle(shard.color, alpha);
+      if (shard.kind === 'triangle') {
+        this.burstGraphics.fillTriangle(
+          -lengthPx * 0.5, widthPx * 0.5,
+          lengthPx * 0.5, 0,
+          -lengthPx * 0.35, -widthPx * 0.5,
+        );
+      } else {
+        this.burstGraphics.fillRect(-lengthPx * 0.5, -widthPx * 0.5, lengthPx, widthPx);
+      }
+      this.burstGraphics.restore();
     }
   }
 }

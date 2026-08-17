@@ -25,8 +25,8 @@ export const MISSILE_SPEED_FACTOR = 1.4;
 
 /**
  * Catalog missile damage BEFORE the global weapon scale and armor.
- * Live hits apply `scaledWeaponDamage()` on top (half for everyone, 30% off
- * for the war tank) so cars last long enough to buy and equip more kit.
+ * Live hits apply `scaledWeaponDamage()` on top (30% for everyone, 70% for
+ * the war tank's own cannon) so cars last long enough to buy and equip more kit.
  */
 export const MISSILE_RAW_DAMAGE = 0.5;
 
@@ -37,18 +37,18 @@ export const MISSILE_RAW_DAMAGE = 0.5;
  */
 export const MINE_RAW_DAMAGE = 1;
 
-/** Everyone's weapons deal this fraction of the catalog raw values. */
-export const WEAPON_DAMAGE_SCALE = 0.5;
+/** Everyone else's weapons deal this fraction of the catalog raw values. */
+export const WEAPON_DAMAGE_SCALE = 0.3;
 
 /**
- * War tank incoming weapon scale. The only car that is not halved: 30% off
- * the catalog raw, so Magma Rex stays killable and still feels like a bunker.
+ * War tank outgoing weapon scale. Magma Rex (car-6) keeps a real cannon:
+ * 30% off the catalog raw, while every other car is cut to 30%.
  */
 export const TANK_WEAPON_DAMAGE_SCALE = 0.7;
 
-/** Catalog raw × the car's incoming weapon scale. */
-export function scaledWeaponDamage(rawDamage: number, perkId: string | undefined): number {
-  const scale = isWarTankPerk(perkId) ? TANK_WEAPON_DAMAGE_SCALE : WEAPON_DAMAGE_SCALE;
+/** Catalog raw × the FIRING car's outgoing weapon scale. */
+export function scaledWeaponDamage(rawDamage: number, attackerPerkId: string | undefined): number {
+  const scale = isWarTankPerk(attackerPerkId) ? TANK_WEAPON_DAMAGE_SCALE : WEAPON_DAMAGE_SCALE;
   return rawDamage * scale;
 }
 
@@ -115,6 +115,12 @@ export const MINE_RADIUS_FACTOR = 1.0;
  * Owner: "persist for the time of a 1.6-lap run on that track".
  */
 export const OIL_LIFETIME_LAPS = 1.6;
+
+/**
+ * How long a car-wreck burn mark stays on the asphalt, in estimated laps.
+ * Owner: leave the scorch for one and a half laps of the current track.
+ */
+export const BURN_MARK_LIFETIME_LAPS = 1.5;
 
 /**
  * Mean race speed used to turn a track length into an estimated lap time for
