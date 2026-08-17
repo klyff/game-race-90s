@@ -52,13 +52,13 @@ function makeManifest(cars: readonly CarSheetManifest[]): CarSetManifest {
 }
 
 describe('CarStatBars — real roster', () => {
-  it('returns four bars, in the documented order and labels, for every car', () => {
+  it('returns six bars, in the documented order and labels, for every car', () => {
     const expectedLabels = STAT_BAR_FIELDS.map(f => f.label);
-    expect(expectedLabels).toEqual(['SPEED', 'ACCEL', 'GRIP', 'ARMOR']);
+    expect(expectedLabels).toEqual(['SPEED', 'ACCEL', 'STEER', 'GRIP', 'BRAKE', 'ARMOR']);
 
     for (const carId of carIds) {
       const bars = statBars(manifest, carId);
-      expect(bars).toHaveLength(4);
+      expect(bars).toHaveLength(6);
       expect(bars.map(b => b.label)).toEqual(expectedLabels);
     }
   });
@@ -182,7 +182,7 @@ describe('CarStatBars — synthetic edge cases', () => {
     const synthetic = makeManifest([makeCar('solo', {})]);
     const bars = statBars(synthetic, 'solo');
 
-    expect(bars).toHaveLength(4);
+    expect(bars).toHaveLength(6);
     for (const bar of bars) {
       expect(bar.fraction).toBe(1);
       expect(Number.isFinite(bar.fraction)).toBe(true);

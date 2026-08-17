@@ -29,8 +29,21 @@ export interface VehicleStats {
   readonly armor: number;
   /** Maximum carried rounds per weapon. */
   readonly ammoCapacity: number;
-  /** Collision circle radius, world units. */
+  /** Collision circle radius, world units. Walls and weapons still use this. */
   readonly collisionRadius: number;
+  /**
+   * Half-length of the source rectangle, along the heading, world units.
+   * Used to derive the min/max/mid squares. Car-to-car hits use collisionSquare.
+   */
+  readonly collisionAlong?: number;
+  /** Half-width of the source rectangle, across the heading, world units. */
+  readonly collisionAcross?: number;
+  /** Largest square that fits inside the car, half-side, world units. */
+  readonly collisionSquareMin?: number;
+  /** Smallest square that contains the car, half-side, world units. */
+  readonly collisionSquareMax?: number;
+  /** Car-to-car square: midpoint of min and max, half-side, world units. */
+  readonly collisionSquare?: number;
   /**
    * Radius of the aim reticle (the green circle) that sits ~2.5 car-lengths ahead
    * of the nose, world units. It is the missile-lock capture zone: a target inside

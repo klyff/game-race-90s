@@ -34,7 +34,9 @@ const MINIMUM_BAR_FRACTION = 0.15;
 export const STAT_BAR_FIELDS = [
   { label: 'SPEED', field: 'maxSpeed' },
   { label: 'ACCEL', field: 'enginePower' },
+  { label: 'STEER', field: 'steerRate' },
   { label: 'GRIP', field: 'grip' },
+  { label: 'BRAKE', field: 'brakeForce' },
   { label: 'ARMOR', field: 'armor' },
 ] as const satisfies readonly { readonly label: string; readonly field: keyof VehicleStats }[];
 

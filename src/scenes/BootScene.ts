@@ -1,5 +1,10 @@
 import Phaser from 'phaser';
-import { parseCarSetManifest } from '../data/cars/CarManifest.ts';
+import {
+  cartPortraitFile,
+  cartPortraitKey,
+  cartPortraitLegacyFile,
+  parseCarSetManifest,
+} from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import { PLANET_THEMES } from '../data/tracks/planetThemes.ts';
 import { parseTrackLinesManifest } from '../data/tracks/TrackLines.ts';
@@ -7,6 +12,7 @@ import { TRACKS } from '../data/tracks/registry.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
 import { SPLASH_CARDS, splashCardUrl } from '../data/cards/SplashCards.ts';
+import { DRIVER_CARDS, driverCardUrl } from '../data/cards/DriverCards.ts';
 import { PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/PubBackgrounds.ts';
 import {
   CAR_ASSET_DIRECTORY,
@@ -40,6 +46,8 @@ import {
  * check means a failed boot reports the real problem instead of stalling on artwork.
  */
 export class BootScene extends Phaser.Scene {
+  private readonly optionalKeys = new Set<string>();
+
   constructor() {
     super(SCENE_KEY.BOOT);
   }
@@ -55,14 +63,17 @@ export class BootScene extends Phaser.Scene {
     // A missing weapon sprite is not fatal — those assets are optional and the race
     // falls back to primitives — so weapon keys are filtered out of the error path.
     // Any OTHER load failure is fatal and reported on screen.
-    const optionalKeys = new Set<string>([
+    for (const key of [
       ...WEAPON_SPRITES.map(sprite => sprite.key),
       ...PLANET_THEMES.map(theme => theme.artKey),
       ...PLANET_THEMES.map(theme => theme.groundKey),
+      ...DRIVER_CARDS.map(card => card.key),
       ...PUB_BACKGROUNDS.map(pub => pubBackgroundKey(pub)),
-    ]);
+    ]) {
+      this.optionalKeys.add(key);
+    }
     this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
-      if (optionalKeys.has(file.key)) {
+      if (this.optionalKeys.has(file.key)) {
         return;
       }
       this.showFatalError(`Failed to load ${file.src}`);
@@ -97,6 +108,7 @@ export class BootScene extends Phaser.Scene {
         frameWidth: manifest.frameWidth,
         frameHeight: manifest.frameHeight,
       });
+      this.queuePortrait(car.id);
     }
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
@@ -106,6 +118,9 @@ export class BootScene extends Phaser.Scene {
     }
     for (const card of SPLASH_CARDS) {
       this.load.image(card.key, splashCardUrl(card));
+    }
+    for (const card of DRIVER_CARDS) {
+      this.load.image(card.key, driverCardUrl(card));
     }
 
     for (const theme of PLANET_THEMES) {
@@ -123,12 +138,53 @@ export class BootScene extends Phaser.Scene {
     }
 
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      for (const car of manifest.cars) {
+        this.promotePortrait(car.id);
+      }
       if (typeof location !== 'undefined') {
         enableTourModeFromSearch(location.search);
       }
       this.scene.start(SCENE_KEY.SPLASH, { manifest, linesByTrack });
     });
     this.load.start();
+  }
+
+  /**
+   * Garage stills are `{carId}_300px.png` under cars/ or assets/. Older files
+   * used `cart_N_300.png`. Queue every candidate; `promotePortrait` keeps the
+   * first one that actually loaded.
+   */
+  private portraitUrls(carId: string): readonly string[] {
+    const still = cartPortraitFile(carId);
+    return [
+      `${CAR_ASSET_DIRECTORY}/${still}`,
+      `assets/${still}`,
+      `${CAR_ASSET_DIRECTORY}/${cartPortraitLegacyFile(carId)}`,
+    ];
+  }
+
+  private queuePortrait(carId: string): void {
+    this.portraitUrls(carId).forEach((url, index) => {
+      const trial = `${cartPortraitKey(carId)}#${index}`;
+      this.optionalKeys.add(trial);
+      this.load.image(trial, url);
+    });
+  }
+
+  private promotePortrait(carId: string): void {
+    const dest = cartPortraitKey(carId);
+    for (let index = 0; index < this.portraitUrls(carId).length; index += 1) {
+      const trial = `${dest}#${index}`;
+      if (!this.textures.exists(trial)) {
+        continue;
+      }
+      const image = this.textures.get(trial).getSourceImage();
+      if (!(image instanceof HTMLImageElement) || image.naturalWidth < 2) {
+        continue;
+      }
+      this.textures.addImage(dest, image);
+      return;
+    }
   }
 
   /**

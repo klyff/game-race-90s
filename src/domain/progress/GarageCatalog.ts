@@ -13,6 +13,9 @@ export const SELL_FRACTION = 0.8;
 export const STARTER_CAR_IDS = ['car-1', 'car-2'] as const;
 export const WORLD_ONE_LOCKED_CAR_IDS = ['car-3', 'car-16'] as const;
 
+/** First podium is spent unlocking the two world-1 extras, not a later wave. */
+const CLEARS_FOR_WORLD_ONE_EXTRAS = 1;
+
 export const CAR_TIER = {
   WEAK: 'weak',
   MEDIUM: 'medium',
@@ -81,7 +84,8 @@ export function isStarterCar(carId: string): boolean {
 
 /**
  * A shop car is unlocked when its wave's planet is open, or after enough
- * podium clears (one extra car per clear, after the four world-1 faces).
+ * podium clears. The first clear opens the two world-1 extras; each clear
+ * after that unlocks one later catalog car ahead of its planet wave.
  */
 export function isCarUnlocked(
   carId: string,
@@ -109,7 +113,49 @@ export function isCarUnlocked(
   if (index < 0) {
     return false;
   }
-  return index < clearedTrackCount;
+  return index < clearedTrackCount - CLEARS_FOR_WORLD_ONE_EXTRAS;
+}
+
+/**
+ * Cars the garage carousel may show. An empty garage is starters only —
+ * locked teasers would tell a new player to finish a race they cannot start.
+ */
+export function shopCarIds(
+  ownedCarIds: readonly string[],
+  highestUnlockedPlanet: number,
+  clearedTrackCount: number,
+): readonly string[] {
+  if (ownedCarIds.length === 0) {
+    return [...STARTER_CAR_IDS];
+  }
+  return GARAGE_CATALOG.filter(entry => {
+    const id = entry.carId;
+    return (
+      ownedCarIds.includes(id) ||
+      isCarUnlocked(id, highestUnlockedPlanet, clearedTrackCount) ||
+      isStarterCar(id) ||
+      (WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(id)
+    );
+  }).map(entry => entry.carId);
+}
+
+/** Why a shop car is still locked, or null when it can be bought. */
+export function carUnlockHint(
+  carId: string,
+  highestUnlockedPlanet: number,
+  clearedTrackCount: number,
+): string | null {
+  if (isCarUnlocked(carId, highestUnlockedPlanet, clearedTrackCount)) {
+    return null;
+  }
+  if ((WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(carId)) {
+    return 'FINISH TOP 3 TO UNLOCK';
+  }
+  const entry = catalogEntry(carId);
+  if (entry !== undefined && entry.unlockPlanet > highestUnlockedPlanet) {
+    return `UNLOCKS IN WORLD ${entry.unlockPlanet}`;
+  }
+  return 'WIN MORE RACES TO UNLOCK';
 }
 
 /** Cars NPCs may drive on this planet. */

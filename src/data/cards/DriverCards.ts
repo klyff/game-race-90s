@@ -1,0 +1,62 @@
+/**
+ * Face cards for championship pilots. Filenames match disk exactly —
+ * `Aline.png` is capitalised; a mismatch is a silent missing texture.
+ *
+ * Character select is not in yet. The player still types a 5-letter name.
+ * When a racer's name matches a card here, Results shows that face.
+ */
+
+export const DRIVER_CARD_DIRECTORY = 'assets/cards';
+
+export interface DriverCard {
+  readonly name: string;
+  readonly key: string;
+  readonly file: string;
+}
+
+function card(name: string, file: string): DriverCard {
+  return { name, key: `driver-card:${name}`, file };
+}
+
+/** Regulars, jokers, and the creator card. */
+export const DRIVER_CARDS: readonly DriverCard[] = [
+  card('ALINE', 'Aline.png'),
+  card('ENZO', 'enzo.png'),
+  card('FLUFE', 'flufe.png'),
+  card('DAVE', 'dave.png'),
+  card('RAZOR', 'razor.png'),
+  card('NIKKI', 'nikki.png'),
+  card('DIEGO', 'diego.png'),
+  card('LUNA', 'luna.png'),
+  card('BLAZE', 'blaze.png'),
+  card('KIRA', 'kira.png'),
+  card('SNAKE', 'snake.png'),
+  card('RIO', 'rio.png'),
+  card('JETT', 'jett.png'),
+  card('NOVA', 'nova.png'),
+  card('CRUZ', 'cruz.png'),
+  card('ASH', 'ash.png'),
+  card('ZARA', 'zara.png'),
+  card('VINCE', 'vince.png'),
+  card('RUBY', 'ruby.png'),
+  card('HEX', 'hex.png'),
+  card('VIKTOR', 'viktor.png'),
+  card('SEAMUS', 'seamus.png'),
+  card('NEGAO', 'negao.png'),
+  card('LUCA', 'luca.png'),
+  card('ZOR9', 'zor9.png'),
+  card('KLYFF', 'klyff.png'),
+];
+
+export function driverCardForName(name: string): DriverCard | undefined {
+  const needle = name.trim().toUpperCase();
+  return DRIVER_CARDS.find(entry => entry.name === needle);
+}
+
+export function driverCardKey(name: string): string {
+  return `driver-card:${name.trim().toUpperCase()}`;
+}
+
+export function driverCardUrl(entry: DriverCard): string {
+  return `${DRIVER_CARD_DIRECTORY}/${entry.file}`;
+}

@@ -85,6 +85,9 @@ export const SPLASH_ART_FILE = 'splash.jpeg';
 export const GARAGE_ART_KEY = 'garage-art';
 export const GARAGE_ART_FILE = 'garage.png';
 
+/** Pixel size of the garage hero still (`car-16_300px.png`). */
+export const CART_PORTRAIT_SIZE = 300;
+
 /**
  * Which car the player drives when nobody chose one.
  *

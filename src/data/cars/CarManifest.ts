@@ -1,5 +1,7 @@
 import { CAR_PERK, CAR_SPRITE_FRAMES, WORLD_ADVANTAGE } from '../../domain/constants.ts';
 import type { CarPerkId, WorldAdvantage } from '../../domain/constants.ts';
+import { collisionBox } from '../../domain/vehicle/CollisionMap.ts';
+import type { CollisionBox } from '../../domain/vehicle/CollisionMap.ts';
 import type { VehicleStats } from '../../domain/vehicle/VehicleStats.ts';
 
 /**
@@ -28,6 +30,9 @@ export interface CarSheetManifest {
   readonly homePlanetId?: string;
   /** 0.9 titular / 0.7 reserva on the home planet. */
   readonly worldAdvantage?: WorldAdvantage;
+  /** Cell size when this strip is not the set default (redrawn cars may be 128). */
+  readonly frameWidth?: number;
+  readonly frameHeight?: number;
 }
 
 /**
@@ -175,10 +180,128 @@ function parseCarSheet(raw: unknown, index: number): CarSheetManifest {
       width: requirePositiveNumber(shadow, 'width'),
       height: requirePositiveNumber(shadow, 'height'),
     },
-    stats: stats as unknown as VehicleStats,
+    stats: foldCollisionStats(stats as unknown as VehicleStats, source['collisionBox'] ?? source['collisionMap'], id),
     perk: parsePerk(source['perk'], id),
     homePlanetId: parseHomePlanet(source['homePlanetId'], id),
     worldAdvantage: parseWorldAdvantage(source['worldAdvantage'], id),
+    frameWidth: parseOptionalSize(source['frameWidth'], id, 'frameWidth'),
+    frameHeight: parseOptionalSize(source['frameHeight'], id, 'frameHeight'),
+  };
+}
+
+function parseOptionalSize(raw: unknown, carId: string, field: string): number | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (typeof raw !== 'number' || !Number.isFinite(raw) || raw <= 0) {
+    throw new CarManifestError(`car "${carId}" ${field} must be a positive number`);
+  }
+  return raw;
+}
+
+function readExtents(raw: unknown, carId: string, where: string): CollisionBox {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    throw new CarManifestError(`car "${carId}" ${where} must be an object`);
+  }
+  const box = raw as Record<string, unknown>;
+  const along = box['along'];
+  const across = box['across'];
+  if (typeof along !== 'number' || !(along > 0) || typeof across !== 'number' || !(across > 0)) {
+    throw new CarManifestError(`car "${carId}" ${where} needs positive along/across`);
+  }
+  return { along, across };
+}
+
+function parseCollisionBox(raw: unknown, carId: string): CollisionBox | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (Array.isArray(raw)) {
+    if (raw.length === 0) {
+      throw new CarManifestError(`car "${carId}" collisionBox is empty`);
+    }
+    let maxAlong = 0;
+    let maxAcross = 0;
+    raw.forEach((entry, index) => {
+      const pose = readExtents(entry, carId, `collisionBox[${index}]`);
+      maxAlong = Math.max(maxAlong, pose.along);
+      maxAcross = Math.max(maxAcross, pose.across);
+    });
+    return collisionBox(maxAlong, maxAcross);
+  }
+  return readExtents(raw, carId, 'collisionBox');
+}
+
+function withSquares(stats: VehicleStats): VehicleStats {
+  const along = stats.collisionAlong;
+  const across = stats.collisionAcross;
+  if (along === undefined || across === undefined || !(along > 0) || !(across > 0)) {
+    return stats;
+  }
+  const min = Math.min(along, across);
+  const max = Math.max(along, across);
+  return {
+    ...stats,
+    collisionSquareMin: stats.collisionSquareMin ?? min,
+    collisionSquareMax: stats.collisionSquareMax ?? max,
+    collisionSquare: stats.collisionSquare ?? (min + max) / 2,
+  };
+}
+
+function foldCollisionStats(stats: VehicleStats, rawBox: unknown, carId: string): VehicleStats {
+  if (
+    typeof stats.collisionAlong === 'number' &&
+    stats.collisionAlong > 0 &&
+    typeof stats.collisionAcross === 'number' &&
+    stats.collisionAcross > 0
+  ) {
+    return withSquares(stats);
+  }
+  const box = parseCollisionBox(rawBox, carId);
+  if (box === undefined) {
+    return stats;
+  }
+  return withSquares({ ...stats, collisionAlong: box.along, collisionAcross: box.across });
+}
+
+/** `car-16` → `16`, `delorean` → `delorean`. Used only for leftover `cart_*_300.png` files. */
+export function cartPortraitToken(carId: string): string {
+  const numbered = /^car-(\d+)/.exec(carId);
+  return numbered?.[1] ?? carId.replace(/[^a-z0-9]+/gi, '-');
+}
+
+/** New-fleet garage still and strip source: `car_1_hero.png`. */
+export function cartHeroFile(carId: string): string {
+  return `${carId}_hero.png`;
+}
+
+/** New-fleet clock strip: `car_1_strip.png`. */
+export function cartStripFile(carId: string): string {
+  return `${carId}_strip.png`;
+}
+
+/** Owner garage still: `car-6-tank_300px.png`, `delorean_300px.png`. */
+export function cartPortraitFile(carId: string): string {
+  return `${carId}_300px.png`;
+}
+
+/** Older generated still: `cart_16_300.png`. Tried only if the `_300px` file is missing. */
+export function cartPortraitLegacyFile(carId: string): string {
+  return `cart_${cartPortraitToken(carId)}_300.png`;
+}
+
+export function cartPortraitKey(carId: string): string {
+  return `cart-portrait:${carId}`;
+}
+
+/** Cell size for this sheet when it is not the set default. */
+export function sheetCellSize(
+  sheet: CarSheetManifest,
+  manifest: CarSetManifest,
+): { readonly width: number; readonly height: number } {
+  return {
+    width: sheet.frameWidth ?? manifest.frameWidth,
+    height: sheet.frameHeight ?? manifest.frameHeight,
   };
 }
 
