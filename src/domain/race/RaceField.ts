@@ -40,6 +40,9 @@ import {
   rivalAgentFor,
   type RivalAgent,
 } from '../vehicle/RivalAgent.ts';
+import { RacingAgent } from '../ai/RacingAgent.ts';
+import type { AgentDebugSnapshot } from '../ai/RacingAgent.ts';
+import { buildStatNormalizer, planningStats, type StatNormalizer } from '../ai/VehicleCapabilityModel.ts';
 import type { TrackLinesManifest } from './RacingLine.ts';
 import { createVehicleState, isAirborne } from '../vehicle/Vehicle.ts';
 import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
@@ -236,8 +239,12 @@ export class RaceField {
     readonly agent: RivalAgent;
     readonly driver: AIDriver;
     readonly line: RacingLine | undefined;
+    readonly racing: RacingAgent;
+    readonly name: string;
   }[];
   private readonly trackLines: TrackLinesManifest | undefined;
+  private readonly normalizer: StatNormalizer;
+  private stepIndex = 0;
   private readonly countdownSeconds: number;
   private readonly projectionWindow: number;
   private readonly gridSetbackUnits: number;
@@ -321,11 +328,14 @@ export class RaceField {
       };
     });
 
+    this.normalizer = buildStatNormalizer(this.racers.map(racer => racer.stats));
+
     const tightness = meanCornerTightness(this.spline);
     this.brains = this.racers.map((racer, index) => {
       const entry = entries[index];
       const seed = entry?.name ?? `${racer.carId}#${racer.gridIndex}`;
       const agent = rivalAgentFor(seed);
+      const racing = new RacingAgent(seed, racer.carId, index);
       const candidates = buildLineCandidates(track, spline, racer.stats.collisionRadius);
       const picked = chooseLineByAccount(
         agent,
@@ -348,10 +358,13 @@ export class RaceField {
         : agent.pathKind === 'astar' && searched !== undefined
           ? searched
           : built;
+      const driveOptions = racing.skillOptions(driveOptionsFor(agent, this.pace.options));
       return {
         agent,
-        driver: new AIDriver(driveOptionsFor(agent, this.pace.options), agent.aggression, agent.traits),
+        driver: new AIDriver(driveOptions, agent.aggression, agent.traits),
         line,
+        racing,
+        name: seed,
       };
     });
 
@@ -440,6 +453,7 @@ export class RaceField {
     this.hazards = [];
     this.freshHazardIds.clear();
     this.playerHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
+    this.stepIndex = 0;
     this.raceState = this.freshRaceState();
   }
 
@@ -447,7 +461,26 @@ export class RaceField {
    * Advances the whole field by one fixed step. See the class comment for why the
    * five stages are in this order.
    */
+  /** Inspectable AI state for the debug overlay. */
+  aiDebug(carId: string): AgentDebugSnapshot | undefined {
+    const racer = this.racers.find(entry => entry.carId === carId);
+    if (racer === undefined) {
+      return undefined;
+    }
+    return this.brains[racer.gridIndex]?.racing.debugSnapshot();
+  }
+
+  npcNames(): readonly { carId: string; name: string }[] {
+    return this.racers
+      .filter(racer => !racer.isPlayer)
+      .map(racer => ({
+        carId: racer.carId,
+        name: this.brains[racer.gridIndex]?.name ?? racer.carId,
+      }));
+  }
+
   step(playerCommand: InputCommand, stepSeconds: number): void {
+    this.stepIndex += 1;
     const frozen = this.raceState.phase === RACE_PHASE.COUNTDOWN;
     const previousDistances = this.racers.map(racer => racer.distance);
     const previousLaps = this.racers.map(racer => this.standingOf(racer.carId)?.lapsCompleted ?? 0);
@@ -660,6 +693,7 @@ export class RaceField {
         );
 
         if (contact.impactSpeed > IMPACT_DAMAGE_THRESHOLD) {
+          this.noteContactMemory(a, b, aggressor);
           const credit = contactAttackCredit(contact);
           if (credit.factor > 0) {
             if (credit.attacker === CONTACT_ATTACKER.A && a.isPlayer && !b.isPlayer) {
@@ -737,6 +771,7 @@ export class RaceField {
       if (racer === undefined || !this.canCollide(racer)) {
         continue;
       }
+      this.brains[racer.gridIndex]?.racing.memory.noteWeapon(hit.ownerCarId, this.raceState.elapsedSeconds);
       const before = racer.integrity;
       racer.integrity = applyWeaponDamage(
         before,
@@ -1009,54 +1044,105 @@ export class RaceField {
       return playerCommand;
     }
     const projection = this.spline.projectNear(racer.state.position, racer.distance, this.projectionWindow);
-    const rivals: RivalView[] = this.racers
-      .filter(other => other !== racer && this.canCollide(other))
-      .map(other => ({
+    const liveRivals = this.racers.filter(other => other !== racer && this.canCollide(other));
+    const rivals: RivalView[] = liveRivals.map(other => ({
+      carId: other.carId,
+      distance: other.distance,
+      position: other.state.position,
+      velocity: other.state.velocity,
+      heading: other.state.heading,
+      lateralOffset: other.lateralOffset,
+    }));
+
+    const aim = decideMissileAim(
+      racer.state.position,
+      racer.state.heading,
+      racer.stats.collisionRadius,
+      racer.stats.aimRadius,
+      liveRivals.map(other => ({
         carId: other.carId,
-        // LIVE stage-1 distance ? never stage-5 standings (one step stale).
-        distance: other.distance,
-      }));
+        position: other.state.position,
+        isPlayer: other.isPlayer,
+      })),
+    );
 
     const brain = this.brains[racer.gridIndex];
+    const standing = this.standingOf(racer.carId);
+    const raceRow = this.raceState.racers.find(entry => entry.carId === racer.carId);
+    const finishDistance = Math.max(1, this.track.laps * this.spline.totalLength);
+    const effective = planningStats(
+      racer.stats,
+      racer.perk,
+      racer.homePlanetId,
+      racer.worldAdvantage,
+      this.planetId,
+    );
+
+    const decision = brain?.racing.decide(
+      {
+        stepIndex: this.stepIndex,
+        stepSeconds: 1 / 60,
+        elapsedSeconds: this.raceState.elapsedSeconds,
+        state: racer.state,
+        distance: racer.distance,
+        lateralOffset: racer.lateralOffset,
+        stats: racer.stats,
+        perk: racer.perk,
+        homePlanetId: racer.homePlanetId,
+        worldAdvantage: racer.worldAdvantage,
+        planetId: this.planetId,
+        integrity: racer.integrity.integrity,
+        missiles: racer.inventory.missiles,
+        oil: racer.inventory.oil,
+        mines: racer.inventory.mines,
+        canAim: aim.shouldFire,
+        position: standing?.position ?? this.racers.length,
+        fieldSize: this.racers.length,
+        lapsCompleted: standing?.lapsCompleted ?? 0,
+        lapsTotal: this.track.laps,
+        progressToFinish: Math.min(1, (raceRow?.progress.totalProgress ?? 0) / finishDistance),
+        finished: standing?.finished === true,
+        track: this.track,
+        spline: this.spline,
+        line: brain?.line,
+        laneBias: brain?.agent.laneRegister ?? 0,
+        rivals: liveRivals.map(other => ({
+          carId: other.carId,
+          distance: other.distance,
+          position: other.state.position,
+          velocity: other.state.velocity,
+          heading: other.state.heading,
+          lateralOffset: other.lateralOffset,
+        })),
+        trackLength: this.spline.totalLength,
+        halfWidth: this.track.halfWidth,
+      },
+      this.normalizer,
+      this.pace.options,
+    );
+
     const drive = brain === undefined
-      ? this.pace.command(racer.state, projection, racer.stats, this.spline)
+      ? this.pace.command(racer.state, projection, effective, this.spline)
       : brain.driver.command(
           racer.state,
           projection,
-          racer.stats,
+          effective,
           this.spline,
           brain.line,
           rivals,
           brain.agent.laneRegister,
+          decision?.lateralOffset,
         );
 
-    if (!this.npcWeapons || racer.weaponCooldownRemaining > 0) {
+    if (!this.npcWeapons || racer.weaponCooldownRemaining > 0 || decision === undefined) {
       return drive;
     }
 
-    // 1) Offence: fire a missile when a target sits in the aim corridor.
-    if (racer.inventory.missiles > 0) {
-      const aim = decideMissileAim(
-        racer.state.position,
-        racer.state.heading,
-        racer.stats.collisionRadius,
-        racer.stats.aimRadius,
-        this.racers
-          .filter(other => other !== racer && this.canCollide(other))
-          .map(other => ({
-            carId: other.carId,
-            position: other.state.position,
-            isPlayer: other.isPlayer,
-          })),
-      );
-      if (aim.shouldFire) {
-        this.armWeaponCooldown(racer);
-        return { ...drive, fire: true };
-      }
+    if (decision.wantFire && racer.inventory.missiles > 0 && aim.shouldFire) {
+      this.armWeaponCooldown(racer);
+      return { ...drive, fire: true };
     }
 
-    // 2) Defence: drop a hazard on whoever is close behind. A mine is spent
-    //    only when the chaser is right on the tail; oil goes down over a looser gap.
     const behind = this.closestRivalBehind(racer);
     if (behind !== null) {
       if (racer.inventory.mines > 0 && behind.gap < NPC_MINE_DROP_GAP_UNITS) {
@@ -1070,6 +1156,18 @@ export class RaceField {
     }
 
     return drive;
+  }
+
+  private noteContactMemory(a: RacerRuntime, b: RacerRuntime, aggressor: ContactSide): void {
+    const now = this.raceState.elapsedSeconds;
+    if (aggressor === CONTACT_SIDE.A) {
+      this.brains[b.gridIndex]?.racing.memory.noteRam(a.carId, now);
+    } else if (aggressor === CONTACT_SIDE.B) {
+      this.brains[a.gridIndex]?.racing.memory.noteRam(b.carId, now);
+    } else {
+      this.brains[a.gridIndex]?.racing.memory.noteNearMiss(b.carId, now);
+      this.brains[b.gridIndex]?.racing.memory.noteNearMiss(a.carId, now);
+    }
   }
 
   private armWeaponCooldown(racer: RacerRuntime): void {

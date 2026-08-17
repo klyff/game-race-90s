@@ -36,6 +36,8 @@ export interface TuningOverlayReadout {
   readonly muted: boolean;
   /** Current sprite frame name or index, e.g. "marauder_0" or 0. */
   readonly spriteFrame: string | number;
+  /** Optional Racing AI debug block, appended under the handling readout. */
+  readonly aiLines?: readonly string[];
 }
 
 /**
@@ -125,5 +127,9 @@ export function formatTuningOverlay(readout: TuningOverlayReadout): readonly str
   // Line 6: key legend with mute label.
   const line6 = `[T] overlay  [C] car  [R] respawn  [M] ${muteLabel}`;
 
-  return [line1, line2, line3, line4, line5, line6];
+  const lines = [line1, line2, line3, line4, line5, line6];
+  if (readout.aiLines !== undefined && readout.aiLines.length > 0) {
+    lines.push('', ...readout.aiLines);
+  }
+  return lines;
 }

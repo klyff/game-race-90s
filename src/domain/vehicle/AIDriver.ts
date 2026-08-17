@@ -37,9 +37,6 @@ export interface RivalView {
  */
 export const AI_DEFAULT_AGGRESSION = 0.9;
 
-/** Hard ceiling on the cornering grip fraction, so even a maxed-out AI is not a guaranteed spin. */
-const MAX_CORNER_SAFETY_FACTOR = 0.99;
-
 /**
  * NPC driver that follows a searched racing line and reacts to rivals ahead.
  *
@@ -65,19 +62,10 @@ export class AIDriver {
     this.aggression = Math.max(0, Math.min(1, aggression));
     this.traits = traits;
 
-    // Push the cornering limit toward the edge of grip and shorten the braking
-    // margin so the car brakes later — both are "risk" the owner asked for.
-    const safety = Math.min(
-      MAX_CORNER_SAFETY_FACTOR,
-      options.cornerSafetyFactor + this.aggression * (MAX_CORNER_SAFETY_FACTOR - options.cornerSafetyFactor),
-    );
-    this.driveOptions = {
-      ...options,
-      cornerSafetyFactor: safety,
-      cornerLookAheadMinimum: options.cornerLookAheadMinimum * (1 - this.aggression * 0.3),
-    };
-    // At full aggression the AI keeps ~92% throttle even while catching a car,
-    // so it presses for the overtake instead of tucking in behind.
+    // Corner limits come from the caller's options. RacingAgent maps
+    // vehiclePhysics / localSteering onto those knobs — aggression is no longer
+    // a hidden grip bonus. Aggression still sharpens the close-ahead throttle.
+    this.driveOptions = options;
     this.closingThrottle = 0.55 + this.aggression * 0.4;
   }
 
@@ -89,6 +77,7 @@ export class AIDriver {
     line: RacingLine | undefined,
     rivals: readonly RivalView[],
     laneBias = 0,
+    lateralOverride?: number,
   ): InputCommand {
     const speed = Math.hypot(state.velocity.x, state.velocity.y);
     const speedRatio = stats.maxSpeed > 0 ? speed / stats.maxSpeed : 0;
@@ -98,7 +87,10 @@ export class AIDriver {
     const marks = committed ? nextCornerMarks(spline, projection.distance) : null;
     const commitLook =
       traits !== undefined && marks !== null ? cornerCommitLookAhead(traits, marks) : null;
-    const lateral = (line === undefined ? 0 : offsetAt(line, projection.distance + 12, spline)) + laneBias;
+    const lateral =
+      lateralOverride !== undefined
+        ? lateralOverride
+        : (line === undefined ? 0 : offsetAt(line, projection.distance + 12, spline)) + laneBias;
     const aim = pursuitAimPoint(
       projection,
       spline,

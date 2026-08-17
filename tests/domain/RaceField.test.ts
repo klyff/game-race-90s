@@ -413,3 +413,30 @@ describe('RaceField — reset', () => {
     });
   });
 });
+
+describe('RaceField — racing AI', () => {
+  it('exposes distinct named profiles after a step', () => {
+    const cars = manifest.cars.slice(0, 3);
+    const [a, b, player] = cars;
+    if (a === undefined || b === undefined || player === undefined) {
+      throw new Error('need three cars');
+    }
+    const field = new RaceField(
+      [
+        { carId: a.id, name: 'ALINE', stats: a.stats, isPlayer: false },
+        { carId: b.id, name: 'NEGAO', stats: b.stats, isPlayer: false },
+        { carId: player.id, stats: player.stats, isPlayer: true },
+      ],
+      track,
+      freshSpline(),
+      { countdownSeconds: 0, npcWeapons: false },
+    );
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    const aline = field.aiDebug(a.id);
+    const negao = field.aiDebug(b.id);
+    expect(aline?.profile.displayName).toBe('ALINE');
+    expect(negao?.profile.displayName).toBe('NEGAO');
+    expect(aline?.profile.ram).toBeLessThan(negao?.profile.ram ?? 0);
+    expect(aline?.scores.length).toBeGreaterThan(0);
+  });
+});
