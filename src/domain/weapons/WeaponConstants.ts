@@ -3,6 +3,8 @@
  * owner's numbers rather than magic literals scattered through the rules.
  */
 
+import { isWarTankPerk } from '../constants.ts';
+
 /**
  * Missiles on the grid for EVERY car (owner, 2026-08-16). Refill at the finish
  * line goes up to that car's own `ammoCapacity` (battle-trak 15, air-blade 4).
@@ -22,10 +24,33 @@ export const MINE_START_COUNT = 4;
 export const MISSILE_SPEED_FACTOR = 1.4;
 
 /**
- * Raw integrity removed by one missile hit BEFORE armor. Owner: "50% of a car's
- * energy" — a car already below half dies to one hit when armor is low.
+ * Catalog missile damage BEFORE the global weapon scale and armor.
+ * Live hits apply `scaledWeaponDamage()` on top (half for everyone, 30% off
+ * for the war tank) so cars last long enough to buy and equip more kit.
  */
 export const MISSILE_RAW_DAMAGE = 0.5;
+
+/**
+ * Catalog landmine damage BEFORE the global weapon scale and armor.
+ * Was an instant wreck (1.0, armor ignored). Now a real hit that armor can
+ * shrug, so a mine is dangerous without ending the race on contact.
+ */
+export const MINE_RAW_DAMAGE = 1;
+
+/** Everyone's weapons deal this fraction of the catalog raw values. */
+export const WEAPON_DAMAGE_SCALE = 0.5;
+
+/**
+ * War tank incoming weapon scale. The only car that is not halved: 30% off
+ * the catalog raw, so Magma Rex stays killable and still feels like a bunker.
+ */
+export const TANK_WEAPON_DAMAGE_SCALE = 0.7;
+
+/** Catalog raw × the car's incoming weapon scale. */
+export function scaledWeaponDamage(rawDamage: number, perkId: string | undefined): number {
+  const scale = isWarTankPerk(perkId) ? TANK_WEAPON_DAMAGE_SCALE : WEAPON_DAMAGE_SCALE;
+  return rawDamage * scale;
+}
 
 /**
  * How long a missile may fly before it is discarded, seconds. Long enough to
@@ -108,9 +133,10 @@ export const OIL_YAW_SPIN = 14;
 
 /**
  * How far behind the rear bumper a mine / oil is thrown, in car lengths.
- * Owner: at least one car length so the dropper does not sit on the blast.
+ * Two lengths plus the bumper/radius offset keeps the puck out from under
+ * the dropper, including fat sprites like the war tank.
  */
-export const DROP_BEHIND_CAR_LENGTHS = 1;
+export const DROP_BEHIND_CAR_LENGTHS = 2;
 
 /**
  * How close behind an NPC a rival must be, in world units, before the NPC drops

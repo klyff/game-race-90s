@@ -1,12 +1,15 @@
 /**
- * Championship pilot names. 25 regulars + 5 mysterious reserved for world 10.
- * A save draws 9 regulars once and keeps them until the last planet.
+ * Championship pilot names. 20 regulars locked at career start for every
+ * track, plus 5 jokers that take the front of the field on world 10.
  */
 
 export const REGULAR_PILOTS = [
+  'ALINE',
+  'ENZO',
+  'FLUFE',
+  'DAVE',
   'RAZOR',
   'NIKKI',
-  'VEX',
   'DIEGO',
   'LUNA',
   'BLAZE',
@@ -17,23 +20,19 @@ export const REGULAR_PILOTS = [
   'NOVA',
   'CRUZ',
   'ASH',
-  'REMY',
   'ZARA',
   'VINCE',
-  'PIXIE',
-  'GAGE',
-  'STORM',
-  'LEX',
-  'DAX',
   'RUBY',
-  'COLE',
-  'FAYE',
   'HEX',
 ] as const;
 
-export const MYSTERIOUS_PILOTS = ['WRAITH', 'SPECTER', 'NYX', 'OMEN', 'PHANTOM'] as const;
+/** Last-planet heavies: Russian mafia, Mad Irish, Negão Brasil, Don, alien. */
+export const JOKER_PILOTS = ['VIKTOR', 'SEAMUS', 'NEGAO', 'LUCA', 'ZOR9'] as const;
 
-export const RIVALS_PER_SAVE = 9;
+/** @deprecated Use JOKER_PILOTS. Kept so older tests and saves still compile. */
+export const MYSTERIOUS_PILOTS = JOKER_PILOTS;
+
+export const RIVALS_PER_SAVE = 20;
 export const MYSTERIOUS_SWAP_COUNT = 5;
 export const CHAMPIONSHIP_SIZE = 10;
 
@@ -47,7 +46,7 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-/** Deterministic draw of 9 regulars. Seed from the slot clock so a reload is stable. */
+/** Deterministic shuffle of the 20 regulars. Seed from the slot clock so a reload is stable. */
 export function drawRivalNames(seed: number): string[] {
   const rng = mulberry32(Number.isFinite(seed) ? seed : 1);
   const pool = [...REGULAR_PILOTS];
@@ -65,8 +64,8 @@ export function drawRivalNames(seed: number): string[] {
 }
 
 /**
- * World 10: the five lowest-scoring rivals are replaced by the mysterious five.
- * `scores` is aligned with `rivals`. Ties keep roster order (stable).
+ * Worlds 1-9 keep the locked 20. World 10 drops the five lowest-scoring
+ * regulars and puts the five jokers at the front of the field so they race.
  */
 export function rivalsForPlanet(
   rivals: readonly string[],
@@ -84,5 +83,5 @@ export function rivalsForPlanet(
   ranked.sort((a, b) => a.score - b.score || a.index - b.index);
   const drop = new Set(ranked.slice(0, MYSTERIOUS_SWAP_COUNT).map(entry => entry.name));
   const kept = rivals.filter(name => !drop.has(name));
-  return [...kept, ...MYSTERIOUS_PILOTS].slice(0, RIVALS_PER_SAVE);
+  return [...JOKER_PILOTS, ...kept].slice(0, RIVALS_PER_SAVE);
 }

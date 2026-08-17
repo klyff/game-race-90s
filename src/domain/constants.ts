@@ -116,6 +116,11 @@ export const CAR_PERK = {
 } as const;
 export type CarPerkId = (typeof CAR_PERK)[keyof typeof CAR_PERK];
 
+/** True when this perk id is the war tank (the only car with a milder weapon nerf). */
+export function isWarTankPerk(id: string | undefined): boolean {
+  return id === CAR_PERK.WAR_TANK;
+}
+
 /**
  * Extra engine power and top speed a car gets on its home planet, before the
  * 0.9 / 0.7 world-advantage fraction is applied. 0.20 × 0.9 = +18% for a

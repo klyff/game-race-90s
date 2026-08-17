@@ -19,8 +19,10 @@ import { decideMissileAim } from '../../src/domain/weapons/WeaponAim.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
   DROP_BEHIND_CAR_LENGTHS,
+  MINE_RAW_DAMAGE,
   MISSILE_RAW_DAMAGE,
   MISSILE_START_COUNT,
+  scaledWeaponDamage,
   MISSILE_SPEED_FACTOR,
   OIL_START_COUNT,
 } from '../../src/domain/weapons/WeaponConstants.ts';
@@ -56,6 +58,15 @@ function twoCarField(): RaceField {
 beforeEach(() => {
   resetMissileIds();
   resetHazardIds();
+});
+
+describe('scaledWeaponDamage', () => {
+  it('halves catalog damage for everyone except the war tank (30% off)', () => {
+    expect(scaledWeaponDamage(0.5, undefined)).toBeCloseTo(0.25, 5);
+    expect(scaledWeaponDamage(0.5, 'arsenal')).toBeCloseTo(0.25, 5);
+    expect(scaledWeaponDamage(0.5, 'war-tank')).toBeCloseTo(0.35, 5);
+    expect(scaledWeaponDamage(1, 'war-tank')).toBeCloseTo(0.7, 5);
+  });
 });
 
 describe('WeaponInventory', () => {
@@ -225,15 +236,32 @@ describe('RaceField weapons', () => {
     expect(field.playerWeaponHits.mines).toBe(0);
   });
 
-  it('a landmine destroys a car on contact', () => {
+  it('a landmine deals scaled weapon damage on contact, not an instant wreck', () => {
     const field = twoCarField();
     field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
     const mine = field.activeHazards.find(h => h.kind === HAZARD_KIND.MINE)!;
     const rival = field.racers.find(r => !r.isPlayer)!;
+    const before = rival.integrity.integrity;
     rival.state = { ...rival.state, position: mine.position };
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
-    expect(rival.integrity.condition).toBe(CAR_CONDITION.DESTROYED);
-    expect(rival.explodedThisStep).toBe(true);
+    const lost = before - rival.integrity.integrity;
+    const expected = scaledWeaponDamage(MINE_RAW_DAMAGE, rival.perk.id) * (1 - rival.stats.armor);
+    expect(lost).toBeCloseTo(expected, 5);
+    expect(rival.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
+  });
+
+  it('does not count a mine collision on the drop step', () => {
+    const field = twoCarField();
+    const player = field.player;
+    const rival = field.racers.find(r => !r.isPlayer)!;
+    const beforePlayer = player.integrity.integrity;
+    const beforeRival = rival.integrity.integrity;
+    rival.state = { ...rival.state, position: player.state.position };
+    field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
+    expect(player.integrity.integrity).toBe(beforePlayer);
+    expect(rival.integrity.integrity).toBe(beforeRival);
+    expect(field.playerWeaponHits.mines).toBe(0);
+    expect(field.activeHazards.some(h => h.kind === HAZARD_KIND.MINE)).toBe(true);
   });
 
   it('a missile hit removes ~50% integrity (armor-mitigated)', () => {
@@ -256,7 +284,7 @@ describe('RaceField weapons', () => {
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
 
     const lost = before - rival.integrity.integrity;
-    const expected = MISSILE_RAW_DAMAGE * (1 - rival.stats.armor);
+    const expected = scaledWeaponDamage(MISSILE_RAW_DAMAGE, rival.perk.id) * (1 - rival.stats.armor);
     expect(lost).toBeCloseTo(expected, 5);
     expect(field.playerWeaponHits.missiles).toBe(1);
   });

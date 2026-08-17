@@ -53,6 +53,7 @@ export class PauseScene extends Phaser.Scene {
           values: AUDIO_VALUES,
           valueIndex: data.muted ? 1 : 0,
         },
+        { id: 'help', kind: MENU_KIND.ACTION, label: 'HELP' },
         { id: 'garage', kind: MENU_KIND.ACTION, label: 'GARAGE' },
         { id: 'menu', kind: MENU_KIND.ACTION, label: 'MAIN MENU' },
       ],
@@ -92,6 +93,7 @@ export class PauseScene extends Phaser.Scene {
       onCycled: () => this.refreshHighlight(),
     });
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.toggleMuteKey());
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H).on('down', () => this.openHelp());
   }
 
   private handleResult(result: MenuResult): void {
@@ -102,6 +104,10 @@ export class PauseScene extends Phaser.Scene {
       }
       if (result.id === 'save') {
         this.save();
+        return;
+      }
+      if (result.id === 'help') {
+        this.openHelp();
         return;
       }
       if (result.id === 'garage') {
@@ -133,6 +139,11 @@ export class PauseScene extends Phaser.Scene {
     this.payload.setMuted(nextMuted);
     this.menu.setOption('audio', nextMuted ? 1 : 0, true);
     this.refreshHighlight();
+  }
+
+  private openHelp(): void {
+    this.scene.pause();
+    this.scene.launch(SCENE_KEY.HELP, { resumeScene: SCENE_KEY.PAUSE });
   }
 
   private resume(): void {
@@ -181,9 +192,9 @@ export class PauseScene extends Phaser.Scene {
     const centreX = width / 2;
 
     this.backdrop.setSize(width, height);
-    this.titleText.setPosition(centreX, height * 0.26);
+    this.titleText.setPosition(centreX, height * 0.18);
     this.optionTexts.forEach((text, index) => {
-      text.setPosition(centreX, height * (0.4 + index * 0.08));
+      text.setPosition(centreX, height * (0.3 + index * 0.07));
     });
     this.statusText.setPosition(centreX, height * 0.76);
     this.promptText.setPosition(centreX, height * 0.88);

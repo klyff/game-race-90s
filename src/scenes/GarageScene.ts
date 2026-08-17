@@ -199,6 +199,7 @@ export class GarageScene extends Phaser.Scene {
     add(Phaser.Input.Keyboard.KeyCodes.ENTER, false, () => this.confirmFocus());
     add(Phaser.Input.Keyboard.KeyCodes.SPACE, false, () => this.confirmFocus());
     add(Phaser.Input.Keyboard.KeyCodes.ESC, false, () => this.back());
+    add(Phaser.Input.Keyboard.KeyCodes.H, false, () => this.openHelp());
     keyboard.on('keydown-TAB', (event: KeyboardEvent) => {
       event.preventDefault();
       this.moveFocus(event.shiftKey ? -1 : 1);
@@ -403,6 +404,14 @@ export class GarageScene extends Phaser.Scene {
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.goRace());
   }
 
+  private openHelp(): void {
+    if (this.mode !== 'hub') {
+      return;
+    }
+    this.scene.pause();
+    this.scene.launch(SCENE_KEY.HELP, { resumeScene: SCENE_KEY.GARAGE });
+  }
+
   private goRace(): void {
     const career = loadActiveCareer();
     if (career === null || career.equippedCarId === '') {
@@ -574,7 +583,7 @@ export class GarageScene extends Phaser.Scene {
       );
       this.btnBuy.setText(owned ? 'EQUIP CAR' : 'BUY CAR');
       this.paintArsenal(carId);
-      this.hintText.setText('CLICK OR TAB  ·  ←→ CARS  ·  ENTER');
+      this.hintText.setText('CLICK OR TAB  ·  ←→ CARS  ·  ENTER  ·  H HELP');
       if (this.textures.exists(carId)) {
         this.preview.setTexture(carId, PREVIEW_FRAME).setVisible(true);
       }
@@ -668,7 +677,7 @@ export class GarageScene extends Phaser.Scene {
     const lines = ['RANKING'];
     ranked.forEach((row, index) => {
       const marker = row.name === playerName ? '>' : ' ';
-      lines.push(`${marker}${String(index + 1).padStart(2)} ${row.name.padEnd(8)} ${String(row.points).padStart(4)}`);
+      lines.push(`${marker}${String(index + 1).padStart(2)} ${row.name.padEnd(10)} ${String(row.points).padStart(4)}`);
     });
     return lines.join('\n');
   }

@@ -1,0 +1,8 @@
+HEX
+
+BIO
+Goth racer. Treats the last lap like a séance.
+
+PHYSICAL / WARDROBE / SET
+Pale, black pageboy, white contacts, coffin pendant, velvet choker, deadpan almost-smile. Griffith Observatory night, purple fog, hearse-nosed coupe. Always facing camera.
+Make it in 16-bit like the card that is in public/assets/cards/klyff.png

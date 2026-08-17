@@ -61,6 +61,32 @@
       "worldAdvantage": 0.7
     },
     {
+      "id": "car-5",
+      "displayName": "Sand Viper",
+      "archetype": "Dirt muscle — Thunder Basin extra",
+      "image": "car-5.png",
+      "shadow": {
+        "width": 43,
+        "height": 18
+      },
+      "stats": {
+        "mass": 880,
+        "enginePower": 32,
+        "brakeForce": 44,
+        "maxSpeed": 74,
+        "grip": 32,
+        "steerRate": 2.7,
+        "steerSpeedFalloff": 0.4,
+        "armor": 0.32,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.6,
+        "aimRadius": 3.3
+      },
+      "perk": "trench-grip",
+      "homePlanetId": "thunder-basin",
+      "worldAdvantage": 0.7
+    },
+    {
       "id": "delorean",
       "displayName": "Delorean",
       "archetype": "Steel wedge — Chrome Verge titular",

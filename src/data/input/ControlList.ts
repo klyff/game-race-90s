@@ -1,0 +1,39 @@
+/**
+ * Authoritative command list for the Help screen and any overlay that
+ * reprints the pad. Keep this in sync with KeyboardDriver and MenuController.
+ */
+
+export interface ControlRow {
+  readonly keys: string;
+  readonly action: string;
+}
+
+export const RACE_DRIVE_CONTROLS: readonly ControlRow[] = [
+  { keys: 'UP', action: 'THROTTLE' },
+  { keys: 'DOWN', action: 'BRAKE  ·  HOLD TO REVERSE' },
+  { keys: 'LEFT / RIGHT', action: 'STEER' },
+  { keys: 'SPACE', action: 'HOP' },
+  { keys: 'LEFT SHIFT', action: 'TURBO' },
+];
+
+export const RACE_WEAPON_CONTROLS: readonly ControlRow[] = [
+  { keys: 'C', action: 'FIRE MISSILE' },
+  { keys: 'X', action: 'DROP LANDMINE' },
+  { keys: 'Z', action: 'DROP OIL' },
+];
+
+export const RACE_SYSTEM_CONTROLS: readonly ControlRow[] = [
+  { keys: 'ESC', action: 'PAUSE' },
+  { keys: 'M', action: 'MUTE / UNMUTE' },
+  { keys: 'H', action: 'HELP' },
+];
+
+export const MENU_CONTROLS: readonly ControlRow[] = [
+  { keys: 'UP / DOWN', action: 'MOVE CURSOR' },
+  { keys: 'LEFT / RIGHT', action: 'CHANGE VALUE  ·  CYCLE CARS' },
+  { keys: 'ENTER / SPACE', action: 'SELECT' },
+  { keys: 'ESC', action: 'BACK' },
+  { keys: 'TAB', action: 'NEXT GARAGE BUTTON' },
+  { keys: 'H', action: 'HELP' },
+  { keys: 'M', action: 'MUTE / UNMUTE' },
+];

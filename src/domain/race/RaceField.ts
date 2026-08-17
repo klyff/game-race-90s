@@ -50,7 +50,9 @@ import {
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 import { decideMissileAim } from '../weapons/WeaponAim.ts';
 import {
+  MINE_RAW_DAMAGE,
   MISSILE_RAW_DAMAGE,
+  scaledWeaponDamage,
   NPC_MINE_DROP_GAP_UNITS,
   NPC_OIL_DROP_GAP_UNITS,
   NPC_WEAPON_COOLDOWN_SECONDS,
@@ -107,7 +109,7 @@ export interface RacerEntry {
  *
  * Mutable on purpose, and the one place in `src/domain/` that is: the render layer
  * reads these objects every frame for five cars at 60 Hz, and rebuilding five frozen
- * records per step only to throw them away would be churn with no safety gained ‚Äî
+ * records per step only to throw them away would be churn with no safety gained ù
  * the rules that decide the values are still pure functions, and this type only
  * *holds* their results.
  */
@@ -201,12 +203,12 @@ const DEFAULT_GRID_SETBACK_UNITS = 14;
  *  2. only THEN is car-to-car contact resolved, pair by pair;
  *  3. any car a contact moved is re-checked against the wall;
  *  4. damage is applied from the hardest contact of the step, then weapon hits
- *     and hazard overlaps resolve (oil ‚Üí yawSpin, mine ‚Üí destroy, missile ‚Üí 50%);
+ *     and hazard overlaps resolve (oil ? yawSpin, mine ? destroy, missile ? 50%);
  *  5. lap progress and standings advance last; a finish-line crossing refills ammo.
  *
  * Steps 1 and 2 must not interleave. Resolving contact inside the per-car loop
  * would let the first car in the list collide with cars that had already moved this
- * step and cars that had not, which makes the result depend on array order ‚Äî the
+ * step and cars that had not, which makes the result depend on array order ù the
  * same pair of cars would exchange a different impulse depending on who was listed
  * first. Step 3 exists because a contact impulse is free to shove a car sideways
  * through a wall that had already been resolved in step 1. Weapons live INSIDE this
@@ -232,7 +234,7 @@ export class RaceField {
   private hazards: TrackHazard[] = [];
   /** Missile bursts this step (car hit or wall), for the presentation layer. */
   private weaponBursts: Vec2[] = [];
-  /** Hazard ids spawned this step ‚Äî their dropper is immune until the next step. */
+  /** Hazard ids spawned this step ù their dropper is immune until the next step. */
   private readonly freshHazardIds = new Set<number>();
   /** Player weapon hits landed on rivals this race (for the purse bounty). */
   private playerHits = { missiles: 0, oil: 0, mines: 0 };
@@ -256,7 +258,7 @@ export class RaceField {
     this.countdownSeconds = options.countdownSeconds ?? DEFAULT_COUNTDOWN_SECONDS;
     this.projectionWindow = options.projectionWindow ?? DEFAULT_PROJECTION_WINDOW;
     this.gridSetbackUnits = options.gridSetbackUnits ?? DEFAULT_GRID_SETBACK_UNITS;
-    // Oil lifetime is derived per track: 1.6 √ó an estimated lap, never a constant.
+    // Oil lifetime is derived per track: 1.6 ù an estimated lap, never a constant.
     this.oilLifetimeSeconds =
       OIL_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED);
     this.npcWeapons = options.npcWeapons ?? true;
@@ -428,7 +430,7 @@ export class RaceField {
       dealtScales[index] = dealtScale;
     };
 
-    // 1. Every car integrates on its own, against the track only ‚Äî and may fire.
+    // 1. Every car integrates on its own, against the track only ù and may fire.
     this.racers.forEach((racer, index) => {
       racer.explodedThisStep = false;
       racer.respawnedThisStep = false;
@@ -458,7 +460,7 @@ export class RaceField {
       // Perks enter as DERIVED values, never as a special case inside the physics: the
       // stats this one step is driven with, and an adjustment to whatever surface the
       // track picks. Both are recomputed every step from the current field, so nothing
-      // is cached and nothing can go stale ‚Äî the trap that produced T-039.
+      // is cached and nothing can go stale ù the trap that produced T-039.
       const draft = this.draftFor(racer);
       const worlded = homeWorldStats(
         racer.stats,
@@ -499,8 +501,8 @@ export class RaceField {
         // measurement showed that is nearly always tiny: real driving glances off
         // walls tangentially, so a threshold on the normal component was crossed once
         // or twice a lap and no car could ever be destroyed (T-033). Total speed lost
-        // in the step catches the case the normal component misses ‚Äî grinding a wall
-        // at 70 u/s wrecks a car, which is what it should do ‚Äî and it is only read
+        // in the step catches the case the normal component misses ù grinding a wall
+        // at 70 u/s wrecks a car, which is what it should do ù and it is only read
         // when the wall was actually touched, so braking never counts as a crash.
         const speedLost = speedBefore - length(step.state.velocity);
         // Always the victim: a car that hits a wall is the victim of its own crash.
@@ -556,7 +558,7 @@ export class RaceField {
           }
         }
         this.weaponBursts.push(advanced.position);
-        // Missile is consumed on hit ‚Äî if the target dies, both "explode" (stage 4).
+        // Missile is consumed on hit ù if the target dies, both "explode" (stage 4).
       }
       this.missiles = surviving;
     }
@@ -574,7 +576,7 @@ export class RaceField {
         // splitting the impulse by reciprocal mass exactly as it always has: a heavier
         // car both shoves harder and is shoved less, which is what "wins contact" and
         // "immovable" mean, and momentum is still conserved for the masses used. The
-        // roster's authored mass is never touched ‚Äî it is shared data from `cars.json`.
+        // roster's authored mass is never touched ù it is shared data from `cars.json`.
         const contact = resolveCarContact(
           a.state,
           contactStats(a.stats, a.perk),
@@ -636,7 +638,7 @@ export class RaceField {
       }
     });
 
-    // 4. Damage from the hardest contact of the step, once per car ‚Äî then weapons.
+    // 4. Damage from the hardest contact of the step, once per car ù then weapons.
     this.racers.forEach((racer, index) => {
       const impact = impacts[index] ?? 0;
       if (impact <= 0) {
@@ -670,7 +672,11 @@ export class RaceField {
         continue;
       }
       const before = racer.integrity;
-      racer.integrity = applyWeaponDamage(before, MISSILE_RAW_DAMAGE, racer.stats);
+      racer.integrity = applyWeaponDamage(
+        before,
+        scaledWeaponDamage(MISSILE_RAW_DAMAGE, racer.perk.id),
+        racer.stats,
+      );
       if (
         before.condition !== CAR_CONDITION.DESTROYED &&
         racer.integrity.condition === CAR_CONDITION.DESTROYED
@@ -778,7 +784,7 @@ export class RaceField {
   }
 
   /**
-   * Oil ‚Üí yawSpin (decision 19); mine ‚Üí instant destroy. A hazard is consumed on
+   * Oil ? yawSpin (decision 19); mine ? instant destroy. A hazard is consumed on
    * contact. The dropper is immune to a hazard on the step it was spawned.
    */
   private resolveHazardOverlaps(): void {
@@ -798,11 +804,9 @@ export class RaceField {
 
     const consumed = new Set<number>();
     for (const hit of hits) {
+      // Drop frame never counts: the puck is still leaving the bumper.
       if (this.freshHazardIds.has(hit.hazardId)) {
-        const hazard = this.hazards.find(entry => entry.id === hit.hazardId);
-        if (hazard !== undefined && hazard.ownerCarId === hit.targetCarId) {
-          continue;
-        }
+        continue;
       }
       const racer = this.racers.find(entry => entry.carId === hit.targetCarId);
       if (racer === undefined || !this.canCollide(racer)) {
@@ -831,9 +835,12 @@ export class RaceField {
         continue;
       }
 
-      // Landmine: destroy outright.
       const before = racer.integrity;
-      racer.integrity = applyWeaponDamage(before, 1, { ...racer.stats, armor: 0 });
+      racer.integrity = applyWeaponDamage(
+        before,
+        scaledWeaponDamage(MINE_RAW_DAMAGE, racer.perk.id),
+        racer.stats,
+      );
       if (
         before.condition !== CAR_CONDITION.DESTROYED &&
         racer.integrity.condition === CAR_CONDITION.DESTROYED
@@ -859,7 +866,7 @@ export class RaceField {
    * How much tow this car is getting from the rest of the field, 0..1.
    *
    * Returns 0 immediately for a car that cannot draft at all, which is four of the five
-   * cars ‚Äî so the pair scan below only ever runs for the one car whose perk uses it, and
+   * cars ù so the pair scan below only ever runs for the one car whose perk uses it, and
    * the common case costs a single comparison rather than a loop over the field.
    *
    * Read at the top of stage 1, from positions as they stood at the END of the previous
@@ -888,7 +895,7 @@ export class RaceField {
   /**
    * A wrecked car keeps its position but takes no part in the race: no physics, no
    * lap progress, and no contact. When the timer runs out it is set back down on the
-   * centreline where it died, facing the right way ‚Äî respawning at the grid would
+   * centreline where it died, facing the right way ù respawning at the grid would
    * teleport a car that was half a lap ahead.
    */
   private sitOutWreck(racer: RacerRuntime, stepSeconds: number): void {
@@ -932,7 +939,7 @@ export class RaceField {
       .filter(other => other !== racer && this.canCollide(other))
       .map(other => ({
         carId: other.carId,
-        // LIVE stage-1 distance ‚Äî never stage-5 standings (one step stale).
+        // LIVE stage-1 distance ù never stage-5 standings (one step stale).
         distance: other.distance,
         isPlayer: other.isPlayer,
       }));
@@ -1057,7 +1064,7 @@ type ContactSide = (typeof CONTACT_SIDE)[keyof typeof CONTACT_SIDE];
  * The aggressor is whichever car was closing the gap faster along the line joining
  * their centres. That single number is the honest test: it makes the car behind in a
  * rear-end the aggressor, it makes a car turning into another's flank the aggressor,
- * and in a genuine head-on ‚Äî both closing at the same rate ‚Äî it names NEITHER, so
+ * and in a genuine head-on ù both closing at the same rate ù it names NEITHER, so
  * both cars take full victim damage. A slow car minding its own line is never blamed
  * for being hit, which is the whole point of the rule.
  *

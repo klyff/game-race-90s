@@ -44,6 +44,7 @@ export const GARAGE_CATALOG: readonly CatalogEntry[] = [
   { carId: 'car-2', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
   { carId: 'car-3', price: WORLD_ONE_EXTRA_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
   { carId: 'car-16', price: WORLD_ONE_EXTRA_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
+  { carId: 'car-5', price: wavePrice(2), unlockPlanet: 2, tier: CAR_TIER.WEAK },
   { carId: 'car-13', price: wavePrice(2), unlockPlanet: 2, tier: CAR_TIER.WEAK },
   { carId: 'car-19', price: wavePrice(2), unlockPlanet: 2, tier: CAR_TIER.WEAK },
   { carId: 'car-4', price: wavePrice(3), unlockPlanet: 3, tier: CAR_TIER.MEDIUM },

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.ts';
 import { GarageScene } from './scenes/GarageScene.ts';
 import { HudScene } from './scenes/HudScene.ts';
+import { HelpScene } from './scenes/HelpScene.ts';
 import { PauseScene } from './scenes/PauseScene.ts';
 import { PlanetSelectScene } from './scenes/PlanetSelectScene.ts';
 import { RaceScene } from './scenes/RaceScene.ts';
@@ -42,6 +43,7 @@ const game = new Phaser.Game({
     HudScene,
     ResultsScene,
     PauseScene,
+    HelpScene,
   ],
 });
 

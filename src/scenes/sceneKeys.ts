@@ -16,6 +16,7 @@ export const SCENE_KEY = {
   HUD: 'hud',
   RESULTS: 'results',
   PAUSE: 'pause',
+  HELP: 'help',
 } as const;
 export type SceneKey = (typeof SCENE_KEY)[keyof typeof SCENE_KEY];
 

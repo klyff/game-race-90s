@@ -106,10 +106,10 @@ describe('parseCarSetManifest', () => {
     expect(manifest).toBeDefined();
   });
 
-  it('real manifest has the full 20-car fleet', () => {
+  it('real manifest has the full 21-car fleet', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    expect(manifest.cars.length).toBe(20);
+    expect(manifest.cars.length).toBe(21);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -400,7 +400,7 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(20);
+    expect(manifest.cars.length).toBe(21);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
