@@ -9,6 +9,7 @@ import type { HudReadout } from '../adapters/render/HudFormat.ts';
 import { IsoProjection } from '../adapters/render/IsoProjection.ts';
 import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
 import { TuningOverlay } from '../adapters/render/TuningOverlay.ts';
+import { formatAiOverlay } from '../adapters/render/AiOverlayFormat.ts';
 import { TyreMarks } from '../adapters/render/TyreMarks.ts';
 import { VehicleView } from '../adapters/render/VehicleView.ts';
 import { findCarSheet, frameIndexForHeading } from '../data/cars/CarManifest.ts';
@@ -166,6 +167,7 @@ export class RaceScene extends Phaser.Scene {
   private loop!: FixedStepLoop;
   private audio!: RaceAudio;
   private overlay!: TuningOverlay;
+  private aiFocusIndex = 0;
   private field!: RaceField;
   /** One view per racer, index-aligned with `field.racers`. */
   private views: VehicleView[] = [];
@@ -696,6 +698,12 @@ export class RaceScene extends Phaser.Scene {
 
     // T hides the overlay, for looking at the game rather than at the numbers.
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T).on('down', unlessPaused(() => this.overlay.toggle()));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N).on('down', unlessPaused(() => {
+      this.aiFocusIndex += 1;
+      if (!this.overlay.isVisible) {
+        this.overlay.toggle();
+      }
+    }));
 
     // Esc pauses the race and raises the pause menu (Return / Save / Main Menu).
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.pauseGame());
@@ -769,7 +777,24 @@ export class RaceScene extends Phaser.Scene {
       zoom: this.cameras.main.zoom,
       muted: this.audio.isMuted,
       spriteFrame: this.playerView()?.sprite.frame.name ?? '0',
+      aiLines: this.aiOverlayLines(),
     });
+  }
+
+  private aiOverlayLines(): readonly string[] {
+    const npcs = this.field.npcNames();
+    if (npcs.length === 0) {
+      return [];
+    }
+    const focus = npcs[this.aiFocusIndex % npcs.length];
+    if (focus === undefined) {
+      return [];
+    }
+    const snapshot = this.field.aiDebug(focus.carId);
+    if (snapshot === undefined) {
+      return [`NPC ${focus.name} — no AI snapshot`];
+    }
+    return formatAiOverlay(snapshot);
   }
 
   private playerView(): VehicleView | undefined {
