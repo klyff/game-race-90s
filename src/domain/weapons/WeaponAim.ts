@@ -15,7 +15,7 @@ export interface AimCandidate {
 export interface AimDecision {
   /** True when a target sits inside the aim corridor. */
   readonly shouldFire: boolean;
-  /** Preferred target car id, if any. Player wins ties on range. */
+  /** Nearest capturable target. The shooter does not know who the human is. */
   readonly targetCarId: string | null;
 }
 
@@ -62,8 +62,7 @@ function distanceToSegment(p: Vec2, a: Vec2, b: Vec2): number {
  * reticle centre. A larger `aimRadius` widens that corridor, so the shot is more
  * forgiving — "quanto maior, mais preciso".
  *
- * Owner rules preserved: if a Player is capturable, every NPC prioritises it;
- * otherwise the nearest capturable rival is chosen.
+ * Nearest capturable rival wins. NPCs do not know who the human is.
  */
 export function decideMissileAim(
   shooterPosition: Vec2,
@@ -80,8 +79,7 @@ export function decideMissileAim(
   );
   const captureRadius = aimRadius > 0 ? aimRadius : DEFAULT_AIM_RADIUS;
 
-  let bestPlayer: { carId: string; range: number } | null = null;
-  let bestOther: { carId: string; range: number } | null = null;
+  let best: { carId: string; range: number } | null = null;
 
   for (const candidate of candidates) {
     const offset = subtract(candidate.position, shooterPosition);
@@ -94,16 +92,12 @@ export function decideMissileAim(
     }
 
     const pick = { carId: candidate.carId, range: distance(shooterPosition, candidate.position) };
-    if (candidate.isPlayer) {
-      if (bestPlayer === null || pick.range < bestPlayer.range) {
-        bestPlayer = pick;
-      }
-    } else if (bestOther === null || pick.range < bestOther.range) {
-      bestOther = pick;
+    if (best === null || pick.range < best.range) {
+      best = pick;
     }
   }
 
-  const chosen = bestPlayer ?? bestOther;
+  const chosen = best;
   if (chosen === null) {
     return { shouldFire: false, targetCarId: null };
   }

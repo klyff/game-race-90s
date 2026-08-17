@@ -7,13 +7,14 @@ import { resolveWallContact } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
 import { trackFullHalfWidth } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
-import { resolveCarContact } from '../vehicle/CarCollision.ts';
+import { CONTACT_ATTACKER, contactAttackCredit, resolveCarContact } from '../vehicle/CarCollision.ts';
 import {
   applyImpactDamage,
   applyWeaponDamage,
   CAR_CONDITION,
   createCarIntegrity,
   DAMAGE_ROLE,
+  IMPACT_DAMAGE_THRESHOLD,
   tickIntegrity,
 } from '../vehicle/CarIntegrity.ts';
 import type { CarIntegrity, DamageRole } from '../vehicle/CarIntegrity.ts';
@@ -31,7 +32,14 @@ import type { CarPerkId } from '../constants.ts';
 import { PaceDriver } from '../vehicle/PaceDriver.ts';
 import { AIDriver } from '../vehicle/AIDriver.ts';
 import type { RivalView } from '../vehicle/AIDriver.ts';
-import { findLineForCar } from './RacingLine.ts';
+import { buildLineCandidates, findLineForCar } from './RacingLine.ts';
+import type { RacingLine } from './RacingLine.ts';
+import {
+  chooseLineByAccount,
+  driveOptionsFor,
+  rivalAgentFor,
+  type RivalAgent,
+} from '../vehicle/RivalAgent.ts';
 import type { TrackLinesManifest } from './RacingLine.ts';
 import { createVehicleState, isAirborne } from '../vehicle/Vehicle.ts';
 import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
@@ -47,6 +55,7 @@ import {
   refillTurboCharges,
   TURBO_DURATION_SECONDS,
 } from '../vehicle/TurboCharges.ts';
+import { collisionBoxFromStats } from '../vehicle/CollisionMap.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 import { decideMissileAim } from '../weapons/WeaponAim.ts';
 import {
@@ -93,6 +102,8 @@ import { coastInput, isNearlyStopped } from './Coast.ts';
 export interface RacerEntry {
   readonly carId: string;
   readonly stats: VehicleStats;
+  /** Pilot name when known. Seeds the NPC agent so KIRA and SNAKE do not share a brain. */
+  readonly name?: string;
   /** Exactly one entry should be the player; the rest are driven by `PaceDriver`. */
   readonly isPlayer: boolean;
   /**
@@ -109,7 +120,7 @@ export interface RacerEntry {
  *
  * Mutable on purpose, and the one place in `src/domain/` that is: the render layer
  * reads these objects every frame for five cars at 60 Hz, and rebuilding five frozen
- * records per step only to throw them away would be churn with no safety gained ù
+ * records per step only to throw them away would be churn with no safety gained ?
  * the rules that decide the values are still pure functions, and this type only
  * *holds* their results.
  */
@@ -208,7 +219,7 @@ const DEFAULT_GRID_SETBACK_UNITS = 14;
  *
  * Steps 1 and 2 must not interleave. Resolving contact inside the per-car loop
  * would let the first car in the list collide with cars that had already moved this
- * step and cars that had not, which makes the result depend on array order ù the
+ * step and cars that had not, which makes the result depend on array order ? the
  * same pair of cars would exchange a different impulse depending on who was listed
  * first. Step 3 exists because a contact impulse is free to shove a car sideways
  * through a wall that had already been resolved in step 1. Weapons live INSIDE this
@@ -221,7 +232,11 @@ export class RaceField {
   private readonly track: TrackDefinition;
   private readonly spline: TrackSpline;
   private readonly pace: PaceDriver;
-  private readonly ai: AIDriver;
+  private readonly brains: readonly {
+    readonly agent: RivalAgent;
+    readonly driver: AIDriver;
+    readonly line: RacingLine | undefined;
+  }[];
   private readonly trackLines: TrackLinesManifest | undefined;
   private readonly countdownSeconds: number;
   private readonly projectionWindow: number;
@@ -234,10 +249,10 @@ export class RaceField {
   private hazards: TrackHazard[] = [];
   /** Missile bursts this step (car hit or wall), for the presentation layer. */
   private weaponBursts: Vec2[] = [];
-  /** Hazard ids spawned this step ù their dropper is immune until the next step. */
+  /** Hazard ids spawned this step ? their dropper is immune until the next step. */
   private readonly freshHazardIds = new Set<number>();
   /** Player weapon hits landed on rivals this race (for the purse bounty). */
-  private playerHits = { missiles: 0, oil: 0, mines: 0 };
+  private playerHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
 
 
   constructor(
@@ -253,12 +268,11 @@ export class RaceField {
     this.track = track;
     this.spline = spline;
     this.pace = options.paceDriver ?? new PaceDriver();
-    this.ai = new AIDriver(this.pace.options);
     this.trackLines = options.trackLines;
     this.countdownSeconds = options.countdownSeconds ?? DEFAULT_COUNTDOWN_SECONDS;
     this.projectionWindow = options.projectionWindow ?? DEFAULT_PROJECTION_WINDOW;
     this.gridSetbackUnits = options.gridSetbackUnits ?? DEFAULT_GRID_SETBACK_UNITS;
-    // Oil lifetime is derived per track: 1.6 ù an estimated lap, never a constant.
+    // Oil lifetime is derived per track: 1.6 ? an estimated lap, never a constant.
     this.oilLifetimeSeconds =
       OIL_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED);
     this.npcWeapons = options.npcWeapons ?? true;
@@ -307,6 +321,40 @@ export class RaceField {
       };
     });
 
+    const tightness = meanCornerTightness(this.spline);
+    this.brains = this.racers.map((racer, index) => {
+      const entry = entries[index];
+      const seed = entry?.name ?? `${racer.carId}#${racer.gridIndex}`;
+      const agent = rivalAgentFor(seed);
+      const candidates = buildLineCandidates(track, spline, racer.stats.collisionRadius);
+      const picked = chooseLineByAccount(
+        agent,
+        candidates,
+        entry?.stats.grip ?? racer.stats.grip,
+        surfaceGrip,
+        tightness,
+      );
+      const searched = this.trackLines === undefined ? undefined : findLineForCar(this.trackLines, racer.carId);
+      const built: RacingLine = {
+        trackId: track.id,
+        carId: racer.carId,
+        candidateName: picked.name,
+        offsets: picked.offsets,
+        lapSeconds: 0,
+        wallContacts: 0,
+      };
+      const line: RacingLine | undefined = racer.isPlayer
+        ? undefined
+        : agent.pathKind === 'astar' && searched !== undefined
+          ? searched
+          : built;
+      return {
+        agent,
+        driver: new AIDriver(driveOptionsFor(agent, this.pace.options), agent.aggression, agent.traits),
+        line,
+      };
+    });
+
     this.raceState = this.freshRaceState();
     this.reset();
   }
@@ -336,7 +384,12 @@ export class RaceField {
   }
 
   /** How many of the player's weapons have hit a rival this race. */
-  get playerWeaponHits(): { readonly missiles: number; readonly oil: number; readonly mines: number } {
+  get playerWeaponHits(): {
+    readonly missiles: number;
+    readonly oil: number;
+    readonly mines: number;
+    readonly contacts: number;
+  } {
     return this.playerHits;
   }
 
@@ -386,7 +439,7 @@ export class RaceField {
     this.missiles = [];
     this.hazards = [];
     this.freshHazardIds.clear();
-    this.playerHits = { missiles: 0, oil: 0, mines: 0 };
+    this.playerHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
     this.raceState = this.freshRaceState();
   }
 
@@ -430,7 +483,7 @@ export class RaceField {
       dealtScales[index] = dealtScale;
     };
 
-    // 1. Every car integrates on its own, against the track only ù and may fire.
+    // 1. Every car integrates on its own, against the track only ? and may fire.
     this.racers.forEach((racer, index) => {
       racer.explodedThisStep = false;
       racer.respawnedThisStep = false;
@@ -460,7 +513,7 @@ export class RaceField {
       // Perks enter as DERIVED values, never as a special case inside the physics: the
       // stats this one step is driven with, and an adjustment to whatever surface the
       // track picks. Both are recomputed every step from the current field, so nothing
-      // is cached and nothing can go stale ù the trap that produced T-039.
+      // is cached and nothing can go stale ? the trap that produced T-039.
       const draft = this.draftFor(racer);
       const worlded = homeWorldStats(
         racer.stats,
@@ -501,8 +554,8 @@ export class RaceField {
         // measurement showed that is nearly always tiny: real driving glances off
         // walls tangentially, so a threshold on the normal component was crossed once
         // or twice a lap and no car could ever be destroyed (T-033). Total speed lost
-        // in the step catches the case the normal component misses ù grinding a wall
-        // at 70 u/s wrecks a car, which is what it should do ù and it is only read
+        // in the step catches the case the normal component misses ? grinding a wall
+        // at 70 u/s wrecks a car, which is what it should do ? and it is only read
         // when the wall was actually touched, so braking never counts as a crash.
         const speedLost = speedBefore - length(step.state.velocity);
         // Always the victim: a car that hits a wall is the victim of its own crash.
@@ -558,7 +611,7 @@ export class RaceField {
           }
         }
         this.weaponBursts.push(advanced.position);
-        // Missile is consumed on hit ù if the target dies, both "explode" (stage 4).
+        // Missile is consumed on hit ? if the target dies, both "explode" (stage 4).
       }
       this.missiles = surviving;
     }
@@ -576,12 +629,14 @@ export class RaceField {
         // splitting the impulse by reciprocal mass exactly as it always has: a heavier
         // car both shoves harder and is shoved less, which is what "wins contact" and
         // "immovable" mean, and momentum is still conserved for the masses used. The
-        // roster's authored mass is never touched ù it is shared data from `cars.json`.
+        // roster's authored mass is never touched ? it is shared data from `cars.json`.
         const contact = resolveCarContact(
           a.state,
           contactStats(a.stats, a.perk),
           b.state,
           contactStats(b.stats, b.perk),
+          collisionBoxFromStats(a.stats),
+          collisionBoxFromStats(b.stats),
         );
         if (!contact.touched) {
           continue;
@@ -603,6 +658,17 @@ export class RaceField {
           aggressor === CONTACT_SIDE.B ? DAMAGE_ROLE.AGGRESSOR : DAMAGE_ROLE.VICTIM,
           perkDealtDamageMultiplier(a.perk),
         );
+
+        if (contact.impactSpeed > IMPACT_DAMAGE_THRESHOLD) {
+          const credit = contactAttackCredit(contact);
+          if (credit.factor > 0) {
+            if (credit.attacker === CONTACT_ATTACKER.A && a.isPlayer && !b.isPlayer) {
+              this.playerHits.contacts += credit.factor;
+            } else if (credit.attacker === CONTACT_ATTACKER.B && b.isPlayer && !a.isPlayer) {
+              this.playerHits.contacts += credit.factor;
+            }
+          }
+        }
 
         a.state = contact.a;
         b.state = contact.b;
@@ -638,7 +704,7 @@ export class RaceField {
       }
     });
 
-    // 4. Damage from the hardest contact of the step, once per car ù then weapons.
+    // 4. Damage from the hardest contact of the step, once per car ? then weapons.
     this.racers.forEach((racer, index) => {
       const impact = impacts[index] ?? 0;
       if (impact <= 0) {
@@ -874,7 +940,7 @@ export class RaceField {
    * How much tow this car is getting from the rest of the field, 0..1.
    *
    * Returns 0 immediately for a car that cannot draft at all, which is four of the five
-   * cars ù so the pair scan below only ever runs for the one car whose perk uses it, and
+   * cars ? so the pair scan below only ever runs for the one car whose perk uses it, and
    * the common case costs a single comparison rather than a loop over the field.
    *
    * Read at the top of stage 1, from positions as they stood at the END of the previous
@@ -903,7 +969,7 @@ export class RaceField {
   /**
    * A wrecked car keeps its position but takes no part in the race: no physics, no
    * lap progress, and no contact. When the timer runs out it is set back down on the
-   * centreline where it died, facing the right way ù respawning at the grid would
+   * centreline where it died, facing the right way ? respawning at the grid would
    * teleport a car that was half a lap ahead.
    */
   private sitOutWreck(racer: RacerRuntime, stepSeconds: number): void {
@@ -947,18 +1013,22 @@ export class RaceField {
       .filter(other => other !== racer && this.canCollide(other))
       .map(other => ({
         carId: other.carId,
-        // LIVE stage-1 distance ù never stage-5 standings (one step stale).
+        // LIVE stage-1 distance ? never stage-5 standings (one step stale).
         distance: other.distance,
-        isPlayer: other.isPlayer,
       }));
 
-    const line = this.trackLines === undefined
-      ? undefined
-      : findLineForCar(this.trackLines, racer.carId);
-
-    const drive = line !== undefined
-      ? this.ai.command(racer.state, projection, racer.stats, this.spline, line, rivals)
-      : this.pace.command(racer.state, projection, racer.stats, this.spline);
+    const brain = this.brains[racer.gridIndex];
+    const drive = brain === undefined
+      ? this.pace.command(racer.state, projection, racer.stats, this.spline)
+      : brain.driver.command(
+          racer.state,
+          projection,
+          racer.stats,
+          this.spline,
+          brain.line,
+          rivals,
+          brain.agent.laneRegister,
+        );
 
     if (!this.npcWeapons || racer.weaponCooldownRemaining > 0) {
       return drive;
@@ -985,9 +1055,8 @@ export class RaceField {
       }
     }
 
-    // 2) Defence: drop a hazard in the path of a rival close behind (the player
-    //    is prioritised). A mine is spent only when the chaser is right on the
-    //    tail; oil goes down over a looser gap.
+    // 2) Defence: drop a hazard on whoever is close behind. A mine is spent
+    //    only when the chaser is right on the tail; oil goes down over a looser gap.
     const behind = this.closestRivalBehind(racer);
     if (behind !== null) {
       if (racer.inventory.mines > 0 && behind.gap < NPC_MINE_DROP_GAP_UNITS) {
@@ -1011,15 +1080,14 @@ export class RaceField {
   }
 
   /**
-   * The nearest rival tailing `racer`, by live arc-length gap. The player is
-   * preferred over an NPC at similar range so hazards are spent on the human.
+   * The nearest rival tailing `racer`, by live arc-length gap.
+   * No player flag ? NPCs contest the whole field.
    */
   private closestRivalBehind(
     racer: RacerRuntime,
   ): { carId: string; gap: number } | null {
     const total = this.spline.totalLength;
-    let bestPlayer: { carId: string; gap: number } | null = null;
-    let bestOther: { carId: string; gap: number } | null = null;
+    let best: { carId: string; gap: number } | null = null;
 
     for (const other of this.racers) {
       if (other === racer || !this.canCollide(other)) {
@@ -1030,15 +1098,12 @@ export class RaceField {
       if (gap <= 0 || gap > total * 0.5) {
         continue;
       }
-      const pick = { carId: other.carId, gap };
-      if (other.isPlayer) {
-        if (bestPlayer === null || pick.gap < bestPlayer.gap) bestPlayer = pick;
-      } else if (bestOther === null || pick.gap < bestOther.gap) {
-        bestOther = pick;
+      if (best === null || gap < best.gap) {
+        best = { carId: other.carId, gap };
       }
     }
 
-    return bestPlayer ?? bestOther;
+    return best;
   }
 
   private freshRaceState(): RaceState {
@@ -1058,6 +1123,15 @@ export class RaceField {
   }
 }
 
+function meanCornerTightness(spline: TrackSpline): number {
+  const samples = 32;
+  let sum = 0;
+  for (let i = 0; i < samples; i += 1) {
+    sum += Math.abs(spline.curvatureAt((i / samples) * spline.totalLength));
+  }
+  return Math.min(1, (sum / samples) * 80);
+}
+
 /** Which side of a two-car contact is which. Used only to name the aggressor. */
 const CONTACT_SIDE = {
   A: 'a',
@@ -1072,7 +1146,7 @@ type ContactSide = (typeof CONTACT_SIDE)[keyof typeof CONTACT_SIDE];
  * The aggressor is whichever car was closing the gap faster along the line joining
  * their centres. That single number is the honest test: it makes the car behind in a
  * rear-end the aggressor, it makes a car turning into another's flank the aggressor,
- * and in a genuine head-on ù both closing at the same rate ù it names NEITHER, so
+ * and in a genuine head-on ? both closing at the same rate ? it names NEITHER, so
  * both cars take full victim damage. A slow car minding its own line is never blamed
  * for being hit, which is the whole point of the rule.
  *

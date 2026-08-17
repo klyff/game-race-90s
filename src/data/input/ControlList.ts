@@ -25,7 +25,7 @@ export const RACE_WEAPON_CONTROLS: readonly ControlRow[] = [
 export const RACE_SYSTEM_CONTROLS: readonly ControlRow[] = [
   { keys: 'ESC', action: 'PAUSE' },
   { keys: 'M', action: 'MUTE / UNMUTE' },
-  { keys: 'H', action: 'HELP' },
+  { keys: 'H', action: 'CONTROLS' },
 ];
 
 export const MENU_CONTROLS: readonly ControlRow[] = [
@@ -34,6 +34,21 @@ export const MENU_CONTROLS: readonly ControlRow[] = [
   { keys: 'ENTER / SPACE', action: 'SELECT' },
   { keys: 'ESC', action: 'BACK' },
   { keys: 'TAB', action: 'NEXT GARAGE BUTTON' },
-  { keys: 'H', action: 'HELP' },
+  { keys: 'H', action: 'CONTROLS' },
   { keys: 'M', action: 'MUTE / UNMUTE' },
 ];
+
+function controlBlock(title: string, rows: readonly ControlRow[]): string {
+  const lines = rows.map(row => `${row.keys.padEnd(16)}  ${row.action}`);
+  return `${title}\n${lines.join('\n')}`;
+}
+
+/** Full pad card for the garage Controls menu and the pause Help overlay. */
+export function formatHelpBody(): string {
+  return [
+    controlBlock('DRIVE', RACE_DRIVE_CONTROLS),
+    controlBlock('WEAPONS', RACE_WEAPON_CONTROLS),
+    controlBlock('RACE', RACE_SYSTEM_CONTROLS),
+    controlBlock('MENUS', MENU_CONTROLS),
+  ].join('\n\n');
+}

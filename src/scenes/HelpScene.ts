@@ -1,11 +1,5 @@
 import Phaser from 'phaser';
-import {
-  MENU_CONTROLS,
-  RACE_DRIVE_CONTROLS,
-  RACE_SYSTEM_CONTROLS,
-  RACE_WEAPON_CONTROLS,
-} from '../data/input/ControlList.ts';
-import type { ControlRow } from '../data/input/ControlList.ts';
+import { formatHelpBody } from '../data/input/ControlList.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 export interface HelpSceneData {
@@ -62,16 +56,7 @@ export class HelpScene extends Phaser.Scene {
   }
 
   private body(): string {
-    const block = (title: string, rows: readonly ControlRow[]): string => {
-      const lines = rows.map(row => `${row.keys.padEnd(16)}  ${row.action}`);
-      return `${title}\n${lines.join('\n')}`;
-    };
-    return [
-      block('DRIVE', RACE_DRIVE_CONTROLS),
-      block('WEAPONS', RACE_WEAPON_CONTROLS),
-      block('RACE', RACE_SYSTEM_CONTROLS),
-      block('MENUS', MENU_CONTROLS),
-    ].join('\n\n');
+    return formatHelpBody();
   }
 
   private layout(): void {

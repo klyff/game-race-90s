@@ -132,19 +132,22 @@ export function stepVehicle(
   const authority = Math.min(1, Math.abs(forwardSpeed) / STEERING_AUTHORITY_SPEED);
   const speedFraction = Math.min(1, Math.abs(forwardSpeed) / stats.maxSpeed);
   const steerRate = stats.steerRate * (1 - stats.steerSpeedFalloff * speedFraction);
-  // Reversing mirrors the steering, as it does in a real car.
-  const travelSign = forwardSpeed < 0 ? -1 : 1;
+  // Throttle wins over reverse: any accelerator input zeroes reverse thrust
+  // outright, rather than the two fighting or the input layer having to
+  // arbitrate. This is also what lets a player tap Up to escape while backing
+  // up, and means a reverse key stuck down can never fight the accelerator.
+  const effectiveReverse = input.throttle > 0 ? 0 : input.reverse;
+  // Mirror steering only while the driver is actually in reverse. A hop, oil
+  // spin or wall bounce can make forwardSpeed dip negative for a few frames;
+  // flipping the wheel on that sign made left become right and front look like
+  // reverse. Sliding backwards after a hit keeps the same steer as forward.
+  const travelSign = effectiveReverse > 0 ? -1 : 1;
   const driverYawRate = input.steer * steerRate * authority * travelSign;
 
   // --- Longitudinal force --------------------------------------------------
   const drag = dragCoefficient(stats) * forwardSpeed * Math.abs(forwardSpeed);
   const resistance = Math.sign(forwardSpeed) * surface.rollingResistance;
   const braking = Math.sign(forwardSpeed) * input.brake * stats.brakeForce;
-  // Throttle wins over reverse: any accelerator input zeroes reverse thrust
-  // outright, rather than the two fighting or the input layer having to
-  // arbitrate. This is also what lets a player tap Up to escape while backing
-  // up, and means a reverse key stuck down can never fight the accelerator.
-  const effectiveReverse = input.throttle > 0 ? 0 : input.reverse;
   const reverseThrust = -reverseThrustFor(stats, forwardSpeed) * effectiveReverse;
   let forwardAcceleration =
     input.throttle * stats.enginePower + reverseThrust - drag - resistance - braking;

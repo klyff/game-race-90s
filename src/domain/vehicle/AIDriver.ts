@@ -11,6 +11,14 @@ import {
   PACE_DRIVER_DEFAULTS,
   type PaceDriverOptions,
 } from './PaceDriver.ts';
+import {
+  commitCornerPlan,
+  cornerCommitLookAhead,
+  goForPass,
+  isStraight,
+  nextCornerMarks,
+  type RivalTraits,
+} from './RivalTraits.ts';
 
 /**
  * A rival the AI may want to overtake or defend against. Distances are LIVE
@@ -19,7 +27,6 @@ import {
 export interface RivalView {
   readonly carId: string;
   readonly distance: number;
-  readonly isPlayer: boolean;
 }
 
 /**
@@ -42,6 +49,7 @@ const MAX_CORNER_SAFETY_FACTOR = 0.99;
 export class AIDriver {
   readonly options: PaceDriverOptions;
   readonly aggression: number;
+  readonly traits: RivalTraits | undefined;
 
   /** Options actually used for corner speed / braking, sharpened by `aggression`. */
   private readonly driveOptions: PaceDriverOptions;
@@ -51,9 +59,11 @@ export class AIDriver {
   constructor(
     options: PaceDriverOptions = PACE_DRIVER_DEFAULTS,
     aggression: number = AI_DEFAULT_AGGRESSION,
+    traits?: RivalTraits,
   ) {
     this.options = options;
     this.aggression = Math.max(0, Math.min(1, aggression));
+    this.traits = traits;
 
     // Push the cornering limit toward the edge of grip and shorten the braking
     // margin so the car brakes later — both are "risk" the owner asked for.
@@ -78,9 +88,17 @@ export class AIDriver {
     spline: TrackSpline,
     line: RacingLine | undefined,
     rivals: readonly RivalView[],
+    laneBias = 0,
   ): InputCommand {
     const speed = Math.hypot(state.velocity.x, state.velocity.y);
-    const lateral = line === undefined ? 0 : offsetAt(line, projection.distance + 12, spline);
+    const speedRatio = stats.maxSpeed > 0 ? speed / stats.maxSpeed : 0;
+    const traits = this.traits;
+    const committed =
+      traits !== undefined && commitCornerPlan(traits, speedRatio, isStraight(spline, projection.distance));
+    const marks = committed ? nextCornerMarks(spline, projection.distance) : null;
+    const commitLook =
+      traits !== undefined && marks !== null ? cornerCommitLookAhead(traits, marks) : null;
+    const lateral = (line === undefined ? 0 : offsetAt(line, projection.distance + 12, spline)) + laneBias;
     const aim = pursuitAimPoint(
       projection,
       spline,
@@ -89,18 +107,25 @@ export class AIDriver {
       this.options.lookAheadScaleFactor,
       lateral,
     );
+    const cornerOpts =
+      commitLook === null || traits === undefined
+        ? this.driveOptions
+        : {
+            ...this.driveOptions,
+            cornerLookAheadMinimum: commitLook * (0.35 + (1 - traits.daring / 10) * 0.5),
+          };
     let { throttle, brake } = speedCommand(
-      cornerTargetSpeed(projection, stats, spline, speed, this.driveOptions),
+      cornerTargetSpeed(projection, stats, spline, speed, cornerOpts),
       speed,
       this.options.speedControlGain,
       this.options.speedDeadband,
     );
 
-    // A rival close ahead on the same line: an aggressive AI barely lifts and keeps
-    // pressing for the overtake; a passive one tucks in behind.
+    // Dive on whoever is ahead — the field, not the human. Daring hits at this instant.
     const ahead = closestRivalAhead(projection.distance, rivals, spline.totalLength);
     if (ahead !== null && ahead.gap < 18 && ahead.gap > 0) {
-      throttle *= this.closingThrottle;
+      const dive = traits === undefined ? this.closingThrottle : 0.55 + goForPass(traits, ahead.gap) * 0.4;
+      throttle *= dive;
     }
 
     return {

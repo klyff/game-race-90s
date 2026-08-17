@@ -122,7 +122,7 @@ describe('WeaponAim', () => {
   // reach for collisionRadius 1.7 ≈ 2.5 * 2.35 * 1.7 ≈ 10 units ahead.
   const COLLISION_RADIUS = 1.7;
 
-  it('prioritises the player when both a player and an NPC sit in the corridor', () => {
+  it('locks the nearest car in the corridor, not the human', () => {
     const decision = decideMissileAim(
       { x: 0, y: 0 },
       0,
@@ -134,7 +134,7 @@ describe('WeaponAim', () => {
       ],
     );
     expect(decision.shouldFire).toBe(true);
-    expect(decision.targetCarId).toBe('player');
+    expect(decision.targetCarId).toBe('npc');
   });
 
   it('does not fire at a car outside the corridor', () => {
@@ -301,7 +301,7 @@ describe('RaceField weapons', () => {
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
     expect(field.playerWeaponHits.mines).toBe(1);
     field.reset();
-    expect(field.playerWeaponHits).toEqual({ missiles: 0, oil: 0, mines: 0 });
+    expect(field.playerWeaponHits).toEqual({ missiles: 0, oil: 0, mines: 0, contacts: 0 });
   });
 
   it('car-10 on the roster carries the Arsenal perk', () => {

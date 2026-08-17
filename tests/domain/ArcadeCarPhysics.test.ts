@@ -216,14 +216,22 @@ describe('stepVehicle steering', () => {
     expect(state.heading).toBeGreaterThan(before);
   });
 
-  it('mirrors steering while reversing', () => {
-    // Push the car backwards along its own heading, then steer left.
+  it('mirrors steering only while the driver holds reverse', () => {
+    const backwards: VehicleState = {
+      ...createVehicleState({ x: 0, y: 0 }, 0),
+      velocity: { x: -20, y: 0 },
+    };
+    const reversing = run(backwards, input({ reverse: 1, steer: 1 }), 10);
+    expect(reversing.heading).toBeLessThan(0);
+  });
+
+  it('does not invert steering when sliding backwards after a hit', () => {
     const backwards: VehicleState = {
       ...createVehicleState({ x: 0, y: 0 }, 0),
       velocity: { x: -20, y: 0 },
     };
     const state = run(backwards, input({ steer: 1 }), 10);
-    expect(state.heading).toBeLessThan(0);
+    expect(state.heading).toBeGreaterThan(0);
   });
 
   it('loses steering authority as speed rises', () => {
