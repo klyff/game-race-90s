@@ -34,3 +34,6 @@ Tudo em **`public/matrix_car/`**:
 
 - cars 18–33: só `car_N_hero.png`, 0 frames
 - Não pise na metade A (2–17) salvo merge consciente
+
+
+Fila detalhada: **`CLOUD_QUEUE_B.md`** (1º=18, depois 19…33).
