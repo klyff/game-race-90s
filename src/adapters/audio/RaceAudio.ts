@@ -62,6 +62,8 @@ export class RaceAudio {
   private readonly bed: BedPlayer | null = null;
   private readonly narrator = new NarratorPlayer();
   private readonly driftLimit: number;
+  private readonly baseMasterVolume: number;
+  private engineSilenced = false;
   private muted = isAudioMuted();
 
   /**
@@ -75,6 +77,7 @@ export class RaceAudio {
     // scales how loud a slide is, and a scale that changed as the car crossed onto
     // dirt would make the skid jump in volume for no audible reason.
     this.driftLimit = driftThreshold(stats, TARMAC);
+    this.baseMasterVolume = masterVolume;
 
     this.context = createAudioContext();
     if (this.context === null) return;
@@ -133,9 +136,34 @@ export class RaceAudio {
     this.music?.start();
   }
 
+  /** Cuts the engine/tyre voices without tearing the graph down (quit race). */
+  silenceEngine(): void {
+    this.engineSilenced = true;
+    this.engine?.update(0, 0, 0);
+    this.skid?.update(0);
+    this.brake?.update(0, 0);
+  }
+
+  /** Scales the SFX master; 0.7 is the quit-race duck. */
+  setMasterScale(scale: number): void {
+    const next = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    if (this.master === null || this.context === null) return;
+    this.master.gain.setTargetAtTime(
+      this.baseMasterVolume * next,
+      this.context.currentTime,
+      0.08,
+    );
+  }
+
   /** Feeds one rendered frame of simulation state to every voice. */
   update(telemetry: VehicleTelemetry, input: InputCommand, maxSpeed: number): void {
     if (this.context === null || this.muted) return;
+    if (this.engineSilenced) {
+      this.engine?.update(0, 0, 0);
+      this.skid?.update(0);
+      this.brake?.update(0, 0);
+      return;
+    }
 
     // Reverse drives the engine exactly like throttle does: the driver is asking
     // for power either way, and the gearbox already reports reverse as gear 0.

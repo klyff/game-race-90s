@@ -1,0 +1,105 @@
+{
+  "trackId": "bogmire-deep-3",
+  "homeZoom": 1.75,
+  "maxZoomIn": 2.6,
+  "autoZoomOutMin": 0.975,
+  "zoomOut50": 0.4800640454494269,
+  "triggers": [
+    {
+      "kind": "curve",
+      "startDistance": 0,
+      "endDistance": 16,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "straight",
+      "startDistance": 56,
+      "endDistance": 336,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 368,
+      "endDistance": 448,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 472,
+      "endDistance": 528,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 632,
+      "endDistance": 672,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "straight",
+      "startDistance": 752,
+      "endDistance": 920,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 944,
+      "endDistance": 992,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1016,
+      "endDistance": 1240,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1496,
+      "endDistance": 1552,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1656,
+      "endDistance": 1688,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1704,
+      "endDistance": 1880,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1896,
+      "endDistance": 1920,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    }
+  ]
+}

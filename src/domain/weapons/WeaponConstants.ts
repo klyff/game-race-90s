@@ -110,6 +110,23 @@ export const OIL_SIZE_OF_CAR = 0.9;
  */
 export const MINE_SIZE_OF_CAR = 0.28;
 
+/** Gasoline barrel diameter as a fraction of a typical car length. Same puck as a mine. */
+export const GASOLINE_SIZE_OF_CAR = MINE_SIZE_OF_CAR;
+
+/** Visual explosion scale for a gasoline barrel vs a landmine (30% larger). */
+export const GASOLINE_BURST_SCALE = 1.3;
+
+/** Weapon / hazard puff intensity fed to `ExplosionEffect.burst`. */
+export const HAZARD_BURST_INTENSITY = 0.4;
+
+/** Clamp a burst scale option so a missing or junk value still draws at 1×. */
+export function resolveBurstScale(scale: number | undefined): number {
+  if (!Number.isFinite(scale) || (scale as number) <= 0) {
+    return 1;
+  }
+  return scale as number;
+}
+
 /**
  * Oil lifetime as a multiple of one estimated lap on the current track.
  * Owner: "persist for the time of a 1.6-lap run on that track".

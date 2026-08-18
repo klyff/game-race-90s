@@ -1,7 +1,7 @@
 import { RACE_PHASE } from '../constants.ts';
 import type { InputCommand } from '../input/InputCommand.ts';
 import { IDLE_INPUT } from '../input/InputCommand.ts';
-import { add, angleOf, dot, length, normalize, scale, subtract, VEC2_ZERO } from '../math/Vec2.ts';
+import { add, angleOf, dot, length, lerp, normalize, scale, subtract, VEC2_ZERO } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
 import { resolveWallContact } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
@@ -44,6 +44,9 @@ import { RacingAgent } from '../ai/RacingAgent.ts';
 import type { AgentDebugSnapshot } from '../ai/RacingAgent.ts';
 import { buildStatNormalizer, planningStats, type StatNormalizer } from '../ai/VehicleCapabilityModel.ts';
 import type { TrackLinesManifest } from './RacingLine.ts';
+import type { CameraContactEvent } from '../camera/AccidentWatch.ts';
+import { CAMERA_PARK_SECONDS } from '../camera/CameraPreset.ts';
+import { innerWallParkPose } from '../camera/innerWallPark.ts';
 import { createVehicleState, isAirborne } from '../vehicle/Vehicle.ts';
 import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
 import {
@@ -68,6 +71,7 @@ import {
   NPC_MINE_DROP_GAP_UNITS,
   NPC_OIL_DROP_GAP_UNITS,
   NPC_WEAPON_COOLDOWN_SECONDS,
+  GASOLINE_BURST_SCALE,
   OIL_LAP_REFERENCE_SPEED,
   OIL_LIFETIME_LAPS,
 } from '../weapons/WeaponConstants.ts';
@@ -79,8 +83,9 @@ import {
   findHazardHits,
   HAZARD_KIND,
   oilYawSpinForArmor,
+  placeGasoline,
 } from '../weapons/Hazard.ts';
-import type { TrackHazard } from '../weapons/Hazard.ts';
+import type { HazardBurst, TrackHazard } from '../weapons/Hazard.ts';
 import { findMissileHit, launchMissile, stepMissile } from '../weapons/Missile.ts';
 import type { Missile } from '../weapons/Missile.ts';
 import {
@@ -256,10 +261,16 @@ export class RaceField {
   private hazards: TrackHazard[] = [];
   /** Missile bursts this step (car hit or wall), for the presentation layer. */
   private weaponBursts: Vec2[] = [];
+  /** Mine / gasoline bursts this step, at the hazard, with a visual scale. */
+  private hazardBursts: HazardBurst[] = [];
   /** Hazard ids spawned this step ? their dropper is immune until the next step. */
   private readonly freshHazardIds = new Set<number>();
   /** Player weapon hits landed on rivals this race (for the purse bounty). */
   private playerHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
+  private playerRetired = false;
+  private parkElapsed = 0;
+  private parkFrom: Vec2 | null = null;
+  private stepContacts: CameraContactEvent[] = [];
 
 
   constructor(
@@ -411,6 +422,27 @@ export class RaceField {
     return this.weaponBursts;
   }
 
+  /** Mine / gasoline bursts from the step just run (at the hazard). */
+  get hazardBurstsThisStep(): readonly HazardBurst[] {
+    return this.hazardBursts;
+  }
+
+  /** Pairwise car contacts from the step just run, for the spectator camera. */
+  get contactsThisStep(): readonly CameraContactEvent[] {
+    return this.stepContacts;
+  }
+
+  get isPlayerRetired(): boolean {
+    return this.playerRetired;
+  }
+
+  /** Player quit: idle the car and slide it to the inner wall. */
+  retirePlayer(): void {
+    this.playerRetired = true;
+    this.parkElapsed = 0;
+    this.parkFrom = this.player.state.position;
+  }
+
   /** True once every car is wrecked or rolling slower than the coast stop speed. */
   get allNearlyStopped(): boolean {
     return this.racers.every(
@@ -451,8 +483,13 @@ export class RaceField {
 
     this.missiles = [];
     this.hazards = [];
+    this.spawnTrackGasoline();
     this.freshHazardIds.clear();
     this.playerHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
+    this.playerRetired = false;
+    this.parkElapsed = 0;
+    this.parkFrom = null;
+    this.stepContacts = [];
     this.stepIndex = 0;
     this.raceState = this.freshRaceState();
   }
@@ -506,6 +543,8 @@ export class RaceField {
     const missileHits: { targetIndex: number; ownerCarId: string; position: Vec2 }[] = [];
     this.freshHazardIds.clear();
     this.weaponBursts = [];
+    this.hazardBursts = [];
+    this.stepContacts = [];
 
     const recordImpact = (index: number, speed: number, role: DamageRole, dealtScale = 1): void => {
       if (speed <= (impacts[index] ?? 0)) {
@@ -526,6 +565,11 @@ export class RaceField {
 
       if (racer.integrity.condition === CAR_CONDITION.DESTROYED) {
         this.sitOutWreck(racer, stepSeconds);
+        return;
+      }
+
+      if (racer.isPlayer && this.playerRetired) {
+        this.slideRetiredPlayer(racer, stepSeconds);
         return;
       }
 
@@ -674,6 +718,16 @@ export class RaceField {
         if (!contact.touched) {
           continue;
         }
+
+        this.stepContacts.push({
+          carIdA: a.carId,
+          carIdB: b.carId,
+          impactSpeed: contact.impactSpeed,
+          position: {
+            x: (a.state.position.x + b.state.position.x) / 2,
+            y: (a.state.position.y + b.state.position.y) / 2,
+          },
+        });
 
         // Blame is read BEFORE the impulse is applied, because resolving the contact is
         // exactly what destroys the evidence: afterwards both cars are moving apart and
@@ -936,6 +990,13 @@ export class RaceField {
         continue;
       }
 
+      if (hazard !== undefined) {
+        this.hazardBursts.push({
+          position: hazard.position,
+          scale: hit.kind === HAZARD_KIND.GASOLINE ? GASOLINE_BURST_SCALE : 1,
+        });
+      }
+
       const before = racer.integrity;
       racer.integrity = applyWeaponDamage(
         before,
@@ -953,6 +1014,21 @@ export class RaceField {
 
     if (consumed.size > 0) {
       this.hazards = this.hazards.filter(hazard => !consumed.has(hazard.id));
+    }
+  }
+
+  /** Shoulder drums authored on the circuit, already armed. */
+  private spawnTrackGasoline(): void {
+    const placements = this.track.gasolineBarrels;
+    if (placements === undefined || placements.length === 0) {
+      return;
+    }
+    const collisionRadius = this.racers[0]?.stats.collisionRadius ?? 1.7;
+    for (const barrel of placements) {
+      const distance = this.spline.wrap(barrel.distance);
+      const frame = this.spline.frameAt(distance);
+      const position = add(frame.position, scale(frame.normal, barrel.lateral));
+      this.hazards.push(placeGasoline(position, collisionRadius, distance));
     }
   }
 
@@ -1007,6 +1083,25 @@ export class RaceField {
    * centreline where it died, facing the right way ? respawning at the grid would
    * teleport a car that was half a lap ahead.
    */
+  private slideRetiredPlayer(racer: RacerRuntime, stepSeconds: number): void {
+    this.parkElapsed += stepSeconds;
+    const t = Math.min(1, this.parkElapsed / CAMERA_PARK_SECONDS);
+    const pose = innerWallParkPose(
+      this.spline,
+      this.track,
+      racer.distance,
+      racer.stats.collisionRadius,
+    );
+    const from = this.parkFrom ?? racer.state.position;
+    racer.state = {
+      ...createVehicleState(lerp(from, pose.position, t), pose.heading),
+      velocity: VEC2_ZERO,
+    };
+    racer.lateralOffset = pose.lateralOffset;
+    racer.telemetry = null;
+    racer.pendingImpactSpeed = 0;
+  }
+
   private sitOutWreck(racer: RacerRuntime, stepSeconds: number): void {
     racer.state = { ...racer.state, velocity: VEC2_ZERO, yawSpin: 0 };
     racer.telemetry = null;

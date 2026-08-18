@@ -1,0 +1,113 @@
+{
+  "trackId": "voidport-3",
+  "homeZoom": 1.75,
+  "maxZoomIn": 2.6,
+  "autoZoomOutMin": 0.975,
+  "zoomOut50": 0.3311927021846926,
+  "triggers": [
+    {
+      "kind": "straight",
+      "startDistance": 2168,
+      "endDistance": 56,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 168,
+      "endDistance": 192,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 280,
+      "endDistance": 304,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 304,
+      "endDistance": 320,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "curve",
+      "startDistance": 320,
+      "endDistance": 344,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "speed",
+      "startDistance": 360,
+      "endDistance": 936,
+      "zoomBias": -0.35,
+      "holdSeconds": 3,
+      "targetZoom": 0.975
+    },
+    {
+      "kind": "curve",
+      "startDistance": 952,
+      "endDistance": 976,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 976,
+      "endDistance": 992,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "curve",
+      "startDistance": 992,
+      "endDistance": 1016,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1264,
+      "endDistance": 1344,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1584,
+      "endDistance": 1696,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1760,
+      "endDistance": 2072,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 2104,
+      "endDistance": 2136,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    }
+  ]
+}

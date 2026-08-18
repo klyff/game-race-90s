@@ -1,6 +1,13 @@
 import type { Vec2 } from '../math/Vec2.ts';
 import type { RampZone } from './RampZone.ts';
 
+/** A gasoline barrel sitting on the asphalt, keyed like a ramp — arc length + lateral. */
+export interface GasolineBarrelPlacement {
+  readonly distance: number;
+  /** Signed offset from the centreline, positive left of travel. */
+  readonly lateral: number;
+}
+
 /**
  * Everything that defines a circuit, as plain data.
  *
@@ -51,6 +58,11 @@ export interface TrackDefinition {
    * ramps on this circuit. See `RampZone.ts` for the shape and the physics.
    */
   readonly rampZones?: readonly RampZone[];
+  /**
+   * Track-placed gasoline barrels (explode like a mine, larger burst).
+   * Optional; absent means none on this circuit.
+   */
+  readonly gasolineBarrels?: readonly GasolineBarrelPlacement[];
 }
 
 /** The track's surface grip multiplier, defaulting to 1 when unset. */

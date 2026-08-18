@@ -30,6 +30,8 @@ import {
   CAR_MANIFEST_KEY,
   DEBRIS_ASSET_DIRECTORY,
   GROUND_ASSET_DIRECTORY,
+  camerasCacheKey,
+  CAMERAS_ASSET_DIRECTORY,
   linesCacheKey,
   LINES_ASSET_DIRECTORY,
   PLANET_ART_DIRECTORY,
@@ -39,6 +41,10 @@ import {
   SPLASH_ART_FILE,
   SPLASH_ART_KEY,
   UI_ASSET_DIRECTORY,
+  HUD_ICON_DIRECTORY,
+  HUD_ICONS,
+  GASOLINE_SPRITE_FILE,
+  GASOLINE_SPRITE_KEY,
   WEAPON_ASSET_DIRECTORY,
   WEAPON_SHEET,
   WEAPON_SPRITES,
@@ -71,12 +77,17 @@ export class BootScene extends Phaser.Scene {
     // track keeps the lookup a plain map rather than a re-fetch on every race.
     for (const track of TRACKS) {
       this.load.json(linesCacheKey(track.id), `${LINES_ASSET_DIRECTORY}/${track.id}.json`);
+      const cameraKey = camerasCacheKey(track.id);
+      this.optionalKeys.add(cameraKey);
+      this.load.json(cameraKey, `${CAMERAS_ASSET_DIRECTORY}/${track.id}.json`);
     }
     // A missing weapon sprite is not fatal — those assets are optional and the race
     // falls back to primitives — so weapon keys are filtered out of the error path.
     // Any OTHER load failure is fatal and reported on screen.
     for (const key of [
       ...WEAPON_SPRITES.map(sprite => sprite.key),
+      ...HUD_ICONS.map(icon => icon.key),
+      GASOLINE_SPRITE_KEY,
       ...SCRAP_SPRITES.map(sprite => sprite.key),
       ...PLANET_THEMES.map(theme => theme.artKey),
       ...PLANET_THEMES.map(theme => theme.groundKey),
@@ -151,6 +162,11 @@ export class BootScene extends Phaser.Scene {
         frameHeight: WEAPON_SHEET.frameHeight,
       });
     }
+
+    for (const icon of HUD_ICONS) {
+      this.load.image(icon.key, `${HUD_ICON_DIRECTORY}/${icon.file}`);
+    }
+    this.load.image(GASOLINE_SPRITE_KEY, `${HUD_ICON_DIRECTORY}/${GASOLINE_SPRITE_FILE}`);
 
     // Optional metal scraps: missing files fall back to gunmetal rects in race.
     for (const scrap of SCRAP_SPRITES) {

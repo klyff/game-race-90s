@@ -1,0 +1,97 @@
+{
+  "trackId": "voidport-1",
+  "homeZoom": 1.75,
+  "maxZoomIn": 2.6,
+  "autoZoomOutMin": 0.975,
+  "zoomOut50": 0.3523898057349611,
+  "triggers": [
+    {
+      "kind": "straight",
+      "startDistance": 48,
+      "endDistance": 192,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 296,
+      "endDistance": 408,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 448,
+      "endDistance": 480,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "straight",
+      "startDistance": 512,
+      "endDistance": 616,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 680,
+      "endDistance": 1024,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1048,
+      "endDistance": 1096,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1120,
+      "endDistance": 1432,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1448,
+      "endDistance": 1528,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1552,
+      "endDistance": 1608,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "speed",
+      "startDistance": 1632,
+      "endDistance": 2104,
+      "zoomBias": -0.35,
+      "holdSeconds": 3,
+      "targetZoom": 0.975
+    },
+    {
+      "kind": "curve",
+      "startDistance": 2136,
+      "endDistance": 2176,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    }
+  ]
+}

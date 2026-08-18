@@ -3,6 +3,7 @@ import type { Vec2 } from '../math/Vec2.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
   DROP_BEHIND_CAR_LENGTHS,
+  GASOLINE_SIZE_OF_CAR,
   MINE_SIZE_OF_CAR,
   OIL_SIZE_OF_CAR,
   OIL_YAW_SPIN,
@@ -11,6 +12,7 @@ import {
 export const HAZARD_KIND = {
   OIL: 'oil',
   MINE: 'mine',
+  GASOLINE: 'gasoline',
 } as const;
 export type HazardKind = (typeof HAZARD_KIND)[keyof typeof HAZARD_KIND];
 
@@ -44,6 +46,12 @@ export interface HazardHit {
   readonly hazardId: number;
   readonly kind: HazardKind;
   readonly targetCarId: string;
+}
+
+/** Presentation cue for a mine / gasoline burst at the hazard, not the car. */
+export interface HazardBurst {
+  readonly position: Vec2;
+  readonly scale: number;
 }
 
 let nextHazardId = 1;
@@ -103,6 +111,29 @@ export function dropMine(
   };
 }
 
+/**
+ * Track-placed gasoline barrel. Already armed: there is no dropper to protect.
+ * Same puck size as a mine; the larger boom is a presentation scale.
+ */
+export function placeGasoline(
+  position: Vec2,
+  collisionRadius: number,
+  distanceAlongTrack: number,
+): TrackHazard {
+  const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * collisionRadius;
+  const radius = Math.max(0.1, (carLength * GASOLINE_SIZE_OF_CAR) / 2);
+  return {
+    id: nextHazardId++,
+    kind: HAZARD_KIND.GASOLINE,
+    ownerCarId: '',
+    position,
+    radius,
+    lifeRemaining: Number.POSITIVE_INFINITY,
+    distance: distanceAlongTrack,
+    ownerArmed: true,
+  };
+}
+
 /** Age oil slicks; remove anything whose fuse has run out. Mines never age out. */
 export function ageHazards(
   hazards: readonly TrackHazard[],
@@ -111,7 +142,7 @@ export function ageHazards(
   const dt = Number.isFinite(stepSeconds) && stepSeconds > 0 ? stepSeconds : 0;
   const next: TrackHazard[] = [];
   for (const hazard of hazards) {
-    if (hazard.kind === HAZARD_KIND.MINE) {
+    if (hazard.kind === HAZARD_KIND.MINE || hazard.kind === HAZARD_KIND.GASOLINE) {
       next.push(hazard);
       continue;
     }

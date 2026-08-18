@@ -1,0 +1,57 @@
+{
+  "trackId": "chrome-verge-2",
+  "homeZoom": 1.75,
+  "maxZoomIn": 2.6,
+  "autoZoomOutMin": 0.975,
+  "zoomOut50": 0.29437806666259037,
+  "triggers": [
+    {
+      "kind": "speed",
+      "startDistance": 2560,
+      "endDistance": 848,
+      "zoomBias": -0.35,
+      "holdSeconds": 3,
+      "targetZoom": 0.975
+    },
+    {
+      "kind": "straight",
+      "startDistance": 912,
+      "endDistance": 1184,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1216,
+      "endDistance": 1248,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1400,
+      "endDistance": 1448,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "speed",
+      "startDistance": 1480,
+      "endDistance": 2464,
+      "zoomBias": -0.35,
+      "holdSeconds": 3,
+      "targetZoom": 0.975
+    },
+    {
+      "kind": "curve",
+      "startDistance": 2480,
+      "endDistance": 2544,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    }
+  ]
+}

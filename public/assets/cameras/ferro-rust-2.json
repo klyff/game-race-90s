@@ -1,0 +1,145 @@
+{
+  "trackId": "ferro-rust-2",
+  "homeZoom": 1.75,
+  "maxZoomIn": 2.6,
+  "autoZoomOutMin": 0.975,
+  "zoomOut50": 0.5253263362279628,
+  "triggers": [
+    {
+      "kind": "straight",
+      "startDistance": 1520,
+      "endDistance": 40,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 56,
+      "endDistance": 80,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 80,
+      "endDistance": 96,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "curve",
+      "startDistance": 96,
+      "endDistance": 120,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "straight",
+      "startDistance": 136,
+      "endDistance": 336,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 496,
+      "endDistance": 552,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "straight",
+      "startDistance": 576,
+      "endDistance": 680,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 696,
+      "endDistance": 728,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 776,
+      "endDistance": 792,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "curve",
+      "startDistance": 792,
+      "endDistance": 816,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 976,
+      "endDistance": 1000,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1000,
+      "endDistance": 1016,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1016,
+      "endDistance": 1040,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1056,
+      "endDistance": 1288,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1448,
+      "endDistance": 1472,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1472,
+      "endDistance": 1480,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1480,
+      "endDistance": 1504,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    }
+  ]
+}

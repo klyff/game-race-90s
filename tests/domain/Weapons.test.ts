@@ -19,9 +19,11 @@ import { decideMissileAim } from '../../src/domain/weapons/WeaponAim.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
   DROP_BEHIND_CAR_LENGTHS,
+  GASOLINE_BURST_SCALE,
   MINE_RAW_DAMAGE,
   MISSILE_RAW_DAMAGE,
   MISSILE_START_COUNT,
+  resolveBurstScale,
   scaledWeaponDamage,
   MISSILE_SPEED_FACTOR,
   OIL_START_COUNT,
@@ -33,7 +35,13 @@ import {
   refillWeaponInventory,
 } from '../../src/domain/weapons/WeaponInventory.ts';
 import { findMissileHit, launchMissile, resetMissileIds, stepMissile } from '../../src/domain/weapons/Missile.ts';
-import { HAZARD_KIND, oilYawSpinForArmor, resetHazardIds } from '../../src/domain/weapons/Hazard.ts';
+import {
+  ageHazards,
+  HAZARD_KIND,
+  oilYawSpinForArmor,
+  placeGasoline,
+  resetHazardIds,
+} from '../../src/domain/weapons/Hazard.ts';
 
 const testFileDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(testFileDir, '..', '..');
@@ -456,5 +464,70 @@ describe('RaceField hop', () => {
     expect(mine.ownerCarId).toBe(player.carId);
     expect(mine.ownerArmed).toBe(true);
     expect(player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
+  });
+});
+
+describe('resolveBurstScale', () => {
+  it('keeps 1.3 and treats missing or junk as 1', () => {
+    expect(resolveBurstScale(GASOLINE_BURST_SCALE)).toBe(1.3);
+    expect(resolveBurstScale(undefined)).toBe(1);
+    expect(resolveBurstScale(Number.NaN)).toBe(1);
+    expect(resolveBurstScale(0)).toBe(1);
+    expect(resolveBurstScale(-2)).toBe(1);
+  });
+});
+
+describe('gasoline barrels', () => {
+  it('does not evaporate the way oil does', () => {
+    const hazard = placeGasoline({ x: 0, y: 0 }, 1.7, 10);
+    const aged = ageHazards([hazard], 100);
+    expect(aged).toHaveLength(1);
+    expect(aged[0]?.kind).toBe(HAZARD_KIND.GASOLINE);
+  });
+
+  it('Thunder Basin starts with three armed gasoline barrels', () => {
+    const field = twoCarField();
+    const barrels = field.activeHazards.filter(hazard => hazard.kind === HAZARD_KIND.GASOLINE);
+    expect(barrels).toHaveLength(3);
+    expect(barrels.every(barrel => barrel.ownerArmed)).toBe(true);
+  });
+
+  it('a gasoline hit deals mine damage, does not spin, and queues a 1.3× burst', () => {
+    const field = twoCarField();
+    const barrel = field.activeHazards.find(hazard => hazard.kind === HAZARD_KIND.GASOLINE)!;
+    const rival = field.racers.find(racer => !racer.isPlayer)!;
+    const before = rival.integrity.integrity;
+    const yawBefore = rival.state.yawSpin;
+    rival.state = { ...rival.state, position: barrel.position };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    const lost = before - rival.integrity.integrity;
+    const expected = scaledWeaponDamage(MINE_RAW_DAMAGE, undefined) * (1 - rival.stats.armor);
+    expect(lost).toBeCloseTo(expected, 5);
+    expect(rival.state.yawSpin).toBe(yawBefore);
+    expect(field.activeHazards.some(hazard => hazard.id === barrel.id)).toBe(false);
+    expect(field.hazardBurstsThisStep).toEqual([
+      { position: barrel.position, scale: GASOLINE_BURST_SCALE },
+    ]);
+  });
+
+  it('a mine hit queues a 1× burst at the hazard', () => {
+    const field = twoCarField();
+    field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
+    const mine = field.activeHazards.find(hazard => hazard.kind === HAZARD_KIND.MINE)!;
+    const rival = field.racers.find(racer => !racer.isPlayer)!;
+    rival.state = { ...rival.state, position: mine.position };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(field.hazardBurstsThisStep).toEqual([{ position: mine.position, scale: 1 }]);
+  });
+
+  it('restores gasoline barrels on reset', () => {
+    const field = twoCarField();
+    const barrel = field.activeHazards.find(hazard => hazard.kind === HAZARD_KIND.GASOLINE)!;
+    const rival = field.racers.find(racer => !racer.isPlayer)!;
+    rival.state = { ...rival.state, position: barrel.position };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(field.activeHazards.filter(hazard => hazard.kind === HAZARD_KIND.GASOLINE)).toHaveLength(2);
+    field.reset();
+    expect(field.activeHazards.filter(hazard => hazard.kind === HAZARD_KIND.GASOLINE)).toHaveLength(3);
   });
 });

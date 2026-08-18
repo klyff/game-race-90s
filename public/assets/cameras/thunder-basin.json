@@ -1,0 +1,89 @@
+{
+  "trackId": "thunder-basin",
+  "homeZoom": 1.75,
+  "maxZoomIn": 2.6,
+  "autoZoomOutMin": 0.975,
+  "zoomOut50": 0.544321599318205,
+  "triggers": [
+    {
+      "kind": "speed",
+      "startDistance": 1440,
+      "endDistance": 456,
+      "zoomBias": -0.35,
+      "holdSeconds": 3,
+      "targetZoom": 0.975
+    },
+    {
+      "kind": "curve",
+      "startDistance": 872,
+      "endDistance": 904,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 976,
+      "endDistance": 1000,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1032,
+      "endDistance": 1296,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1312,
+      "endDistance": 1360,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1360,
+      "endDistance": 1376,
+      "zoomBias": 0.3,
+      "holdSeconds": 3,
+      "targetZoom": 2.6
+    },
+    {
+      "kind": "curve",
+      "startDistance": 1376,
+      "endDistance": 1408,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "ramp",
+      "startDistance": 200,
+      "endDistance": 212,
+      "zoomBias": -0.1,
+      "holdSeconds": 3,
+      "targetZoom": 1.35
+    },
+    {
+      "kind": "ramp",
+      "startDistance": 680,
+      "endDistance": 690,
+      "zoomBias": -0.1,
+      "holdSeconds": 3,
+      "targetZoom": 1.35
+    },
+    {
+      "kind": "ramp",
+      "startDistance": 1180,
+      "endDistance": 1190,
+      "zoomBias": -0.1,
+      "holdSeconds": 3,
+      "targetZoom": 1.35
+    }
+  ]
+}

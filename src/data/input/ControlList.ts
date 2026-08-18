@@ -24,6 +24,8 @@ export const RACE_WEAPON_CONTROLS: readonly ControlRow[] = [
 
 export const RACE_SYSTEM_CONTROLS: readonly ControlRow[] = [
   { keys: 'ESC', action: 'PAUSE' },
+  { keys: '[ / ]', action: 'ZOOM IN  ·  ZOOM OUT' },
+  { keys: '0', action: 'RESET CAMERA' },
   { keys: 'M', action: 'MUTE / UNMUTE' },
   { keys: 'H', action: 'CONTROLS' },
 ];

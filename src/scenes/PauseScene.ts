@@ -15,6 +15,8 @@ export interface PauseSceneData {
   readonly carId: string;
   readonly muted: boolean;
   readonly setMuted: (muted: boolean) => void;
+  /** Mid-race retire: keep watching; omit on watch mode. */
+  readonly onQuitRace?: () => void;
 }
 
 const AUDIO_VALUES = ['ON', 'OFF'] as const;
@@ -55,6 +57,9 @@ export class PauseScene extends Phaser.Scene {
         },
         { id: 'help', kind: MENU_KIND.ACTION, label: 'HELP' },
         { id: 'garage', kind: MENU_KIND.ACTION, label: 'GARAGE' },
+        ...(data.onQuitRace === undefined
+          ? []
+          : [{ id: 'quit', kind: MENU_KIND.ACTION, label: 'QUIT RACE' }]),
         { id: 'menu', kind: MENU_KIND.ACTION, label: 'MAIN MENU' },
       ],
       {
@@ -114,6 +119,10 @@ export class PauseScene extends Phaser.Scene {
         this.garage();
         return;
       }
+      if (result.id === 'quit') {
+        this.quitRace();
+        return;
+      }
       if (result.id === 'menu') {
         this.mainMenu();
       }
@@ -150,6 +159,14 @@ export class PauseScene extends Phaser.Scene {
     this.scene.resume(SCENE_KEY.RACE);
     this.scene.resume(SCENE_KEY.HUD);
     this.scene.stop();
+  }
+
+  private quitRace(): void {
+    const quit = this.payload.onQuitRace;
+    this.scene.resume(SCENE_KEY.RACE);
+    this.scene.resume(SCENE_KEY.HUD);
+    this.scene.stop();
+    quit?.();
   }
 
   private save(): void {

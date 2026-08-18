@@ -1,0 +1,49 @@
+{
+  "trackId": "ash-reach-1",
+  "homeZoom": 1.75,
+  "maxZoomIn": 2.6,
+  "autoZoomOutMin": 0.975,
+  "zoomOut50": 0.28481897634986425,
+  "triggers": [
+    {
+      "kind": "speed",
+      "startDistance": 1792,
+      "endDistance": 48,
+      "zoomBias": -0.35,
+      "holdSeconds": 3,
+      "targetZoom": 0.975
+    },
+    {
+      "kind": "curve",
+      "startDistance": 72,
+      "endDistance": 128,
+      "zoomBias": 0.1,
+      "holdSeconds": 3,
+      "targetZoom": 2.2
+    },
+    {
+      "kind": "speed",
+      "startDistance": 152,
+      "endDistance": 1168,
+      "zoomBias": -0.35,
+      "holdSeconds": 3,
+      "targetZoom": 0.975
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1368,
+      "endDistance": 1496,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1528,
+      "endDistance": 1736,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    }
+  ]
+}

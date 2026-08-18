@@ -4,6 +4,17 @@ import { RaceAudio } from '../adapters/audio/RaceAudio.ts';
 import { KeyboardDriver } from '../adapters/input/KeyboardDriver.ts';
 import { CameraZoomPolicy } from '../adapters/render/CameraZoomPolicy.ts';
 import { ChaseCamera } from '../adapters/render/ChaseCamera.ts';
+import { AccidentWatch } from '../domain/camera/AccidentWatch.ts';
+import { analyzeTrackCameras, zoomToFitHalfBounds } from '../domain/camera/analyzeTrackCameras.ts';
+import {
+  CAMERA_MAX_ZOOM_IN,
+  CAMERA_QUIT_MASTER_SCALE,
+  CAMERA_ZOOM_STEP,
+  type CameraPreset,
+} from '../domain/camera/CameraPreset.ts';
+import { CameraDirector } from '../domain/camera/CameraDirector.ts';
+import { CameraImpulse } from '../domain/camera/CameraImpulse.ts';
+import { parseTrackCameraPreset } from '../data/tracks/TrackCameras.ts';
 import { ExplosionEffect } from '../adapters/render/ExplosionEffect.ts';
 import { MetalScrapEffect } from '../adapters/render/MetalScrapEffect.ts';
 import type { HudReadout } from '../adapters/render/HudFormat.ts';
@@ -39,6 +50,7 @@ import { assignNpcCars } from '../domain/race/CarAssignment.ts';
 import {
   nextWatchTrack,
   splitWatchRoster,
+  watchCarIds,
   watchPilots,
   WATCH_RACER_COUNT,
 } from '../domain/race/WatchField.ts';
@@ -52,12 +64,15 @@ import { HAZARD_KIND } from '../domain/weapons/Hazard.ts';
 import {
   BURN_MARK_LIFETIME_LAPS,
   CAR_LENGTH_PER_COLLISION_RADIUS,
+  HAZARD_BURST_INTENSITY,
   OIL_LAP_REFERENCE_SPEED,
 } from '../domain/weapons/WeaponConstants.ts';
 import type { ResultsEntry, ResultsSceneData } from './ResultsScene.ts';
 import type { PauseSceneData } from './PauseScene.ts';
 import {
+  camerasCacheKey,
   DEFAULT_TRACK_ID,
+  GASOLINE_SPRITE_KEY,
   MINE_SPRITE_KEY,
   MISSILE_SPRITE_KEY,
   OIL_SPRITE_KEY,
@@ -87,17 +102,6 @@ const ZOOM_LOOK_AHEAD_MINIMUM_UNITS = 25;
  * spline, and a twitching zoom is worse than no zoom at all.
  */
 const ZOOM_CURVATURE_SPAN_UNITS = 45;
-
-/**
- * The camera's zoom is quantised to multiples of this.
- *
- * The adaptive policy (T-020) produces a continuous value between 1.5 and 2.0, but the
- * cars are pre-rendered 64 px sprites: a zoom that drifts every frame resamples them
- * every frame, which reads as a shimmer along the car's edges. Snapping to 0.5 parks the
- * car at one of two stable scales and confines any resampling to the transition between
- * them, which `zoomSmoothingSeconds` already spreads over about 0.6 s.
- */
-const CAMERA_ZOOM_STEP = 0.5;
 
 /**
  * How many cars line up, the player included.
@@ -146,6 +150,8 @@ interface PendingExplosion {
   readonly intensity: number;
   /** Car wrecks stamp a dark asphalt scorch; weapon puffs do not. */
   readonly leaveBurnMark?: boolean;
+  /** Visual size. Gasoline barrels pass 1.3. */
+  readonly scale?: number;
 }
 
 interface PendingScrap {
@@ -186,6 +192,11 @@ export class RaceScene extends Phaser.Scene {
   private scraps!: MetalScrapEffect;
   private chaseCamera!: ChaseCamera;
   private zoomPolicy!: CameraZoomPolicy;
+  private cameraDirector = new CameraDirector();
+  private cameraImpulse = new CameraImpulse();
+  private accidentWatch = new AccidentWatch();
+  private cameraPreset!: CameraPreset;
+  private quitedTheRace = false;
   private driver!: KeyboardDriver;
   private loop!: FixedStepLoop;
   private audio!: RaceAudio;
@@ -239,6 +250,10 @@ export class RaceScene extends Phaser.Scene {
     this.trackId = data.trackId ?? DEFAULT_TRACK_ID;
     this.watch = data.watch === true;
     this.watchPinned = false;
+    this.quitedTheRace = false;
+    this.cameraDirector = new CameraDirector();
+    this.cameraImpulse = new CameraImpulse();
+    this.accidentWatch = new AccidentWatch();
     this.trackLines = this.linesByTrack[this.trackId];
     this.startingCash = loadWallet();
     this.planetIndex = campaignSlotForTrackId(this.trackId)?.planetIndex ?? 1;
@@ -267,6 +282,7 @@ export class RaceScene extends Phaser.Scene {
     });
     this.chaseCamera = new ChaseCamera(this.cameras.main, this.projection);
     this.zoomPolicy = new CameraZoomPolicy({ zoomStep: CAMERA_ZOOM_STEP });
+    this.cameraPreset = this.loadCameraPreset();
     this.driver = new KeyboardDriver(this.requireKeyboard());
     this.loop = new FixedStepLoop(SIMULATION_STEP_SECONDS);
     this.audio = new RaceAudio(this.playerSheetStats(), musicForTrackId(this.track.id));
@@ -308,7 +324,10 @@ export class RaceScene extends Phaser.Scene {
     // keeps every step of a frame perfectly reproducible. The driver needs the
     // current forward speed because Down means "brake" while rolling and "reverse"
     // once stopped (decision 18).
-    this.command = this.watch ? IDLE_INPUT : this.driver.read(deltaSeconds, this.forwardSpeed());
+    this.command =
+      this.watch || this.quitedTheRace
+        ? IDLE_INPUT
+        : this.driver.read(deltaSeconds, this.forwardSpeed());
     this.loop.advance(deltaSeconds, stepSeconds => this.stepSimulation(stepSeconds));
     this.presentHitRewards();
 
@@ -324,7 +343,13 @@ export class RaceScene extends Phaser.Scene {
     this.updatePlayerAudio();
     this.explosions.update(deltaSeconds);
     this.scraps.update(deltaSeconds);
-    this.chaseCamera.follow(this.followedRacer().state, deltaSeconds, this.targetZoom());
+    this.chaseCamera.follow(this.followedRacer().state, deltaSeconds, this.targetZoom(deltaSeconds));
+    const impulse = this.cameraImpulse.sample(deltaSeconds);
+    this.chaseCamera.applyOverlay(
+      impulse.x * this.cameras.main.width,
+      impulse.y * this.cameras.main.height,
+      impulse.zoomScale,
+    );
     this.trackRenderer.syncToCamera(this.cameras.main);
     this.refreshOverlay();
 
@@ -337,7 +362,7 @@ export class RaceScene extends Phaser.Scene {
    * a short hold expires so a stuck NPC cannot freeze the results.
    */
   private maybeFinishRace(deltaSeconds: number): void {
-    if (this.resultsShown || this.watch) {
+    if (this.resultsShown || this.watch || this.quitedTheRace) {
       return;
     }
     const race = this.field.race;
@@ -450,6 +475,12 @@ export class RaceScene extends Phaser.Scene {
   private stepSimulation(stepSeconds: number): void {
     const impactBefore = this.field.racers.map(racer => racer.pendingImpactSpeed);
     this.field.step(this.command, stepSeconds);
+    this.accidentWatch.note(
+      this.field.contactsThisStep,
+      IMPACT_DAMAGE_THRESHOLD,
+      stepSeconds,
+    );
+    this.notePlayerCameraImpulse(impactBefore);
 
     // Collected here rather than in `update`, because `explodedThisStep` is true for
     // one step only and a frame can contain several steps.
@@ -483,7 +514,15 @@ export class RaceScene extends Phaser.Scene {
       }
     });
     for (const position of this.field.weaponBurstsThisStep) {
-      this.pendingExplosions.push({ position, intensity: 0.4 });
+      this.pendingExplosions.push({ position, intensity: HAZARD_BURST_INTENSITY });
+      this.weaponThisFrame = true;
+    }
+    for (const burst of this.field.hazardBurstsThisStep) {
+      this.pendingExplosions.push({
+        position: burst.position,
+        intensity: HAZARD_BURST_INTENSITY,
+        scale: burst.scale,
+      });
       this.weaponThisFrame = true;
     }
     if (this.field.racers.some(racer => racer.explodedThisStep)) {
@@ -578,7 +617,8 @@ export class RaceScene extends Phaser.Scene {
     for (const hazard of this.field.activeHazards) {
       const screen = this.projection.toScreen(hazard.position);
       const isOil = hazard.kind === HAZARD_KIND.OIL;
-      const artKey = isOil ? OIL_SPRITE_KEY : MINE_SPRITE_KEY;
+      const isGasoline = hazard.kind === HAZARD_KIND.GASOLINE;
+      const artKey = isOil ? OIL_SPRITE_KEY : isGasoline ? GASOLINE_SPRITE_KEY : MINE_SPRITE_KEY;
       if (this.textures.exists(artKey)) {
         const sprite = this.hazardSprite(hazardSlot, artKey);
         hazardSlot += 1;
@@ -597,6 +637,9 @@ export class RaceScene extends Phaser.Scene {
         if (isOil) {
           this.weaponLayer.fillStyle(0x1a1208, 0.85);
           this.weaponLayer.fillEllipse(screen.x, screen.y, radius * 2, radius);
+        } else if (isGasoline) {
+          this.weaponLayer.fillStyle(0xc43a28, 1);
+          this.weaponLayer.fillEllipse(screen.x, screen.y, radius * 1.4, radius * 1.8);
         } else {
           this.weaponLayer.fillStyle(0xff3344, 1);
           this.weaponLayer.fillCircle(screen.x, screen.y, radius);
@@ -644,6 +687,7 @@ export class RaceScene extends Phaser.Scene {
       this.explosions.burst(explosion.position, explosion.intensity, {
         leaveBurnMark: explosion.leaveBurnMark === true,
         skipShards: explosion.leaveBurnMark === true,
+        scale: explosion.scale,
       });
       this.audio.playExplosion(explosion.intensity);
     }
@@ -713,8 +757,18 @@ export class RaceScene extends Phaser.Scene {
    */
   private followedRacer(): RacerRuntime {
     const racers = this.field.racers;
-    if (!this.watch || racers.length === 0) {
+    if (racers.length === 0) {
       return this.player;
+    }
+    if (!this.watch && !this.quitedTheRace) {
+      return this.player;
+    }
+    const accidentId = this.accidentWatch.targetCarId();
+    if (accidentId !== null && !this.watchPinned) {
+      const wreck = racers.find(racer => racer.carId === accidentId);
+      if (wreck !== undefined) {
+        return wreck;
+      }
     }
     if (!this.watchPinned) {
       const leaderId = this.field.race.standings[0]?.carId;
@@ -725,6 +779,29 @@ export class RaceScene extends Phaser.Scene {
       }
     }
     return racers[this.aiFocusIndex % racers.length] ?? this.player;
+  }
+
+  private notePlayerCameraImpulse(impactBefore: readonly number[]): void {
+    const player = this.player;
+    if (!player.isPlayer) {
+      return;
+    }
+    if (player.explodedThisStep) {
+      this.cameraImpulse.punchExplosion();
+      return;
+    }
+    if (player.respawnedThisStep) {
+      this.cameraImpulse.recoverFromExplosion();
+      return;
+    }
+    const index = this.field.racers.indexOf(player);
+    const before = impactBefore[index] ?? 0;
+    if (
+      player.pendingImpactSpeed > before &&
+      player.pendingImpactSpeed > IMPACT_DAMAGE_THRESHOLD
+    ) {
+      this.cameraImpulse.punchHit();
+    }
   }
 
   private buildEntries(): readonly RacerEntry[] {
@@ -776,7 +853,7 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private buildWatchEntries(): readonly RacerEntry[] {
-    const allIds = this.manifest.cars.map(car => car.id);
+    const allIds = watchCarIds(this.manifest.cars.map(car => car.id));
     const planetTwoIndex = Math.max(0, this.planetIndex - 1);
     const { field, reserve } = splitWatchRoster(allIds, planetTwoIndex);
     const pilots = watchPilots();
@@ -804,8 +881,8 @@ export class RaceScene extends Phaser.Scene {
     return findCarSheet(this.manifest, this.carId).stats;
   }
 
-  /** Zoom in on a fast straight, out for a corner (decision 21). */
-  private targetZoom(): number {
+  /** Live policy, then director (manual 10s > trigger 3s > live). */
+  private targetZoom(deltaSeconds: number = SIMULATION_STEP_SECONDS): number {
     const player = this.followedRacer();
     const speed = player.telemetry?.speed ?? 0;
     const lookAhead = Math.max(
@@ -816,7 +893,36 @@ export class RaceScene extends Phaser.Scene {
       player.distance + lookAhead,
       ZOOM_CURVATURE_SPAN_UNITS,
     );
-    return this.zoomPolicy.targetZoom(speed, player.stats.maxSpeed, curvature);
+    const live = this.zoomPolicy.targetZoom(speed, player.stats.maxSpeed, curvature);
+    return this.cameraDirector.sample(
+      deltaSeconds,
+      live,
+      player.distance,
+      this.cameraPreset,
+      this.spline.totalLength,
+    ).zoom;
+  }
+
+  private loadCameraPreset(): CameraPreset {
+    const raw = this.cache.json.get(camerasCacheKey(this.trackId));
+    if (raw !== undefined && raw !== null) {
+      try {
+        return parseTrackCameraPreset(raw);
+      } catch {
+        /* Generated file missing or stale — analyze live. */
+      }
+    }
+    return analyzeTrackCameras(this.track);
+  }
+
+  private manualZoomOut(): number {
+    const bounds = this.trackRenderer.bounds;
+    return zoomToFitHalfBounds(
+      bounds.width,
+      bounds.height,
+      this.cameras.main.width,
+      this.cameras.main.height,
+    );
   }
 
   /**
@@ -855,12 +961,28 @@ export class RaceScene extends Phaser.Scene {
       }
     }));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.OPEN_BRACKET).on('down', unlessPaused(() => {
-      this.watchPinned = true;
-      this.aiFocusIndex = Math.max(0, this.aiFocusIndex - 1);
+      this.cameraDirector.zoomIn(this.cameraPreset.maxZoomIn ?? CAMERA_MAX_ZOOM_IN);
     }));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CLOSED_BRACKET).on('down', unlessPaused(() => {
-      this.watchPinned = true;
-      this.aiFocusIndex += 1;
+      this.cameraDirector.zoomOut(this.manualZoomOut());
+    }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ZERO).on('down', unlessPaused(() => {
+      this.cameraDirector.resetToDefault();
+    }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT).on('down', unlessPaused(() => {
+      if (this.watch || this.quitedTheRace) {
+        this.cycleSpectator(-1);
+      }
+    }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT).on('down', unlessPaused(() => {
+      if (this.watch || this.quitedTheRace) {
+        this.cycleSpectator(1);
+      }
+    }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', unlessPaused(() => {
+      if (this.watch || this.quitedTheRace) {
+        this.jumpSpectatorCluster();
+      }
     }));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L).on('down', unlessPaused(() => {
       this.watchPinned = false;
@@ -907,9 +1029,55 @@ export class RaceScene extends Phaser.Scene {
       carId: this.carId,
       muted: this.audio.isMuted,
       setMuted: muted => this.audio.setMuted(muted),
+      onQuitRace: this.watch || this.quitedTheRace ? undefined : () => this.quitTheRace(),
     } satisfies PauseSceneData);
     this.scene.pause(SCENE_KEY.HUD);
     this.scene.pause();
+  }
+
+  private quitTheRace(): void {
+    if (this.watch || this.quitedTheRace || this.resultsShown) {
+      return;
+    }
+    this.quitedTheRace = true;
+    this.watchPinned = false;
+    this.field.retirePlayer();
+    this.audio.silenceEngine();
+    this.audio.setMasterScale(CAMERA_QUIT_MASTER_SCALE);
+    this.cameraImpulse.cancelHold();
+    this.cameraDirector.resetToDefault();
+  }
+
+  private cycleSpectator(step: number): void {
+    if (!this.watch && !this.quitedTheRace) {
+      return;
+    }
+    const count = this.field.racers.length;
+    if (count === 0) {
+      return;
+    }
+    this.watchPinned = true;
+    this.aiFocusIndex = (this.aiFocusIndex + step + count) % count;
+  }
+
+  private jumpSpectatorCluster(): void {
+    if (!this.watch && !this.quitedTheRace) {
+      return;
+    }
+    const id = this.accidentWatch.jumpToCluster(
+      this.field.racers.map(racer => ({
+        carId: racer.carId,
+        position: racer.state.position,
+      })),
+    );
+    if (id === null) {
+      return;
+    }
+    const index = this.field.racers.findIndex(racer => racer.carId === id);
+    if (index >= 0) {
+      this.aiFocusIndex = index;
+      this.watchPinned = false;
+    }
   }
 
   /** Debug: destroys the player's car so the wreck, explosion and respawn can be watched. */
@@ -924,6 +1092,7 @@ export class RaceScene extends Phaser.Scene {
       respawnRemaining: DEBUG_RESPAWN_SECONDS,
     };
     this.pendingExplosions.push({ position: player.state.position, intensity: 1, leaveBurnMark: true });
+    this.cameraImpulse.punchExplosion();
     const playerIndex = this.field.racers.findIndex(racer => racer.isPlayer);
     this.pendingScraps.push({
       racerIndex: playerIndex,
@@ -936,6 +1105,9 @@ export class RaceScene extends Phaser.Scene {
   /** Puts the whole field back on the grid and restarts the countdown. */
   private respawn(): void {
     this.field.reset();
+    this.quitedTheRace = false;
+    this.cameraDirector.resetToDefault();
+    this.cameraImpulse.cancelHold();
     this.command = IDLE_INPUT;
     this.pendingExplosions = [];
     this.pendingScraps = [];

@@ -53,6 +53,8 @@ export class ChaseCamera {
   private readonly projection: IsoProjection;
   private readonly defaultZoom: number;
   private currentZoom: number;
+  private currentX = 0;
+  private currentY = 0;
   private readonly lookAheadSeconds: number;
   private readonly smoothingSeconds: number;
   private readonly zoomSmoothingSeconds: number;
@@ -88,7 +90,9 @@ export class ChaseCamera {
     const target: ScreenPoint = this.projection.toScreen(
       add(state.position, scale(state.velocity, this.lookAheadSeconds)),
     );
-    this.camera.centerOn(target.x, target.y);
+    this.currentX = target.x;
+    this.currentY = target.y;
+    this.camera.centerOn(this.currentX, this.currentY);
 
     if (targetZoom !== undefined) {
       this.currentZoom = targetZoom;
@@ -115,13 +119,12 @@ export class ChaseCamera {
       add(state.position, scale(state.velocity, this.lookAheadSeconds)),
     );
 
-    const current = this.camera.midPoint;
-    // Exponential decay: factor = 1 - e^(-dt / tau), moves fraction of the way to target.
+    // Own last pose, not camera.midPoint: an impulse overlay must not feed back
+    // into the chase smoother or the shake leaks into the next frame.
     const factor = 1 - Math.exp(-deltaSeconds / this.smoothingSeconds);
-    const nextX = current.x + (target.x - current.x) * factor;
-    const nextY = current.y + (target.y - current.y) * factor;
-
-    this.camera.centerOn(nextX, nextY);
+    this.currentX += (target.x - this.currentX) * factor;
+    this.currentY += (target.y - this.currentY) * factor;
+    this.camera.centerOn(this.currentX, this.currentY);
 
     // Ease zoom towards target if provided, using the slower zoom time constant.
     if (targetZoom !== undefined && Number.isFinite(targetZoom)) {
@@ -131,5 +134,19 @@ export class ChaseCamera {
       this.currentZoom = nextZoom;
       this.camera.setZoom(this.currentZoom);
     }
+  }
+
+  /**
+   * Presentation overlay (shake / wreck punch). Does not update the chase pose
+   * or the smoothed zoom, so the kick dies without dragging the follow.
+   */
+  applyOverlay(offsetX: number, offsetY: number, zoomScale: number): void {
+    this.camera.centerOn(this.currentX + offsetX, this.currentY + offsetY);
+    const scale = Number.isFinite(zoomScale) && zoomScale > 0 ? zoomScale : 1;
+    this.camera.setZoom(this.currentZoom * scale);
+  }
+
+  get zoom(): number {
+    return this.currentZoom;
   }
 }

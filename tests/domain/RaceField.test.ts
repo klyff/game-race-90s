@@ -440,3 +440,20 @@ describe('RaceField — racing AI', () => {
     expect(aline?.scores.length).toBeGreaterThan(0);
   });
 });
+
+describe('RaceField — quit park', () => {
+  it('slides the retired player onto the inner wall and ignores throttle', () => {
+    const field = new RaceField(fullFieldEntries(), track, freshSpline(), {
+      countdownSeconds: 0,
+      npcWeapons: false,
+    });
+    run(field, 1, FULL_THROTTLE);
+    field.retirePlayer();
+    expect(field.isPlayerRetired).toBe(true);
+    run(field, 1.4, FULL_THROTTLE);
+    const wallLimit = trackFullHalfWidth(track) - field.player.stats.collisionRadius;
+    expect(Math.abs(field.player.lateralOffset)).toBeCloseTo(wallLimit, 1);
+    expect(field.player.lateralOffset).toBeGreaterThan(0);
+    expect(vecLength(field.player.state.velocity)).toBe(0);
+  });
+});

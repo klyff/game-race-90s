@@ -31,6 +31,13 @@ export function linesCacheKey(trackId: string): string {
 /** Where `npm run gen:lines` writes its output, relative to the served root. */
 export const LINES_ASSET_DIRECTORY = 'assets/lines';
 
+export function camerasCacheKey(trackId: string): string {
+  return `track-cameras:${trackId}`;
+}
+
+/** Where `npm run gen:cameras` writes its output, relative to the served root. */
+export const CAMERAS_ASSET_DIRECTORY = 'assets/cameras';
+
 /** Where `npm run gen:sprites` writes its output, relative to the served root. */
 export const CAR_ASSET_DIRECTORY = 'assets/cars';
 
@@ -48,6 +55,27 @@ export const GROUND_ASSET_DIRECTORY = 'assets/ground';
 
 /** Where owner-provided weapon art (missile / oil / mine) lives, relative to the served root. */
 export const WEAPON_ASSET_DIRECTORY = 'assets/weapons';
+
+/** Single-frame isometric HUD icons (turbo, missile, mine, oil, jump). */
+export const HUD_ICON_DIRECTORY = `${UI_ASSET_DIRECTORY}/hud`;
+
+export const HUD_ICONS = [
+  { key: 'hud-turbo', file: 'hud-turbo.png' },
+  { key: 'hud-missile', file: 'hud-missile.png' },
+  { key: 'hud-mine', file: 'hud-mine.png' },
+  { key: 'hud-oil', file: 'hud-oil.png' },
+  { key: 'hud-jump', file: 'hud-jump.png' },
+] as const;
+
+export const HUD_TURBO_KEY = 'hud-turbo';
+export const HUD_MISSILE_KEY = 'hud-missile';
+export const HUD_MINE_KEY = 'hud-mine';
+export const HUD_OIL_KEY = 'hud-oil';
+export const HUD_JUMP_KEY = 'hud-jump';
+
+/** Dirty red gasoline barrel still, used as a world hazard. */
+export const GASOLINE_SPRITE_KEY = 'world-gasoline';
+export const GASOLINE_SPRITE_FILE = 'world-gasoline.png';
 
 /** Where the metal-scrap pieces live (`scrap-01.png` …). */
 export const DEBRIS_ASSET_DIRECTORY = 'assets/debris';

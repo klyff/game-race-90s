@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Vec2 } from '../../domain/math/Vec2.ts';
 import { add, fromAngle, scale } from '../../domain/math/Vec2.ts';
+import { resolveBurstScale } from '../../domain/weapons/WeaponConstants.ts';
 import { IsoProjection } from './IsoProjection.ts';
 import { ROAD_DEPTH } from './TrackRenderer.ts';
 
@@ -139,6 +140,8 @@ export interface BurstOptions {
   readonly leaveBurnMark?: boolean;
   /** Skip geometric shards when the scrap roster is handling debris. */
   readonly skipShards?: boolean;
+  /** Visual size multiplier. Gasoline barrels pass 1.3; mines and missiles omit it. */
+  readonly scale?: number;
 }
 
 /** One spark: world position, planar velocity, height arc, and colour fade. */
@@ -191,6 +194,7 @@ interface BurnMark {
 interface Burst {
   positionWorld: Vec2;
   intensity: number;
+  scale: number;
   sparks: Spark[];
   shards: MetalShard[];
   ageSeconds: number;
@@ -284,15 +288,17 @@ export class ExplosionEffect {
 
     const burstIdSeed = this.nextBurstId;
     this.nextBurstId += 1;
+    const visualScale = resolveBurstScale(options.scale);
 
-    const sparks = this.spawnSparks(position, clampedIntensity, burstIdSeed);
+    const sparks = this.spawnSparks(position, clampedIntensity, burstIdSeed, visualScale);
     const shards = options.skipShards
       ? []
-      : this.spawnShards(position, clampedIntensity, burstIdSeed);
+      : this.spawnShards(position, clampedIntensity, burstIdSeed, visualScale);
 
     this.bursts.push({
       positionWorld: position,
       intensity: clampedIntensity,
+      scale: visualScale,
       sparks,
       shards,
       ageSeconds: 0,
@@ -326,7 +332,7 @@ export class ExplosionEffect {
     this.burnGraphics.destroy();
   }
 
-  private spawnSparks(position: Vec2, intensity: number, burstIdSeed: number): Spark[] {
+  private spawnSparks(position: Vec2, intensity: number, burstIdSeed: number, visualScale: number): Spark[] {
     const count = Math.round(intensity * MAX_SPARKS_PER_BURST);
     const sparks: Spark[] = [];
 
@@ -339,7 +345,7 @@ export class ExplosionEffect {
       const upRand = seededRandom(baseSeed + 4);
 
       const angle = (i / Math.max(1, count)) * 2 * Math.PI + angleRand * 0.45;
-      const speed = intensity * MAX_SPARK_SPEED_UNITS_PER_SEC * (0.85 + speedRand * 0.3);
+      const speed = intensity * MAX_SPARK_SPEED_UNITS_PER_SEC * (0.85 + speedRand * 0.3) * visualScale;
       const direction = fromAngle(angle);
 
       sparks.push({
@@ -349,7 +355,7 @@ export class ExplosionEffect {
         verticalVelocity: SPARK_UPWARD_VELOCITY_UNITS_PER_SEC * (0.7 + upRand * 0.6),
         lifetimeSeconds: SPARK_LIFETIME_BASE_SECONDS * (0.75 + lifeRand * 0.5),
         ageSeconds: 0,
-        size: SPARK_MIN_SIZE_UNITS + sizeRand * (SPARK_MAX_SIZE_UNITS - SPARK_MIN_SIZE_UNITS),
+        size: (SPARK_MIN_SIZE_UNITS + sizeRand * (SPARK_MAX_SIZE_UNITS - SPARK_MIN_SIZE_UNITS)) * visualScale,
         startColor: 0xffffcc,
         endColor: 0x8b2a00,
       });
@@ -358,7 +364,7 @@ export class ExplosionEffect {
     return sparks;
   }
 
-  private spawnShards(position: Vec2, intensity: number, burstIdSeed: number): MetalShard[] {
+  private spawnShards(position: Vec2, intensity: number, burstIdSeed: number, visualScale: number): MetalShard[] {
     const count = Math.round(intensity * MAX_SHARDS_PER_BURST);
     const shards: MetalShard[] = [];
 
@@ -375,7 +381,7 @@ export class ExplosionEffect {
       const kindRand = seededRandom(baseSeed + 8);
 
       const angle = (i / Math.max(1, count)) * 2 * Math.PI + angleRand * 0.55;
-      const speed = intensity * MAX_SHARD_SPEED_UNITS_PER_SEC * (0.7 + speedRand * 0.5);
+      const speed = intensity * MAX_SHARD_SPEED_UNITS_PER_SEC * (0.7 + speedRand * 0.5) * visualScale;
       const direction = fromAngle(angle);
       const colorIndex = Math.min(METAL_COLORS.length - 1, Math.floor(colorRand * METAL_COLORS.length));
 
@@ -386,8 +392,8 @@ export class ExplosionEffect {
         verticalVelocity: SHARD_UPWARD_VELOCITY_UNITS_PER_SEC * (0.65 + upRand * 0.7),
         rotationRadians: angleRand * Math.PI * 2,
         spinRadiansPerSec: (spinRand - 0.5) * 14,
-        length: 0.45 + lengthRand * 0.85,
-        width: 0.12 + widthRand * 0.28,
+        length: (0.45 + lengthRand * 0.85) * visualScale,
+        width: (0.12 + widthRand * 0.28) * visualScale,
         color: METAL_COLORS[colorIndex]!,
         lifetimeSeconds: SHARD_LIFETIME_BASE_SECONDS * (0.85 + lifeRand * 0.4),
         ageSeconds: 0,
@@ -547,8 +553,8 @@ export class ExplosionEffect {
     const progress = burst.ageSeconds / SHOCKWAVE_LIFETIME_SECONDS;
     if (progress > 1) return;
 
-    const radius = SHOCKWAVE_MIN_RADIUS_UNITS
-      + (SHOCKWAVE_MAX_RADIUS_UNITS - SHOCKWAVE_MIN_RADIUS_UNITS) * progress;
+    const radius = (SHOCKWAVE_MIN_RADIUS_UNITS
+      + (SHOCKWAVE_MAX_RADIUS_UNITS - SHOCKWAVE_MIN_RADIUS_UNITS) * progress) * burst.scale;
     const fade = 1 - progress * progress;
     const screenCenter = this.projection.toScreen(burst.positionWorld);
     const screenWidth = radius * 2 * this.projection.pixelsPerUnit;
@@ -562,7 +568,7 @@ export class ExplosionEffect {
     // Brief white flash at the blast centre so the wreck reads as a hit, not a puff.
     if (progress < 0.18) {
       const flash = 1 - progress / 0.18;
-      const flashRadius = (1.2 + burst.intensity * 2.2) * this.projection.pixelsPerUnit;
+      const flashRadius = (1.2 + burst.intensity * 2.2) * burst.scale * this.projection.pixelsPerUnit;
       this.burstGraphics.fillStyle(0xfff6d8, 0.7 * flash);
       this.burstGraphics.fillCircleShape(
         new Phaser.Geom.Circle(screenCenter.x, screenCenter.y, flashRadius),
@@ -576,8 +582,8 @@ export class ExplosionEffect {
     if (progress > 1) return;
 
     const grow = progress < 0.35 ? progress / 0.35 : 1 - (progress - 0.35) / 0.65 * 0.45;
-    const radiusAtProgress = FIREBALL_START_RADIUS_UNITS
-      + (burst.intensity * FIREBALL_MAX_RADIUS_UNITS - FIREBALL_START_RADIUS_UNITS) * grow;
+    const radiusAtProgress = (FIREBALL_START_RADIUS_UNITS
+      + (burst.intensity * FIREBALL_MAX_RADIUS_UNITS - FIREBALL_START_RADIUS_UNITS) * grow) * burst.scale;
     const driftHeight = FIREBALL_DRIFT_SPEED_UNITS_PER_SEC * burst.ageSeconds;
     const { color, alpha } = sampleFireballColor(progress);
 

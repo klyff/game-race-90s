@@ -74,4 +74,11 @@ export const thunderBasin: TrackDefinition = {
     { triggerDistance: 680, triggerLength: 10, launchSpeed: 13 },
     { triggerDistance: 1180, triggerLength: 10, launchSpeed: 11 },
   ],
+
+  // Shoulder drums, not on the racing line: long straight, sweeper exit, hairpin approach.
+  gasolineBarrels: [
+    { distance: 90, lateral: 22 },
+    { distance: 450, lateral: -22 },
+    { distance: 1050, lateral: 22 },
+  ],
 };
