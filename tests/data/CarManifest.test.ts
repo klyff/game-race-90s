@@ -11,6 +11,9 @@ import {
   cartPortraitLegacyFile,
   cartStripFile,
   isNewFleetCarId,
+  matrixHeroFile,
+  matrixHeroNumber,
+  matrixHeroUrl,
   CarManifestError,
 } from '../../src/data/cars/CarManifest.ts';
 import { CAR_PERK, CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/domain/constants.ts';
@@ -489,6 +492,16 @@ describe('cart portraits', () => {
     expect(cartPortraitFile('delorean')).toBe('delorean_300px.png');
     expect(cartPortraitLegacyFile('car-16')).toBe('cart_16_300.png');
     expect(cartPortraitKey('car-1')).toBe('cart-portrait:car-1');
+  });
+
+  it('maps roster ids onto matrix_car/N_hero/car_N_hero.png', () => {
+    expect(matrixHeroNumber('car-1')).toBe(1);
+    expect(matrixHeroNumber('car_2')).toBe(2);
+    expect(matrixHeroNumber('car-6-tank')).toBe(6);
+    expect(matrixHeroNumber('car-12-strong')).toBe(12);
+    expect(matrixHeroNumber('delorean')).toBeUndefined();
+    expect(matrixHeroFile(6)).toBe('car_6_hero.png');
+    expect(matrixHeroUrl(6)).toBe('matrix_car/6_hero/car_6_hero.png');
   });
 });
 

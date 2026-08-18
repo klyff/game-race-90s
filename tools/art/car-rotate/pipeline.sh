@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# LEGACY — DO NOT USE for matrix_car (Cloud metade B).
+# Old layout: frames_300/car_blue/car_blue_f23.png  ← REMOVED
+# Current:    public/matrix_car/{N}_hero/car_{N}_a023.png
+# Use:        public/matrix_car/CLOUD_QUEUE_B.md
+#             tools/art/car-rotate/build_matrix_strip.py
+#             tools/art/car-rotate/pack_matrix_sources.py
+#
+# --- below is the old 36-frame / frames_SRC pipeline (kept for archaeology) ---
+#
 # Local car-rotation pipeline (no Cursor GenerateImage).
 #
 # Art canvas: 1024×1024 (native or reused).
@@ -12,6 +21,13 @@
 #     --assets /path/to/assets \
 #     --src 1024 --dst 64
 set -euo pipefail
+
+echo "WARNING: pipeline.sh is LEGACY (frames_300 / car_*_fXX)." >&2
+echo "For matrix_car use public/matrix_car/CLOUD_QUEUE_B.md" >&2
+if [[ "${ALLOW_LEGACY_PIPELINE:-}" != "1" ]]; then
+  echo "Refusing to run. Set ALLOW_LEGACY_PIPELINE=1 to override." >&2
+  exit 1
+fi
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 CAR="${1:?usage: pipeline.sh <car_id> [--assets DIR] [--src N] [--dst N]}"

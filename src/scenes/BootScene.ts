@@ -4,6 +4,8 @@ import {
   cartPortraitFile,
   cartPortraitKey,
   cartPortraitLegacyFile,
+  matrixHeroNumber,
+  matrixHeroUrl,
   parseCarSetManifest,
   sheetCellSize,
 } from '../data/cars/CarManifest.ts';
@@ -240,20 +242,26 @@ export class BootScene extends Phaser.Scene {
   }
 
   /**
-   * New cars use `car_1_hero.png` (live set or `cars/new/`). Fleet stills are
-   * `{carId}_300px.png`. Older files used `cart_N_300.png`. Queue every
-   * candidate; `promotePortrait` keeps the first one that actually loaded.
+   * Garage stills prefer the matrix vitrine (`matrix_car/N_hero/car_N_hero.png`).
+   * Then `car_1_hero.png` (live set or `cars/new/`), then `{carId}_300px.png`,
+   * then leftover `cart_N_300.png`. `promotePortrait` keeps the first that loaded.
    */
   private portraitUrls(carId: string): readonly string[] {
+    const n = matrixHeroNumber(carId);
     const hero = cartHeroFile(carId);
     const still = cartPortraitFile(carId);
-    return [
+    const urls: string[] = [];
+    if (n !== undefined) {
+      urls.push(matrixHeroUrl(n));
+    }
+    urls.push(
       `${CAR_ASSET_DIRECTORY}/${hero}`,
       `${NEW_CARS_DIRECTORY}/${hero}`,
       `${CAR_ASSET_DIRECTORY}/${still}`,
       `assets/${still}`,
       `${CAR_ASSET_DIRECTORY}/${cartPortraitLegacyFile(carId)}`,
-    ];
+    );
+    return urls;
   }
 
   private queuePortrait(carId: string): void {

@@ -9,6 +9,8 @@ import { pickPubBackground, PUB_BACKGROUNDS, pubBackgroundKey } from '../data/ui
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
 import { formatRaceTime, positionOrdinal } from '../adapters/render/HudFormat.ts';
+import { layoutResults } from '../adapters/render/ResultsLayout.ts';
+import type { Plate, PodiumSlot } from '../adapters/render/ResultsLayout.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
 import { containSize } from '../adapters/render/FitBox.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
@@ -49,17 +51,16 @@ export interface ResultsSceneData {
 }
 
 export const ADVANCE_POSITION = 3;
-const WINNER_CARD = 140;
-const OTHER_CARD = 104;
-const WINNER_CAR = 128;
-const OTHER_CAR = 104;
 const PLAQUE_EDGE = 0xf4e6c4;
 const PLAQUE_GOLD = 0xffd85c;
+const PLAQUE_SILVER = 0xc0c8d4;
+const PLAQUE_BRONZE = 0xc4843a;
+const PLAQUE_ALPHA = 0.82;
 const GOLD = '#ffd85c';
+const SILVER = '#d4dae4';
+const BRONZE = '#e0a060';
 const IVORY = '#f4f0e4';
-const FIRST_BLUE = '#4da3ff';
 const LAST_RED = '#ff4a4a';
-const RANK_LINE = 21;
 
 interface PodiumStack {
   readonly entry: ResultsEntry;
@@ -71,6 +72,7 @@ interface PodiumStack {
 }
 
 interface RankRow {
+  readonly place: number;
   readonly name: string;
   readonly race: number;
   readonly total: number;
@@ -94,14 +96,17 @@ export class ResultsScene extends Phaser.Scene {
   private rankingBox!: Phaser.GameObjects.Graphics;
   private payoutBox!: Phaser.GameObjects.Graphics;
   private promptBox!: Phaser.GameObjects.Graphics;
+  private stepsBox!: Phaser.GameObjects.Graphics;
   private playerMark!: Phaser.GameObjects.Rectangle;
   private headerText!: Phaser.GameObjects.Text;
   private winnerText!: Phaser.GameObjects.Text;
-  private rankingHeader!: Phaser.GameObjects.Text;
-  private rankingHeaderRight!: Phaser.GameObjects.Text;
+  private rankingCaption!: Phaser.GameObjects.Text;
+  private rankingColumns!: Phaser.GameObjects.Text;
   private rankLineTexts: Phaser.GameObjects.Text[] = [];
+  private payoutCaption!: Phaser.GameObjects.Text;
   private payoutText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
+  private stepLabels: Phaser.GameObjects.Text[] = [];
   private podium: PodiumStack[] = [];
 
   constructor() {
@@ -145,39 +150,38 @@ export class ResultsScene extends Phaser.Scene {
     this.rankRows = this.buildRankRows();
 
     this.art = this.add.image(0, 0, '').setOrigin(0, 0).setVisible(false).setDepth(0);
-    this.dim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.28).setOrigin(0, 0).setDepth(1);
-    this.floorDim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.42).setOrigin(0, 1).setDepth(1);
+    this.dim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.46).setOrigin(0, 0).setDepth(1);
+    this.floorDim = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.36).setOrigin(0, 1).setDepth(1);
     this.applyPubArt();
 
     this.titleBox = this.add.graphics().setDepth(2);
+    this.stepsBox = this.add.graphics().setDepth(2);
     this.rankingBox = this.add.graphics().setDepth(2);
     this.payoutBox = this.add.graphics().setDepth(2);
     this.promptBox = this.add.graphics().setDepth(2);
     this.playerMark = this.add
-      .rectangle(0, 0, 10, RANK_LINE, 0x3a2a14, 0.9)
-      .setStrokeStyle(1, PLAQUE_GOLD, 0.7)
-      .setOrigin(0.5, 0.5)
+      .rectangle(0, 0, 10, 18, 0x3a2a14, 0.95)
+      .setStrokeStyle(2, PLAQUE_GOLD, 0.85)
+      .setOrigin(0, 0.5)
       .setDepth(3)
       .setVisible(false);
 
     this.headerText = this.add.text(0, 0, 'WINNER IS', this.headerStyle()).setOrigin(0.5, 0.5).setDepth(4);
     this.winnerText = this.add.text(0, 0, this.winnerName(), this.winnerStyle()).setOrigin(0.5, 0.5).setDepth(4);
-    this.rankingHeader = this.add
-      .text(0, 0, ' # NAME   RACE TOT', this.rankStyle())
-      .setOrigin(0, 0)
-      .setDepth(4);
-    this.rankingHeaderRight = this.add
-      .text(0, 0, ' # NAME   RACE TOT', this.rankStyle())
-      .setOrigin(0, 0)
-      .setDepth(4);
+    this.rankingCaption = this.add.text(0, 0, 'CHAMPIONSHIP', this.captionStyle()).setOrigin(0, 0).setDepth(4);
+    this.rankingColumns = this.add.text(0, 0, ' #  PILOT    RACE  TOT', this.rankStyle()).setOrigin(0, 0).setDepth(4);
     this.rankLineTexts = Array.from({ length: 10 }, () =>
       this.add.text(0, 0, '', this.rankStyle()).setOrigin(0, 0).setDepth(4),
     );
+    this.payoutCaption = this.add.text(0, 0, 'PURSE', this.captionStyle()).setOrigin(0, 0).setDepth(4);
     this.payoutText = this.add.text(0, 0, this.payoutBlock(), this.payoutStyle()).setOrigin(0, 0).setDepth(4);
-    this.promptText = this.add
-      .text(0, 0, 'SPACE / ENTER   ·   GARAGE', this.promptStyle())
-      .setOrigin(0.5, 0.5)
-      .setDepth(4);
+    this.promptText = this.add.text(0, 0, 'CONTINUE  ·  GARAGE', this.promptStyle()).setOrigin(0.5, 0.5).setDepth(4);
+    this.stepLabels = [1, 2, 3].map(place =>
+      this.add
+        .text(0, 0, String(place), this.stepStyle(place))
+        .setOrigin(0.5, 0.5)
+        .setDepth(3),
+    );
 
     this.podium = this.payload.standings
       .filter(entry => entry.position <= 3)
@@ -193,22 +197,15 @@ export class ResultsScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.audio.destroy());
   }
 
-  private paintPlate(
-    graphics: Phaser.GameObjects.Graphics,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    edge = PLAQUE_EDGE,
-  ): void {
+  private paintPlate(graphics: Phaser.GameObjects.Graphics, plate: Plate, edge = PLAQUE_EDGE): void {
     paintRoundedPlaque(graphics, {
-      x,
-      y,
-      width,
-      height,
-      radius: 16,
+      x: plate.x,
+      y: plate.y,
+      width: plate.width,
+      height: plate.height,
+      radius: 14,
       fill: PLAQUE_INK,
-      alpha: 0.5,
+      alpha: PLAQUE_ALPHA,
       edge,
     });
   }
@@ -297,7 +294,8 @@ export class ResultsScene extends Phaser.Scene {
     return [...totals.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
-      .map(([name, total]) => ({
+      .map(([name, total], index) => ({
+        place: index + 1,
         name,
         race: racePts.get(name) ?? 0,
         total,
@@ -309,17 +307,23 @@ export class ResultsScene extends Phaser.Scene {
     return this.rankRows.slice(0, 10);
   }
 
-  private rankSplit(): number {
-    const n = this.visibleRankRows().length;
-    if (n <= 4) {
-      return n;
+  /** Keep the player on the board even when they sit below the last visible slot. */
+  private pinPlayerRow(rows: readonly RankRow[], slots: number): RankRow[] {
+    if (rows.length <= slots) {
+      return [...rows];
     }
-    return n - 3;
+    const shown = rows.slice(0, slots);
+    const player = rows.find(row => row.isPlayer);
+    if (player !== undefined && !shown.some(row => row.isPlayer)) {
+      shown[slots - 1] = player;
+    }
+    return shown;
   }
 
-  private formatRankLine(row: RankRow, index: number): string {
+  private formatRankLine(row: RankRow): string {
     const marker = row.isPlayer ? '>' : ' ';
-    return `${marker}${String(index + 1).padStart(2)} ${row.name.padEnd(6)} ${String(row.race).padStart(4)} ${String(row.total).padStart(4)}`;
+    const race = row.race > 0 ? `+${row.race}` : String(row.race);
+    return `${marker}${String(row.place).padStart(2)}  ${row.name.slice(0, 6).padEnd(6)}  ${race.padStart(4)}  ${String(row.total).padStart(4)}`;
   }
 
   private racePlace(name: string): number | undefined {
@@ -328,7 +332,13 @@ export class ResultsScene extends Phaser.Scene {
 
   private podiumNameColor(entry: ResultsEntry): string {
     if (entry.position === 1) {
-      return FIRST_BLUE;
+      return GOLD;
+    }
+    if (entry.position === 2) {
+      return SILVER;
+    }
+    if (entry.position === 3) {
+      return BRONZE;
     }
     if (this.payload.totalRacers > 1 && entry.position >= this.payload.totalRacers) {
       return LAST_RED;
@@ -337,9 +347,12 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   private rankLineColor(row: RankRow): string {
+    if (row.isPlayer) {
+      return GOLD;
+    }
     const place = this.racePlace(row.name);
     if (place === 1) {
-      return FIRST_BLUE;
+      return GOLD;
     }
     if (place !== undefined && this.payload.totalRacers > 1 && place >= this.payload.totalRacers) {
       return LAST_RED;
@@ -351,9 +364,9 @@ export class ResultsScene extends Phaser.Scene {
     const row = (label: string, value: string): string => `${label.padEnd(8)}${value.padStart(10)}`;
     const lines = [
       this.payload.trackName.toUpperCase(),
-      `PLACE    ${positionOrdinal(this.payload.playerPosition).toUpperCase()}`,
+      `${positionOrdinal(this.payload.playerPosition).toUpperCase()} PLACE`,
+      row('TIME', formatRaceTime(this.payload.finishSeconds)),
     ];
-    lines.push(row('TIME', formatRaceTime(this.payload.finishSeconds)));
     if (this.prize > 0) {
       lines.push(row('PRIZE', formatCash(this.prize)));
     }
@@ -405,10 +418,10 @@ export class ResultsScene extends Phaser.Scene {
 
   private slamTitle(): void {
     this.tweens.add({
-      targets: [this.headerText, this.winnerText],
-      scale: { from: 1.18, to: 1 },
-      duration: 260,
-      ease: 'Back.easeOut',
+      targets: this.winnerText,
+      scale: { from: 1.12, to: 1 },
+      duration: 220,
+      ease: 'Cubic.easeOut',
     });
   }
 
@@ -420,122 +433,155 @@ export class ResultsScene extends Phaser.Scene {
       this.art.setPosition(rect.x, rect.y).setDisplaySize(rect.width, rect.height);
     }
     this.dim.setSize(width, height);
-    this.floorDim.setPosition(0, height).setSize(width, height * 0.48);
+    this.floorDim.setPosition(0, height).setSize(width, height * 0.42);
 
-    const titleY = height * 0.08;
-    this.paintPlate(this.titleBox, width / 2, titleY, Math.min(520, width * 0.56), 78, PLAQUE_GOLD);
-    this.headerText.setPosition(width / 2, titleY - 18);
-    this.winnerText.setPosition(width / 2, titleY + 16);
+    const rows = this.visibleRankRows();
+    const placed = layoutResults(
+      { width, height },
+      { rankCount: rows.length, payoutLines: this.payoutText.text.split('\n').length },
+    );
+    const shown = this.pinPlayerRow(rows, placed.rankSlots);
 
-    const podiumBottom = this.placePodium(width, height);
-    const gap = 16;
-    const boxW = Math.min(420, Math.max(360, (width - 56 - gap) / 2));
-    const rankNeed = (1 + this.rankSplit()) * RANK_LINE + 28;
-    const payNeed = (this.payoutText.text.split('\n').length + 1) * 22 + 20;
-    const boardH = Math.min(height * 0.38, Math.max(rankNeed, payNeed));
-    const boardTop = Math.min(height * 0.9 - boardH, Math.max(height * 0.52, podiumBottom + 12));
-    const boardCy = boardTop + boardH / 2;
-    const total = boxW * 2 + gap;
-    const left = width / 2 - total / 2 + boxW / 2;
-    const right = left + boxW + gap;
+    this.paintPlate(this.titleBox, placed.title, PLAQUE_GOLD);
+    this.headerText.setPosition(placed.header.x, placed.header.y);
+    this.winnerText.setPosition(placed.winner.x, placed.winner.y);
 
-    this.paintPlate(this.rankingBox, left, boardCy, boxW, boardH);
-    this.paintPlate(this.payoutBox, right, boardCy, boxW, boardH);
+    this.placePodium(placed.first, placed.second, placed.third);
+    this.paintSteps(placed.first, placed.second, placed.third);
 
-    const rankLeft = left - boxW / 2 + 16;
-    const rankTop = boardCy - boardH / 2 + 12;
-    const colW = (boxW - 40) / 2;
-    this.rankingHeader.setPosition(rankLeft, rankTop);
-    this.rankingHeaderRight.setPosition(rankLeft + colW + 8, rankTop);
-    this.placeRankLines(colW, rankLeft, rankTop);
-    this.payoutText.setPosition(right - boxW / 2 + 16, rankTop);
+    this.paintPlate(this.rankingBox, placed.ranking);
+    this.paintPlate(this.payoutBox, placed.payout, PLAQUE_GOLD);
+    this.rankingCaption.setPosition(placed.rankingCaption.x, placed.rankingCaption.y);
+    this.rankingColumns.setPosition(placed.rankingColumns.x, placed.rankingColumns.y);
+    this.placeRankLines(shown, placed.rankingLine0.x, placed.rankingLine0.y, placed.rankLine, placed.ranking.width);
+    this.payoutCaption.setPosition(placed.payoutCaption.x, placed.payoutCaption.y);
+    this.payoutText.setPosition(placed.payoutText.x, placed.payoutText.y);
 
-    this.placePlayerMark(colW, rankLeft, rankTop);
-    this.paintPlate(this.promptBox, width / 2, height * 0.96, Math.min(420, width * 0.5), 34);
-    this.promptText.setPosition(width / 2, height * 0.96);
+    this.paintPlate(this.promptBox, placed.prompt);
+    this.promptText.setPosition(placed.promptText.x, placed.promptText.y);
   }
 
-  private placeRankLines(colW: number, rankLeft: number, rankTop: number): void {
-    const rows = this.visibleRankRows();
-    const split = this.rankSplit();
+  private placeRankLines(
+    rows: readonly RankRow[],
+    left: number,
+    top: number,
+    line: number,
+    plateWidth: number,
+  ): void {
     this.rankLineTexts.forEach((text, index) => {
       const row = rows[index];
       if (row === undefined) {
         text.setVisible(false);
         return;
       }
-      const inRight = index >= split;
-      const local = inRight ? index - split : index;
       text
         .setVisible(true)
-        .setText(this.formatRankLine(row, index))
+        .setText(this.formatRankLine(row))
         .setColor(this.rankLineColor(row))
-        .setPosition(rankLeft + (inRight ? colW + 8 : 0), rankTop + (1 + local) * RANK_LINE);
+        .setPosition(left, top + index * line);
     });
+    this.placePlayerMark(rows, left, top, line, plateWidth);
   }
 
-  private placePlayerMark(colW: number, rankLeft: number, rankTop: number): void {
-    const playerIndex = this.visibleRankRows().findIndex(row => row.isPlayer);
+  private placePlayerMark(
+    rows: readonly RankRow[],
+    left: number,
+    top: number,
+    line: number,
+    plateWidth: number,
+  ): void {
+    const playerIndex = rows.findIndex(row => row.isPlayer);
     if (playerIndex < 0) {
       this.playerMark.setVisible(false);
       return;
     }
-    const split = this.rankSplit();
-    const inRight = playerIndex >= split;
-    const row = inRight ? playerIndex - split : playerIndex;
-    const x = rankLeft + (inRight ? colW + 8 : 0) + colW / 2;
-    const y = rankTop + (1 + row) * RANK_LINE + RANK_LINE / 2;
-    this.playerMark.setVisible(true).setPosition(x, y).setSize(colW - 4, RANK_LINE);
+    this.playerMark
+      .setVisible(true)
+      .setPosition(left - 6, top + playerIndex * line + line / 2)
+      .setSize(plateWidth - 20, line);
   }
 
-  private placePodium(width: number, height: number): number {
-    const headerBottom = height * 0.08 + 42;
-    const boardTop = height * 0.56;
-    const avail = Math.max(180, boardTop - headerBottom - 10);
-    const natural = WINNER_CARD + 8 + WINNER_CAR + 8 + 20 + 12;
-    const scale = Phaser.Math.Clamp(Math.min(height / 820, avail / natural), 0.62, 1.05);
+  private placePodium(firstSlot: PodiumSlot, secondSlot: PodiumSlot, thirdSlot: PodiumSlot): void {
     const first = this.podium.find(stack => stack.entry.position === 1);
     const second = this.podium.find(stack => stack.entry.position === 2);
     const third = this.podium.find(stack => stack.entry.position === 3);
-    let bottom = height * 0.2;
     if (first !== undefined) {
-      bottom = Math.max(
-        bottom,
-        this.placeStack(first, width * 0.5, headerBottom + 6, WINNER_CARD * scale, WINNER_CAR * scale),
-      );
+      this.placeStack(first, firstSlot);
     }
     if (second !== undefined) {
-      bottom = Math.max(
-        bottom,
-        this.placeStack(second, width * 0.28, headerBottom + 36, OTHER_CARD * scale, OTHER_CAR * scale),
-      );
+      this.placeStack(second, secondSlot);
     }
     if (third !== undefined) {
-      bottom = Math.max(
-        bottom,
-        this.placeStack(third, width * 0.72, headerBottom + 36, OTHER_CARD * scale, OTHER_CAR * scale),
-      );
+      this.placeStack(third, thirdSlot);
     }
-    return bottom;
   }
 
-  private placeStack(stack: PodiumStack, x: number, top: number, cardMax: number, carMax: number): number {
+  private paintSteps(first: PodiumSlot, second: PodiumSlot, third: PodiumSlot): void {
+    this.stepsBox.clear();
+    const blocks: readonly {
+      slot: PodiumSlot;
+      edge: number;
+      label: Phaser.GameObjects.Text | undefined;
+      present: boolean;
+    }[] = [
+      {
+        slot: first,
+        edge: PLAQUE_GOLD,
+        label: this.stepLabels[0],
+        present: this.podium.some(stack => stack.entry.position === 1),
+      },
+      {
+        slot: second,
+        edge: PLAQUE_SILVER,
+        label: this.stepLabels[1],
+        present: this.podium.some(stack => stack.entry.position === 2),
+      },
+      {
+        slot: third,
+        edge: PLAQUE_BRONZE,
+        label: this.stepLabels[2],
+        present: this.podium.some(stack => stack.entry.position === 3),
+      },
+    ];
+    for (const block of blocks) {
+      const label = block.label;
+      if (label === undefined) {
+        continue;
+      }
+      label.setVisible(block.present);
+      if (!block.present) {
+        continue;
+      }
+      const left = block.slot.step.x - block.slot.step.width / 2;
+      const top = block.slot.step.y - block.slot.step.height / 2;
+      this.stepsBox.fillStyle(PLAQUE_INK, PLAQUE_ALPHA);
+      this.stepsBox.fillRoundedRect(left, top, block.slot.step.width, block.slot.step.height, 8);
+      this.stepsBox.lineStyle(2, block.edge, 0.85);
+      this.stepsBox.strokeRoundedRect(left, top, block.slot.step.width, block.slot.step.height, 8);
+      label.setPosition(block.slot.step.x, block.slot.step.y);
+    }
+  }
+
+  private placeStack(stack: PodiumStack, slot: PodiumSlot): void {
     const nameH = 20;
-    const gap = 8;
-    const pad = 12;
+    const gap = 6;
+    const pad = 8;
+    const floor = slot.step.y - slot.step.height / 2 - 4;
+    const budget = Math.max(72, floor - slot.top - nameH - gap);
+    const cardMax = Math.min(slot.cardMax, budget * 0.5);
+    const carMax = Math.min(slot.carMax, budget * 0.46);
     const card = stack.card.visible
       ? this.fitPhoto(stack.card, cardMax, cardMax)
       : { width: cardMax, height: cardMax };
     const car = stack.car.visible
       ? this.fitPhoto(stack.car, carMax, carMax)
       : this.fitPhoto(stack.carFallback, carMax, carMax);
-    stack.card.setPosition(x, top + pad);
-    stack.cardLetter.setPosition(x, top + pad + card.height / 2);
-    const carY = top + pad + card.height + gap;
-    stack.car.setPosition(x, carY);
-    stack.carFallback.setPosition(x, carY);
-    stack.name.setPosition(x, carY + car.height + gap);
-    return top + pad + card.height + gap + car.height + gap + nameH;
+    stack.card.setPosition(slot.x, slot.top + pad);
+    stack.cardLetter.setPosition(slot.x, slot.top + pad + card.height / 2);
+    const carY = slot.top + pad + card.height + gap;
+    stack.car.setPosition(slot.x, carY);
+    stack.carFallback.setPosition(slot.x, carY);
+    stack.name.setPosition(slot.x, Math.min(carY + car.height + gap, floor - nameH));
   }
 
   private fitPhoto(
@@ -549,11 +595,15 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   private headerStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return { fontFamily: 'monospace', fontSize: '18px', color: GOLD, stroke: '#1a0e05', strokeThickness: 6 };
+    return { fontFamily: 'monospace', fontSize: '16px', color: GOLD, stroke: '#1a0e05', strokeThickness: 5 };
   }
 
   private winnerStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return { fontFamily: 'monospace', fontSize: '36px', color: GOLD, stroke: '#3a0d05', strokeThickness: 8 };
+    return { fontFamily: 'monospace', fontSize: '42px', color: GOLD, stroke: '#3a0d05', strokeThickness: 8 };
+  }
+
+  private captionStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '14px', color: GOLD, stroke: '#101014', strokeThickness: 4 };
   }
 
   private rankStyle(): Phaser.Types.GameObjects.Text.TextStyle {
@@ -564,7 +614,7 @@ export class ResultsScene extends Phaser.Scene {
       align: 'left',
       stroke: '#101014',
       strokeThickness: 3,
-      lineSpacing: 5,
+      lineSpacing: 4,
     };
   }
 
@@ -575,13 +625,18 @@ export class ResultsScene extends Phaser.Scene {
       color: '#9dffad',
       align: 'left',
       stroke: '#101014',
-      strokeThickness: 3,
-      lineSpacing: 6,
+      strokeThickness: 4,
+      lineSpacing: 5,
     };
   }
 
   private promptStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return { fontFamily: 'monospace', fontSize: '14px', color: IVORY, stroke: '#1a0e05', strokeThickness: 4 };
+    return { fontFamily: 'monospace', fontSize: '15px', color: IVORY, stroke: '#1a0e05', strokeThickness: 4 };
+  }
+
+  private stepStyle(place: number): Phaser.Types.GameObjects.Text.TextStyle {
+    const color = place === 1 ? GOLD : place === 2 ? SILVER : BRONZE;
+    return { fontFamily: 'monospace', fontSize: '16px', color, stroke: '#101014', strokeThickness: 4 };
   }
 }
 

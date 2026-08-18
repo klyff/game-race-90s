@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { containSize } from '../adapters/render/FitBox.ts';
+import { garageBayRect, garageHeroLayout } from '../adapters/render/GarageLayout.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
 import { cartPortraitKey, findCarSheet, sheetCellSize } from '../data/cars/CarManifest.ts';
@@ -43,7 +43,6 @@ import { MENU_KIND, MenuController } from '../adapters/input/MenuController.ts';
 import type { MenuResult } from '../adapters/input/MenuController.ts';
 import { formatHelpBody } from '../data/input/ControlList.ts';
 import {
-  CART_PORTRAIT_SIZE,
   GARAGE_ART_KEY,
   MINE_SPRITE_KEY,
   MISSILE_SPRITE_KEY,
@@ -215,10 +214,24 @@ export class GarageScene extends Phaser.Scene {
     this.wireClick(this.portrait, () => this.handleHub('equip'));
 
     this.rebuildOverlay();
+    this.layerHub();
     this.refresh();
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
+  }
+
+  /** Workshop plate, then the car on the floor, then every menu in front. */
+  private layerHub(): void {
+    this.art.setDepth(0);
+    this.portrait.setDepth(1);
+    this.preview.setDepth(1);
+    for (const child of this.children.list) {
+      if (child === this.art || child === this.portrait || child === this.preview) {
+        continue;
+      }
+      (child as Phaser.GameObjects.GameObject & { setDepth: (value: number) => void }).setDepth(10);
+    }
   }
 
   private plaque(width: number, height: number): Phaser.GameObjects.Rectangle {
@@ -615,6 +628,7 @@ export class GarageScene extends Phaser.Scene {
     }
     this.overlayTexts = this.menu.views().map((view, index) => {
       const text = this.add.text(0, 0, view.text, this.overlayStyle()).setOrigin(0.5, 0.5);
+      text.setDepth(12);
       text.setInteractive({ useHandCursor: true });
       text.on(Phaser.Input.Events.POINTER_DOWN, () => {
         if (this.mode === 'slots') {
@@ -904,7 +918,6 @@ export class GarageScene extends Phaser.Scene {
 
     const left = width * 0.16;
     const right = width * 0.84;
-    const floorY = height * 0.48;
     this.titleText.setPosition(width / 2, height * 0.075);
     this.fitTitleBox();
     this.titleBox.setPosition(width / 2, height * 0.075);
@@ -943,17 +956,27 @@ export class GarageScene extends Phaser.Scene {
     });
     this.specPerkText.setPosition(specX, specY + specH / 2 - 36).setWordWrapWidth(specW - 20);
 
-    const portraitSize = Math.min(CART_PORTRAIT_SIZE, height * 0.34, width * 0.28);
-    const portraitFit = containSize(
+    const artSize = this.art.visible
+      ? { width: this.art.width, height: this.art.height }
+      : { width, height };
+    const hero = garageHeroLayout(
+      { width, height },
+      artSize,
       { width: this.portrait.frame.width, height: this.portrait.frame.height },
-      { width: portraitSize, height: portraitSize },
     );
-    this.portrait.setPosition(width / 2, floorY).setDisplaySize(portraitFit.width, portraitFit.height);
-    this.preview.setPosition(width / 2, floorY);
-    this.arrowLeft.setPosition(width * 0.34, floorY);
-    this.arrowRight.setPosition(width * 0.66, floorY);
-    this.carNameText.setPosition(width / 2, height * 0.68);
-    this.valueText.setPosition(width / 2, height * 0.725);
+    const bay = garageBayRect({ width, height }, artSize);
+    this.portrait
+      .setOrigin(hero.originX, hero.originY)
+      .setPosition(hero.x, hero.y)
+      .setDisplaySize(hero.width, hero.height);
+    this.preview
+      .setOrigin(hero.originX, hero.originY)
+      .setPosition(hero.x, hero.y)
+      .setDisplaySize(hero.width, hero.height);
+    this.arrowLeft.setPosition(bay.x + 28, hero.y);
+    this.arrowRight.setPosition(bay.x + bay.width - 28, hero.y);
+    this.carNameText.setPosition(hero.x, bay.y + bay.height + 18);
+    this.valueText.setPosition(hero.x, bay.y + bay.height + 46);
 
     const gap = Math.min(18, width * 0.014);
     const saveW = 180;

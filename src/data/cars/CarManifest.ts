@@ -270,6 +270,29 @@ export function cartPortraitToken(carId: string): string {
   return numbered?.[1] ?? carId.replace(/[^a-z0-9]+/gi, '-');
 }
 
+/**
+ * Matrix-car index for a roster id. `car-6-tank` and `car_6` are both 6.
+ * Names with no digits (`delorean`) have no vitrine folder.
+ */
+export function matrixHeroNumber(carId: string): number | undefined {
+  const match = /(\d+)/.exec(carId);
+  if (match === null) {
+    return undefined;
+  }
+  const n = Number(match[1]);
+  return Number.isInteger(n) && n > 0 ? n : undefined;
+}
+
+/** Vitrine filename: `car_6_hero.png`. */
+export function matrixHeroFile(n: number): string {
+  return `car_${n}_hero.png`;
+}
+
+/** Served path: `matrix_car/6_hero/car_6_hero.png`. */
+export function matrixHeroUrl(n: number): string {
+  return `matrix_car/${n}_hero/${matrixHeroFile(n)}`;
+}
+
 /** New-fleet garage still and strip source: `car_1_hero.png`. */
 export function cartHeroFile(carId: string): string {
   return `${carId}_hero.png`;
