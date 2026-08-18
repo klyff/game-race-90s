@@ -36,6 +36,12 @@ import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
 import { angleOf, dot, fromAngle } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
 import { assignNpcCars } from '../domain/race/CarAssignment.ts';
+import {
+  nextWatchTrack,
+  splitWatchRoster,
+  watchPilots,
+  WATCH_RACER_COUNT,
+} from '../domain/race/WatchField.ts';
 import { RaceField } from '../domain/race/RaceField.ts';
 import type { RacerEntry, RacerRuntime } from '../domain/race/RaceField.ts';
 import type { TrackDefinition } from '../domain/track/TrackDefinition.ts';
@@ -130,6 +136,8 @@ interface RaceSceneData {
   readonly carId?: string;
   /** Which circuit to race. Defaults to the anchor track when omitted. */
   readonly trackId?: string;
+  /** AI-only ten-car watch. Camera follows the pack; keyboard does not drive. */
+  readonly watch?: boolean;
 }
 
 /** One explosion waiting to be presented, queued inside a simulation step. */
@@ -167,6 +175,8 @@ export class RaceScene extends Phaser.Scene {
   private trackLines: TrackLinesManifest | undefined;
   private carId: string = PLAYER_CAR_ID;
   private trackId: string = DEFAULT_TRACK_ID;
+  private watch = false;
+  private watchPinned = false;
   private track!: TrackDefinition;
   private spline!: TrackSpline;
   private projection!: IsoProjection;
@@ -227,6 +237,8 @@ export class RaceScene extends Phaser.Scene {
     this.linesByTrack = data.linesByTrack ?? {};
     this.carId = data.carId ?? PLAYER_CAR_ID;
     this.trackId = data.trackId ?? DEFAULT_TRACK_ID;
+    this.watch = data.watch === true;
+    this.watchPinned = false;
     this.trackLines = this.linesByTrack[this.trackId];
     this.startingCash = loadWallet();
     this.planetIndex = campaignSlotForTrackId(this.trackId)?.planetIndex ?? 1;
@@ -296,7 +308,7 @@ export class RaceScene extends Phaser.Scene {
     // keeps every step of a frame perfectly reproducible. The driver needs the
     // current forward speed because Down means "brake" while rolling and "reverse"
     // once stopped (decision 18).
-    this.command = this.driver.read(deltaSeconds, this.forwardSpeed());
+    this.command = this.watch ? IDLE_INPUT : this.driver.read(deltaSeconds, this.forwardSpeed());
     this.loop.advance(deltaSeconds, stepSeconds => this.stepSimulation(stepSeconds));
     this.presentHitRewards();
 
@@ -312,7 +324,7 @@ export class RaceScene extends Phaser.Scene {
     this.updatePlayerAudio();
     this.explosions.update(deltaSeconds);
     this.scraps.update(deltaSeconds);
-    this.chaseCamera.follow(this.player.state, deltaSeconds, this.targetZoom());
+    this.chaseCamera.follow(this.followedRacer().state, deltaSeconds, this.targetZoom());
     this.trackRenderer.syncToCamera(this.cameras.main);
     this.refreshOverlay();
 
@@ -325,7 +337,7 @@ export class RaceScene extends Phaser.Scene {
    * a short hold expires so a stuck NPC cannot freeze the results.
    */
   private maybeFinishRace(deltaSeconds: number): void {
-    if (this.resultsShown) {
+    if (this.resultsShown || this.watch) {
       return;
     }
     const race = this.field.race;
@@ -388,7 +400,7 @@ export class RaceScene extends Phaser.Scene {
    * keeps the race loop free of any knowledge of what is on screen.
    */
   hudReadout(): HudReadout {
-    const player = this.player;
+    const player = this.followedRacer();
     const standing = this.field.standingOf(player.carId);
     const race = this.field.race;
 
@@ -699,7 +711,26 @@ export class RaceScene extends Phaser.Scene {
    * That is a gameplay choice, not an accident — starting on pole in a packed
    * arcade race means driving away from everyone and never seeing another car.
    */
+  private followedRacer(): RacerRuntime {
+    const racers = this.field.racers;
+    if (!this.watch || racers.length === 0) {
+      return this.player;
+    }
+    if (!this.watchPinned) {
+      const leaderId = this.field.race.standings[0]?.carId;
+      const leader = racers.find(racer => racer.carId === leaderId);
+      if (leader !== undefined) {
+        this.aiFocusIndex = racers.indexOf(leader);
+        return leader;
+      }
+    }
+    return racers[this.aiFocusIndex % racers.length] ?? this.player;
+  }
+
   private buildEntries(): readonly RacerEntry[] {
+    if (this.watch) {
+      return this.buildWatchEntries();
+    }
     const rosterIds = npcRosterForPlanet(this.planetIndex);
     const npcIds = assignNpcCars(rosterIds, this.carId, RACER_COUNT - 1);
     this.playerPilotName = loadActiveName() || 'YOU';
@@ -744,13 +775,38 @@ export class RaceScene extends Phaser.Scene {
     ];
   }
 
+  private buildWatchEntries(): readonly RacerEntry[] {
+    const allIds = this.manifest.cars.map(car => car.id);
+    const planetTwoIndex = Math.max(0, this.planetIndex - 1);
+    const { field, reserve } = splitWatchRoster(allIds, planetTwoIndex);
+    const pilots = watchPilots();
+    this.sittingRivals = reserve.map(carId => findCarSheet(this.manifest, carId).displayName);
+    this.pilotNames = {};
+    const ids = field.slice(0, WATCH_RACER_COUNT);
+    this.carId = ids[0] ?? this.carId;
+    return ids.map((carId, index) => {
+      const sheet = findCarSheet(this.manifest, carId);
+      const name = pilots[index] ?? `RIV${index + 1}`;
+      this.pilotNames[carId] = name;
+      return {
+        carId,
+        name,
+        stats: sheet.stats,
+        perk: sheet.perk,
+        homePlanetId: sheet.homePlanetId,
+        worldAdvantage: sheet.worldAdvantage,
+        isPlayer: false,
+      };
+    });
+  }
+
   private playerSheetStats() {
     return findCarSheet(this.manifest, this.carId).stats;
   }
 
   /** Zoom in on a fast straight, out for a corner (decision 21). */
   private targetZoom(): number {
-    const player = this.player;
+    const player = this.followedRacer();
     const speed = player.telemetry?.speed ?? 0;
     const lookAhead = Math.max(
       ZOOM_LOOK_AHEAD_MINIMUM_UNITS,
@@ -793,10 +849,24 @@ export class RaceScene extends Phaser.Scene {
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T).on('down', unlessPaused(() => this.overlay.toggle()));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N).on('down', unlessPaused(() => {
       this.aiFocusIndex += 1;
+      this.watchPinned = true;
       if (!this.overlay.isVisible) {
         this.overlay.toggle();
       }
     }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.OPEN_BRACKET).on('down', unlessPaused(() => {
+      this.watchPinned = true;
+      this.aiFocusIndex = Math.max(0, this.aiFocusIndex - 1);
+    }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CLOSED_BRACKET).on('down', unlessPaused(() => {
+      this.watchPinned = true;
+      this.aiFocusIndex += 1;
+    }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L).on('down', unlessPaused(() => {
+      this.watchPinned = false;
+    }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.COMMA).on('down', unlessPaused(() => this.swapWatchTrack(-1)));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.PERIOD).on('down', unlessPaused(() => this.swapWatchTrack(1)));
 
     // Esc pauses the race and raises the pause menu (Return / Save / Main Menu).
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => this.pauseGame());
@@ -808,6 +878,22 @@ export class RaceScene extends Phaser.Scene {
     // comes from a real user gesture, so the first key press is the earliest the
     // engine can be heard. `resume()` is a no-op once it has taken.
     keyboard.on('keydown', () => this.audio.resume());
+  }
+
+  private swapWatchTrack(step: number): void {
+    if (!this.watch) {
+      return;
+    }
+    const trackId = nextWatchTrack(this.trackId, step);
+    if (trackId === this.trackId) {
+      return;
+    }
+    this.scene.restart({
+      manifest: this.manifest,
+      linesByTrack: this.linesByTrack,
+      trackId,
+      watch: true,
+    } satisfies RaceSceneData);
   }
 
   /** Freezes the race and HUD and raises the pause menu over them. */
@@ -862,7 +948,7 @@ export class RaceScene extends Phaser.Scene {
       this.views[index]?.setVisible(true);
       this.views[index]?.sync(racer.state);
     });
-    this.chaseCamera.snapTo(this.player.state, this.targetZoom());
+    this.chaseCamera.snapTo(this.followedRacer().state, this.targetZoom());
     this.rebuildNarrator();
   }
 
@@ -954,7 +1040,7 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private refreshOverlay(): void {
-    const player = this.player;
+    const player = this.followedRacer();
     this.overlay.update({
       carName: findCarSheet(this.manifest, player.carId).displayName,
       trackName: this.track.displayName,
@@ -988,7 +1074,8 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private playerView(): VehicleView | undefined {
-    const index = this.field.racers.findIndex(racer => racer.isPlayer);
+    const followed = this.followedRacer();
+    const index = this.field.racers.findIndex(racer => racer.carId === followed.carId);
     return index < 0 ? undefined : this.views[index];
   }
 

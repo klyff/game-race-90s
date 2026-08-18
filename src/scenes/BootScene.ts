@@ -14,7 +14,12 @@ import { TRACKS } from '../data/tracks/registry.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { markMusicBedLoaded } from '../adapters/audio/BedRegistry.ts';
 import { MUSIC_BEDS, musicBedKey, musicBedUrl } from '../data/audio/MusicBeds.ts';
-import { enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
+import { enableTourMode, enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
+import {
+  enableWatchModeFromSearch,
+  watchTrackFromSearch,
+} from '../adapters/progress/WatchMode.ts';
+import { watchPlanetTwoTracks } from '../domain/race/WatchField.ts';
 import { SPLASH_CARDS, splashCardUrl } from '../data/cards/SplashCards.ts';
 import { DRIVER_CARDS, driverCardUrl } from '../data/cards/DriverCards.ts';
 import { PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/PubBackgrounds.ts';
@@ -167,6 +172,12 @@ export class BootScene extends Phaser.Scene {
       }
       if (typeof location !== 'undefined') {
         enableTourModeFromSearch(location.search);
+        if (enableWatchModeFromSearch(location.search)) {
+          enableTourMode();
+          const trackId = watchTrackFromSearch(location.search) ?? watchPlanetTwoTracks()[0];
+          this.scene.start(SCENE_KEY.RACE, { manifest, linesByTrack, trackId, watch: true });
+          return;
+        }
       }
       this.scene.start(SCENE_KEY.SPLASH, { manifest, linesByTrack });
     });

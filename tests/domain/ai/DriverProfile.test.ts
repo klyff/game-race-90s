@@ -23,6 +23,8 @@ describe('driver profiles', () => {
     expect(profileFor('NEGAO').tier).toBe(DRIVER_PROFILE_TIER.SIGNATURE);
     expect(profileFor('KLYFF').vehiclePhysics).toBe(1);
     expect(profileFor('ALINE')).toEqual(profileFor('aline'));
+    expect(profileFor('TECHNICIAN').id).toBe('technician');
+    expect(profileFor('APEX').tier).toBe(DRIVER_PROFILE_TIER.MEDIUM);
   });
 
   it('derives leftover regulars from a medium without hashing every dimension from scratch', () => {

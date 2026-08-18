@@ -1,16 +1,16 @@
 # Graph Report - game-race-90s  (2026-08-17)
 
 ## Corpus Check
-- 327 files · ~8,571,985 words
+- 328 files · ~8,572,955 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2660 nodes · 6914 edges · 150 communities (124 shown, 26 thin omitted)
+- 2673 nodes · 6954 edges · 148 communities (130 shown, 18 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.64)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `689d0259`
+- Built from commit: `09cd74ae`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -25,19 +25,19 @@
 - .create
 - scripts
 - Circuitos
-- VehicleStats
+- TrackSpline.ts
 - RaceScore.ts
-- fromAngle
+- Vec2.ts
 - RaceScene
 - ProgressStore.ts
-- loadActiveCareer
+- qa-strip.ts
 - Pilotos
 - compilerOptions
 - CarPerk.test.ts
 - MusicScore.ts
 - import-fleet.ts
 - planetMusic.ts
-- HelpScene
+- main.ts
 - constants.ts
 - generate-metal-scraps.ts
 - Clock — 32 poses
@@ -57,7 +57,7 @@
 - HudFormat.ts
 - generate-planet-select.ts
 - ResultsScene
-- SeasonPoints.ts
+- pack-redrawn.ts
 - MusicPlayer
 - WORKLOG — concurrence-gamming
 - API reference for whoever picks this up
@@ -86,7 +86,7 @@
 - Context cleanup — 2026-08-15 23:40 — the owner is clearing the session to start clean
 - Context cleanup — 2026-08-15 23:55 — the owner stopped implementation and asked for a save point
 - Context cleanup — 2026-08-16 00:05 — the owner is clearing the session
-- trackgen/generate.ts
+- planets.ts
 - BootScene.ts
 - Context cleanup — 2026-08-15 23:10 — context reached 312k, past the 290k ceiling
 - circuit-maps.ts
@@ -94,8 +94,8 @@
 - probe.mjs
 - screenshot.mjs
 - SevenSegment.test.ts
-- Vehicle.ts
-- CarStatBars.test.ts
+- VehicleTelemetry
+- findCarSheet
 - MetalScrapEffect.ts
 - ResultsScene.ts
 - TrackSelectScene
@@ -106,15 +106,15 @@
 - PaceDriver.test.ts
 - TyreMarks.ts
 - ExplosionEffect
-- RaceField.ts
+- RaceScene.ts
 - Music brief — 10 original race beds
-- pack-redrawn.ts
+- spritegen/preview.ts
 - DriverProfile.ts
-- HitRewardEffect
+- SplashLayout.ts
 - trackgen/preview.ts
 - CarManifest.ts
-- NarratorDirector
-- TourMode.ts
+- NarratorDirector.ts
+- SplashScene.ts
 - Sprite-strip
 - sprite-strip/SKILL.md
 - RacingLine.ts
@@ -131,36 +131,34 @@
 - Clock — 32 poses
 - Collision — one square, midpoint
 - CATALOG.md
-- Vec2.ts
+- LapTimes.test.ts
 - VehicleCapabilityModel.ts
 - Regras — tira de relógio (car-1)
 - RaceSimulation.ts
 - car-1 — Marauder
-- RaceScene.ts
+- CarSetManifest
 - Clock — 32 poses
 - CLAUDE.md
 - LEIA-ME.md
 - PLAN.md
 - UtilityEvaluator.ts
 - SIMULATION_STEP_SECONDS
-- NarratorDirector.ts
-- CameraZoomPolicy
+- SplashAttractShow
+- SpeedoGauge.ts
 - clamp01
-- assignNpcCars
+- trackgen/generate.ts
 - PilotRoster.ts
 - PlanetSelectScene
-- MenuController
+- HudScene.ts
 - Intercept.ts
 - TrajectoryPlanner.ts
-- Slipstream.ts
-- PLANETS
-- ControlList.ts
+- Vehicle.ts
+- planetThemes.ts
+- EngineVoice
 - SplashScene
-- .toScreen
-- Coast.ts
-- TurboCharges.ts
-- BlinkClock
-- MetalScrapEffect
+- scale
+- InputCommand.ts
+- RaceField.ts
 - containSize
 
 ## God Nodes (most connected - your core abstractions)
@@ -178,83 +176,83 @@
 ## Surprising Connections (you probably didn't know these)
 - `main()` --indirect_call--> `findTrack()`  [INFERRED]
   tools/trackgen/preview.ts → src/data/tracks/registry.ts
-- `candidateAtGap()` --calls--> `vec2`  [EXTRACTED]
-  tests/domain/Slipstream.test.ts → src/domain/math/Vec2.ts
 - `Chosen` --references--> `TrackDefinition`  [EXTRACTED]
   tools/trackgen/generate.ts → src/domain/track/TrackDefinition.ts
 - `RenderedCar` --references--> `CarSheetManifest`  [EXTRACTED]
   tools/spritegen/renderCar.ts → src/data/cars/CarManifest.ts
-- `getCarStats()` --calls--> `parseCarSetManifest()`  [EXTRACTED]
-  tests/domain/OnTrackStep.test.ts → src/data/cars/CarManifest.ts
+- `generateForTrack()` --calls--> `parseCarSetManifest()`  [EXTRACTED]
+  tools/linegen/generate.ts → src/data/cars/CarManifest.ts
+- `installStrip()` --calls--> `parseCarSetManifest()`  [EXTRACTED]
+  tools/spritegen/pack-redrawn.ts → src/data/cars/CarManifest.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (150 total, 26 thin omitted)
+## Communities (148 total, 18 thin omitted)
 
 ### Community 0 - "20 REGULARS — every planet"
 Cohesion: 0.07
 Nodes (29): 10. KIRA, 11. SNAKE, 12. RIO, 13. JETT, 14. NOVA, 15. CRUZ, 16. ASH, 17. ZARA (+21 more)
 
 ### Community 1 - "fit-redrawn.ts"
-Cohesion: 0.10
-Nodes (43): chroma(), consumePose(), Crop, fitHq(), fitPoseToFootprint(), isGreenKey(), isPaper(), luma() (+35 more)
+Cohesion: 0.11
+Nodes (32): CAR_SPRITE_FRAME_ARC, chroma(), Crop, fitHq(), fitPoseToFootprint(), isGreenKey(), isPaper(), luma() (+24 more)
 
 ### Community 2 - "RaceField.test.ts"
-Cohesion: 0.16
-Nodes (13): RacerEntry, carsJsonPath, collideWithRearPerk(), freshSpline(), FULL_THROTTLE, fullFieldEntries(), makeField(), manifest (+5 more)
+Cohesion: 0.11
+Nodes (23): applyImpactDamage(), applyWeaponDamage(), CAR_CONDITION, CarCondition, conditionFromIntegrity(), createCarIntegrity(), DAMAGE_ROLE, tickIntegrity() (+15 more)
 
 ### Community 3 - "SplashAttract.ts"
-Cohesion: 0.07
-Nodes (45): CARD_FLIP_SECONDS, CARD_GAP_SECONDS, CARD_GROW_FADE_SECONDS, CARD_GROW_SCALE, CARD_SEQUENCE_DELAY_SECONDS, cardBeatSeconds(), cardStartAt(), clamp() (+37 more)
+Cohesion: 0.15
+Nodes (23): CARD_FLIP_SECONDS, CARD_GAP_SECONDS, CARD_GROW_FADE_SECONDS, CARD_GROW_SCALE, CARD_SEQUENCE_DELAY_SECONDS, cardBeatSeconds(), cardStartAt(), clamp() (+15 more)
 
 ### Community 4 - "TrackRenderer.ts"
 Cohesion: 0.22
-Nodes (10): propHash(), sampleCenterline(), ScreenBounds, shade(), TrackRenderer, TrackRendererOptions, PlanetTheme, lerp() (+2 more)
+Nodes (10): ScreenPoint, propHash(), sampleCenterline(), ScreenBounds, shade(), TrackRenderer, TrackRendererOptions, PlanetTheme (+2 more)
 
 ### Community 5 - "vec2"
-Cohesion: 0.09
-Nodes (21): BURN_COLORS, BurnBlotch, BurnMark, Burst, BurstOptions, ExplosionEffectOptions, FIREBALL_COLORS, METAL_COLORS (+13 more)
+Cohesion: 0.11
+Nodes (18): BURN_COLORS, BurnBlotch, BurnMark, Burst, BurstOptions, ExplosionEffectOptions, FIREBALL_COLORS, METAL_COLORS (+10 more)
 
 ### Community 6 - "RaceAudio.ts"
-Cohesion: 0.20
+Cohesion: 0.19
 Nodes (16): isAudioMuted(), setAudioMuted(), clearLoadedMusicBeds(), loaded, loadedMusicBeds(), markMusicBedLoaded(), pickLoadedMusicBed(), createAudioContext() (+8 more)
 
 ### Community 7 - ".create"
-Cohesion: 0.30
-Nodes (5): musicBedKey(), cartPortraitKey(), sheetCellSize(), BootScene, linesCacheKey()
+Cohesion: 0.35
+Nodes (4): musicBedKey(), cartPortraitKey(), pubBackgroundKey(), BootScene
 
 ### Community 8 - "scripts"
 Cohesion: 0.04
-Nodes (45): dependencies, phaser, description, devDependencies, pngjs, @types/pngjs, typescript, vite (+37 more)
+Nodes (46): dependencies, phaser, description, devDependencies, pngjs, @types/pngjs, typescript, vite (+38 more)
 
 ### Community 9 - "Circuitos"
 Cohesion: 0.05
 Nodes (41): Ash Reach, Ash Reach I, Ash Reach II, Ash Reach III, Bogmire Deep, Bogmire Deep I, Bogmire Deep II, Bogmire Deep III (+33 more)
 
-### Community 10 - "VehicleStats"
-Cohesion: 0.10
-Nodes (37): InputCommand, cross(), RaceFieldOptions, offsetAt(), TrackProjection, AI_DEFAULT_AGGRESSION, AIDriver, closestRivalAhead() (+29 more)
+### Community 10 - "TrackSpline.ts"
+Cohesion: 0.12
+Nodes (29): cross(), TrackProjection, AI_DEFAULT_AGGRESSION, closestRivalAhead(), cornerTargetSpeed(), speedCommand(), paceCommand(), PaceDriver (+21 more)
 
 ### Community 11 - "RaceScore.ts"
 Cohesion: 0.47
 Nodes (7): clamp01(), computeRaceScore(), POSITION_WEIGHT, positionFraction(), RaceScoreInput, TIME_WEIGHT, timeFraction()
 
-### Community 12 - "fromAngle"
-Cohesion: 0.16
-Nodes (25): distance(), dot(), fromAngle(), normalize(), subtract(), aggressorOf(), CONTACT_ATTACKER, contactAttackCredit (+17 more)
+### Community 12 - "Vec2.ts"
+Cohesion: 0.17
+Nodes (22): dot(), normalize(), perpendicularLeft(), subtract(), aggressorOf(), CONTACT_ATTACKER, contactAttackCredit, ContactAttacker (+14 more)
 
 ### Community 13 - "RaceScene"
-Cohesion: 0.07
-Nodes (7): KeyboardDriver, DriveIntent, ReverseLatch, ReverseLatchOptions, findCarSheet(), frameIndexForHeading(), RaceScene
+Cohesion: 0.06
+Nodes (7): KeyboardDriver, DriveIntent, ReverseLatch, ReverseLatchOptions, CameraZoomPolicy, CameraZoomPolicyOptions, RaceScene
 
 ### Community 14 - "ProgressStore.ts"
-Cohesion: 0.12
-Nodes (43): activateSlot(), activeSlotIndex(), beginSlot(), CLEAR_POSITION, creditWallet(), debitWallet(), equipCar(), loadActiveName() (+35 more)
+Cohesion: 0.11
+Nodes (44): activateSlot(), activeSlotIndex(), beginSlot(), CLEAR_POSITION, creditWallet(), debitWallet(), equipCar(), loadActiveName() (+36 more)
 
-### Community 15 - "loadActiveCareer"
-Cohesion: 0.22
-Nodes (8): buyCar(), cashInPoints(), loadActiveCareer(), loadCleared(), loadWonTracks(), isTourModeOn(), highestUnlockedPlanetIndex(), HUB_FOCUS
+### Community 15 - "qa-strip.ts"
+Cohesion: 0.13
+Nodes (34): chroma(), isInkBlack(), isPaper(), luma(), main(), nearest(), parseArgs(), poseBudget() (+26 more)
 
 ### Community 16 - "Pilotos"
 Cohesion: 0.06
@@ -265,24 +263,28 @@ Cohesion: 0.07
 Nodes (28): DOM, DOM.Iterable, ES2022, src, tests, tools, vite/client, vitest/globals (+20 more)
 
 ### Community 18 - "CarPerk.test.ts"
-Cohesion: 0.10
-Nodes (29): HOME_WORLD_STAT_BONUS, applyImpactDamage(), applyWeaponDamage(), CAR_CONDITION, CarCondition, conditionFromIntegrity(), createCarIntegrity(), DAMAGE_ROLE (+21 more)
+Cohesion: 0.16
+Nodes (15): HOME_WORLD_STAT_BONUS, DamageRole, CAR_PERKS, clampUnit(), contactStats(), lerp(), NEUTRAL_PERK, perkDamageMultiplier() (+7 more)
 
 ### Community 19 - "MusicScore.ts"
 Cohesion: 0.12
-Nodes (29): barCount(), barHasLick(), barIndexForStep(), BEATS_PER_BAR, beatsToSeconds(), ChordStep, eighthInBarForStep(), LeadNote (+21 more)
+Nodes (30): barCount(), barHasLick(), barIndexForStep(), BEATS_PER_BAR, beatsToSeconds(), ChordStep, DrumStep, eighthInBarForStep() (+22 more)
 
 ### Community 20 - "import-fleet.ts"
-Cohesion: 0.13
-Nodes (28): bestCollisionBox(), collisionSquares(), collisionBoxForCarId(), collisionBoxFromDef(), FLEET_MODEL_ID, rounded(), withCollisionBox(), groundExtents() (+20 more)
+Cohesion: 0.25
+Nodes (15): cellBounds(), contentBox(), contentRowRange(), extractFrame(), importCar(), isContent(), ORIGIN, OUTPUT_DIRECTORY (+7 more)
 
 ### Community 21 - "planetMusic.ts"
 Cohesion: 0.11
 Nodes (16): ASH_REACH_SCORE, BOGMIRE_DEEP_SCORE, CHROME_VERGE_SCORE, CRYO_HOLLOW_SCORE, DOUBLE_KICK_DRUM, FERRO_RUST_SCORE, HEAVY_STRUM, NEON_KASBAH_SCORE (+8 more)
 
+### Community 22 - "main.ts"
+Cohesion: 0.13
+Nodes (10): controlBlock(), ControlRow, formatHelpBody(), MENU_CONTROLS, RACE_DRIVE_CONTROLS, RACE_SYSTEM_CONTROLS, RACE_WEAPON_CONTROLS, game (+2 more)
+
 ### Community 23 - "constants.ts"
-Cohesion: 0.25
-Nodes (14): CAR_PERK, PALETTE_ROLE, SIMULATION_HZ, airBlade, airBoat, battleTrak, delorean, dirtDevil (+6 more)
+Cohesion: 0.24
+Nodes (15): CAR_PERK, CarPerkId, PALETTE_ROLE, SIMULATION_HZ, airBlade, airBoat, battleTrak, delorean (+7 more)
 
 ### Community 24 - "generate-metal-scraps.ts"
 Cohesion: 0.21
@@ -293,20 +295,20 @@ Cohesion: 0.18
 Nodes (7): Claude Code — desenhar um carro (tira de relógio), Anchors (draw these first), Clock — 32 poses, Full table, Lights and parts by yaw, Size — fixed world, not fill-the-cell, Handoff — modelo X → tira de relógio
 
 ### Community 26 - "TrackDefinition"
-Cohesion: 0.11
-Nodes (22): GENERATED_TRACKS, findTrack(), TRACKS, thunderBasin, AgentTickInput, RacingLine, RampZone, TrackDefinition (+14 more)
+Cohesion: 0.09
+Nodes (32): GENERATED_TRACKS, findTrack(), TRACKS, thunderBasin, AgentTickInput, angleOf(), advanceLapProgress(), checkpointDistance() (+24 more)
 
 ### Community 27 - "renderCar.ts"
 Cohesion: 0.09
-Nodes (37): CAR_SPRITE_FRAME_ARC, ISO_X, ISO_Y, clampByte(), parseHex(), quantize(), RAMP_FACTORS, RampTable (+29 more)
+Nodes (33): ISO_X, ISO_Y, SHADE_STEP, ShadeStep, clampByte(), parseHex(), quantize(), RAMP_FACTORS (+25 more)
 
 ### Community 28 - "PlannedClip"
-Cohesion: 0.13
+Cohesion: 0.14
 Nodes (9): PlannedClip, ScheduledBanter, NARRATOR_MAX_SEQUENCE, NARRATOR_PRIORITY, NarratorQueue, A, B, C (+1 more)
 
 ### Community 29 - "geometry.ts"
-Cohesion: 0.15
-Nodes (16): PaletteRole, SHADE_STEP, ShadeStep, cross(), dot(), Face, length(), prismFaces() (+8 more)
+Cohesion: 0.24
+Nodes (12): PaletteRole, cross(), dot(), Face, length(), prismFaces(), sectionCorners(), sub() (+4 more)
 
 ### Community 30 - "strip-fit.ts"
 Cohesion: 0.39
@@ -317,44 +319,44 @@ Cohesion: 0.19
 Nodes (18): chunk(), crc32(), drawMine(), drawMissile(), drawOil(), drawTurbo(), emptyFrame(), encodePng() (+10 more)
 
 ### Community 32 - "NoiseSource"
-Cohesion: 0.12
-Nodes (7): BrakeVoice, clampUnit(), clampUnit(), ExplosionVoice, NoiseSource, clampUnit(), SkidVoice
+Cohesion: 0.16
+Nodes (5): clampUnit(), ExplosionVoice, NoiseSource, clampUnit(), SkidVoice
 
 ### Community 33 - "ArcadeCarPhysics.ts"
-Cohesion: 0.08
-Nodes (40): LATERAL_GRIP_STIFFNESS, OFFROAD_GRIP_MULTIPLIER, OFFROAD_ROLLING_RESISTANCE, OVERSPEED_ALLOWANCE, REVERSE_SPEED_FRACTION, STEERING_AUTHORITY_SPEED, TARMAC_ROLLING_RESISTANCE, YAW_SPIN_DECAY_PER_SECOND (+32 more)
+Cohesion: 0.09
+Nodes (29): LATERAL_GRIP_STIFFNESS, OFFROAD_GRIP_MULTIPLIER, OFFROAD_ROLLING_RESISTANCE, OVERSPEED_ALLOWANCE, REVERSE_SPEED_FRACTION, STEERING_AUTHORITY_SPEED, TARMAC_ROLLING_RESISTANCE, YAW_SPIN_DECAY_PER_SECOND (+21 more)
 
 ### Community 34 - "GarageScene.ts"
-Cohesion: 0.15
-Nodes (23): sellCar(), CAR_TIER, CarTier, carUnlockHint(), catalogEntry, GARAGE_CATALOG, isCarUnlocked(), isStarterCar() (+15 more)
+Cohesion: 0.13
+Nodes (31): buyCar(), cashInPoints(), loadActiveCareer(), loadCleared(), loadPoints(), loadWonTracks(), sellCar(), isTourModeOn() (+23 more)
 
 ### Community 36 - "RaceAudio"
 Cohesion: 0.13
-Nodes (3): clampUnit(), EngineVoice, RaceAudio
+Nodes (3): BrakeVoice, clampUnit(), RaceAudio
 
 ### Community 37 - "TitleAudio"
 Cohesion: 0.13
 Nodes (3): BedPlayer, TitleAudio, TitleMusic
 
 ### Community 38 - "fleet.ts"
-Cohesion: 0.13
-Nodes (18): CarSheetManifest, CarPerkId, WORLD_ADVANTAGE, WorldAdvantage, templateCar, FleetCarDef, STATS_AIR_BLADE, STATS_AIR_BOAT (+10 more)
+Cohesion: 0.12
+Nodes (17): CarSheetManifest, WORLD_ADVANTAGE, WorldAdvantage, templateCar, FleetCarDef, STATS_AIR_BLADE, STATS_AIR_BOAT, STATS_BATTLE_TRAK (+9 more)
 
 ### Community 39 - "HudFormat.ts"
-Cohesion: 0.26
-Nodes (10): loadPoints(), formatCountdown(), formatHud(), formatIntegrityPercent(), formatRaceTime(), formatSpeed(), formatSpeedDigits(), formatSpeedFraction() (+2 more)
+Cohesion: 0.32
+Nodes (9): formatCountdown(), formatHud(), formatIntegrityPercent(), formatRaceTime(), formatSpeed(), formatSpeedDigits(), formatSpeedFraction(), MPH_PER_WORLD_UNIT (+1 more)
 
 ### Community 40 - "generate-planet-select.ts"
 Cohesion: 0.20
 Nodes (12): bandedGradient(), calmFactor(), here, lerp(), outDir, Rgb, SelectSpec, silhouetteHeightAt() (+4 more)
 
-### Community 42 - "SeasonPoints.ts"
-Cohesion: 0.16
-Nodes (18): BASE_FIRST_POINTS, CASH_IN_PAYOUT, cashInBatches(), cashInValue(), CONTACT_HIT_POINTS, firstPlacePoints(), hitScale(), MINE_HIT_POINTS (+10 more)
+### Community 42 - "pack-redrawn.ts"
+Cohesion: 0.15
+Nodes (23): collisionBoxForCarId(), collisionBoxFromDef(), FLEET_MODEL_ID, rounded(), withCollisionBox(), main(), groundExtents(), main() (+15 more)
 
 ### Community 43 - "MusicPlayer"
-Cohesion: 0.22
-Nodes (4): clampUnit(), MusicPlayer, DrumStep, MusicScore
+Cohesion: 0.23
+Nodes (3): clampUnit(), MusicPlayer, MusicScore
 
 ### Community 44 - "WORKLOG — concurrence-gamming"
 Cohesion: 0.12
@@ -384,9 +386,13 @@ Nodes (4): clampUnit(), EngineGearbox, GearboxOptions, GearboxState
 Cohesion: 0.25
 Nodes (7): Constraints, Decisions, Discarded, Files, MISSION, Next step, Objective
 
+### Community 51 - "GarageScene"
+Cohesion: 0.08
+Nodes (3): activeSlotSafe(), GarageScene, HUB_FOCUS
+
 ### Community 53 - "Wallet.ts"
-Cohesion: 0.15
-Nodes (23): Burst, rewardLabel(), Star, BASE_FIRST_PRIZE, CONTACT_HIT_BOUNTY, contactHitBounty(), firstPlacePrize(), formatCash() (+15 more)
+Cohesion: 0.09
+Nodes (37): BASE_FIRST_POINTS, CASH_IN_PAYOUT, cashInBatches(), CONTACT_HIT_POINTS, firstPlacePoints(), hitScale(), MINE_HIT_POINTS, MISSILE_HIT_POINTS (+29 more)
 
 ### Community 54 - "Delivery reports"
 Cohesion: 0.10
@@ -397,12 +403,12 @@ Cohesion: 0.25
 Nodes (11): clamp(), consumeJump(), createJumpCharges(), HOP_LAUNCH_SPEED, HOP_REF_MASS, HOP_REF_SPEED, HOP_SCALE_MAX, HOP_SCALE_MIN (+3 more)
 
 ### Community 56 - "TrackSpline"
-Cohesion: 0.30
-Nodes (3): distanceSquared(), TrackSpline, driveLap()
+Cohesion: 0.27
+Nodes (5): distanceSquared(), TrackSpline, getCheckpointDistance(), driveLap(), simulateLap()
 
 ### Community 57 - "RaceField"
-Cohesion: 0.16
-Nodes (5): RaceField, oilYawSpinForArmor(), TrackHazard, Missile, measure()
+Cohesion: 0.11
+Nodes (10): InputCommand, RaceField, isAirborne(), armHazards(), findHazardHits(), oilYawSpinForArmor(), TrackHazard, Missile (+2 more)
 
 ### Community 58 - "New tasks opened 2026-08-16 by the owner (T-043..T-047)"
 Cohesion: 0.11
@@ -413,8 +419,8 @@ Cohesion: 0.29
 Nodes (7): Final handoff — 2026-08-16 01:05 — the owner called the end of the session ("logo vao acabar os tokens"), Shipped this session, Start here next session, in this order, The two owner decisions, settled — do not re-open either, Tooling added this session — do not re-derive it, Two gates only the owner can close, Two questions put to the owner and NOT yet answered
 
 ### Community 60 - "PlanetSelectScene.ts"
-Cohesion: 0.16
-Nodes (15): bindMenuKeys(), MenuKeyHandlers, MENU_KIND, MENU_PROMPT_LIST, MENU_PROMPT_OPTIONS, MenuActionSpec, MenuControllerOptions, MenuItemSpec (+7 more)
+Cohesion: 0.11
+Nodes (17): bindMenuKeys(), MenuKeyHandlers, clampIndex(), MENU_KIND, MENU_PROMPT_LIST, MENU_PROMPT_OPTIONS, MenuActionSpec, MenuController (+9 more)
 
 ### Community 62 - "vercel.json"
 Cohesion: 0.33
@@ -430,7 +436,7 @@ Nodes (6): Agents involved this round, Context cleanup — 2026-08-16 00:55 — 
 
 ### Community 65 - "RacingAgent.ts"
 Cohesion: 0.13
-Nodes (24): relativeSpeedAlong(), OpponentMemoryEntry, AgentDebugSnapshot, AgentDecision, closestAhead(), closestBehind(), emptyCapabilities(), executionOf() (+16 more)
+Nodes (25): DriverProfile, DriverWeights, relativeSpeedAlong(), OpponentMemoryEntry, AgentDebugSnapshot, AgentDecision, closestAhead(), closestBehind() (+17 more)
 
 ### Community 67 - "Verification helpers — seeing the game with your own eyes"
 Cohesion: 0.40
@@ -448,53 +454,53 @@ Nodes (5): Context cleanup — 2026-08-15 23:55 — the owner stopped implementa
 Cohesion: 0.40
 Nodes (5): Context cleanup — 2026-08-16 00:05 — the owner is clearing the session, Next steps, unchanged order, No agent is mid-flight, Sign-offs so far, so nobody re-litigates them, Standing lessons this project has already paid for
 
-### Community 71 - "trackgen/generate.ts"
-Cohesion: 0.14
-Nodes (25): campaignSlotForTrackId(), campaignTracks(), isPlanetUnlocked(), isTrackUnlocked(), nextCampaignTrack(), planetTracks(), ANCHOR_TRACK_ID, PlanetDefinition (+17 more)
+### Community 71 - "planets.ts"
+Cohesion: 0.25
+Nodes (15): campaignSlotForTrackId(), campaignTracks(), isPlanetUnlocked(), isTrackUnlocked(), nextCampaignTrack(), planetTracks(), findPlanet(), PlanetDefinition (+7 more)
 
 ### Community 72 - "BootScene.ts"
-Cohesion: 0.14
-Nodes (22): CAR_ASSET_DIRECTORY, CAR_MANIFEST_KEY, DEBRIS_ASSET_DIRECTORY, DEFAULT_TRACK_ID, GARAGE_ART_FILE, GARAGE_ART_KEY, GROUND_ASSET_DIRECTORY, LINES_ASSET_DIRECTORY (+14 more)
+Cohesion: 0.15
+Nodes (21): CAR_ASSET_DIRECTORY, CAR_MANIFEST_KEY, CART_PORTRAIT_SIZE, DEBRIS_ASSET_DIRECTORY, DEFAULT_TRACK_ID, GARAGE_ART_FILE, GARAGE_ART_KEY, GROUND_ASSET_DIRECTORY (+13 more)
 
 ### Community 73 - "Context cleanup — 2026-08-15 23:10 — context reached 312k, past the 290k ceiling"
 Cohesion: 0.50
 Nodes (4): Agents involved this round, Art was reorganised this turn — the old paths are gone, do not look for them, Context cleanup — 2026-08-15 23:10 — context reached 312k, past the 290k ceiling, How the next agent continues
 
 ### Community 74 - "circuit-maps.ts"
-Cohesion: 0.16
-Nodes (19): COLOR_BACKGROUND, COLOR_GUIDE, COLOR_PURSUIT, COLOR_PURSUIT_LINE, COLOR_ROAD, COLOR_START, createBitmap(), drawSegment() (+11 more)
+Cohesion: 0.15
+Nodes (21): offsetAt(), COLOR_BACKGROUND, COLOR_GUIDE, COLOR_PURSUIT, COLOR_PURSUIT_LINE, COLOR_ROAD, COLOR_START, createBitmap() (+13 more)
 
 ### Community 78 - "SevenSegment.test.ts"
-Cohesion: 0.09
-Nodes (24): BLANK_PATTERN, DIGIT_PATTERNS, isSegmentLit(), WHY: the vertical segments (f/b, e/c) already occupy the full `STROKE` width at…, SEGMENT, SEGMENT_LAYOUT, SegmentName, SegmentRect (+16 more)
+Cohesion: 0.18
+Nodes (15): BLANK_PATTERN, DIGIT_PATTERNS, isSegmentLit(), WHY: the vertical segments (f/b, e/c) already occupy the full `STROKE` width at…, SEGMENT, SEGMENT_LAYOUT, SegmentName, SegmentRect (+7 more)
 
-### Community 79 - "Vehicle.ts"
-Cohesion: 0.23
-Nodes (5): TuningOverlay, formatTuningOverlay(), safeFormat(), TuningOverlayReadout, VehicleTelemetry
+### Community 79 - "VehicleTelemetry"
+Cohesion: 0.19
+Nodes (6): TuningOverlay, formatTuningOverlay(), safeFormat(), TuningOverlayReadout, OnTrackStepResult, VehicleTelemetry
 
-### Community 80 - "CarStatBars.test.ts"
-Cohesion: 0.14
-Nodes (12): normalise(), safeStat(), STAT_BAR_FIELDS, StatBar, statBars(), perkProfile(), BASE_STATS, carIds (+4 more)
+### Community 80 - "findCarSheet"
+Cohesion: 0.13
+Nodes (13): normalise(), safeStat(), STAT_BAR_FIELDS, StatBar, statBars(), findCarSheet(), perkProfile(), BASE_STATS (+5 more)
 
 ### Community 83 - "MetalScrapEffect.ts"
-Cohesion: 0.25
-Nodes (13): SCRAP_HARD_COUNT, SCRAP_HARD_SPEED, SCRAP_LIGHT_COUNT, SCRAP_MEDIUM_COUNT, SCRAP_MEDIUM_SPEED, SCRAP_ROSTER_SIZE, SCRAP_SPRITES, scrapCountForHit() (+5 more)
+Cohesion: 0.23
+Nodes (14): FlyingScrap, SCRAP_HARD_COUNT, SCRAP_HARD_SPEED, SCRAP_LIGHT_COUNT, SCRAP_MEDIUM_COUNT, SCRAP_MEDIUM_SPEED, SCRAP_ROSTER_SIZE, SCRAP_SPRITES (+6 more)
 
 ### Community 84 - "ResultsScene.ts"
-Cohesion: 0.13
-Nodes (16): paintRoundedPlaque(), PLAQUE_INK, PLAQUE_LINE, PlaquePaint, pickPubBackground(), PUB_BACKGROUND_DIRECTORY, PUB_BACKGROUNDS, PubBackground (+8 more)
+Cohesion: 0.15
+Nodes (14): paintRoundedPlaque(), PLAQUE_INK, PLAQUE_LINE, PlaquePaint, pickPubBackground(), PUB_BACKGROUND_DIRECTORY, PUB_BACKGROUNDS, PubBackground (+6 more)
 
 ### Community 85 - "TrackSelectScene"
-Cohesion: 0.23
-Nodes (3): CampaignTrack, findPlanet(), TrackSelectScene
+Cohesion: 0.18
+Nodes (6): Burst, rewardLabel(), Star, CampaignTrack, formatCash(), TrackSelectScene
 
 ### Community 86 - "HudScene"
-Cohesion: 0.15
-Nodes (5): HudReadout, HudText, barColour(), HudScene, HudSource
+Cohesion: 0.19
+Nodes (3): HudText, barColour(), HudScene
 
 ### Community 87 - "NarratorBank.ts"
-Cohesion: 0.17
-Nodes (14): createElement(), BANTER_EXTRA_IDS, LINES_BY_ID, NARRATOR_CATEGORY, NARRATOR_LAB_DIRECTORY, NARRATOR_LINES, NARRATOR_STASH_DIRECTORY, NarratorClip (+6 more)
+Cohesion: 0.26
+Nodes (9): createElement(), BANTER_EXTRA_IDS, NARRATOR_LAB_DIRECTORY, NARRATOR_STASH_DIRECTORY, NarratorClip, narratorClipKey(), narratorClipUrl(), NarratorVoice (+1 more)
 
 ### Community 88 - "NarratorPlan.ts"
 Cohesion: 0.27
@@ -513,36 +519,44 @@ Cohesion: 0.15
 Nodes (7): ROAD_DEPTH, freshAlphaFor(), Segment, slideIntensity(), TyreMarks, TyreMarksOptions, WheelTrail
 
 ### Community 92 - "ExplosionEffect"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (4): ExplosionEffect, lerpColor(), sampleFireballColor(), seededRandom()
 
-### Community 93 - "RaceField.ts"
+### Community 93 - "RaceScene.ts"
 Cohesion: 0.06
-Nodes (67): isWarTankPerk(), VEC2_ZERO, CONTACT_SIDE, ContactSide, RacerRuntime, CarIntegrity, CarPerkProfile, ageHazards() (+59 more)
+Nodes (52): isWarTankPerk(), assignNpcCars(), RacerEntry, ageHazards(), HAZARD_KIND, HazardHit, HazardKind, HazardTarget (+44 more)
 
 ### Community 94 - "Music brief — 10 original race beds"
 Cohesion: 0.33
 Nodes (5): Delivery, Music brief — 10 original race beds, Specs, Style, Use
 
-### Community 95 - "pack-redrawn.ts"
-Cohesion: 0.11
-Nodes (30): CAR_FRAME_WIDTH, main(), OUTPUT_DIRECTORY, REPO_ROOT, CARS_DIRECTORY, installStrip(), main(), parseArgs() (+22 more)
+### Community 95 - "spritegen/preview.ts"
+Cohesion: 0.08
+Nodes (27): CAR_FRAME_HEIGHT, CAR_FRAME_WIDTH, CAR_SPRITE_FRAMES, carsDir, manifest, projectRoot, testFileDir, CARS_DIRECTORY (+19 more)
 
 ### Community 96 - "DriverProfile.ts"
-Cohesion: 0.16
-Nodes (22): deriveProfile(), WEIGHT_SALTS, clampWeights(), DERIVED_SPECS, DRIVER_PROFILE_TIER, DRIVER_WEIGHT_IDS, DriverProfile, DriverProfileTier (+14 more)
+Cohesion: 0.17
+Nodes (20): deriveProfile(), WEIGHT_SALTS, clampWeights(), DERIVED_SPECS, DRIVER_PROFILE_TIER, DRIVER_WEIGHT_IDS, DriverProfileTier, DriverWeightId (+12 more)
+
+### Community 97 - "SplashLayout.ts"
+Cohesion: 0.19
+Nodes (17): cornerCenter(), cornerSize(), coverRect(), coverScale(), Point, pointIn(), promptAnchor(), Rect (+9 more)
 
 ### Community 98 - "trackgen/preview.ts"
-Cohesion: 0.14
-Nodes (21): createViewport(), COLOR_BACKGROUND, COLOR_CHECKPOINT, COLOR_CONTROL, COLOR_FAST, COLOR_SHOULDER, COLOR_START, COLOR_SURFACE (+13 more)
+Cohesion: 0.15
+Nodes (20): COLOR_BACKGROUND, COLOR_CHECKPOINT, COLOR_CONTROL, COLOR_FAST, COLOR_SHOULDER, COLOR_START, COLOR_SURFACE, COLOR_TIGHT (+12 more)
 
 ### Community 99 - "CarManifest.ts"
-Cohesion: 0.07
-Nodes (41): CarManifestError, cartHeroFile(), cartPortraitFile(), cartPortraitLegacyFile(), cartPortraitToken(), cartStripFile(), foldCollisionStats(), KNOWN_CAR_PERKS (+33 more)
+Cohesion: 0.11
+Nodes (29): CarManifestError, cartHeroFile(), cartPortraitFile(), cartPortraitLegacyFile(), cartPortraitToken(), cartStripFile(), foldCollisionStats(), frameIndexForHeading() (+21 more)
 
-### Community 101 - "TourMode.ts"
-Cohesion: 0.47
-Nodes (6): enableTourMode(), enableTourModeFromSearch(), feedTourCode(), resetTourMode(), TOUR_CODE, tourModeFromSearch()
+### Community 100 - "NarratorDirector.ts"
+Cohesion: 0.20
+Nodes (7): CursorKey, NarratorDirector, NarratorOffer, NarratorSnapshot, NarratorPlan, NarratorPriority, RacePhase
+
+### Community 101 - "SplashScene.ts"
+Cohesion: 0.25
+Nodes (7): enableTourMode(), enableTourModeFromSearch(), feedTourCode(), resetTourMode(), TOUR_CODE, tourModeFromSearch(), BlinkClock
 
 ### Community 102 - "Sprite-strip"
 Cohesion: 0.20
@@ -554,7 +568,7 @@ Nodes (4): 3/4 painted size (frames 0, 8, 16, 24), Check, Fit — generated stil
 
 ### Community 104 - "RacingLine.ts"
 Cohesion: 0.18
-Nodes (15): meanCornerTightness(), buildLineCandidates(), clamp(), findLineForCar(), LineCandidate, chooseLineByAccount(), clamp(), driveOptionsFor() (+7 more)
+Nodes (16): buildLineCandidates(), clamp(), LineCandidate, AIDriver, PaceDriverOptions, chooseLineByAccount(), clamp(), hash32() (+8 more)
 
 ### Community 105 - "Game sprint sprites 2D"
 Cohesion: 0.25
@@ -581,12 +595,12 @@ Cohesion: 0.29
 Nodes (7): Duas skills, Frases más → o que fazer em vez, Invocar, Melhor forma (esta ordem), O que o agente não pede, O que o humano prepara, Uso — melhor forma
 
 ### Community 113 - "IsoProjection"
-Cohesion: 0.17
-Nodes (7): ChaseCamera, ChaseCameraOptions, IsoProjection, SCREEN_ROTATION_SIGN, ScreenPoint, VehicleViewExtras, ISO_Z
+Cohesion: 0.15
+Nodes (7): ChaseCamera, ChaseCameraOptions, HitRewardEffect, IsoProjection, SCREEN_ROTATION_SIGN, MetalScrapEffect, ISO_Z
 
 ### Community 114 - "generate-lab.ts"
-Cohesion: 0.21
-Nodes (12): NARRATOR_VOICES, NarratorCategory, narratorClipFile(), BASE_INSTRUCTIONS, CATEGORY_INSTRUCTIONS, FORCE, LAB_DIRECTORY, main() (+4 more)
+Cohesion: 0.13
+Nodes (17): LINES_BY_ID, NARRATOR_CATEGORY, NARRATOR_LINES, NARRATOR_VOICES, NarratorCategory, narratorClipFile(), narratorLine, clipsInPlan() (+9 more)
 
 ### Community 115 - "Clock — 32 poses"
 Cohesion: 0.40
@@ -596,53 +610,61 @@ Nodes (5): Anchors (draw these first), Clock — 32 poses, Full table, Lights an
 Cohesion: 0.40
 Nodes (4): After a new strip, Collision — one square, midpoint, One box for every yaw, Where it lives
 
-### Community 118 - "Vec2.ts"
-Cohesion: 0.13
-Nodes (21): computeBounds(), add(), angleOf(), scale(), gridSlotPosition(), buildStartingGrid(), trackSurfaceGrip(), createVehicleState() (+13 more)
+### Community 118 - "LapTimes.test.ts"
+Cohesion: 0.14
+Nodes (15): stepVehicleOnTrack(), SurfaceAdjuster, RAMP_GRAVITY, rampPeakHeight(), rampZoneAt(), surfaceAt(), integrateAirborne(), carIds (+7 more)
 
 ### Community 119 - "VehicleCapabilityModel.ts"
 Cohesion: 0.13
-Nodes (18): TUNING_STILL_REQUIRED, buildStatNormalizer(), capabilitiesFromStats(), FIELDS, minMax(), mix(), planningCapabilities(), planningStats() (+10 more)
+Nodes (19): TUNING_STILL_REQUIRED, buildStatNormalizer(), capabilitiesFromStats(), FIELDS, minMax(), mix(), planningCapabilities(), planningStats() (+11 more)
 
 ### Community 120 - "Regras — tira de relógio (car-1)"
 Cohesion: 0.29
 Nodes (6): Contrato, Ordem, Proibido, Prompt de cada célula 128×128, Prompt de cada HQ 512×512, Regras — tira de relógio (car-1)
 
 ### Community 121 - "RaceSimulation.ts"
-Cohesion: 0.15
-Nodes (16): advanceLapProgress(), checkpointDistance(), createLapProgress(), LapProgress, IMPORTANT: Use the starting value of nextCheckpoint for the checkpoint index…, RacerProgress, RacerStanding, rankRacers() (+8 more)
+Cohesion: 0.26
+Nodes (10): RACE_PHASE, LapProgress, RacerProgress, RacerStanding, rankRacers(), advanceRace(), createRaceState(), RacerRaceState (+2 more)
 
 ### Community 122 - "car-1 — Marauder"
 Cohesion: 0.33
 Nodes (5): car-1 — Marauder, Do not change, Lock, Outputs, Refs in this pack
 
-### Community 123 - "RaceScene.ts"
-Cohesion: 0.25
-Nodes (12): CarSetManifest, TrackLinesManifest, BURN_MARK_LIFETIME_LAPS, game, GarageSceneData, HelpSceneData, AUDIO_VALUES, PauseSceneData (+4 more)
+### Community 123 - "CarSetManifest"
+Cohesion: 0.33
+Nodes (10): CarSetManifest, RaceFieldOptions, TrackLinesManifest, GarageSceneData, PauseSceneData, RaceSceneData, ResultsSceneData, PlanetSelectData (+2 more)
 
 ### Community 124 - "Clock — 32 poses"
 Cohesion: 0.33
 Nodes (5): Anchors (draw these first), Clock — 32 poses, Full table, Lights and parts by yaw, Size — fixed world, not fill-the-cell
 
 ### Community 128 - "UtilityEvaluator.ts"
-Cohesion: 0.18
+Cohesion: 0.16
 Nodes (18): formatAiOverlay(), safe(), EXECUTION_STATE, evaluateOpportunities(), NearbyRival, RaceSituation, raceTacticalValue(), SituationOpportunities (+10 more)
 
-### Community 131 - "NarratorDirector.ts"
-Cohesion: 0.29
-Nodes (6): CursorKey, NarratorOffer, NarratorSnapshot, NarratorPriority, RACE_PHASE, RacePhase
+### Community 131 - "SplashAttractShow"
+Cohesion: 0.22
+Nodes (5): showcaseCenter(), showcaseRect(), Size, card(), SplashAttractShow
+
+### Community 132 - "SpeedoGauge.ts"
+Cohesion: 0.17
+Nodes (9): BarPoint, barProfileAt(), COLOUR_STOPS, colourAtT(), dimColour(), lerpColour(), SpeedoGauge, SpeedoGaugeOptions (+1 more)
 
 ### Community 133 - "clamp01"
 Cohesion: 0.22
 Nodes (11): clamp01(), decayField(), decayMemory(), emptyMemory(), memoryEffect(), OpponentMemoryBook, recordBlockedBy(), recordNearMiss() (+3 more)
 
-### Community 135 - "PilotRoster.ts"
-Cohesion: 0.18
-Nodes (15): DRIVER_CARD_DIRECTORY, DRIVER_CARDS, DriverCard, driverCardForName(), driverCardKey(), driverCardUrl(), CHAMPIONSHIP_SIZE, drawRivalNames() (+7 more)
+### Community 134 - "trackgen/generate.ts"
+Cohesion: 0.16
+Nodes (13): ANCHOR_TRACK_ID, carsJsonPath, chooseTrack(), Chosen, evaluate(), Evaluation, generated, generateGeometry() (+5 more)
 
-### Community 137 - "MenuController"
-Cohesion: 0.17
-Nodes (3): clampIndex(), MenuController, wrapIndex()
+### Community 135 - "PilotRoster.ts"
+Cohesion: 0.19
+Nodes (14): DRIVER_CARD_DIRECTORY, DRIVER_CARDS, DriverCard, driverCardForName(), driverCardUrl(), CHAMPIONSHIP_SIZE, drawRivalNames(), JOKER_PILOTS (+6 more)
+
+### Community 137 - "HudScene.ts"
+Cohesion: 0.22
+Nodes (6): HudReadout, HudSource, MINE_SPRITE_KEY, MISSILE_SPRITE_KEY, OIL_SPRITE_KEY, TURBO_SPRITE_KEY
 
 ### Community 138 - "Intercept.ts"
 Cohesion: 0.30
@@ -652,49 +674,49 @@ Nodes (10): interceptPoint(), observedPosition(), predictionTime(), predictPosit
 Cohesion: 0.27
 Nodes (10): candidateOffsets(), LATERAL_FRACTIONS, maxSafeOffset(), NearbyLateral, planTrajectory(), scoreCandidate(), TrajectoryCandidate, trajectoryScore() (+2 more)
 
-### Community 140 - "Slipstream.ts"
-Cohesion: 0.30
-Nodes (10): computeRawDraft(), DraftCandidate, draftFromCandidate(), rampAlignment(), rampFalloff(), rampToPeakAndBack(), SLIPSTREAM_DEFAULTS, slipstreamFactor() (+2 more)
+### Community 140 - "Vehicle.ts"
+Cohesion: 0.23
+Nodes (12): VehicleViewExtras, computeRawDraft(), DraftCandidate, draftFromCandidate(), rampAlignment(), rampFalloff(), rampToPeakAndBack(), SLIPSTREAM_DEFAULTS (+4 more)
 
-### Community 141 - "PLANETS"
-Cohesion: 0.40
-Nodes (7): planetForTrackId(), PLANETS, DEFAULT_THEME, everyPlanetHasTheme(), PLANET_THEMES, themeForPlanetId(), themeForTrackId()
+### Community 141 - "planetThemes.ts"
+Cohesion: 0.54
+Nodes (5): DEFAULT_THEME, everyPlanetHasTheme(), PLANET_THEMES, themeForPlanetId(), themeForTrackId()
 
-### Community 142 - "ControlList.ts"
-Cohesion: 0.28
-Nodes (7): controlBlock(), ControlRow, formatHelpBody(), MENU_CONTROLS, RACE_DRIVE_CONTROLS, RACE_SYSTEM_CONTROLS, RACE_WEAPON_CONTROLS
+### Community 144 - "scale"
+Cohesion: 0.13
+Nodes (21): computeBounds(), VehicleView, sheetCellSize(), add(), distance(), fromAngle(), scale(), gridSlotPosition() (+13 more)
 
-### Community 145 - "Coast.ts"
-Cohesion: 0.39
-Nodes (5): CEREMONY_HOLD_SECONDS, COAST_BRAKE, COAST_STOP_SPEED, coastInput(), isNearlyStopped()
+### Community 145 - "InputCommand.ts"
+Cohesion: 0.19
+Nodes (11): clampSigned(), clampUnit(), IDLE_INPUT, sanitizeInput(), CEREMONY_HOLD_SECONDS, COAST_BRAKE, COAST_STOP_SPEED, coastInput() (+3 more)
 
-### Community 146 - "TurboCharges.ts"
-Cohesion: 0.46
-Nodes (6): consumeTurbo(), createTurboCharges(), refillTurboCharges(), TURBO_DURATION_SECONDS, TURBO_SPEED_BONUS, TURBO_START_COUNT
+### Community 146 - "RaceField.ts"
+Cohesion: 0.13
+Nodes (21): VEC2_ZERO, CONTACT_SIDE, ContactSide, meanCornerTightness(), RacerRuntime, findLineForCar(), RivalView, CarIntegrity (+13 more)
 
 ### Community 149 - "containSize"
 Cohesion: 0.60
 Nodes (3): containSize(), FitSize, sane()
 
 ## Knowledge Gaps
-- **677 isolated node(s):** `name`, `version`, `private`, `type`, `description` (+672 more)
+- **680 isolated node(s):** `name`, `version`, `private`, `type`, `description` (+675 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `vec2` connect `vec2` to `TrackRenderer.ts`, `Intercept.ts`, `VehicleStats`, `Slipstream.ts`, `fromAngle`, `.toScreen`, `CarPerk.test.ts`, `TrackDefinition`, `ArcadeCarPhysics.ts`, `Wallet.ts`, `TrackSpline`, `RaceField`, `RacingAgent.ts`, `trackgen/generate.ts`, `circuit-maps.ts`, `Vehicle.ts`, `MetalScrapEffect.ts`, `TyreMarks.ts`, `ExplosionEffect`, `RaceField.ts`, `HitRewardEffect`, `trackgen/preview.ts`, `IsoProjection`, `Vec2.ts`, `RaceScene.ts`?**
-  _High betweenness centrality (0.037) - this node is a cross-community bridge._
-- **Why does `GarageScene` connect `GarageScene` to `GarageScene.ts`, `MenuController`, `loadActiveCareer`, `CarStatBars.test.ts`, `RaceScene.ts`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
-- **Why does `RaceScene` connect `RaceScene` to `SIMULATION_STEP_SECONDS`, `CameraZoomPolicy`, `TrackRenderer.ts`, `VehicleStats`, `PLANETS`, `.toScreen`, `MetalScrapEffect`, `TrackDefinition`, `RaceAudio`, `HudFormat.ts`, `TrackSpline`, `RaceField`, `Vehicle.ts`, `TyreMarks.ts`, `ExplosionEffect`, `HitRewardEffect`, `NarratorDirector`, `IsoProjection`, `RaceScene.ts`?**
-  _High betweenness centrality (0.031) - this node is a cross-community bridge._
+- **Why does `vec2` connect `vec2` to `TrackRenderer.ts`, `trackgen/generate.ts`, `Intercept.ts`, `TrackSpline.ts`, `Vec2.ts`, `Vehicle.ts`, `scale`, `RaceField.ts`, `CarPerk.test.ts`, `TrackDefinition`, `ArcadeCarPhysics.ts`, `TrackSpline`, `RaceField`, `RacingAgent.ts`, `circuit-maps.ts`, `MetalScrapEffect.ts`, `TrackSelectScene`, `PaceDriver.test.ts`, `TyreMarks.ts`, `ExplosionEffect`, `RaceScene.ts`, `trackgen/preview.ts`, `IsoProjection`?**
+  _High betweenness centrality (0.039) - this node is a cross-community bridge._
+- **Why does `GarageScene` connect `GarageScene` to `GarageScene.ts`, `ProgressStore.ts`, `findCarSheet`, `main.ts`, `PlanetSelectScene.ts`?**
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+- **Why does `RaceScene` connect `RaceScene` to `SIMULATION_STEP_SECONDS`, `TrackRenderer.ts`, `scale`, `RaceField.ts`, `main.ts`, `TrackDefinition`, `GarageScene.ts`, `RaceAudio`, `Wallet.ts`, `TrackSpline`, `RaceField`, `planets.ts`, `VehicleTelemetry`, `TyreMarks.ts`, `ExplosionEffect`, `RaceScene.ts`, `NarratorDirector.ts`, `IsoProjection`, `CarSetManifest`?**
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
 - **What connects `name`, `version`, `private` to the rest of the system?**
-  _677 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _680 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `20 REGULARS — every planet` be split into smaller, more focused modules?**
   _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
 - **Should `fit-redrawn.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.10283687943262411 - nodes in this community are weakly interconnected._
-- **Should `SplashAttract.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.07418788410886742 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10952380952380952 - nodes in this community are weakly interconnected._
+- **Should `RaceField.test.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.1111111111111111 - nodes in this community are weakly interconnected._

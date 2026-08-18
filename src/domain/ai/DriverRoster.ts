@@ -58,6 +58,16 @@ const NAME_TO_PROFILE_ID: Readonly<Record<string, string>> = {
   RIO: 'rio',
   JETT: 'jett',
   NOVA: 'nova',
+  APEX: 'apex',
+  PREDATOR: 'predator',
+  ENFORCER: 'enforcer',
+  GUNSLINGER: 'gunslinger',
+  GUARDIAN: 'guardian',
+  OPPORTUNIST: 'opportunist',
+  BERSERKER: 'berserker',
+  TECHNICIAN: 'technician',
+  SLIPSTREAMER: 'slipstreamer',
+  NEMESIS: 'nemesis',
 };
 
 /**

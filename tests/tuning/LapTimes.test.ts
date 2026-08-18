@@ -156,6 +156,7 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     const bands: Record<string, { min: number; max: number }> = {
       'car-1': { min: 24.91, max: 41.52 },
       'car-2': { min: 24.5, max: 42.0 },
+      'car-5': { min: 24.5, max: 42.0 },
       'delorean': { min: 25.98, max: 43.29 },
       'car-9-turbo': { min: 29.35, max: 48.92 },
       'car-3': { min: 24.77, max: 41.29 },

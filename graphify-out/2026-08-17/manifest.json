@@ -1,7 +1,7 @@
 {
   "package.json": {
-    "mtime": 1786982200.9585648,
-    "ast_hash": "093f957cdcebb371adc242eea28846f2",
+    "mtime": 1786990972.4195344,
+    "ast_hash": "0d9118a3e9c6a17128dacc5e64026d19",
     "semantic_hash": ""
   },
   "public/assets/cars/cars.json": {
@@ -760,8 +760,8 @@
     "semantic_hash": ""
   },
   "tests/domain/RaceField.test.ts": {
-    "mtime": 1786946025.1636474,
-    "ast_hash": "540afd40e45e5aec56668fc0b79eaa62",
+    "mtime": 1786990239.1688402,
+    "ast_hash": "0b3dec87fb68fb4c9da517d43ad41cce",
     "semantic_hash": ""
   },
   "tests/domain/RaceScore.test.ts": {
@@ -4847,6 +4847,11 @@
   "tests/domain/ai/skillLimits.test.ts": {
     "mtime": 1786990112.5481005,
     "ast_hash": "8dbd823078999bee6ba33379b96c932f",
+    "semantic_hash": ""
+  },
+  "tools/spritegen/fit-raw-frames.ts": {
+    "mtime": 1786990972.062642,
+    "ast_hash": "1f048e2aaf9328ba353ddf058d9c82f0",
     "semantic_hash": ""
   }
 }
