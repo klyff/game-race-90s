@@ -10,6 +10,23 @@ description: >-
 
 Assets live in **`public/matrix_car/`**. Docs mirror: `tools/art/car-rotate/`.
 
+## Where to find the gabarito + docs
+
+**Always start here:** `public/matrix_car/`
+
+| file | what |
+|------|------|
+| `public/matrix_car/GABARITO_RELOGIO.png` | **Gabarito visual** (índice ↔ hora ↔ ângulo) |
+| `public/matrix_car/RELOGIO.md` | Contrato + tabela completa |
+| `public/matrix_car/PROMPT_30.md` | Prompt de geração |
+| `public/matrix_car/README.md` | Índice da pasta |
+| `public/matrix_car/PASSO_A_PASSO.md` | Pipeline / comandos |
+| `public/matrix_car/{N}_hero/` | Vitrine + frames `car_N_aXXX.png` |
+
+Skill copy of the gabarito (same image): `.cursor/skills/matrix-car-rotate/GABARITO_RELOGIO.png`.
+
+**Cloud / batch start folder:** `public/matrix_car/2_hero/` (cars **2→33**; car_1 already partial).
+
 ## Non-negotiable
 
 1. **`0°` = frente absoluta.** **`12h` = traseira absoluta** (`180°`).
@@ -34,11 +51,13 @@ Gabarito: [GABARITO_RELOGIO.png](GABARITO_RELOGIO.png) · tabela completa: [refe
 
 ## Workflow
 
-1. Ler `public/matrix_car/RELOGIO.md` + inventário do `{N}_hero/`.
-2. Gerar/completar só slots faltantes; anexar **vitrine** só como referência de identidade.
-3. Pipeline por frame: GenerateImage → `hero_chroma_key.py` → `magick … -extent 1700x1254` → `public/matrix_car/{N}_hero/car_N_a{III}.png`.
-4. Ordem de geração a partir do hero: `25,26,27,28,29,0,1,…,24`.
-5. **Nunca** sobrescrever `car_N_hero.png`.
+1. Ler **`public/matrix_car/GABARITO_RELOGIO.png`** + `RELOGIO.md` + inventário do `{N}_hero/`.
+2. Batch restante: começar em **`public/matrix_car/2_hero/`** e seguir `3_hero`…`33_hero` (car_1 já parcial — completar buracos no fim se der).
+3. Gerar/completar só slots faltantes; anexar **vitrine** só como referência de identidade.
+4. Pipeline por frame: GenerateImage → `hero_chroma_key.py` → `magick … -extent 1700x1254` → `public/matrix_car/{N}_hero/car_N_a{III}.png`.
+5. Ordem de geração a partir do hero: `25,26,27,28,29,0,1,…,24`.
+6. **Nunca** sobrescrever `car_N_hero.png`.
+7. Trabalho **não** termina até cars 2–33 terem os 30 slots (ou STATUS.md listar gaps honestos).
 
 ## Prompt
 

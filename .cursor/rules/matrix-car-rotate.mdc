@@ -8,6 +8,8 @@ alwaysApply: false
 
 # Matrix car rotate
 
+- Gabarito + docs: **`public/matrix_car/`** — abrir primeiro `GABARITO_RELOGIO.png` + `RELOGIO.md`.
+- Batch restante: **`public/matrix_car/2_hero/`** → `33_hero` (não terminado até 2–33 completos).
 - Pasta: `public/matrix_car/`. Skill: `.cursor/skills/matrix-car-rotate/`.
 - **`0°` = frente absoluta.** **`12h` (`180°`) = traseira absoluta.**
 - Passo **+12°**. Arquivos `car_N_a000`…`a029` (índice = nome). Não recompactar buracos.
