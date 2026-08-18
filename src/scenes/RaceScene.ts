@@ -60,7 +60,9 @@ import {
 import {
   DEBUG_IA_CAMERA_MAP_FRACTION,
   drawDebugIaGrid,
+  drawSkillMixGrid,
   type DebugIaSeat,
+  type SkillMix,
 } from '../domain/race/DebugIaField.ts';
 import {
   DEBUG_IA_LOG_INTERVAL_SECONDS,
@@ -163,6 +165,7 @@ interface RaceSceneData {
   /** 14-NPC debug-IA session. Camera locked at 45% of the map on the leader. */
   readonly debugIa?: boolean;
   readonly debugIaSeed?: number;
+  readonly debugIaMix?: SkillMix;
 }
 
 /** One explosion waiting to be presented, queued inside a simulation step. */
@@ -205,6 +208,7 @@ export class RaceScene extends Phaser.Scene {
   private watch = false;
   private debugIa = false;
   private debugIaSeed = 1;
+  private debugIaMix: SkillMix | undefined;
   private debugIaLogElapsed = 0;
   private debugIaSeats: readonly DebugIaSeat[] = [];
   private watchPinned = false;
@@ -278,6 +282,7 @@ export class RaceScene extends Phaser.Scene {
     this.trackId = data.trackId ?? DEFAULT_TRACK_ID;
     this.debugIa = data.debugIa === true;
     this.debugIaSeed = data.debugIaSeed ?? 1;
+    this.debugIaMix = data.debugIaMix;
     this.debugIaLogElapsed = 0;
     this.debugIaSeats = [];
     this.watch = data.watch === true || this.debugIa;
@@ -994,7 +999,9 @@ export class RaceScene extends Phaser.Scene {
 
   private buildDebugIaEntries(): readonly RacerEntry[] {
     const allIds = this.manifest.cars.map(car => car.id);
-    const grid = drawDebugIaGrid(allIds, this.debugIaSeed);
+    const grid = this.debugIaMix
+      ? drawSkillMixGrid(allIds, this.debugIaSeed, this.debugIaMix)
+      : drawDebugIaGrid(allIds, this.debugIaSeed);
     this.debugIaSeats = grid.seats;
     this.debugIaSeed = grid.seed;
     this.sittingRivals = [];
@@ -1174,6 +1181,9 @@ export class RaceScene extends Phaser.Scene {
       linesByTrack: this.linesByTrack,
       trackId,
       watch: true,
+      debugIa: this.debugIa,
+      debugIaSeed: this.debugIaSeed,
+      debugIaMix: this.debugIaMix,
     } satisfies RaceSceneData);
   }
 
@@ -1423,8 +1433,11 @@ export class RaceScene extends Phaser.Scene {
     const terrainLine = terrain
       ? `TERRA  straight ${terrain.straightBias.toFixed(2)}  tight ${terrain.cornerTightness.toFixed(2)}  grip ${terrain.surfaceGrip.toFixed(2)}  hw ${terrain.halfWidth}`
       : `TERRA  surfGrip ${(this.track.surfaceGrip ?? 1).toFixed(2)}  hw ${this.track.halfWidth}`;
+    const mix = this.debugIaMix
+      ? `  mix ${this.debugIaMix.experts}:${this.debugIaMix.mediums}:${this.debugIaMix.bobos}`
+      : '';
     return [
-      `DEBUG-IA  ${this.track.displayName}  ${this.field.racers.length} NPC  cam 45% map  seed ${this.debugIaSeed}`,
+      `DEBUG-IA  ${this.track.displayName}  ${this.field.racers.length} NPC  cam 45% map  seed ${this.debugIaSeed}${mix}`,
       terrainLine,
       `LEADER  ${leaderName}  zoom ${this.cameras.main.zoom.toFixed(2)}  t ${this.field.race.elapsedSeconds.toFixed(1)}s`,
       '',

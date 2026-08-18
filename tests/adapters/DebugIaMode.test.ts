@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  debugIaMixFromSearch,
   debugIaModeFromSearch,
   debugIaSeedFromSearch,
   debugIaTrackFromSearch,
@@ -13,6 +14,8 @@ describe('DebugIaMode', () => {
     expect(debugIaModeFromSearch('?watch=1')).toBe(false);
     expect(debugIaTrackFromSearch('?debugia=1&track=thunder-basin-2')).toBe('thunder-basin-2');
     expect(debugIaSeedFromSearch('?seed=123')).toBe(123);
+    expect(debugIaMixFromSearch('?mix=2:2:2')).toEqual({ experts: 2, mediums: 2, bobos: 2 });
+    expect(debugIaMixFromSearch('?debugia=1')).toBeUndefined();
   });
 
   it('names a per-driver run log', () => {

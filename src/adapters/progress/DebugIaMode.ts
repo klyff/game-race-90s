@@ -2,12 +2,15 @@
  * Session-only debug IA: jump into a 14-NPC race with the new agent brains.
  *
  * Launch with `?debugia=1`. Optional `?track=thunder-basin-2`.
+ * Optional `?mix=2:2:2` draws a skill-band grid (experts:mediums:bobos).
  */
 
 import { TRACKS } from '../../data/tracks/registry.ts';
+import type { SkillMix } from '../../domain/race/DebugIaField.ts';
 
 let sessionOn = false;
 let sessionSeed = 1;
+let sessionMix: SkillMix | undefined;
 
 export function isDebugIaModeOn(): boolean {
   return sessionOn;
@@ -17,15 +20,21 @@ export function debugIaSeed(): number {
   return sessionSeed;
 }
 
-export function enableDebugIaMode(seed: number = Date.now()): void {
+export function enableDebugIaMode(seed: number = Date.now(), mix?: SkillMix): void {
   sessionOn = true;
   sessionSeed = Number.isFinite(seed) && seed > 0 ? Math.floor(seed) : Date.now();
+  sessionMix = mix;
+}
+
+export function debugIaMix(): SkillMix | undefined {
+  return sessionMix;
 }
 
 /** Test hook. */
 export function resetDebugIaMode(): void {
   sessionOn = false;
   sessionSeed = 1;
+  sessionMix = undefined;
 }
 
 function paramsFrom(search: string): URLSearchParams {
@@ -64,10 +73,30 @@ export function debugIaSeedFromSearch(search: string): number | undefined {
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : undefined;
 }
 
+export function debugIaMixFromSearch(search: string): SkillMix | undefined {
+  const raw = paramsFrom(search).get('mix')?.trim();
+  if (raw === undefined || raw.length === 0) {
+    return undefined;
+  }
+  const parts = raw.split(/[,:]/).map(part => Number(part));
+  if (parts.length !== 3 || parts.some(value => !Number.isFinite(value) || value < 0)) {
+    return undefined;
+  }
+  const mix = {
+    experts: Math.floor(parts[0] ?? 0),
+    mediums: Math.floor(parts[1] ?? 0),
+    bobos: Math.floor(parts[2] ?? 0),
+  };
+  if (mix.experts + mix.mediums + mix.bobos < 1) {
+    return undefined;
+  }
+  return mix;
+}
+
 export function enableDebugIaModeFromSearch(search: string): boolean {
   if (!debugIaModeFromSearch(search)) {
     return false;
   }
-  enableDebugIaMode(debugIaSeedFromSearch(search) ?? Date.now());
+  enableDebugIaMode(debugIaSeedFromSearch(search) ?? Date.now(), debugIaMixFromSearch(search));
   return true;
 }

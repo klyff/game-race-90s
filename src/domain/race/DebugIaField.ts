@@ -8,8 +8,8 @@
  */
 
 import { JOKER_PILOTS } from '../../data/pilots/PilotRoster.ts';
-import { DERIVED_SPECS, DRIVER_PROFILE_TIER, MEDIUM_PROFILES } from '../ai/DriverProfile.ts';
-import { ALL_PROFILES, profileFor } from '../ai/DriverRoster.ts';
+import { DERIVED_SPECS, DRIVER_PROFILE_TIER, MEDIUM_PROFILES, SIGNATURE_PROFILES } from '../ai/DriverProfile.ts';
+import { profileFor } from '../ai/DriverRoster.ts';
 import { driverSkill } from './WatchField.ts';
 
 export const DEBUG_IA_RACER_COUNT = 14;
@@ -128,16 +128,10 @@ export function drawDebugIaGrid(carIds: readonly string[], seed: number): DebugI
 }
 
 function catalogNames(): readonly string[] {
-  const seen = new Set<string>();
-  const names: string[] = [];
-  for (const profile of ALL_PROFILES) {
-    if (seen.has(profile.displayName)) {
-      continue;
-    }
-    seen.add(profile.displayName);
-    names.push(profile.displayName);
-  }
-  return names;
+  return [
+    ...SIGNATURE_PROFILES.map(profile => profile.displayName),
+    ...MEDIUM_PROFILES.map(profile => profile.displayName),
+  ];
 }
 
 function pickBand(

@@ -26,8 +26,14 @@ import {
   DEBUG_IA_LOG_INTERVAL_SECONDS,
   debugIaLogFileName,
 } from '../../src/adapters/debug/DebugIaReporter.ts';
-import { drawDebugIaGrid } from '../../src/domain/race/DebugIaField.ts';
-import { watchPlanetTwoTracks } from '../../src/domain/race/WatchField.ts';
+import {
+  drawDebugIaGrid,
+  drawSkillMixGrid,
+  skillBandForName,
+  type SkillMix,
+} from '../../src/domain/race/DebugIaField.ts';
+import { profileFor } from '../../src/domain/ai/DriverRoster.ts';
+import { driverSkill, watchPlanetTwoTracks } from '../../src/domain/race/WatchField.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -41,10 +47,32 @@ function argValue(flag: string, fallback: string): string {
   return process.argv[index + 1] ?? fallback;
 }
 
+function parseMix(raw: string): SkillMix | undefined {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const parts = trimmed.split(/[,:]/).map(part => Number(part));
+  if (parts.length !== 3 || parts.some(value => !Number.isFinite(value) || value < 0)) {
+    throw new Error('--mix expects experts:mediums:bobos (e.g. 2:2:2)');
+  }
+  return {
+    experts: Math.floor(parts[0] ?? 0),
+    mediums: Math.floor(parts[1] ?? 0),
+    bobos: Math.floor(parts[2] ?? 0),
+  };
+}
+
 const seconds = Math.max(3, Number(argValue('--seconds', '180')) || 180);
 const seed = Math.max(1, Math.floor(Number(argValue('--seed', '1')) || 1));
 const trackId = argValue('--track', watchPlanetTwoTracks()[0] ?? 'thunder-basin-2');
-const outRoot = argValue('--out', join(root, '.tmp', 'reportIA'));
+const mix = parseMix(argValue('--mix', ''));
+const outRoot = argValue(
+  '--out',
+  mix
+    ? join(root, '.tmp', 'reportIA-mix', `${mix.experts}-${mix.mediums}-${mix.bobos}-${seconds}s`)
+    : join(root, '.tmp', 'reportIA'),
+);
 const driversDir = join(outRoot, 'drivers');
 
 mkdirSync(driversDir, { recursive: true });
@@ -52,7 +80,13 @@ mkdirSync(join(outRoot, 'logs'), { recursive: true });
 
 const carsJson = JSON.parse(readFileSync(join(root, 'public/assets/cars/cars.json'), 'utf8'));
 const manifest = parseCarSetManifest(carsJson);
-const track = findTrack(trackId);
+const authoredTrack = findTrack(trackId);
+const lapsArg = argValue('--laps', '');
+const lapsOverride = lapsArg.length > 0 ? Math.max(1, Math.floor(Number(lapsArg) || 1)) : undefined;
+const laps =
+  lapsOverride ??
+  (mix ? Math.max(authoredTrack.laps, Math.ceil(seconds / 20)) : authoredTrack.laps);
+const track = laps === authoredTrack.laps ? authoredTrack : { ...authoredTrack, laps };
 const spline = new TrackSpline(track.controlPoints);
 const planet = planetForTrackId(trackId);
 const linesPath = join(root, 'public/assets/lines', `${trackId}.json`);
@@ -60,10 +94,8 @@ const trackLines = existsSync(linesPath)
   ? parseTrackLinesManifest(JSON.parse(readFileSync(linesPath, 'utf8')))
   : undefined;
 
-const grid = drawDebugIaGrid(
-  manifest.cars.map(car => car.id),
-  seed,
-);
+const carIds = manifest.cars.map(car => car.id);
+const grid = mix ? drawSkillMixGrid(carIds, seed, mix) : drawDebugIaGrid(carIds, seed);
 
 const field = new RaceField(
   grid.seats.map(seat => {
@@ -91,7 +123,14 @@ const field = new RaceField(
 const buffers = new Map<string, string[]>();
 for (const seat of grid.seats) {
   const file = debugIaLogFileName(seat.name, seat.carId);
-  buffers.set(file, [`# debug-ia ${file}`, `# track=${trackId} seed=${seed} seats=${grid.seats.length}`]);
+  const profile = profileFor(seat.name);
+  const skill = driverSkill(profile);
+  const band = skillBandForName(seat.name);
+  buffers.set(file, [
+    `# debug-ia ${file}`,
+    `# track=${trackId} seed=${seed} seats=${grid.seats.length} seconds=${seconds} laps=${track.laps}`,
+    `# name=${seat.name} car=${seat.carId} band=${band} skill=${skill.toFixed(2)} tier=${profile.tier}`,
+  ]);
 }
 
 function logEntries(elapsed: number): void {
@@ -119,6 +158,8 @@ function logEntries(elapsed: number): void {
       `exec=${snapshot?.execution ?? '-'}`,
       `profile=${snapshot?.profile.id ?? name.toLowerCase()}`,
       `tier=${snapshot?.profile.tier ?? '-'}`,
+      `band=${skillBandForName(name)}`,
+      `skill=${driverSkill(profileFor(name)).toFixed(2)}`,
       `leader=${leaderId}`,
       `zoom=headless`,
       terrain
@@ -134,9 +175,16 @@ const logEvery = Math.round(DEBUG_IA_LOG_INTERVAL_SECONDS / SIMULATION_STEP_SECO
 const started = Date.now();
 
 console.log(
-  `DEBUG-IA headless  ${track.displayName}  ${grid.seats.length} NPC  seed ${seed}  ${seconds}s`,
+  `DEBUG-IA headless  ${track.displayName}  ${grid.seats.length} NPC  seed ${seed}  ${seconds}s  laps ${track.laps}${mix ? `  mix ${mix.experts}:${mix.mediums}:${mix.bobos}` : ''}`,
 );
-console.log(grid.seats.map((seat, i) => `  ${String(i + 1).padStart(2)} ${seat.name.padEnd(12)} ${seat.carId} ${seat.tier} ${seat.slot}`).join('\n'));
+console.log(
+  grid.seats
+    .map((seat, i) => {
+      const skill = driverSkill(profileFor(seat.name));
+      return `  ${String(i + 1).padStart(2)} ${seat.name.padEnd(12)} ${seat.carId.padEnd(12)} ${seat.slot.padEnd(8)} skill ${skill.toFixed(2)}`;
+    })
+    .join('\n'),
+);
 
 logEntries(field.race.elapsedSeconds);
 
@@ -172,6 +220,8 @@ const standings = field.race.standings.map(entry => {
     carId: entry.carId,
     tier: seat?.tier,
     slot: seat?.slot,
+    band: seat ? skillBandForName(seat.name) : undefined,
+    skill: seat ? driverSkill(profileFor(seat.name)) : undefined,
     laps: entry.lapsCompleted,
     finished: entry.finished,
     dist: racer?.distance ?? 0,
@@ -188,6 +238,8 @@ const summary = {
   trackId,
   trackName: track.displayName,
   seed,
+  mix: mix ?? null,
+  laps: track.laps,
   simSeconds: field.race.elapsedSeconds,
   requestedSeconds: seconds,
   wallMs,
