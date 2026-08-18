@@ -58,6 +58,6 @@ export function withCollisionBox(stats: VehicleStats, box: CollisionBox): Vehicl
 }
 
 export function collisionBoxForCarId(carId: string): CollisionBox {
-  const modelId = FLEET_MODEL_ID[carId] ?? carId;
+  const modelId = FLEET_MODEL_ID[carId] ?? (/^car_\d+$/.test(carId) ? 'marauder' : carId);
   return collisionBoxFromDef(findCarModel(modelId));
 }

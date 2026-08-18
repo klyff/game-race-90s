@@ -13,7 +13,7 @@ import type { RacerEntry } from '../../src/domain/race/RaceField.ts';
 import { trackFullHalfWidth } from '../../src/domain/track/TrackDefinition.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
 import { CAR_PERKS } from '../../src/domain/vehicle/CarPerk.ts';
-import { oilYawSpinForArmor, resetHazardIds } from '../../src/domain/weapons/Hazard.ts';
+import { HAZARD_KIND, oilYawSpinForArmor, resetHazardIds } from '../../src/domain/weapons/Hazard.ts';
 import { resetMissileIds } from '../../src/domain/weapons/Missile.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
@@ -68,7 +68,7 @@ describe('hazard size', () => {
       { countdownSeconds: 0, npcWeapons: false },
     );
     field.step({ ...IDLE_INPUT, dropOil: true }, SIMULATION_STEP_SECONDS);
-    const oil = field.activeHazards[0]!;
+    const oil = field.activeHazards.find(hazard => hazard.kind === HAZARD_KIND.OIL)!;
     const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * car.stats.collisionRadius;
     expect(oil.radius).toBeCloseTo((carLength * OIL_SIZE_OF_CAR) / 2, 5);
   });
@@ -82,7 +82,7 @@ describe('hazard size', () => {
       { countdownSeconds: 0, npcWeapons: false },
     );
     field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
-    const mine = field.activeHazards[0]!;
+    const mine = field.activeHazards.find(hazard => hazard.kind === HAZARD_KIND.MINE)!;
     const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * car.stats.collisionRadius;
     expect(mine.radius).toBeCloseTo((carLength * MINE_SIZE_OF_CAR) / 2, 5);
   });

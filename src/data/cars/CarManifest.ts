@@ -275,6 +275,11 @@ export function cartHeroFile(carId: string): string {
   return `${carId}_hero.png`;
 }
 
+/** Inbox / clock-fleet id: `car_2`, not the old hyphen roster (`car-2`). */
+export function isNewFleetCarId(carId: string): boolean {
+  return /^car_\d+$/.test(carId);
+}
+
 /** New-fleet clock strip: `car_1_strip.png`. */
 export function cartStripFile(carId: string): string {
   return `${carId}_strip.png`;

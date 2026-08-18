@@ -4,11 +4,12 @@ import type { HudReadout, HudText } from '../adapters/render/HudFormat.ts';
 import { SpeedoGauge } from '../adapters/render/SpeedoGauge.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import {
-  MINE_SPRITE_KEY,
-  MISSILE_SPRITE_KEY,
-  OIL_SPRITE_KEY,
+  HUD_JUMP_KEY,
+  HUD_MINE_KEY,
+  HUD_MISSILE_KEY,
+  HUD_OIL_KEY,
+  HUD_TURBO_KEY,
   SCENE_KEY,
-  TURBO_SPRITE_KEY,
 } from './sceneKeys.ts';
 
 /**
@@ -18,11 +19,35 @@ import {
  * this scene has its own camera at zoom 1 with no scroll, so one unit of this scene
  * is one screen pixel by definition. See the class comment.
  */
-const MARGIN = 22;
+const MARGIN = 32;
 
-/** Integrity bar geometry, pixels. */
-const BAR_WIDTH = 190;
-const BAR_HEIGHT = 14;
+/**
+ * Loadout rail: native icons are 32×32, shown at 2× (integer scale — pixelArt).
+ * Slot is [icon][gap][two-digit count] plus a trailing gap so five sit in a row:
+ * [Nitro] 99 [Missile] 99 [Mine] 99 [Oil] 99 [Jump] 99
+ */
+const ICON_NATIVE = 32;
+const ICON_SCALE = 2;
+const ICON_SIZE = ICON_NATIVE * ICON_SCALE;
+const ICON_COUNT_GAP = 10;
+const COUNT_WIDTH = 36;
+const SLOT_GAP = 16;
+const SLOT_WIDTH = ICON_SIZE + ICON_COUNT_GAP + COUNT_WIDTH + SLOT_GAP;
+const LOADOUT_SLOT_COUNT = 5;
+
+/** Integrity bar spans first icon through last count — no leftover trailing gap. */
+const BAR_WIDTH = SLOT_WIDTH * LOADOUT_SLOT_COUNT - SLOT_GAP;
+const BAR_HEIGHT = 16;
+const RAIL_PAD = 8;
+const EMPTY_ICON_ALPHA = 0.4;
+
+const LOADOUT_ICON_KEYS = [
+  HUD_TURBO_KEY,
+  HUD_MISSILE_KEY,
+  HUD_MINE_KEY,
+  HUD_OIL_KEY,
+  HUD_JUMP_KEY,
+] as const;
 
 /** Integrity thresholds at which the bar changes colour. Matches `CAR_CONDITION`. */
 const BAR_HEALTHY_ABOVE = 66;
@@ -74,8 +99,9 @@ export class HudScene extends Phaser.Scene {
   private cashText!: Phaser.GameObjects.Text;
   private pointsText!: Phaser.GameObjects.Text;
   private timeText!: Phaser.GameObjects.Text;
-  private ammoText!: Phaser.GameObjects.Text;
-  private ammoIcons: Phaser.GameObjects.Sprite[] = [];
+  private loadoutIcons: Phaser.GameObjects.Sprite[] = [];
+  private loadoutCounts: Phaser.GameObjects.Text[] = [];
+  private railPlate!: Phaser.GameObjects.Rectangle;
   private countdownText!: Phaser.GameObjects.Text;
   private standingsText!: Phaser.GameObjects.Text;
   private barBackground!: Phaser.GameObjects.Rectangle;
@@ -101,14 +127,21 @@ export class HudScene extends Phaser.Scene {
     this.pointsText = this.add.text(0, 0, '', this.pointsStyle()).setDepth(HUD_DEPTH);
     this.timeText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
     this.standingsText = this.add.text(0, 0, '', this.smallStyle()).setDepth(HUD_DEPTH);
-    this.ammoText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
-    this.ammoIcons = [MISSILE_SPRITE_KEY, MINE_SPRITE_KEY, OIL_SPRITE_KEY, TURBO_SPRITE_KEY].map(
-      key => {
-        const sprite = this.add.sprite(0, 0, key, 0).setDepth(HUD_DEPTH).setVisible(this.textures.exists(key));
-        sprite.setDisplaySize(22, 22);
-        return sprite;
-      },
+    this.loadoutIcons = LOADOUT_ICON_KEYS.map(key => {
+      const sprite = this.add.sprite(0, 0, key, 0).setDepth(HUD_DEPTH).setVisible(this.textures.exists(key));
+      sprite.setDisplaySize(ICON_SIZE, ICON_SIZE);
+      sprite.setOrigin(0.5, 0.5);
+      return sprite;
+    });
+    this.loadoutCounts = Array.from({ length: LOADOUT_SLOT_COUNT }, () =>
+      this.add.text(0, 0, '0', this.loadoutCountStyle()).setOrigin(0, 0.5).setDepth(HUD_DEPTH),
     );
+
+    const railHeight = ICON_SIZE + RAIL_PAD * 2;
+    this.railPlate = this.add
+      .rectangle(0, 0, BAR_WIDTH + RAIL_PAD * 2, railHeight, 0x000000, 0.45)
+      .setOrigin(0, 0)
+      .setDepth(HUD_DEPTH - 1);
 
     this.barBackground = this.add
       .rectangle(0, 0, BAR_WIDTH, BAR_HEIGHT, 0x000000, 0.55)
@@ -148,7 +181,7 @@ export class HudScene extends Phaser.Scene {
     const text = formatHud(readout);
 
     this.timeText.setText(text.time);
-    this.ammoText.setText(text.ammo);
+    this.applyLoadout(readout);
     this.applyCash(readout.cash ?? 0);
     this.applyPoints(readout.points ?? 0);
     this.applyPosition(text);
@@ -157,7 +190,6 @@ export class HudScene extends Phaser.Scene {
     this.applySpeed(text);
     this.applyCountdown(text);
     this.applyStandings(source, readout);
-    this.applyTurbo(readout);
   }
 
   private applyCash(amount: number): void {
@@ -277,19 +309,33 @@ export class HudScene extends Phaser.Scene {
     this.standingsText.setAlpha(readout.phase === 'finished' ? 1 : 0.72);
   }
 
-  private applyTurbo(readout: HudReadout): void {
-    const icon = this.ammoIcons[3];
-    if (icon === undefined) {
-      return;
-    }
-    const active = readout.turboActive === true;
-    icon.setDisplaySize(active ? 28 : 22, active ? 28 : 22);
-    if (active) {
-      icon.setTint(0xffe066);
-      icon.setAlpha(1);
-    } else {
-      icon.clearTint();
-      icon.setAlpha(0.9);
+  /**
+   * Five glance slots: Nitro, Missile, Mine, Oil, Jump. Count sits beside the
+   * icon. Empty stock dims the icon; turbo tints gold without changing size.
+   */
+  private applyLoadout(readout: HudReadout): void {
+    const counts = [
+      Math.max(0, Number.isFinite(readout.turbos) ? readout.turbos! : 0),
+      Math.max(0, Number.isFinite(readout.ammo) ? readout.ammo : 0),
+      Math.max(0, Number.isFinite(readout.mines) ? readout.mines! : 0),
+      Math.max(0, Number.isFinite(readout.oil) ? readout.oil! : 0),
+      Math.max(0, Number.isFinite(readout.jumps) ? readout.jumps! : 0),
+    ];
+    for (let index = 0; index < LOADOUT_SLOT_COUNT; index += 1) {
+      const count = Math.round(counts[index] ?? 0);
+      this.loadoutCounts[index]?.setText(String(count).padStart(2, ' '));
+      const icon = this.loadoutIcons[index];
+      if (icon === undefined) {
+        continue;
+      }
+      const empty = count <= 0;
+      icon.setAlpha(empty ? EMPTY_ICON_ALPHA : 0.95);
+      if (index === 0 && readout.turboActive === true) {
+        icon.setTint(0xffe066);
+        icon.setAlpha(1);
+      } else {
+        icon.clearTint();
+      }
     }
   }
 
@@ -327,9 +373,13 @@ export class HudScene extends Phaser.Scene {
     const barY = height - MARGIN - BAR_HEIGHT;
     this.barBackground.setPosition(MARGIN, barY);
     this.barFill.setPosition(MARGIN, barY);
-    this.ammoText.setPosition(MARGIN + 108, barY - 30);
-    this.ammoIcons.forEach((icon, index) => {
-      icon.setPosition(MARGIN + 12 + index * 26, barY - 18);
+    const iconY = barY - RAIL_PAD - ICON_SIZE / 2;
+    this.railPlate.setPosition(MARGIN - RAIL_PAD, iconY - ICON_SIZE / 2 - RAIL_PAD);
+    this.loadoutIcons.forEach((icon, index) => {
+      const slotX = MARGIN + index * SLOT_WIDTH;
+      icon.setPosition(slotX + ICON_SIZE / 2, iconY);
+      icon.setDisplaySize(ICON_SIZE, ICON_SIZE);
+      this.loadoutCounts[index]?.setPosition(slotX + ICON_SIZE + ICON_COUNT_GAP, iconY);
     });
 
     // Speedometer: bottom-right, the only free corner — top corners hold position/lap
@@ -400,6 +450,17 @@ export class HudScene extends Phaser.Scene {
       color: '#f2f2f2',
       stroke: '#101014',
       strokeThickness: 5,
+    };
+  }
+
+  /** Two-digit stock next to a 64px icon — same stroke as the rest of the HUD. */
+  private loadoutCountStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '28px',
+      color: '#f2f2f2',
+      stroke: '#101014',
+      strokeThickness: 6,
     };
   }
 

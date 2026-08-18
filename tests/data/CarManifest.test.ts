@@ -10,6 +10,7 @@ import {
   cartPortraitKey,
   cartPortraitLegacyFile,
   cartStripFile,
+  isNewFleetCarId,
   CarManifestError,
 } from '../../src/data/cars/CarManifest.ts';
 import { CAR_PERK, CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/domain/constants.ts';
@@ -114,7 +115,9 @@ describe('parseCarSetManifest', () => {
   it('real manifest has the full 21-car fleet', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    expect(manifest.cars.length).toBe(21);
+    const legacy = manifest.cars.filter(car => !/^car_\d+$/.test(car.id));
+    expect(legacy.length).toBe(21);
+    expect(manifest.cars.length).toBeGreaterThanOrEqual(21);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -466,7 +469,7 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(21);
+    expect(manifest.cars.length).toBeGreaterThanOrEqual(21);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
@@ -478,6 +481,8 @@ describe('cart portraits', () => {
   it('names stills {carId}_300px.png so tank/turbo/strong keep their suffix', () => {
     expect(cartHeroFile('car_1')).toBe('car_1_hero.png');
     expect(cartStripFile('car_1')).toBe('car_1_strip.png');
+    expect(isNewFleetCarId('car_2')).toBe(true);
+    expect(isNewFleetCarId('car-2')).toBe(false);
     expect(cartPortraitFile('car-16')).toBe('car-16_300px.png');
     expect(cartPortraitFile('car-6-tank')).toBe('car-6-tank_300px.png');
     expect(cartPortraitFile('car-12-strong')).toBe('car-12-strong_300px.png');

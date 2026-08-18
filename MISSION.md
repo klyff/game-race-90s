@@ -56,6 +56,8 @@ WINNER IS + 2nd/3rd purse. Then open another planet and check the ground colour 
 ## Files
 
 - Plan: `~/.claude/plans/fa-a-um-plano-para-compressed-beaver.md`
+- `SUMMARY.md` — 10-line product north star (planets → cities, web, multiplayer).
+- `JOURNAL.md` — 6-line daily delta. Skill: `.cursor/skills/game-jornal/`.
 - `WORKLOG.md` — the ledger. **Read its last cleanup block first.** Read the rest in slices.
 - `docs/art-briefs/planets.md` — the three image-AI prompts and the ten planets.
 - `tools/verify/README.md` — how to see the screen. `tools/measure-impacts.ts` — damage measurement.

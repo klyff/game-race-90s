@@ -6,6 +6,7 @@
  * on the next circuit instead of sitting unused.
  */
 
+import { isNewFleetCarId } from '../../data/cars/CarManifest.ts';
 import { MEDIUM_PROFILES, type DriverProfile } from '../ai/DriverProfile.ts';
 import { PLANETS, planetTrackId } from '../../data/tracks/planets.ts';
 
@@ -25,6 +26,15 @@ export function watchPilots(): readonly string[] {
 /** Track II of every planet, campaign order. */
 export function watchPlanetTwoTracks(): readonly string[] {
   return PLANETS.map(planet => planetTrackId(planet, 2));
+}
+
+/**
+ * Prefer the clock-fleet (`car_2`…) once enough strips are installed.
+ * Career still uses the hyphen roster; watch is the place to look at new art.
+ */
+export function watchCarIds(carIds: readonly string[]): readonly string[] {
+  const neu = carIds.filter(isNewFleetCarId);
+  return neu.length >= WATCH_RACER_COUNT ? neu : carIds;
 }
 
 export function watchFieldPacks(carIds: readonly string[]): {

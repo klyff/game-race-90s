@@ -131,7 +131,7 @@ const carsJsonPath = join(projectRoot, 'public', 'assets', 'cars', 'cars.json');
 const track = findTrack('thunder-basin');
 const spline = new TrackSpline(track.controlPoints);
 const manifest = parseCarSetManifest(JSON.parse(readFileSync(carsJsonPath, 'utf8')));
-const carIds = manifest.cars.map(car => car.id);
+const carIds = manifest.cars.filter(car => !/^car_\d+$/.test(car.id)).map(car => car.id);
 const trackFullHalfWidth = track.halfWidth + track.shoulderWidth;
 
 describe('LapTimes — full-lap simulation with PaceDriver', () => {

@@ -353,6 +353,20 @@ describe('formatHud (integration)', () => {
       expect(hud.ammo).toBe('3  1  2  4');
     });
 
+    it('appends jump charges after turbo when the hop stock is present', () => {
+      const hud = formatHud(
+        readout({ ammo: 6, ammoCapacity: 6, oil: 4, mines: 4, turbos: 4, jumps: 4 }),
+      );
+      expect(hud.ammo).toBe('6  4  4  4  4');
+    });
+
+    it('shows a zero jump stock', () => {
+      const hud = formatHud(
+        readout({ ammo: 0, ammoCapacity: 6, oil: 0, mines: 0, turbos: 0, jumps: 0 }),
+      );
+      expect(hud.ammo).toBe('0  0  0  0  0');
+    });
+
   });
 
   describe('countdown formatting', () => {

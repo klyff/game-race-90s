@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CAR_SPRITE_FRAMES } from '../../src/domain/constants.ts';
-import { parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
-import type { CarSetManifest } from '../../src/data/cars/CarManifest.ts';
+import { cartStripFile, parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
+import type { CarSetManifest, CarSheetManifest } from '../../src/data/cars/CarManifest.ts';
 import { collisionBoxForCarId, withCollisionBox } from './collision-map.ts';
 import { packStrip, writePng } from './raster/png.ts';
 import {
@@ -70,6 +70,20 @@ function pinFrames(frames: readonly Uint8Array[], frameSize: number): Uint8Array
   return frames.map((frame) => translateFrame(frame, frameSize, frameSize, shift.dx, shift.dy));
 }
 
+function newFleetSheet(base: CarSheetManifest, carId: string): CarSheetManifest {
+  const number = carId.replace(/^car_/, '');
+  return {
+    ...base,
+    id: carId,
+    displayName: `Car ${number}`,
+    archetype: 'Clock-fleet strip',
+    image: cartStripFile(carId),
+    homePlanetId: base.homePlanetId,
+    worldAdvantage: base.worldAdvantage,
+    perk: base.perk,
+  };
+}
+
 function installStrip(
   carId: string,
   stripPath: string,
@@ -80,26 +94,26 @@ function installStrip(
   const manifest: CarSetManifest = parseCarSetManifest(
     JSON.parse(readFileSync(manifestPath, 'utf-8')),
   );
-  const car = manifest.cars.find((entry) => entry.id === carId);
-  if (car === undefined) {
-    const known = manifest.cars.map((entry) => entry.id).join(', ');
-    throw new Error(`"${carId}" is not in cars.json. Known: ${known}`);
-  }
-  const dest = join(CARS_DIRECTORY, car.image);
+  const image = cartStripFile(carId);
+  const dest = join(CARS_DIRECTORY, image);
   writeFileSync(dest, readFileSync(stripPath));
+
+  const existing = manifest.cars.find((entry) => entry.id === carId);
+  const template = existing ?? newFleetSheet(manifest.cars[0]!, carId);
+  const installed: CarSheetManifest = {
+    ...template,
+    image,
+    shadow,
+    frameWidth: frameSize === manifest.frameWidth ? undefined : frameSize,
+    frameHeight: frameSize === manifest.frameHeight ? undefined : frameSize,
+    stats: withCollisionBox(template.stats, collisionBoxForCarId(carId)),
+  };
   const next: CarSetManifest = {
     ...manifest,
-    cars: manifest.cars.map((entry) =>
-      entry.id === carId
-        ? {
-            ...entry,
-            shadow,
-            frameWidth: frameSize === manifest.frameWidth ? undefined : frameSize,
-            frameHeight: frameSize === manifest.frameHeight ? undefined : frameSize,
-            stats: withCollisionBox(entry.stats, collisionBoxForCarId(carId)),
-          }
-        : entry,
-    ),
+    cars:
+      existing === undefined
+        ? [...manifest.cars, installed]
+        : manifest.cars.map((entry) => (entry.id === carId ? installed : entry)),
   };
   writeFileSync(manifestPath, `${JSON.stringify(next, null, 2)}\n`);
   console.log(`installed ${dest}  ${frameSize}×${frameSize}  shadow ${shadow.width}x${shadow.height}`);

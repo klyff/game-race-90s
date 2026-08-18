@@ -32,12 +32,13 @@ function isFrameBlank(pixels: Uint8Array, frameIndex: number, sheetWidth: number
 
 describe('imported fleet sheets', () => {
   it('writes one 2048×64 strip per fleet car with 32 non-blank frames', () => {
-    expect(manifest.cars).toHaveLength(FLEET_CARS.length);
     expect(manifest.frameWidth).toBe(CAR_FRAME_WIDTH);
     expect(manifest.frameHeight).toBe(CAR_FRAME_HEIGHT);
     expect(manifest.frameCount).toBe(CAR_SPRITE_FRAMES);
 
-    for (const car of manifest.cars) {
+    const fleetSheets = manifest.cars.filter(car => FLEET_CARS.some(fleet => fleet.id === car.id));
+    expect(fleetSheets).toHaveLength(FLEET_CARS.length);
+    for (const car of fleetSheets) {
       const png = PNG.sync.read(readFileSync(join(carsDir, car.image)));
       expect(png.width).toBe(CAR_FRAME_WIDTH * CAR_SPRITE_FRAMES);
       expect(png.height).toBe(CAR_FRAME_HEIGHT);
@@ -51,6 +52,8 @@ describe('imported fleet sheets', () => {
   it('keeps unique fleet ids matching the authored roster', () => {
     const ids = manifest.cars.map(car => car.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toEqual(FLEET_CARS.map(car => car.id));
+    expect(ids.filter(id => FLEET_CARS.some(fleet => fleet.id === id))).toEqual(
+      FLEET_CARS.map(car => car.id),
+    );
   });
 });

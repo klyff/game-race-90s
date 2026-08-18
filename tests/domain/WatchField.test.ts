@@ -4,6 +4,7 @@ import { MEDIUM_PROFILES } from '../../src/domain/ai/DriverProfile.ts';
 import {
   nextWatchTrack,
   splitWatchRoster,
+  watchCarIds,
   watchFieldPacks,
   watchPilots,
   watchPlanetTwoTracks,
@@ -37,6 +38,12 @@ describe('WatchField', () => {
     const odd = splitWatchRoster(FLEET, 1);
     expect(odd.field).toEqual(FLEET.slice(10, 20));
     expect(odd.reserve).toEqual(FLEET.slice(0, 10));
+  });
+
+  it('uses the clock fleet once ten or more new strips are listed', () => {
+    const mixed = ['car-1', 'car-2', ...Array.from({ length: 12 }, (_, index) => `car_${index + 2}`)];
+    expect(watchCarIds(mixed)).toEqual(mixed.filter(id => id.startsWith('car_')));
+    expect(watchCarIds(FLEET)).toEqual(FLEET);
   });
 
   it('does not drop cars when building packs', () => {
