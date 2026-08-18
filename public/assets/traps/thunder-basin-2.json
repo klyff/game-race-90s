@@ -7,39 +7,39 @@
       "lateral": -24.05
     },
     {
+      "distance": 120,
+      "lateral": 24.05
+    },
+    {
+      "distance": 132,
+      "lateral": -24.05
+    },
+    {
+      "distance": 144,
+      "lateral": 24.05
+    },
+    {
+      "distance": 156,
+      "lateral": -24.05
+    },
+    {
+      "distance": 168,
+      "lateral": 24.05
+    },
+    {
+      "distance": 180,
+      "lateral": -24.05
+    },
+    {
+      "distance": 192,
+      "lateral": 24.05
+    },
+    {
+      "distance": 204,
+      "lateral": -24.05
+    },
+    {
       "distance": 216,
-      "lateral": 24.05
-    },
-    {
-      "distance": 228,
-      "lateral": -24.05
-    },
-    {
-      "distance": 240,
-      "lateral": 24.05
-    },
-    {
-      "distance": 252,
-      "lateral": -24.05
-    },
-    {
-      "distance": 264,
-      "lateral": 24.05
-    },
-    {
-      "distance": 276,
-      "lateral": -24.05
-    },
-    {
-      "distance": 288,
-      "lateral": 24.05
-    },
-    {
-      "distance": 300,
-      "lateral": -24.05
-    },
-    {
-      "distance": 312,
       "lateral": 24.05
     }
   ],

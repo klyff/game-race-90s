@@ -3,87 +3,71 @@
   "homeZoom": 1.75,
   "maxZoomIn": 2.6,
   "autoZoomOutMin": 0.975,
-  "zoomOut50": 0.37102165132912723,
+  "zoomOut50": 0.4073482371252698,
   "triggers": [
     {
-      "kind": "straight",
-      "startDistance": 1984,
-      "endDistance": 120,
-      "zoomBias": -0.15,
-      "holdSeconds": 3,
-      "targetZoom": 1.275
-    },
-    {
-      "kind": "curve",
-      "startDistance": 136,
-      "endDistance": 192,
-      "zoomBias": 0.1,
-      "holdSeconds": 3,
-      "targetZoom": 2.2
-    },
-    {
       "kind": "speed",
-      "startDistance": 216,
-      "endDistance": 704,
+      "startDistance": 24,
+      "endDistance": 616,
       "zoomBias": -0.35,
       "holdSeconds": 3,
       "targetZoom": 0.975
     },
     {
-      "kind": "curve",
+      "kind": "straight",
       "startDistance": 728,
-      "endDistance": 784,
-      "zoomBias": 0.1,
-      "holdSeconds": 3,
-      "targetZoom": 2.2
-    },
-    {
-      "kind": "curve",
-      "startDistance": 936,
-      "endDistance": 984,
-      "zoomBias": 0.1,
-      "holdSeconds": 3,
-      "targetZoom": 2.2
-    },
-    {
-      "kind": "straight",
-      "startDistance": 992,
-      "endDistance": 1184,
-      "zoomBias": -0.15,
-      "holdSeconds": 3,
-      "targetZoom": 1.275
-    },
-    {
-      "kind": "curve",
-      "startDistance": 1216,
-      "endDistance": 1256,
-      "zoomBias": 0.3,
-      "holdSeconds": 3,
-      "targetZoom": 2.6
-    },
-    {
-      "kind": "straight",
-      "startDistance": 1288,
-      "endDistance": 1472,
+      "endDistance": 880,
       "zoomBias": -0.15,
       "holdSeconds": 3,
       "targetZoom": 1.275
     },
     {
       "kind": "straight",
-      "startDistance": 1608,
-      "endDistance": 1824,
+      "startDistance": 952,
+      "endDistance": 1032,
       "zoomBias": -0.15,
       "holdSeconds": 3,
       "targetZoom": 1.275
     },
     {
-      "kind": "curve",
-      "startDistance": 1840,
-      "endDistance": 1904,
-      "zoomBias": 0.1,
+      "kind": "straight",
+      "startDistance": 1096,
+      "endDistance": 1176,
+      "zoomBias": -0.15,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1240,
+      "endDistance": 1320,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "straight",
+      "startDistance": 1384,
+      "endDistance": 1752,
+      "zoomBias": -0.15,
+      "holdSeconds": 3,
+      "targetZoom": 1.275
+    },
+    {
+      "kind": "ramp",
+      "startDistance": 280,
+      "endDistance": 292,
+      "zoomBias": -0.1,
+      "holdSeconds": 3,
+      "targetZoom": 1.35
+    },
+    {
+      "kind": "ramp",
+      "startDistance": 1520,
+      "endDistance": 1530,
+      "zoomBias": -0.1,
+      "holdSeconds": 3,
+      "targetZoom": 1.35
     }
   ]
 }

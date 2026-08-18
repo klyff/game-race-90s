@@ -123,6 +123,19 @@ export const PLANETS: readonly PlanetDefinition[] = [
 /** The 'thunder-basin' authored track is planet 1, track 1 and keeps its id. */
 export const ANCHOR_TRACK_ID = 'thunder-basin';
 
+/**
+ * World-1 circuits that stay hand-authored (ramps + layout).
+ * `npm run gen:tracks` skips these so lips are never overwritten.
+ */
+export const AUTHORED_TRACK_IDS: readonly string[] = [
+  ANCHOR_TRACK_ID,
+  'thunder-basin-2',
+] as const;
+
+export function isAuthoredTrackId(trackId: string): boolean {
+  return (AUTHORED_TRACK_IDS as readonly string[]).includes(trackId);
+}
+
 /** Deterministic track id for planet `planet`, track number `n` (1-based). */
 export function planetTrackId(planet: PlanetDefinition, n: number): string {
   if (planet.index === 1 && n === 1) {

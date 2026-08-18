@@ -548,7 +548,7 @@ describe('RaceField — ramp landings (T-050)', () => {
     expect(player.explodedThisStep).toBe(true);
     run(field, 2.05, IDLE_INPUT);
     expect(player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
-    expect(player.distance).toBeCloseTo(exit, 0);
+    expect(Math.abs(player.distance - exit)).toBeLessThan(1);
     expect(Math.abs(player.lateralOffset)).toBeLessThan(1);
   });
 

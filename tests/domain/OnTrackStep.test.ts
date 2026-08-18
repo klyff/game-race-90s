@@ -550,10 +550,11 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
       };
     }
 
-    it('launches a fast car off the 45° bottom-straight ramp', () => {
+    it('launches a fast car off the 15° bottom-straight ramp', () => {
       const { track, spline } = getTrackAndSpline();
       const stats = getCarStats();
       const zone = track.rampZones![0]!;
+      expect(zone.inclineDegrees).toBe(15);
       const { state } = poseOnRamp(spline, zone.triggerDistance + 1, stats.maxSpeed * 0.9);
       const result = stepVehicleOnTrack(
         state,
@@ -571,14 +572,14 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
       expect(result.state.height).toBeGreaterThan(0);
     });
 
-    it('rejects a crawl on the 45° ramp and shoves the car backward', () => {
+    it('rejects a crawl on the 15° ramp and shoves the car backward', () => {
       const { track, spline } = getTrackAndSpline();
       const stats = getCarStats();
       const zone = track.rampZones![0]!;
       const { heading, state } = poseOnRamp(
         spline,
         zone.triggerDistance + 1,
-        stats.maxSpeed * 0.4,
+        stats.maxSpeed * 0.1,
       );
       const result = stepVehicleOnTrack(
         state,

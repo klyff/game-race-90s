@@ -25,6 +25,7 @@ import type { InputCommand } from '../../src/domain/input/InputCommand.ts';
 import { createVehicleState } from '../../src/domain/vehicle/Vehicle.ts';
 import type { VehicleStats } from '../../src/domain/vehicle/VehicleStats.ts';
 import { thunderBasin } from '../../src/data/tracks/thunder-basin.track.ts';
+import { thunderBasinTwo } from '../../src/data/tracks/thunder-basin-2.track.ts';
 import { TURBO_SPEED_BONUS } from '../../src/domain/vehicle/TurboCharges.ts';
 import { dot, fromAngle, length, scale } from '../../src/domain/math/Vec2.ts';
 
@@ -187,9 +188,14 @@ describe('resolveRampContact', () => {
 });
 
 describe('Thunder Basin ramps', () => {
-  it('authors 45/30/15 on the three existing zones', () => {
-    expect(thunderBasin.rampZones?.map(z => z.inclineDegrees)).toEqual([45, 30, 15]);
-    expect(thunderBasin.rampZones?.map(z => z.triggerDistance)).toEqual([200, 680, 1180]);
+  it('authors 15° then 30° on Basin I', () => {
+    expect(thunderBasin.rampZones?.map(z => z.inclineDegrees)).toEqual([15, 30]);
+    expect(thunderBasin.rampZones?.map(z => z.triggerDistance)).toEqual([200, 1240]);
+  });
+
+  it('authors 45° then 30° on Basin II', () => {
+    expect(thunderBasinTwo.rampZones?.map(z => z.inclineDegrees)).toEqual([45, 30]);
+    expect(thunderBasinTwo.rampZones?.map(z => z.triggerDistance)).toEqual([280, 1520]);
   });
 });
 
