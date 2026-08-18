@@ -93,7 +93,7 @@ function driveLap(
 
     maxAbsLateralOffset = Math.max(maxAbsLateralOffset, Math.abs(result.lateralOffset));
     if (result.touchedWall) wallContacts += 1;
-    if (result.telemetry.isSliding) slidingSteps += 1;
+    if (result.telemetry.isSliding && result.state.height <= 0) slidingSteps += 1;
 
     // Check if lap is complete
     if (accumulatedForwardProgress >= spline.totalLength) {

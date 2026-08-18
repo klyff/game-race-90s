@@ -70,9 +70,9 @@ export const thunderBasin: TrackDefinition = {
 
   // Rock slabs, not painted ramps: mid-straight hop, sweeper exit, hairpin approach.
   rampZones: [
-    { triggerDistance: 200, triggerLength: 12, launchSpeed: 12 },
-    { triggerDistance: 680, triggerLength: 10, launchSpeed: 13 },
-    { triggerDistance: 1180, triggerLength: 10, launchSpeed: 11 },
+    { triggerDistance: 200, triggerLength: 12, launchSpeed: 12, inclineDegrees: 45 },
+    { triggerDistance: 680, triggerLength: 10, launchSpeed: 13, inclineDegrees: 30 },
+    { triggerDistance: 1180, triggerLength: 10, launchSpeed: 11, inclineDegrees: 15 },
   ],
 
   // Shoulder drums, not on the racing line: long straight, sweeper exit, hairpin approach.

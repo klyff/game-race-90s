@@ -531,12 +531,17 @@ export class TrackRenderer {
 
   private drawRockRamp(spline: TrackSpline, halfWidth: number, zone: RampZone): void {
     const peak = rampPeakHeight(zone);
-    const steps = Math.max(4, Math.round(zone.triggerLength / 2));
+    const incline = (zone.inclineDegrees * Math.PI) / 180;
+    const tan = Math.tan(incline);
+    const visualLength =
+      tan > 0 ? Math.min(zone.triggerLength, Math.max(2, peak / tan)) : zone.triggerLength;
+    const start = zone.triggerDistance + zone.triggerLength - visualLength;
+    const steps = Math.max(4, Math.round(visualLength / 2));
     for (let i = 0; i < steps; i += 1) {
       const t0 = i / steps;
       const t1 = (i + 1) / steps;
-      const d0 = zone.triggerDistance + zone.triggerLength * t0;
-      const d1 = zone.triggerDistance + zone.triggerLength * t1;
+      const d0 = start + visualLength * t0;
+      const d1 = start + visualLength * t1;
       const h0 = peak * t0;
       const h1 = peak * t1;
       const a = spline.frameAt(d0);

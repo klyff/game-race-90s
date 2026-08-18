@@ -7,6 +7,12 @@ import { resolveWallContact } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
 import { trackFullHalfWidth } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
+import {
+  applyAirTurboKick,
+  rampRespawnDistance,
+  RAMP_LANDING_DAMAGE,
+  RAMP_LANDING_STUN_SECONDS,
+} from '../track/RampLaunch.ts';
 import { CONTACT_ATTACKER, contactAttackCredit, resolveCarContact } from '../vehicle/CarCollision.ts';
 import {
   applyImpactDamage,
@@ -196,6 +202,16 @@ export interface RacerRuntime {
    * (keyboard is already edge-triggered). Arsenal shortens it via reloadMultiplier.
    */
   weaponCooldownRemaining: number;
+  /** Seconds of ignored input after a 45° hot ramp landing. */
+  landingStunRemaining: number;
+  /** Mid-air turbo kick already spent this ramp flight. */
+  airTurboKicked: boolean;
+  /** True from a ramp launch until the car lands. Hop does not set this. */
+  pendingRampFlight: boolean;
+  /** 45° hot launch — pay stun + 4% on a clean landing. */
+  pendingHardLanding: boolean;
+  /** Centreline to respawn on after a void landing. Undefined for other wrecks. */
+  offTrackRespawnDistance: number | undefined;
 }
 
 export interface RaceFieldOptions {
@@ -375,6 +391,11 @@ export class RaceField {
         explodedThisStep: false,
         respawnedThisStep: false,
         weaponCooldownRemaining: 0,
+        landingStunRemaining: 0,
+        airTurboKicked: false,
+        pendingRampFlight: false,
+        pendingHardLanding: false,
+        offTrackRespawnDistance: undefined,
       };
     });
 
@@ -528,6 +549,11 @@ export class RaceField {
       racer.explodedThisStep = false;
       racer.respawnedThisStep = false;
       racer.weaponCooldownRemaining = 0;
+      racer.landingStunRemaining = 0;
+      racer.airTurboKicked = false;
+      racer.pendingRampFlight = false;
+      racer.pendingHardLanding = false;
+      racer.offTrackRespawnDistance = undefined;
     });
 
     this.missiles = [];
@@ -629,11 +655,18 @@ export class RaceField {
 
       const speedBefore = length(racer.state.velocity);
       const finished = this.standingOf(racer.carId)?.finished === true;
-      const command = frozen
+      let command = frozen
         ? IDLE_INPUT
         : finished
           ? coastInput(speedBefore)
           : this.commandFor(racer, playerCommand, stepSeconds);
+
+      if (!frozen && racer.landingStunRemaining > 0) {
+        command = IDLE_INPUT;
+        racer.landingStunRemaining = Math.max(0, racer.landingStunRemaining - stepSeconds);
+      }
+
+      const wasAirborne = isAirborne(racer.state);
 
       if (!frozen) {
         this.resolveWeaponCommand(racer, command);
@@ -672,12 +705,27 @@ export class RaceField {
         this.projectionWindow,
         stepSeconds,
         surface => perkSurface(surface, racer.perk),
+        racer.turboRemaining > 0,
       );
 
       racer.state = step.state;
       racer.telemetry = step.telemetry;
       racer.distance = step.distance;
       racer.lateralOffset = step.lateralOffset;
+
+      if (step.rampEvent?.kind === 'launch') {
+        racer.pendingRampFlight = true;
+        racer.pendingHardLanding =
+          step.rampEvent.hot && step.rampEvent.zone.inclineDegrees === 45;
+        racer.offTrackRespawnDistance = this.spline.wrap(
+          rampRespawnDistance(step.rampEvent.zone),
+        );
+        racer.airTurboKicked = false;
+      }
+
+      if (wasAirborne && !isAirborne(racer.state)) {
+        this.resolveRampLanding(racer);
+      }
 
       if (step.touchedWall) {
         // Damage is driven by the SPEED THE CRASH COST, not by `impactSpeed` alone.
@@ -839,7 +887,7 @@ export class RaceField {
 
     // 3. A contact can push a car through a wall that was already resolved in stage 1.
     this.racers.forEach((racer, index) => {
-      if (!nudged[index]) {
+      if (!nudged[index] || isAirborne(racer.state)) {
         return;
       }
       const projection = this.spline.projectNear(racer.state.position, racer.distance, this.projectionWindow);
@@ -984,6 +1032,10 @@ export class RaceField {
     }
     racer.turbos = next;
     racer.turboRemaining = TURBO_DURATION_SECONDS;
+    if (isAirborne(racer.state) && racer.pendingRampFlight && !racer.airTurboKicked) {
+      racer.state = applyAirTurboKick(racer.state);
+      racer.airTurboKicked = true;
+    }
   }
 
   /** Impart hop velocity when grounded and a charge remains. */
@@ -1313,11 +1365,62 @@ export class RaceField {
     racer.integrity = tickIntegrity(before, stepSeconds);
 
     if (racer.integrity.condition !== CAR_CONDITION.DESTROYED) {
-      const frame = this.spline.frameAt(racer.distance);
+      const distance = racer.offTrackRespawnDistance ?? racer.distance;
+      const frame = this.spline.frameAt(this.spline.wrap(distance));
       racer.state = createVehicleState(frame.position, angleOf(frame.tangent));
+      racer.distance = this.spline.wrap(distance);
       racer.lateralOffset = 0;
       racer.pendingImpactSpeed = 0;
       racer.respawnedThisStep = true;
+      racer.offTrackRespawnDistance = undefined;
+      racer.pendingRampFlight = false;
+      racer.pendingHardLanding = false;
+      racer.airTurboKicked = false;
+      racer.landingStunRemaining = 0;
+    }
+  }
+
+  /**
+   * Clean ramp landing vs void wreck. Hop flights never set pendingRampFlight,
+   * so they fall through as a no-op besides clearing the air-turbo flag.
+   */
+  private resolveRampLanding(racer: RacerRuntime): void {
+    const flewRamp = racer.pendingRampFlight;
+    const hard = racer.pendingHardLanding;
+    const respawnAt = racer.offTrackRespawnDistance;
+    racer.pendingRampFlight = false;
+    racer.pendingHardLanding = false;
+    racer.airTurboKicked = false;
+
+    if (!flewRamp) {
+      racer.offTrackRespawnDistance = undefined;
+      return;
+    }
+
+    if (Math.abs(racer.lateralOffset) > trackFullHalfWidth(this.track)) {
+      racer.offTrackRespawnDistance = respawnAt;
+      const before = racer.integrity;
+      racer.integrity = applyDirectDamage(before, 1);
+      if (
+        before.condition !== CAR_CONDITION.DESTROYED &&
+        racer.integrity.condition === CAR_CONDITION.DESTROYED
+      ) {
+        racer.explodedThisStep = true;
+        racer.state = {
+          ...racer.state,
+          velocity: VEC2_ZERO,
+          yawSpin: 0,
+          height: 0,
+          verticalVelocity: 0,
+        };
+      }
+      return;
+    }
+
+    racer.offTrackRespawnDistance = undefined;
+    if (hard) {
+      racer.integrity = applyWeaponDamage(racer.integrity, RAMP_LANDING_DAMAGE, racer.stats);
+      racer.landingStunRemaining = RAMP_LANDING_STUN_SECONDS;
     }
   }
 

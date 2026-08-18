@@ -533,4 +533,89 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
       expect(result.state).not.toBe(initialState);
     });
   });
+
+  describe('ramp contact (T-050)', () => {
+    const throttle: InputCommand = { ...IDLE_INPUT, throttle: 1 };
+    const window = 40;
+
+    function poseOnRamp(spline: TrackSpline, distance: number, speed: number) {
+      const frame = spline.frameAt(distance);
+      const heading = Math.atan2(frame.tangent.y, frame.tangent.x);
+      return {
+        heading,
+        state: {
+          ...createVehicleState(frame.position, heading),
+          velocity: { x: frame.tangent.x * speed, y: frame.tangent.y * speed },
+        },
+      };
+    }
+
+    it('launches a fast car off the 45° bottom-straight ramp', () => {
+      const { track, spline } = getTrackAndSpline();
+      const stats = getCarStats();
+      const zone = track.rampZones![0]!;
+      const { state } = poseOnRamp(spline, zone.triggerDistance + 1, stats.maxSpeed * 0.9);
+      const result = stepVehicleOnTrack(
+        state,
+        throttle,
+        stats,
+        track,
+        spline,
+        zone.triggerDistance + 1,
+        window,
+        SIMULATION_STEP_SECONDS,
+        undefined,
+        true,
+      );
+      expect(result.rampEvent?.kind).toBe('launch');
+      expect(result.state.height).toBeGreaterThan(0);
+    });
+
+    it('rejects a crawl on the 45° ramp and shoves the car backward', () => {
+      const { track, spline } = getTrackAndSpline();
+      const stats = getCarStats();
+      const zone = track.rampZones![0]!;
+      const { heading, state } = poseOnRamp(
+        spline,
+        zone.triggerDistance + 1,
+        stats.maxSpeed * 0.4,
+      );
+      const result = stepVehicleOnTrack(
+        state,
+        throttle,
+        stats,
+        track,
+        spline,
+        zone.triggerDistance + 1,
+        window,
+        SIMULATION_STEP_SECONDS,
+      );
+      expect(result.rampEvent?.kind).toBe('reject');
+      expect(result.state.height).toBe(0);
+      const along = result.state.velocity.x * Math.cos(heading) + result.state.velocity.y * Math.sin(heading);
+      expect(along).toBeLessThan(0);
+    });
+
+    it('does not re-launch a car already in the air', () => {
+      const { track, spline } = getTrackAndSpline();
+      const stats = getCarStats();
+      const zone = track.rampZones![0]!;
+      const { state } = poseOnRamp(spline, zone.triggerDistance + 1, stats.maxSpeed * 0.9);
+      const flying = { ...state, height: 2, verticalVelocity: 8 };
+      const result = stepVehicleOnTrack(
+        flying,
+        throttle,
+        stats,
+        track,
+        spline,
+        zone.triggerDistance + 1,
+        window,
+        SIMULATION_STEP_SECONDS,
+        undefined,
+        true,
+      );
+      expect(result.rampEvent).toBeNull();
+      expect(result.touchedWall).toBe(false);
+    });
+  });
 });

@@ -7,6 +7,9 @@ import type { TrackDefinition } from './TrackDefinition.ts';
  * speed. Peak height and airtime are DERIVED rather than separately
  * authored, so they can never disagree with the physics that produces them.
  */
+/** Authored lip angle. Also the minimum climb as a percent of maxSpeed. */
+export type RampIncline = 15 | 30 | 45;
+
 export interface RampZone {
   /** Arc length where the trigger zone begins. */
   readonly triggerDistance: number;
@@ -14,6 +17,8 @@ export interface RampZone {
   readonly triggerLength: number;
   /** Vertical launch speed imparted on entry, world units/s. */
   readonly launchSpeed: number;
+  /** Lip angle in degrees. Selects climb gate, hot-bonus table, and slab shape. */
+  readonly inclineDegrees: RampIncline;
 }
 
 /** Shared gravity for every ramp — one feel knob, not per-ramp data, so

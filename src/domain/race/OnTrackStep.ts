@@ -2,6 +2,8 @@ import { resolveWallContact, surfaceAt } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import { rampZoneAt } from '../track/RampZone.ts';
+import type { RampZone } from '../track/RampZone.ts';
+import { resolveRampContact } from '../track/RampLaunch.ts';
 import { AIRBORNE_SURFACE, stepVehicle } from '../vehicle/ArcadeCarPhysics.ts';
 import { integrateAirborne } from '../vehicle/Airborne.ts';
 import { isAirborne } from '../vehicle/Vehicle.ts';
@@ -26,7 +28,14 @@ export interface OnTrackStepResult {
   readonly touchedWall: boolean;
   /** Speed component INTO the wall, world units/s. Zero if no contact. */
   readonly impactSpeed: number;
+  /** Ramp launch or reject that fired this step, if any. Hop never produces this. */
+  readonly rampEvent: RampStepEvent;
 }
+
+export type RampStepEvent =
+  | { readonly kind: 'launch'; readonly zone: RampZone; readonly hot: boolean }
+  | { readonly kind: 'reject'; readonly zone: RampZone }
+  | null;
 
 /**
  * Turns the surface the track chose into the surface THIS car experiences.
@@ -79,21 +88,29 @@ export function stepVehicleOnTrack(
   searchWindow: number,
   stepSeconds: number,
   surfaceAdjust?: SurfaceAdjuster,
+  turboActive = false,
 ): OnTrackStepResult {
   // 1. Project the car onto the centreline; use the previous frame's distance as a hint.
   const before = spline.projectNear(state.position, hintDistance, searchWindow);
 
-  // A ramp launches a grounded car by imparting vertical speed; a car already
-  // airborne re-entering the same zone (a long ramp) does not re-launch.
+  // A ramp launches a grounded car that is not already hopping; a car already
+  // airborne re-entering the same zone does not re-launch.
   const zone = rampZoneAt(before.distance, track);
-  const launched: VehicleState =
-    zone !== null && !isAirborne(state)
-      ? { ...state, verticalVelocity: zone.launchSpeed }
-      : state;
+  let rampEvent: RampStepEvent = null;
+  let launched = state;
+  if (zone !== null && !isAirborne(state) && state.verticalVelocity <= 0) {
+    const contact = resolveRampContact(state, zone, stats, command, turboActive);
+    launched = contact.state;
+    rampEvent =
+      contact.kind === 'launch'
+        ? { kind: 'launch', zone, hot: contact.hot }
+        : { kind: 'reject', zone };
+  }
 
   // 2. Pick the surface from the lateral offset: tarmac inside halfWidth, offroad
   //    outside — unless the car is airborne, which touches nothing at all (T-050).
-  const chosen = isAirborne(launched) ? AIRBORNE_SURFACE : surfaceAt(before.lateralOffset, track);
+  const flying = isAirborne(launched) || launched.verticalVelocity > 0;
+  const chosen = flying ? AIRBORNE_SURFACE : surfaceAt(before.lateralOffset, track);
   const surface = surfaceAdjust === undefined ? chosen : surfaceAdjust(chosen);
 
   // 3. Integrate the physics on that surface for the full timestep, then gravity —
@@ -124,5 +141,6 @@ export function stepVehicleOnTrack(
     lateralOffset: wall.lateralOffset,
     touchedWall: wall.touchedWall,
     impactSpeed: wall.impactSpeed,
+    rampEvent,
   };
 }

@@ -13,7 +13,9 @@ import { CAR_PERK, RACE_PHASE, SIMULATION_STEP_SECONDS } from '../../src/domain/
 import { IDLE_INPUT } from '../../src/domain/input/InputCommand.ts';
 import type { InputCommand } from '../../src/domain/input/InputCommand.ts';
 import { CAR_CONDITION, createCarIntegrity } from '../../src/domain/vehicle/CarIntegrity.ts';
-import { distance as vecDistance, length as vecLength, scale, subtract } from '../../src/domain/math/Vec2.ts';
+import { isAirborne } from '../../src/domain/vehicle/Vehicle.ts';
+import { add, distance as vecDistance, length as vecLength, scale, subtract } from '../../src/domain/math/Vec2.ts';
+import { RAMP_LANDING_DAMAGE, RAMP_LANDING_STUN_SECONDS } from '../../src/domain/track/RampLaunch.ts';
 
 const testFileDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(testFileDir, '..', '..');
@@ -455,5 +457,125 @@ describe('RaceField — quit park', () => {
     expect(Math.abs(field.player.lateralOffset)).toBeCloseTo(wallLimit, 1);
     expect(field.player.lateralOffset).toBeGreaterThan(0);
     expect(vecLength(field.player.state.velocity)).toBe(0);
+  });
+});
+
+describe('RaceField — ramp landings (T-050)', () => {
+  function rampField(): RaceField {
+    const player = manifest.cars[0]!;
+    return new RaceField(
+      [{ carId: player.id, stats: player.stats, isPlayer: true, perk: player.perk }],
+      track,
+      freshSpline(),
+      { countdownSeconds: 0, npcWeapons: false },
+    );
+  }
+
+  function placeAirborne(
+    field: RaceField,
+    distance: number,
+    lateral: number,
+    height: number,
+  ): void {
+    const spline = freshSpline();
+    const frame = spline.frameAt(distance);
+    const player = field.player;
+    player.state = {
+      ...player.state,
+      position: add(frame.position, scale(frame.normal, lateral)),
+      heading: Math.atan2(frame.tangent.y, frame.tangent.x),
+      height,
+      verticalVelocity: -80,
+      velocity: { x: frame.tangent.x * 40, y: frame.tangent.y * 40 },
+    };
+    player.distance = distance;
+    player.lateralOffset = lateral;
+  }
+
+  it('a 45° hot landing costs 4% before armor and stuns for 1s', () => {
+    const field = rampField();
+    const player = field.player;
+    const zone = track.rampZones![0]!;
+    placeAirborne(field, zone.triggerDistance + zone.triggerLength + 2, 0, 0.12);
+    player.pendingRampFlight = true;
+    player.pendingHardLanding = true;
+    const before = player.integrity.integrity;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(isAirborne(player.state)).toBe(false);
+    const lost = before - player.integrity.integrity;
+    expect(lost).toBeCloseTo(RAMP_LANDING_DAMAGE * (1 - player.stats.armor), 5);
+    expect(player.landingStunRemaining).toBe(RAMP_LANDING_STUN_SECONDS);
+    const jumps = player.jumps;
+    const turbos = player.turbos;
+    field.step({ ...IDLE_INPUT, jump: true, boost: true, throttle: 1 }, SIMULATION_STEP_SECONDS);
+    expect(player.jumps).toBe(jumps);
+    expect(player.turbos).toBe(turbos);
+  });
+
+  it('15°/30° ramp landings and hops do not pay the landing tax', () => {
+    const field = rampField();
+    const player = field.player;
+    const mid = track.rampZones![1]!;
+    placeAirborne(field, mid.triggerDistance + mid.triggerLength + 2, 0, 0.12);
+    player.pendingRampFlight = true;
+    player.pendingHardLanding = false;
+    const before = player.integrity.integrity;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(player.integrity.integrity).toBe(before);
+    expect(player.landingStunRemaining).toBe(0);
+
+    const hopField = rampField();
+    hopField.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
+    expect(isAirborne(hopField.player.state)).toBe(true);
+    const hopIntegrity = hopField.player.integrity.integrity;
+    run(hopField, 1.2, IDLE_INPUT);
+    expect(isAirborne(hopField.player.state)).toBe(false);
+    expect(hopField.player.integrity.integrity).toBe(hopIntegrity);
+    expect(hopField.player.landingStunRemaining).toBe(0);
+  });
+
+  it('a ramp landing past the wall explodes and respawns on the line after the ramp', () => {
+    const field = rampField();
+    const player = field.player;
+    const zone = track.rampZones![0]!;
+    const exit = zone.triggerDistance + zone.triggerLength;
+    const wall = trackFullHalfWidth(track);
+    placeAirborne(field, exit - 1, wall + 6, 0.12);
+    player.pendingRampFlight = true;
+    player.offTrackRespawnDistance = exit;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(player.integrity.condition).toBe(CAR_CONDITION.DESTROYED);
+    expect(player.explodedThisStep).toBe(true);
+    run(field, 2.05, IDLE_INPUT);
+    expect(player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
+    expect(player.distance).toBeCloseTo(exit, 0);
+    expect(Math.abs(player.lateralOffset)).toBeLessThan(1);
+  });
+
+  it('a hop landing past the wall does not explode', () => {
+    const field = rampField();
+    const wall = trackFullHalfWidth(track);
+    placeAirborne(field, 50, wall + 6, 0.12);
+    field.player.pendingRampFlight = false;
+    const before = field.player.integrity.integrity;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(field.player.integrity.integrity).toBe(before);
+    expect(field.player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
+  });
+
+  it('a mine wreck still respawns where it died, not at a ramp exit', () => {
+    const field = rampField();
+    const player = field.player;
+    player.integrity = {
+      ...createCarIntegrity(),
+      integrity: 0,
+      condition: CAR_CONDITION.DESTROYED,
+      respawnRemaining: 2,
+    };
+    const deathDistance = player.distance;
+    player.offTrackRespawnDistance = undefined;
+    run(field, 2.05, IDLE_INPUT);
+    expect(player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
+    expect(player.distance).toBeCloseTo(deathDistance, 0);
   });
 });
