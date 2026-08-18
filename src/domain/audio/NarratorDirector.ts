@@ -161,7 +161,7 @@ export class NarratorDirector {
   }
 
   private offerFinalLap(snapshot: NarratorSnapshot): NarratorOffer | undefined {
-    if (snapshot.playerFinished || snapshot.totalLaps <= 0) {
+    if (snapshot.totalLaps <= 0) {
       return undefined;
     }
     if (!this.finalLapStartPlayed && snapshot.playerLap >= snapshot.totalLaps) {
@@ -181,7 +181,7 @@ export class NarratorDirector {
   }
 
   private offerBanter(snapshot: NarratorSnapshot): NarratorOffer | undefined {
-    if (snapshot.phase !== RACE_PHASE.RACING || snapshot.playerFinished) {
+    if (snapshot.phase !== RACE_PHASE.RACING) {
       return undefined;
     }
     const cue = this.plan.banter[this.nextBanter];

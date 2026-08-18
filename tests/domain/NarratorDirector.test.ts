@@ -82,6 +82,18 @@ describe('NarratorDirector', () => {
     );
   });
 
+  it('keeps calling crashes after the flag, so the field can still talk', () => {
+    const plan = planNarratorRace({ lapCount: 3, parSeconds: 50, random: () => 0.15 });
+    const director = new NarratorDirector(plan);
+    director.update(snapshot({ phase: RACE_PHASE.COUNTDOWN, countdownRemaining: 0.4 }));
+    expect(director.update(snapshot({ playerFinished: true, playerPosition: 1 }))?.clip).toEqual(
+      plan.victory,
+    );
+
+    const crash = director.update(snapshot({ impactJustHappened: true, elapsedSeconds: 80 }));
+    expect(crash?.clip).toEqual(plan.damagePool[0]);
+  });
+
   it('releases a scheduled banter line when the race clock reaches it', () => {
     const plan = planNarratorRace({ lapCount: 3, parSeconds: 50, random: () => 0.45 });
     const director = new NarratorDirector(plan);
