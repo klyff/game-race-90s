@@ -255,6 +255,24 @@ export function applyWeaponDamage(
 }
 
 /**
+ * Integrity loss as a raw fraction of energy, 0..1. No armor, no weapon scale.
+ * Trap blasts and crate smacks use this so the authored percentages land in tests.
+ */
+export function applyDirectDamage(current: CarIntegrity, fraction: number): CarIntegrity {
+  const safe = Number.isNaN(fraction) ? 0 : Math.max(0, fraction);
+  if (current.condition === CAR_CONDITION.DESTROYED || safe === 0) {
+    return current;
+  }
+  const newIntegrity = Math.max(0, current.integrity - safe);
+  const condition = conditionFromIntegrity(newIntegrity);
+  return {
+    integrity: newIntegrity,
+    condition,
+    respawnRemaining: condition === CAR_CONDITION.DESTROYED ? RESPAWN_TIME_SECONDS : 0,
+  };
+}
+
+/**
  * Ticks the respawn timer down by `deltaSeconds`. Once it reaches 0, the car is
  * restored to pristine HEALTHY condition and is driveable again.
  *

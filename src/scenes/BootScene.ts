@@ -32,6 +32,8 @@ import {
   GROUND_ASSET_DIRECTORY,
   camerasCacheKey,
   CAMERAS_ASSET_DIRECTORY,
+  trapsCacheKey,
+  TRAPS_ASSET_DIRECTORY,
   linesCacheKey,
   LINES_ASSET_DIRECTORY,
   PLANET_ART_DIRECTORY,
@@ -45,6 +47,11 @@ import {
   HUD_ICONS,
   GASOLINE_SPRITE_FILE,
   GASOLINE_SPRITE_KEY,
+  TRAP_CRATE_FILE,
+  TRAP_CRATE_KEY,
+  TRAP_GASOLINE_FILE,
+  TRAP_GASOLINE_KEY,
+  WOOD_CHIP_SPRITES,
   WEAPON_ASSET_DIRECTORY,
   WEAPON_SHEET,
   WEAPON_SPRITES,
@@ -80,6 +87,9 @@ export class BootScene extends Phaser.Scene {
       const cameraKey = camerasCacheKey(track.id);
       this.optionalKeys.add(cameraKey);
       this.load.json(cameraKey, `${CAMERAS_ASSET_DIRECTORY}/${track.id}.json`);
+      const trapKey = trapsCacheKey(track.id);
+      this.optionalKeys.add(trapKey);
+      this.load.json(trapKey, `${TRAPS_ASSET_DIRECTORY}/${track.id}.json`);
     }
     // A missing weapon sprite is not fatal — those assets are optional and the race
     // falls back to primitives — so weapon keys are filtered out of the error path.
@@ -88,6 +98,9 @@ export class BootScene extends Phaser.Scene {
       ...WEAPON_SPRITES.map(sprite => sprite.key),
       ...HUD_ICONS.map(icon => icon.key),
       GASOLINE_SPRITE_KEY,
+      TRAP_CRATE_KEY,
+      TRAP_GASOLINE_KEY,
+      ...WOOD_CHIP_SPRITES.map(chip => chip.key),
       ...SCRAP_SPRITES.map(sprite => sprite.key),
       ...PLANET_THEMES.map(theme => theme.artKey),
       ...PLANET_THEMES.map(theme => theme.groundKey),
@@ -167,6 +180,11 @@ export class BootScene extends Phaser.Scene {
       this.load.image(icon.key, `${HUD_ICON_DIRECTORY}/${icon.file}`);
     }
     this.load.image(GASOLINE_SPRITE_KEY, `${HUD_ICON_DIRECTORY}/${GASOLINE_SPRITE_FILE}`);
+    this.load.image(TRAP_CRATE_KEY, `${TRAPS_ASSET_DIRECTORY}/${TRAP_CRATE_FILE}`);
+    this.load.image(TRAP_GASOLINE_KEY, `${TRAPS_ASSET_DIRECTORY}/${TRAP_GASOLINE_FILE}`);
+    for (const chip of WOOD_CHIP_SPRITES) {
+      this.load.image(chip.key, `${TRAPS_ASSET_DIRECTORY}/${chip.file}`);
+    }
 
     // Optional metal scraps: missing files fall back to gunmetal rects in race.
     for (const scrap of SCRAP_SPRITES) {

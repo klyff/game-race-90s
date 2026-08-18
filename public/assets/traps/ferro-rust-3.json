@@ -1,0 +1,132 @@
+{
+  "trackId": "ferro-rust-3",
+  "worldIndex": 5,
+  "crates": [
+    {
+      "distance": 300,
+      "lateral": -28.05
+    },
+    {
+      "distance": 312,
+      "lateral": 28.05
+    },
+    {
+      "distance": 324,
+      "lateral": -28.05
+    },
+    {
+      "distance": 336,
+      "lateral": 28.05
+    },
+    {
+      "distance": 348,
+      "lateral": -28.05
+    },
+    {
+      "distance": 360,
+      "lateral": 28.05
+    },
+    {
+      "distance": 432,
+      "lateral": -28.05
+    },
+    {
+      "distance": 528,
+      "lateral": 28.05
+    },
+    {
+      "distance": 540,
+      "lateral": -28.05
+    },
+    {
+      "distance": 552,
+      "lateral": 28.05
+    },
+    {
+      "distance": 564,
+      "lateral": -28.05
+    },
+    {
+      "distance": 576,
+      "lateral": 28.05
+    },
+    {
+      "distance": 588,
+      "lateral": -28.05
+    },
+    {
+      "distance": 600,
+      "lateral": 28.05
+    },
+    {
+      "distance": 612,
+      "lateral": -28.05
+    },
+    {
+      "distance": 816,
+      "lateral": 28.05
+    },
+    {
+      "distance": 828,
+      "lateral": -28.05
+    },
+    {
+      "distance": 840,
+      "lateral": 28.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 28.05
+    },
+    {
+      "distance": 60,
+      "lateral": -28.05
+    },
+    {
+      "distance": 72,
+      "lateral": 28.05
+    },
+    {
+      "distance": 84,
+      "lateral": -28.05
+    },
+    {
+      "distance": 96,
+      "lateral": 28.05
+    },
+    {
+      "distance": 108,
+      "lateral": -28.05
+    },
+    {
+      "distance": 216,
+      "lateral": 28.05
+    },
+    {
+      "distance": 228,
+      "lateral": -28.05
+    },
+    {
+      "distance": 240,
+      "lateral": 28.05
+    },
+    {
+      "distance": 252,
+      "lateral": -28.05
+    },
+    {
+      "distance": 264,
+      "lateral": 28.05
+    },
+    {
+      "distance": 276,
+      "lateral": -28.05
+    },
+    {
+      "distance": 288,
+      "lateral": 28.05
+    }
+  ]
+}

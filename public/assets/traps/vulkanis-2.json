@@ -1,0 +1,148 @@
+{
+  "trackId": "vulkanis-2",
+  "worldIndex": 6,
+  "crates": [
+    {
+      "distance": 384,
+      "lateral": -28.05
+    },
+    {
+      "distance": 396,
+      "lateral": 28.05
+    },
+    {
+      "distance": 408,
+      "lateral": -28.05
+    },
+    {
+      "distance": 420,
+      "lateral": 28.05
+    },
+    {
+      "distance": 432,
+      "lateral": -28.05
+    },
+    {
+      "distance": 444,
+      "lateral": 28.05
+    },
+    {
+      "distance": 456,
+      "lateral": -28.05
+    },
+    {
+      "distance": 468,
+      "lateral": 28.05
+    },
+    {
+      "distance": 480,
+      "lateral": -28.05
+    },
+    {
+      "distance": 492,
+      "lateral": 28.05
+    },
+    {
+      "distance": 504,
+      "lateral": -28.05
+    },
+    {
+      "distance": 516,
+      "lateral": 28.05
+    },
+    {
+      "distance": 528,
+      "lateral": -28.05
+    },
+    {
+      "distance": 540,
+      "lateral": 28.05
+    },
+    {
+      "distance": 552,
+      "lateral": -28.05
+    },
+    {
+      "distance": 564,
+      "lateral": 28.05
+    },
+    {
+      "distance": 672,
+      "lateral": -28.05
+    },
+    {
+      "distance": 684,
+      "lateral": 28.05
+    },
+    {
+      "distance": 696,
+      "lateral": -28.05
+    },
+    {
+      "distance": 708,
+      "lateral": 28.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 28.05
+    },
+    {
+      "distance": 216,
+      "lateral": -28.05
+    },
+    {
+      "distance": 228,
+      "lateral": 28.05
+    },
+    {
+      "distance": 240,
+      "lateral": -28.05
+    },
+    {
+      "distance": 252,
+      "lateral": 28.05
+    },
+    {
+      "distance": 264,
+      "lateral": -28.05
+    },
+    {
+      "distance": 276,
+      "lateral": 28.05
+    },
+    {
+      "distance": 288,
+      "lateral": -28.05
+    },
+    {
+      "distance": 300,
+      "lateral": 28.05
+    },
+    {
+      "distance": 312,
+      "lateral": -28.05
+    },
+    {
+      "distance": 324,
+      "lateral": 28.05
+    },
+    {
+      "distance": 336,
+      "lateral": -28.05
+    },
+    {
+      "distance": 348,
+      "lateral": 28.05
+    },
+    {
+      "distance": 360,
+      "lateral": -28.05
+    },
+    {
+      "distance": 372,
+      "lateral": 28.05
+    }
+  ]
+}

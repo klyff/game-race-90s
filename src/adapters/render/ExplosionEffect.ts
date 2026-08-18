@@ -140,7 +140,7 @@ export interface BurstOptions {
   readonly leaveBurnMark?: boolean;
   /** Skip geometric shards when the scrap roster is handling debris. */
   readonly skipShards?: boolean;
-  /** Visual size multiplier. Gasoline barrels pass 1.3; mines and missiles omit it. */
+  /** Visual size multiplier. Gasoline barrels pass 1.8; mines and missiles omit it. */
   readonly scale?: number;
 }
 

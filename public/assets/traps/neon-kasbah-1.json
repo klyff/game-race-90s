@@ -1,0 +1,164 @@
+{
+  "trackId": "neon-kasbah-1",
+  "worldIndex": 7,
+  "crates": [
+    {
+      "distance": 480,
+      "lateral": -20.05
+    },
+    {
+      "distance": 492,
+      "lateral": 20.05
+    },
+    {
+      "distance": 504,
+      "lateral": -20.05
+    },
+    {
+      "distance": 516,
+      "lateral": 20.05
+    },
+    {
+      "distance": 528,
+      "lateral": -20.05
+    },
+    {
+      "distance": 540,
+      "lateral": 20.05
+    },
+    {
+      "distance": 552,
+      "lateral": -20.05
+    },
+    {
+      "distance": 564,
+      "lateral": 20.05
+    },
+    {
+      "distance": 576,
+      "lateral": -20.05
+    },
+    {
+      "distance": 588,
+      "lateral": 20.05
+    },
+    {
+      "distance": 696,
+      "lateral": -20.05
+    },
+    {
+      "distance": 708,
+      "lateral": 20.05
+    },
+    {
+      "distance": 720,
+      "lateral": -20.05
+    },
+    {
+      "distance": 732,
+      "lateral": 20.05
+    },
+    {
+      "distance": 744,
+      "lateral": -20.05
+    },
+    {
+      "distance": 756,
+      "lateral": 20.05
+    },
+    {
+      "distance": 768,
+      "lateral": -20.05
+    },
+    {
+      "distance": 780,
+      "lateral": 20.05
+    },
+    {
+      "distance": 792,
+      "lateral": -20.05
+    },
+    {
+      "distance": 888,
+      "lateral": 20.05
+    },
+    {
+      "distance": 900,
+      "lateral": -20.05
+    },
+    {
+      "distance": 912,
+      "lateral": 20.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 20.05
+    },
+    {
+      "distance": 120,
+      "lateral": -20.05
+    },
+    {
+      "distance": 132,
+      "lateral": 20.05
+    },
+    {
+      "distance": 144,
+      "lateral": -20.05
+    },
+    {
+      "distance": 156,
+      "lateral": 20.05
+    },
+    {
+      "distance": 168,
+      "lateral": -20.05
+    },
+    {
+      "distance": 180,
+      "lateral": 20.05
+    },
+    {
+      "distance": 192,
+      "lateral": -20.05
+    },
+    {
+      "distance": 288,
+      "lateral": 20.05
+    },
+    {
+      "distance": 300,
+      "lateral": -20.05
+    },
+    {
+      "distance": 312,
+      "lateral": 20.05
+    },
+    {
+      "distance": 324,
+      "lateral": -20.05
+    },
+    {
+      "distance": 336,
+      "lateral": 20.05
+    },
+    {
+      "distance": 348,
+      "lateral": -20.05
+    },
+    {
+      "distance": 360,
+      "lateral": 20.05
+    },
+    {
+      "distance": 456,
+      "lateral": -20.05
+    },
+    {
+      "distance": 468,
+      "lateral": 20.05
+    }
+  ]
+}

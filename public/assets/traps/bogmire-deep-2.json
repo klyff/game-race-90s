@@ -1,0 +1,100 @@
+{
+  "trackId": "bogmire-deep-2",
+  "worldIndex": 3,
+  "crates": [
+    {
+      "distance": 360,
+      "lateral": -24.05
+    },
+    {
+      "distance": 372,
+      "lateral": 24.05
+    },
+    {
+      "distance": 384,
+      "lateral": -24.05
+    },
+    {
+      "distance": 396,
+      "lateral": 24.05
+    },
+    {
+      "distance": 408,
+      "lateral": -24.05
+    },
+    {
+      "distance": 420,
+      "lateral": 24.05
+    },
+    {
+      "distance": 432,
+      "lateral": -24.05
+    },
+    {
+      "distance": 444,
+      "lateral": 24.05
+    },
+    {
+      "distance": 456,
+      "lateral": -24.05
+    },
+    {
+      "distance": 468,
+      "lateral": 24.05
+    },
+    {
+      "distance": 480,
+      "lateral": -24.05
+    },
+    {
+      "distance": 492,
+      "lateral": 24.05
+    },
+    {
+      "distance": 504,
+      "lateral": -24.05
+    },
+    {
+      "distance": 516,
+      "lateral": 24.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 96,
+      "lateral": 24.05
+    },
+    {
+      "distance": 108,
+      "lateral": -24.05
+    },
+    {
+      "distance": 180,
+      "lateral": 24.05
+    },
+    {
+      "distance": 192,
+      "lateral": -24.05
+    },
+    {
+      "distance": 204,
+      "lateral": 24.05
+    },
+    {
+      "distance": 216,
+      "lateral": -24.05
+    },
+    {
+      "distance": 324,
+      "lateral": 24.05
+    },
+    {
+      "distance": 336,
+      "lateral": -24.05
+    },
+    {
+      "distance": 348,
+      "lateral": 24.05
+    }
+  ]
+}

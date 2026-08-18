@@ -67,7 +67,7 @@ export class ImpactVoice {
   }
 
   /** @param intensity 0..1, scaled from the speed the car hit the wall with. */
-  play(intensity: number): void {
+  play(intensity: number, timbre: 'metal' | 'wood' = 'metal'): void {
     if (!this.isUsable()) return;
 
     const now = this.context.currentTime;
@@ -80,17 +80,22 @@ export class ImpactVoice {
     const source = this.context.createBufferSource();
     source.buffer = this.burstBuffer;
 
+    const wood = timbre === 'wood';
+    const startCutoff = wood ? 6200 : ImpactVoice.START_CUTOFF_HZ;
+    const endCutoff = wood ? 380 : ImpactVoice.END_CUTOFF_HZ;
+    const decay = wood ? 0.12 : ImpactVoice.SWEEP_TIME_CONSTANT;
+
     const filter = this.context.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.Q.value = 1;
-    filter.frequency.setValueAtTime(ImpactVoice.START_CUTOFF_HZ * clamped, now);
-    filter.frequency.setTargetAtTime(ImpactVoice.END_CUTOFF_HZ, now, ImpactVoice.SWEEP_TIME_CONSTANT);
+    filter.Q.value = wood ? 0.7 : 1;
+    filter.frequency.setValueAtTime(startCutoff * clamped, now);
+    filter.frequency.setTargetAtTime(endCutoff, now, decay);
 
     const gain = this.context.createGain();
-    const peakGain = ImpactVoice.MAX_GAIN * clamped;
+    const peakGain = ImpactVoice.MAX_GAIN * clamped * (wood ? 0.85 : 1);
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(peakGain, now + ImpactVoice.ATTACK_SECONDS);
-    gain.gain.setTargetAtTime(0, now + ImpactVoice.ATTACK_SECONDS, ImpactVoice.SWEEP_TIME_CONSTANT);
+    gain.gain.setTargetAtTime(0, now + ImpactVoice.ATTACK_SECONDS, decay);
 
     source.connect(filter);
     filter.connect(gain);

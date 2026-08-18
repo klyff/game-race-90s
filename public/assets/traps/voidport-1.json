@@ -1,0 +1,196 @@
+{
+  "trackId": "voidport-1",
+  "worldIndex": 9,
+  "crates": [
+    {
+      "distance": 348,
+      "lateral": -24.05
+    },
+    {
+      "distance": 360,
+      "lateral": 24.05
+    },
+    {
+      "distance": 372,
+      "lateral": -24.05
+    },
+    {
+      "distance": 384,
+      "lateral": 24.05
+    },
+    {
+      "distance": 396,
+      "lateral": -24.05
+    },
+    {
+      "distance": 516,
+      "lateral": 24.05
+    },
+    {
+      "distance": 528,
+      "lateral": -24.05
+    },
+    {
+      "distance": 540,
+      "lateral": 24.05
+    },
+    {
+      "distance": 552,
+      "lateral": -24.05
+    },
+    {
+      "distance": 564,
+      "lateral": 24.05
+    },
+    {
+      "distance": 576,
+      "lateral": -24.05
+    },
+    {
+      "distance": 588,
+      "lateral": 24.05
+    },
+    {
+      "distance": 600,
+      "lateral": -24.05
+    },
+    {
+      "distance": 612,
+      "lateral": 24.05
+    },
+    {
+      "distance": 684,
+      "lateral": -24.05
+    },
+    {
+      "distance": 696,
+      "lateral": 24.05
+    },
+    {
+      "distance": 708,
+      "lateral": -24.05
+    },
+    {
+      "distance": 720,
+      "lateral": 24.05
+    },
+    {
+      "distance": 732,
+      "lateral": -24.05
+    },
+    {
+      "distance": 744,
+      "lateral": 24.05
+    },
+    {
+      "distance": 756,
+      "lateral": -24.05
+    },
+    {
+      "distance": 768,
+      "lateral": 24.05
+    },
+    {
+      "distance": 780,
+      "lateral": -24.05
+    },
+    {
+      "distance": 792,
+      "lateral": 24.05
+    },
+    {
+      "distance": 804,
+      "lateral": -24.05
+    },
+    {
+      "distance": 816,
+      "lateral": 24.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 24.05
+    },
+    {
+      "distance": 60,
+      "lateral": -24.05
+    },
+    {
+      "distance": 72,
+      "lateral": 24.05
+    },
+    {
+      "distance": 84,
+      "lateral": -24.05
+    },
+    {
+      "distance": 96,
+      "lateral": 24.05
+    },
+    {
+      "distance": 108,
+      "lateral": -24.05
+    },
+    {
+      "distance": 120,
+      "lateral": 24.05
+    },
+    {
+      "distance": 132,
+      "lateral": -24.05
+    },
+    {
+      "distance": 144,
+      "lateral": 24.05
+    },
+    {
+      "distance": 156,
+      "lateral": -24.05
+    },
+    {
+      "distance": 168,
+      "lateral": 24.05
+    },
+    {
+      "distance": 180,
+      "lateral": -24.05
+    },
+    {
+      "distance": 216,
+      "lateral": 24.05
+    },
+    {
+      "distance": 228,
+      "lateral": -24.05
+    },
+    {
+      "distance": 240,
+      "lateral": 24.05
+    },
+    {
+      "distance": 252,
+      "lateral": -24.05
+    },
+    {
+      "distance": 264,
+      "lateral": 24.05
+    },
+    {
+      "distance": 300,
+      "lateral": -24.05
+    },
+    {
+      "distance": 312,
+      "lateral": 24.05
+    },
+    {
+      "distance": 324,
+      "lateral": -24.05
+    },
+    {
+      "distance": 336,
+      "lateral": 24.05
+    }
+  ]
+}

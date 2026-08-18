@@ -468,8 +468,8 @@ describe('RaceField hop', () => {
 });
 
 describe('resolveBurstScale', () => {
-  it('keeps 1.3 and treats missing or junk as 1', () => {
-    expect(resolveBurstScale(GASOLINE_BURST_SCALE)).toBe(1.3);
+  it('keeps 1.8 and treats missing or junk as 1', () => {
+    expect(resolveBurstScale(GASOLINE_BURST_SCALE)).toBe(1.8);
     expect(resolveBurstScale(undefined)).toBe(1);
     expect(resolveBurstScale(Number.NaN)).toBe(1);
     expect(resolveBurstScale(0)).toBe(1);
@@ -485,29 +485,33 @@ describe('gasoline barrels', () => {
     expect(aged[0]?.kind).toBe(HAZARD_KIND.GASOLINE);
   });
 
-  it('Thunder Basin starts with three armed gasoline barrels', () => {
+  it('Thunder Basin starts with two armed gasoline seats, not the old three', () => {
     const field = twoCarField();
-    const barrels = field.activeHazards.filter(hazard => hazard.kind === HAZARD_KIND.GASOLINE);
-    expect(barrels).toHaveLength(3);
+    const barrels = field.activeHazards.filter(
+      hazard => hazard.kind === HAZARD_KIND.GASOLINE && hazard.stackIndex === 0,
+    );
+    expect(barrels).toHaveLength(2);
     expect(barrels.every(barrel => barrel.ownerArmed)).toBe(true);
+    expect(
+      field.activeHazards.filter(hazard => hazard.kind === HAZARD_KIND.CRATE && hazard.stackIndex === 0),
+    ).toHaveLength(4);
   });
 
-  it('a gasoline hit deals mine damage, does not spin, and queues a 1.3× burst', () => {
+  it('a gasoline hit wrecks the contact car and queues a 1.8× burn burst', () => {
     const field = twoCarField();
     const barrel = field.activeHazards.find(hazard => hazard.kind === HAZARD_KIND.GASOLINE)!;
     const rival = field.racers.find(racer => !racer.isPlayer)!;
-    const before = rival.integrity.integrity;
     const yawBefore = rival.state.yawSpin;
     rival.state = { ...rival.state, position: barrel.position };
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
-    const lost = before - rival.integrity.integrity;
-    const expected = scaledWeaponDamage(MINE_RAW_DAMAGE, undefined) * (1 - rival.stats.armor);
-    expect(lost).toBeCloseTo(expected, 5);
+    expect(rival.integrity.condition).toBe(CAR_CONDITION.DESTROYED);
     expect(rival.state.yawSpin).toBe(yawBefore);
     expect(field.activeHazards.some(hazard => hazard.id === barrel.id)).toBe(false);
-    expect(field.hazardBurstsThisStep).toEqual([
-      { position: barrel.position, scale: GASOLINE_BURST_SCALE },
-    ]);
+    expect(
+      field.hazardBurstsThisStep.some(
+        burst => burst.scale === GASOLINE_BURST_SCALE && burst.leaveBurnMark === true,
+      ),
+    ).toBe(true);
   });
 
   it('a mine hit queues a 1× burst at the hazard', () => {
@@ -526,8 +530,30 @@ describe('gasoline barrels', () => {
     const rival = field.racers.find(racer => !racer.isPlayer)!;
     rival.state = { ...rival.state, position: barrel.position };
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
-    expect(field.activeHazards.filter(hazard => hazard.kind === HAZARD_KIND.GASOLINE)).toHaveLength(2);
     field.reset();
-    expect(field.activeHazards.filter(hazard => hazard.kind === HAZARD_KIND.GASOLINE)).toHaveLength(3);
+    expect(
+      field.activeHazards.filter(
+        hazard => hazard.kind === HAZARD_KIND.GASOLINE && hazard.stackIndex === 0,
+      ),
+    ).toHaveLength(2);
+  });
+});
+
+describe('wooden crates', () => {
+  it('costs energy and leaves wood chips', () => {
+    const field = twoCarField();
+    const crate = field.activeHazards.find(hazard => hazard.kind === HAZARD_KIND.CRATE)!;
+    const rival = field.racers.find(racer => !racer.isPlayer)!;
+    rival.state = {
+      ...rival.state,
+      position: crate.position,
+      velocity: { x: 40, y: 0 },
+    };
+    const before = rival.integrity.integrity;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(before - rival.integrity.integrity).toBeCloseTo(0.07, 5);
+    expect(field.activeHazards.some(hazard => hazard.id === crate.id)).toBe(false);
+    expect(field.woodBurstsThisStep.length).toBeGreaterThan(0);
+    expect(field.trapSmashesThisStep.some(smash => smash.kind === 'crate')).toBe(true);
   });
 });

@@ -1,0 +1,116 @@
+{
+  "trackId": "cryo-hollow-2",
+  "worldIndex": 4,
+  "crates": [
+    {
+      "distance": 336,
+      "lateral": -23.05
+    },
+    {
+      "distance": 348,
+      "lateral": 23.05
+    },
+    {
+      "distance": 360,
+      "lateral": -23.05
+    },
+    {
+      "distance": 444,
+      "lateral": 23.05
+    },
+    {
+      "distance": 456,
+      "lateral": -23.05
+    },
+    {
+      "distance": 468,
+      "lateral": 23.05
+    },
+    {
+      "distance": 480,
+      "lateral": -23.05
+    },
+    {
+      "distance": 492,
+      "lateral": 23.05
+    },
+    {
+      "distance": 504,
+      "lateral": -23.05
+    },
+    {
+      "distance": 516,
+      "lateral": 23.05
+    },
+    {
+      "distance": 528,
+      "lateral": -23.05
+    },
+    {
+      "distance": 540,
+      "lateral": 23.05
+    },
+    {
+      "distance": 552,
+      "lateral": -23.05
+    },
+    {
+      "distance": 564,
+      "lateral": 23.05
+    },
+    {
+      "distance": 576,
+      "lateral": -23.05
+    },
+    {
+      "distance": 588,
+      "lateral": 23.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 108,
+      "lateral": 23.05
+    },
+    {
+      "distance": 120,
+      "lateral": -23.05
+    },
+    {
+      "distance": 228,
+      "lateral": 23.05
+    },
+    {
+      "distance": 240,
+      "lateral": -23.05
+    },
+    {
+      "distance": 252,
+      "lateral": 23.05
+    },
+    {
+      "distance": 264,
+      "lateral": -23.05
+    },
+    {
+      "distance": 276,
+      "lateral": 23.05
+    },
+    {
+      "distance": 288,
+      "lateral": -23.05
+    },
+    {
+      "distance": 300,
+      "lateral": 23.05
+    },
+    {
+      "distance": 312,
+      "lateral": -23.05
+    },
+    {
+      "distance": 324,
+      "lateral": 23.05
+    }
+  ]
+}

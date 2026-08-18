@@ -38,6 +38,13 @@ export function camerasCacheKey(trackId: string): string {
 /** Where `npm run gen:cameras` writes its output, relative to the served root. */
 export const CAMERAS_ASSET_DIRECTORY = 'assets/cameras';
 
+export function trapsCacheKey(trackId: string): string {
+  return `track-traps:${trackId}`;
+}
+
+/** Where `npm run gen:traps` writes its output, relative to the served root. */
+export const TRAPS_ASSET_DIRECTORY = 'assets/traps';
+
 /** Where `npm run gen:sprites` writes its output, relative to the served root. */
 export const CAR_ASSET_DIRECTORY = 'assets/cars';
 
@@ -76,6 +83,17 @@ export const HUD_JUMP_KEY = 'hud-jump';
 /** Dirty red gasoline barrel still, used as a world hazard. */
 export const GASOLINE_SPRITE_KEY = 'world-gasoline';
 export const GASOLINE_SPRITE_FILE = 'world-gasoline.png';
+
+/** Optional isometric world props. Missing files fall back to HUD still / geometry. */
+export const TRAP_CRATE_KEY = 'trap-crate';
+export const TRAP_CRATE_FILE = 'crate.png';
+export const TRAP_GASOLINE_KEY = 'trap-gasoline';
+export const TRAP_GASOLINE_FILE = 'gasoline.png';
+
+export const WOOD_CHIP_SPRITES = [1, 2, 3, 4, 5, 6].map(n => ({
+  key: `trap-wood-chip-${String(n).padStart(2, '0')}`,
+  file: `wood-chip-${String(n).padStart(2, '0')}.png`,
+}));
 
 /** Where the metal-scrap pieces live (`scrap-01.png` …). */
 export const DEBRIS_ASSET_DIRECTORY = 'assets/debris';

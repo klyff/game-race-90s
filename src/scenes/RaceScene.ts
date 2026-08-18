@@ -15,8 +15,10 @@ import {
 import { CameraDirector } from '../domain/camera/CameraDirector.ts';
 import { CameraImpulse } from '../domain/camera/CameraImpulse.ts';
 import { parseTrackCameraPreset } from '../data/tracks/TrackCameras.ts';
+import { parseTrackTrapCatalog } from '../data/tracks/TrackTraps.ts';
 import { ExplosionEffect } from '../adapters/render/ExplosionEffect.ts';
 import { MetalScrapEffect } from '../adapters/render/MetalScrapEffect.ts';
+import { WoodDebrisEffect } from '../adapters/render/WoodDebrisEffect.ts';
 import type { HudReadout } from '../adapters/render/HudFormat.ts';
 import { IsoProjection } from '../adapters/render/IsoProjection.ts';
 import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
@@ -60,6 +62,8 @@ import type { TrackDefinition } from '../domain/track/TrackDefinition.ts';
 import { TrackSpline } from '../domain/track/TrackSpline.ts';
 import { CAR_CONDITION, IMPACT_DAMAGE_THRESHOLD } from '../domain/vehicle/CarIntegrity.ts';
 import { missileCapacity } from '../domain/weapons/WeaponInventory.ts';
+import { trapSeed } from '../domain/traps/pickRaceTraps.ts';
+import { TRAP_KIND } from '../domain/traps/TrapCatalog.ts';
 import { HAZARD_KIND } from '../domain/weapons/Hazard.ts';
 import {
   BURN_MARK_LIFETIME_LAPS,
@@ -71,8 +75,11 @@ import type { ResultsEntry, ResultsSceneData } from './ResultsScene.ts';
 import type { PauseSceneData } from './PauseScene.ts';
 import {
   camerasCacheKey,
+  trapsCacheKey,
   DEFAULT_TRACK_ID,
   GASOLINE_SPRITE_KEY,
+  TRAP_CRATE_KEY,
+  TRAP_GASOLINE_KEY,
   MINE_SPRITE_KEY,
   MISSILE_SPRITE_KEY,
   OIL_SPRITE_KEY,
@@ -150,7 +157,7 @@ interface PendingExplosion {
   readonly intensity: number;
   /** Car wrecks stamp a dark asphalt scorch; weapon puffs do not. */
   readonly leaveBurnMark?: boolean;
-  /** Visual size. Gasoline barrels pass 1.3. */
+  /** Visual size. Gasoline barrels pass 1.8. */
   readonly scale?: number;
 }
 
@@ -190,6 +197,7 @@ export class RaceScene extends Phaser.Scene {
   private tyreMarks!: TyreMarks;
   private explosions!: ExplosionEffect;
   private scraps!: MetalScrapEffect;
+  private wood!: WoodDebrisEffect;
   private chaseCamera!: ChaseCamera;
   private zoomPolicy!: CameraZoomPolicy;
   private cameraDirector = new CameraDirector();
@@ -276,6 +284,7 @@ export class RaceScene extends Phaser.Scene {
     this.tyreMarks = new TyreMarks(this, this.projection);
     this.hitRewards = new HitRewardEffect(this, this.projection);
     this.scraps = new MetalScrapEffect(this, this.projection);
+    this.wood = new WoodDebrisEffect(this, this.projection);
     this.explosions = new ExplosionEffect(this, this.projection, {
       burnMarkLifetimeSeconds:
         BURN_MARK_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED),
@@ -287,9 +296,13 @@ export class RaceScene extends Phaser.Scene {
     this.loop = new FixedStepLoop(SIMULATION_STEP_SECONDS);
     this.audio = new RaceAudio(this.playerSheetStats(), musicForTrackId(this.track.id));
 
+    const planet = planetForTrackId(this.trackId);
     this.field = new RaceField(this.buildEntries(), this.track, this.spline, {
       trackLines: this.trackLines,
-      planetId: planetForTrackId(this.trackId)?.id,
+      planetId: planet?.id,
+      worldIndex: planet?.index ?? 1,
+      trapCatalog: this.loadTrapCatalog(),
+      trapSeed: trapSeed(planet?.seed ?? 1, this.trackId),
     });
     this.views = this.field.racers.map(racer =>
       new VehicleView(this, this.manifest, findCarSheet(this.manifest, racer.carId), this.projection),
@@ -340,9 +353,12 @@ export class RaceScene extends Phaser.Scene {
     this.tyreMarks.update(deltaSeconds);
     this.presentExplosions();
     this.presentScraps();
+    this.presentWood();
+    this.presentTrapSmashes();
     this.updatePlayerAudio();
     this.explosions.update(deltaSeconds);
     this.scraps.update(deltaSeconds);
+    this.wood.update(deltaSeconds);
     this.chaseCamera.follow(this.followedRacer().state, deltaSeconds, this.targetZoom(deltaSeconds));
     const impulse = this.cameraImpulse.sample(deltaSeconds);
     this.chaseCamera.applyOverlay(
@@ -522,6 +538,7 @@ export class RaceScene extends Phaser.Scene {
         position: burst.position,
         intensity: HAZARD_BURST_INTENSITY,
         scale: burst.scale,
+        leaveBurnMark: burst.leaveBurnMark === true,
       });
       this.weaponThisFrame = true;
     }
@@ -618,15 +635,27 @@ export class RaceScene extends Phaser.Scene {
       const screen = this.projection.toScreen(hazard.position);
       const isOil = hazard.kind === HAZARD_KIND.OIL;
       const isGasoline = hazard.kind === HAZARD_KIND.GASOLINE;
-      const artKey = isOil ? OIL_SPRITE_KEY : isGasoline ? GASOLINE_SPRITE_KEY : MINE_SPRITE_KEY;
+      const isCrate = hazard.kind === HAZARD_KIND.CRATE;
+      const gasolineKey = this.textures.exists(TRAP_GASOLINE_KEY)
+        ? TRAP_GASOLINE_KEY
+        : GASOLINE_SPRITE_KEY;
+      const artKey = isOil
+        ? OIL_SPRITE_KEY
+        : isCrate
+          ? TRAP_CRATE_KEY
+          : isGasoline
+            ? gasolineKey
+            : MINE_SPRITE_KEY;
       if (this.textures.exists(artKey)) {
         const sprite = this.hazardSprite(hazardSlot, artKey);
         hazardSlot += 1;
+        const height = (hazard.stackIndex ?? 0) * 1.15;
+        const screen = this.projection.toScreen(hazard.position, height);
         sprite
           .setVisible(true)
           .setPosition(screen.x, screen.y)
           .setFrame(0)
-          .setDepth(this.projection.depthOf(hazard.position) - 0.2);
+          .setDepth(this.projection.depthOf(hazard.position) - 0.2 + height);
         const display = hazard.radius * 2;
         this.scaleWeaponSprite(sprite, display * px);
         if (isOil) {
@@ -634,15 +663,24 @@ export class RaceScene extends Phaser.Scene {
         }
       } else {
         const radius = Math.max(10, hazard.radius * px * 0.85);
+        const height = (hazard.stackIndex ?? 0) * 8;
         if (isOil) {
           this.weaponLayer.fillStyle(0x1a1208, 0.85);
-          this.weaponLayer.fillEllipse(screen.x, screen.y, radius * 2, radius);
+          this.weaponLayer.fillEllipse(screen.x, screen.y - height, radius * 2, radius);
         } else if (isGasoline) {
           this.weaponLayer.fillStyle(0xc43a28, 1);
-          this.weaponLayer.fillEllipse(screen.x, screen.y, radius * 1.4, radius * 1.8);
+          this.weaponLayer.fillEllipse(screen.x, screen.y - height, radius * 1.4, radius * 1.8);
+        } else if (isCrate) {
+          this.weaponLayer.fillStyle(0xb07838, 1);
+          this.weaponLayer.fillRect(
+            screen.x - radius * 0.7,
+            screen.y - radius * 0.7 - height,
+            radius * 1.4,
+            radius * 1.4,
+          );
         } else {
           this.weaponLayer.fillStyle(0xff3344, 1);
-          this.weaponLayer.fillCircle(screen.x, screen.y, radius);
+          this.weaponLayer.fillCircle(screen.x, screen.y - height, radius);
         }
       }
     }
@@ -699,6 +737,22 @@ export class RaceScene extends Phaser.Scene {
       this.scraps.burst(scrap.position, scrap.impactSpeed, scrap.exploded);
     }
     this.pendingScraps = [];
+  }
+
+  private presentWood(): void {
+    for (const position of this.field.woodBurstsThisStep) {
+      this.wood.burst(position);
+    }
+  }
+
+  private presentTrapSmashes(): void {
+    for (const smash of this.field.trapSmashesThisStep) {
+      if (smash.kind === TRAP_KIND.CRATE) {
+        this.audio.playCrateHit();
+      } else {
+        this.audio.playDrumHit();
+      }
+    }
   }
 
   /**
@@ -915,6 +969,18 @@ export class RaceScene extends Phaser.Scene {
     return analyzeTrackCameras(this.track);
   }
 
+  private loadTrapCatalog() {
+    const raw = this.cache.json.get(trapsCacheKey(this.trackId));
+    if (raw !== undefined && raw !== null) {
+      try {
+        return parseTrackTrapCatalog(raw);
+      } catch {
+        /* Generated file missing or stale — analyze live. */
+      }
+    }
+    return undefined;
+  }
+
   private manualZoomOut(): number {
     const bounds = this.trackRenderer.bounds;
     return zoomToFitHalfBounds(
@@ -1115,6 +1181,7 @@ export class RaceScene extends Phaser.Scene {
     this.tyreMarks.clear();
     this.explosions.clear();
     this.scraps.clear();
+    this.wood.clear();
     this.audio.reset();
     this.field.racers.forEach((racer, index) => {
       this.views[index]?.setVisible(true);
@@ -1285,6 +1352,7 @@ export class RaceScene extends Phaser.Scene {
     this.tyreMarks.destroy();
     this.hitRewards.destroy();
     this.scraps.destroy();
+    this.wood.destroy();
     this.explosions.destroy();
     this.trackRenderer.destroy();
     this.overlay.destroy();

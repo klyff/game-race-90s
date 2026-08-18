@@ -1,0 +1,68 @@
+{
+  "trackId": "thunder-basin",
+  "worldIndex": 1,
+  "crates": [
+    {
+      "distance": 108,
+      "lateral": -24.05
+    },
+    {
+      "distance": 120,
+      "lateral": 24.05
+    },
+    {
+      "distance": 132,
+      "lateral": -24.05
+    },
+    {
+      "distance": 144,
+      "lateral": 24.05
+    },
+    {
+      "distance": 156,
+      "lateral": -24.05
+    },
+    {
+      "distance": 168,
+      "lateral": 24.05
+    },
+    {
+      "distance": 180,
+      "lateral": -24.05
+    },
+    {
+      "distance": 228,
+      "lateral": 24.05
+    },
+    {
+      "distance": 240,
+      "lateral": -24.05
+    },
+    {
+      "distance": 252,
+      "lateral": 24.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 24.05
+    },
+    {
+      "distance": 60,
+      "lateral": -24.05
+    },
+    {
+      "distance": 72,
+      "lateral": 24.05
+    },
+    {
+      "distance": 84,
+      "lateral": -24.05
+    },
+    {
+      "distance": 96,
+      "lateral": 24.05
+    }
+  ]
+}

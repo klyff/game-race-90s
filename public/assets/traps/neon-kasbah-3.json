@@ -1,0 +1,164 @@
+{
+  "trackId": "neon-kasbah-3",
+  "worldIndex": 7,
+  "crates": [
+    {
+      "distance": 444,
+      "lateral": -20.05
+    },
+    {
+      "distance": 456,
+      "lateral": 20.05
+    },
+    {
+      "distance": 468,
+      "lateral": -20.05
+    },
+    {
+      "distance": 480,
+      "lateral": 20.05
+    },
+    {
+      "distance": 492,
+      "lateral": -20.05
+    },
+    {
+      "distance": 504,
+      "lateral": 20.05
+    },
+    {
+      "distance": 516,
+      "lateral": -20.05
+    },
+    {
+      "distance": 528,
+      "lateral": 20.05
+    },
+    {
+      "distance": 624,
+      "lateral": -20.05
+    },
+    {
+      "distance": 636,
+      "lateral": 20.05
+    },
+    {
+      "distance": 648,
+      "lateral": -20.05
+    },
+    {
+      "distance": 660,
+      "lateral": 20.05
+    },
+    {
+      "distance": 672,
+      "lateral": -20.05
+    },
+    {
+      "distance": 684,
+      "lateral": 20.05
+    },
+    {
+      "distance": 780,
+      "lateral": -20.05
+    },
+    {
+      "distance": 792,
+      "lateral": 20.05
+    },
+    {
+      "distance": 804,
+      "lateral": -20.05
+    },
+    {
+      "distance": 816,
+      "lateral": 20.05
+    },
+    {
+      "distance": 828,
+      "lateral": -20.05
+    },
+    {
+      "distance": 840,
+      "lateral": 20.05
+    },
+    {
+      "distance": 852,
+      "lateral": -20.05
+    },
+    {
+      "distance": 864,
+      "lateral": 20.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 20.05
+    },
+    {
+      "distance": 84,
+      "lateral": -20.05
+    },
+    {
+      "distance": 96,
+      "lateral": 20.05
+    },
+    {
+      "distance": 108,
+      "lateral": -20.05
+    },
+    {
+      "distance": 120,
+      "lateral": 20.05
+    },
+    {
+      "distance": 132,
+      "lateral": -20.05
+    },
+    {
+      "distance": 144,
+      "lateral": 20.05
+    },
+    {
+      "distance": 156,
+      "lateral": -20.05
+    },
+    {
+      "distance": 168,
+      "lateral": 20.05
+    },
+    {
+      "distance": 276,
+      "lateral": -20.05
+    },
+    {
+      "distance": 288,
+      "lateral": 20.05
+    },
+    {
+      "distance": 300,
+      "lateral": -20.05
+    },
+    {
+      "distance": 312,
+      "lateral": 20.05
+    },
+    {
+      "distance": 324,
+      "lateral": -20.05
+    },
+    {
+      "distance": 408,
+      "lateral": 20.05
+    },
+    {
+      "distance": 420,
+      "lateral": -20.05
+    },
+    {
+      "distance": 432,
+      "lateral": 20.05
+    }
+  ]
+}

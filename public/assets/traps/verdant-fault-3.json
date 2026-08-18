@@ -1,0 +1,212 @@
+{
+  "trackId": "verdant-fault-3",
+  "worldIndex": 10,
+  "crates": [
+    {
+      "distance": 876,
+      "lateral": -22.05
+    },
+    {
+      "distance": 888,
+      "lateral": 22.05
+    },
+    {
+      "distance": 900,
+      "lateral": -22.05
+    },
+    {
+      "distance": 912,
+      "lateral": 22.05
+    },
+    {
+      "distance": 924,
+      "lateral": -22.05
+    },
+    {
+      "distance": 936,
+      "lateral": 22.05
+    },
+    {
+      "distance": 948,
+      "lateral": -22.05
+    },
+    {
+      "distance": 960,
+      "lateral": 22.05
+    },
+    {
+      "distance": 972,
+      "lateral": -22.05
+    },
+    {
+      "distance": 984,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1164,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1176,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1188,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1200,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1212,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1224,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1236,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1248,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1260,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1272,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1380,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1560,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1572,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1584,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1704,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1716,
+      "lateral": 22.05
+    },
+    {
+      "distance": 1728,
+      "lateral": -22.05
+    },
+    {
+      "distance": 1740,
+      "lateral": 22.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 22.05
+    },
+    {
+      "distance": 216,
+      "lateral": -22.05
+    },
+    {
+      "distance": 228,
+      "lateral": 22.05
+    },
+    {
+      "distance": 240,
+      "lateral": -22.05
+    },
+    {
+      "distance": 252,
+      "lateral": 22.05
+    },
+    {
+      "distance": 264,
+      "lateral": -22.05
+    },
+    {
+      "distance": 276,
+      "lateral": 22.05
+    },
+    {
+      "distance": 288,
+      "lateral": -22.05
+    },
+    {
+      "distance": 300,
+      "lateral": 22.05
+    },
+    {
+      "distance": 324,
+      "lateral": -22.05
+    },
+    {
+      "distance": 336,
+      "lateral": 22.05
+    },
+    {
+      "distance": 348,
+      "lateral": -22.05
+    },
+    {
+      "distance": 444,
+      "lateral": 22.05
+    },
+    {
+      "distance": 456,
+      "lateral": -22.05
+    },
+    {
+      "distance": 468,
+      "lateral": 22.05
+    },
+    {
+      "distance": 480,
+      "lateral": -22.05
+    },
+    {
+      "distance": 492,
+      "lateral": 22.05
+    },
+    {
+      "distance": 504,
+      "lateral": -22.05
+    },
+    {
+      "distance": 732,
+      "lateral": 22.05
+    },
+    {
+      "distance": 744,
+      "lateral": -22.05
+    },
+    {
+      "distance": 756,
+      "lateral": 22.05
+    },
+    {
+      "distance": 852,
+      "lateral": -22.05
+    },
+    {
+      "distance": 864,
+      "lateral": 22.05
+    }
+  ]
+}

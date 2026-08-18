@@ -184,6 +184,18 @@ export class RaceAudio {
     this.impact?.play(Math.min(1, impactSpeed / (maxSpeed * 0.5)));
   }
 
+  /** Wooden crate smash — brighter, shorter thump than a body panel. */
+  playCrateHit(): void {
+    if (this.context === null || this.muted) return;
+    this.impact?.play(0.7, 'wood');
+  }
+
+  /** Gasoline drum body hit, before the explosion voice. */
+  playDrumHit(): void {
+    if (this.context === null || this.muted) return;
+    this.impact?.play(0.9, 'metal');
+  }
+
   /**
    * A car has been destroyed. `intensity` 0..1 carries how close it was: the player's
    * own wreck is full volume, an NPC blowing up across the circuit is quieter, so the

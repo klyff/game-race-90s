@@ -1,5 +1,6 @@
 import { add, distance, fromAngle, scale } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
+import { CRATE_SIZE_OF_CAR } from '../traps/TrapRules.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
   DROP_BEHIND_CAR_LENGTHS,
@@ -13,6 +14,7 @@ export const HAZARD_KIND = {
   OIL: 'oil',
   MINE: 'mine',
   GASOLINE: 'gasoline',
+  CRATE: 'crate',
 } as const;
 export type HazardKind = (typeof HAZARD_KIND)[keyof typeof HAZARD_KIND];
 
@@ -40,6 +42,8 @@ export interface TrackHazard {
    * the owner on a later lap) can hit it.
    */
   readonly ownerArmed: boolean;
+  /** 0 = on the asphalt. Stacked traps sit above this. */
+  readonly stackIndex: number;
 }
 
 export interface HazardHit {
@@ -52,6 +56,7 @@ export interface HazardHit {
 export interface HazardBurst {
   readonly position: Vec2;
   readonly scale: number;
+  readonly leaveBurnMark?: boolean;
 }
 
 let nextHazardId = 1;
@@ -86,6 +91,7 @@ export function dropOil(
     lifeRemaining: Math.max(0, lifetimeSeconds),
     distance: distanceAlongTrack,
     ownerArmed: false,
+    stackIndex: 0,
   };
 }
 
@@ -108,6 +114,7 @@ export function dropMine(
     lifeRemaining: Number.POSITIVE_INFINITY,
     distance: distanceAlongTrack,
     ownerArmed: false,
+    stackIndex: 0,
   };
 }
 
@@ -119,6 +126,7 @@ export function placeGasoline(
   position: Vec2,
   collisionRadius: number,
   distanceAlongTrack: number,
+  stackIndex: number = 0,
 ): TrackHazard {
   const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * collisionRadius;
   const radius = Math.max(0.1, (carLength * GASOLINE_SIZE_OF_CAR) / 2);
@@ -131,6 +139,31 @@ export function placeGasoline(
     lifeRemaining: Number.POSITIVE_INFINITY,
     distance: distanceAlongTrack,
     ownerArmed: true,
+    stackIndex,
+  };
+}
+
+/**
+ * Track-placed wooden crate. Already armed. Hitting one costs speed and a little energy.
+ */
+export function placeCrate(
+  position: Vec2,
+  collisionRadius: number,
+  distanceAlongTrack: number,
+  stackIndex: number = 0,
+): TrackHazard {
+  const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * collisionRadius;
+  const radius = Math.max(0.1, (carLength * CRATE_SIZE_OF_CAR) / 2);
+  return {
+    id: nextHazardId++,
+    kind: HAZARD_KIND.CRATE,
+    ownerCarId: '',
+    position,
+    radius,
+    lifeRemaining: Number.POSITIVE_INFINITY,
+    distance: distanceAlongTrack,
+    ownerArmed: true,
+    stackIndex,
   };
 }
 
@@ -142,7 +175,11 @@ export function ageHazards(
   const dt = Number.isFinite(stepSeconds) && stepSeconds > 0 ? stepSeconds : 0;
   const next: TrackHazard[] = [];
   for (const hazard of hazards) {
-    if (hazard.kind === HAZARD_KIND.MINE || hazard.kind === HAZARD_KIND.GASOLINE) {
+    if (
+      hazard.kind === HAZARD_KIND.MINE ||
+      hazard.kind === HAZARD_KIND.GASOLINE ||
+      hazard.kind === HAZARD_KIND.CRATE
+    ) {
       next.push(hazard);
       continue;
     }
@@ -216,6 +253,26 @@ export function findHazardHits(
     }
   }
   return hits;
+}
+
+export function isTrackTrap(hazard: TrackHazard): boolean {
+  return hazard.kind === HAZARD_KIND.CRATE || hazard.kind === HAZARD_KIND.GASOLINE;
+}
+
+/** First crate or drum a missile overlaps. Oil and mines are not traps. */
+export function findMissileTrapHit(
+  missile: { readonly position: Vec2; readonly radius: number },
+  hazards: readonly TrackHazard[],
+): TrackHazard | null {
+  for (const hazard of hazards) {
+    if (!isTrackTrap(hazard)) {
+      continue;
+    }
+    if (distance(missile.position, hazard.position) <= missile.radius + hazard.radius) {
+      return hazard;
+    }
+  }
+  return null;
 }
 
 /**

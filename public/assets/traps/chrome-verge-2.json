@@ -1,0 +1,84 @@
+{
+  "trackId": "chrome-verge-2",
+  "worldIndex": 2,
+  "crates": [
+    {
+      "distance": 132,
+      "lateral": -26.05
+    },
+    {
+      "distance": 144,
+      "lateral": 26.05
+    },
+    {
+      "distance": 156,
+      "lateral": -26.05
+    },
+    {
+      "distance": 168,
+      "lateral": 26.05
+    },
+    {
+      "distance": 180,
+      "lateral": -26.05
+    },
+    {
+      "distance": 192,
+      "lateral": 26.05
+    },
+    {
+      "distance": 204,
+      "lateral": -26.05
+    },
+    {
+      "distance": 216,
+      "lateral": 26.05
+    },
+    {
+      "distance": 228,
+      "lateral": -26.05
+    },
+    {
+      "distance": 240,
+      "lateral": 26.05
+    },
+    {
+      "distance": 252,
+      "lateral": -26.05
+    },
+    {
+      "distance": 264,
+      "lateral": 26.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 26.05
+    },
+    {
+      "distance": 60,
+      "lateral": -26.05
+    },
+    {
+      "distance": 72,
+      "lateral": 26.05
+    },
+    {
+      "distance": 84,
+      "lateral": -26.05
+    },
+    {
+      "distance": 96,
+      "lateral": 26.05
+    },
+    {
+      "distance": 108,
+      "lateral": -26.05
+    },
+    {
+      "distance": 120,
+      "lateral": 26.05
+    }
+  ]
+}

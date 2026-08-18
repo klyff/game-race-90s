@@ -1,7 +1,7 @@
 import { RACE_PHASE } from '../constants.ts';
 import type { InputCommand } from '../input/InputCommand.ts';
 import { IDLE_INPUT } from '../input/InputCommand.ts';
-import { add, angleOf, dot, length, lerp, normalize, scale, subtract, VEC2_ZERO } from '../math/Vec2.ts';
+import { add, angleOf, distance, dot, length, lerp, normalize, scale, subtract, VEC2_ZERO } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
 import { resolveWallContact } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
@@ -11,6 +11,7 @@ import { CONTACT_ATTACKER, contactAttackCredit, resolveCarContact } from '../veh
 import {
   applyImpactDamage,
   applyWeaponDamage,
+  applyDirectDamage,
   CAR_CONDITION,
   createCarIntegrity,
   DAMAGE_ROLE,
@@ -81,13 +82,29 @@ import {
   dropMine,
   dropOil,
   findHazardHits,
+  findMissileTrapHit,
   HAZARD_KIND,
+  isTrackTrap,
   oilYawSpinForArmor,
+  placeCrate,
   placeGasoline,
 } from '../weapons/Hazard.ts';
 import type { HazardBurst, TrackHazard } from '../weapons/Hazard.ts';
 import { findMissileHit, launchMissile, stepMissile } from '../weapons/Missile.ts';
 import type { Missile } from '../weapons/Missile.ts';
+import { analyzeTrackTraps } from '../traps/analyzeTrackTraps.ts';
+import { pickRaceTraps, trapSeed } from '../traps/pickRaceTraps.ts';
+import type { PickedRaceTrap, TrackDebris, TrackTrapCatalog, TrapSmashCue } from '../traps/TrapCatalog.ts';
+import { TRAP_KIND } from '../traps/TrapCatalog.ts';
+import {
+  CRATE_ENERGY_LOSS,
+  CRATE_WOOD_CHIP_COUNT,
+  CRATE_WOOD_LIFE_SECONDS,
+  carLengthFromRadius,
+  crateHitSpeed,
+  drumBlastDamage,
+  drumBlastRadius,
+} from '../traps/TrapRules.ts';
 import {
   consumeMine,
   consumeMissile,
@@ -200,6 +217,12 @@ export interface RaceFieldOptions {
   readonly trackLines?: TrackLinesManifest;
   /** Planet this race is on; home-world bonus only applies when it matches. */
   readonly planetId?: string;
+  /** 1-based campaign planet. Trap pool and spawn counts grow with this. */
+  readonly worldIndex?: number;
+  /** Precomputed trap seats. When omitted, the field analyzes the track. */
+  readonly trapCatalog?: TrackTrapCatalog;
+  /** Seed for which seats spawn. When omitted, derived from worldIndex + track id. */
+  readonly trapSeed?: number;
 }
 
 const DEFAULT_COUNTDOWN_SECONDS = 3;
@@ -263,6 +286,15 @@ export class RaceField {
   private weaponBursts: Vec2[] = [];
   /** Mine / gasoline bursts this step, at the hazard, with a visual scale. */
   private hazardBursts: HazardBurst[] = [];
+  /** Crate smash points this step — wood chips, no fireball. */
+  private woodBursts: Vec2[] = [];
+  /** Hit sounds this step: crate thump vs drum clang. */
+  private trapSmashes: TrapSmashCue[] = [];
+  private debris: TrackDebris[] = [];
+  private nextDebrisId = 1;
+  private readonly trapPicks: readonly PickedRaceTrap[];
+  private readonly pendingDetonations = new Set<number>();
+  private readonly contactCarByHazard = new Map<number, string>();
   /** Hazard ids spawned this step ? their dropper is immune until the next step. */
   private readonly freshHazardIds = new Set<number>();
   /** Player weapon hits landed on rivals this race (for the purse bounty). */
@@ -295,6 +327,13 @@ export class RaceField {
       OIL_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED);
     this.npcWeapons = options.npcWeapons ?? true;
     this.planetId = options.planetId;
+    const worldIndex = options.worldIndex ?? 1;
+    const catalog = options.trapCatalog ?? analyzeTrackTraps(track, worldIndex);
+    this.trapPicks = pickRaceTraps(
+      catalog,
+      worldIndex,
+      options.trapSeed ?? trapSeed(worldIndex, track.id),
+    );
 
     // Grid slots follow entry order, so the caller decides where the player starts by
     // where it puts the player in the list. The scene puts them at the back.
@@ -427,6 +466,16 @@ export class RaceField {
     return this.hazardBursts;
   }
 
+  /** Crate smash points from the step just run (wood chips, no fireball). */
+  get woodBurstsThisStep(): readonly Vec2[] {
+    return this.woodBursts;
+  }
+
+  /** Crate / drum hits that owe a sound this step. */
+  get trapSmashesThisStep(): readonly TrapSmashCue[] {
+    return this.trapSmashes;
+  }
+
   /** Pairwise car contacts from the step just run, for the spectator camera. */
   get contactsThisStep(): readonly CameraContactEvent[] {
     return this.stepContacts;
@@ -483,7 +532,8 @@ export class RaceField {
 
     this.missiles = [];
     this.hazards = [];
-    this.spawnTrackGasoline();
+    this.debris = [];
+    this.spawnTrackTraps();
     this.freshHazardIds.clear();
     this.playerHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
     this.playerRetired = false;
@@ -544,6 +594,10 @@ export class RaceField {
     this.freshHazardIds.clear();
     this.weaponBursts = [];
     this.hazardBursts = [];
+    this.woodBursts = [];
+    this.trapSmashes = [];
+    this.pendingDetonations.clear();
+    this.contactCarByHazard.clear();
     this.stepContacts = [];
 
     const recordImpact = (index: number, speed: number, role: DamageRole, dealtScale = 1): void => {
@@ -667,6 +721,12 @@ export class RaceField {
         }
         const hit = findMissileHit(advanced, targets);
         if (hit === null) {
+          const trap = findMissileTrapHit(advanced, this.hazards);
+          if (trap !== null) {
+            this.weaponBursts.push(advanced.position);
+            this.enqueueDetonate(trap.id);
+            continue;
+          }
           const projection = this.spline.project(advanced.position);
           const wallLimit = trackFullHalfWidth(this.track) - advanced.radius;
           if (Math.abs(projection.lateralOffset) > wallLimit) {
@@ -843,6 +903,7 @@ export class RaceField {
 
     if (!frozen) {
       this.resolveHazardOverlaps();
+      this.resolveTrapChains(stepSeconds);
       this.hazards = ageHazards(this.hazards, stepSeconds);
     }
 
@@ -939,8 +1000,8 @@ export class RaceField {
   }
 
   /**
-   * Oil ? yawSpin (decision 19); mine ? instant destroy. A hazard is consumed on
-   * contact. The dropper is immune to a hazard on the step it was spawned.
+   * Oil → yawSpin (decision 19); mine → weapon damage. Crates and drums queue
+   * a detonation so a blast can hit every car in range, not just the first overlap.
    */
   private resolveHazardOverlaps(): void {
     const targets = this.racers
@@ -953,13 +1014,8 @@ export class RaceField {
 
     this.hazards = armHazards(this.hazards, targets);
     const hits = findHazardHits(this.hazards, targets);
-    if (hits.length === 0) {
-      return;
-    }
-
     const consumed = new Set<number>();
     for (const hit of hits) {
-      // Drop frame never counts: the puck is still leaving the bumper.
       if (this.freshHazardIds.has(hit.hazardId)) {
         continue;
       }
@@ -967,7 +1023,6 @@ export class RaceField {
       if (racer === undefined || !this.canCollide(racer)) {
         continue;
       }
-      consumed.add(hit.hazardId);
 
       const hazard = this.hazards.find(entry => entry.id === hit.hazardId);
       if (
@@ -983,6 +1038,7 @@ export class RaceField {
       }
 
       if (hit.kind === HAZARD_KIND.OIL) {
+        consumed.add(hit.hazardId);
         racer.state = {
           ...racer.state,
           yawSpin: racer.state.yawSpin + oilYawSpinForArmor(racer.stats.armor),
@@ -990,11 +1046,15 @@ export class RaceField {
         continue;
       }
 
+      if (hit.kind === HAZARD_KIND.CRATE || hit.kind === HAZARD_KIND.GASOLINE) {
+        this.enqueueDetonate(hit.hazardId, racer.carId);
+        continue;
+      }
+
+      consumed.add(hit.hazardId);
       if (hazard !== undefined) {
-        this.hazardBursts.push({
-          position: hazard.position,
-          scale: hit.kind === HAZARD_KIND.GASOLINE ? GASOLINE_BURST_SCALE : 1,
-        });
+        this.hazardBursts.push({ position: hazard.position, scale: 1 });
+        this.chainTrapsNear(hazard.position, hazard.radius + 2);
       }
 
       const before = racer.integrity;
@@ -1017,18 +1077,161 @@ export class RaceField {
     }
   }
 
-  /** Shoulder drums authored on the circuit, already armed. */
-  private spawnTrackGasoline(): void {
-    const placements = this.track.gasolineBarrels;
-    if (placements === undefined || placements.length === 0) {
-      return;
-    }
+  private resolveTrapChains(stepSeconds: number): void {
     const collisionRadius = this.racers[0]?.stats.collisionRadius ?? 1.7;
-    for (const barrel of placements) {
-      const distance = this.spline.wrap(barrel.distance);
+    for (const racer of this.racers) {
+      if (!racer.explodedThisStep) {
+        continue;
+      }
+      this.spawnDebris('metal', racer.state.position, 4, 1.25, 0.4);
+      this.chainTrapsNear(racer.state.position, 2 * carLengthFromRadius(racer.stats.collisionRadius));
+    }
+    this.flushDetonations(collisionRadius);
+    this.ageDebris(stepSeconds);
+    for (const scrap of this.debris) {
+      this.chainTrapsNear(scrap.position, scrap.radius);
+    }
+    this.flushDetonations(collisionRadius);
+  }
+
+  private enqueueDetonate(hazardId: number, contactCarId?: string): void {
+    if (contactCarId !== undefined) {
+      this.contactCarByHazard.set(hazardId, contactCarId);
+    }
+    this.pendingDetonations.add(hazardId);
+  }
+
+  private chainTrapsNear(position: Vec2, radius: number): void {
+    const reach = Number.isFinite(radius) && radius > 0 ? radius : 0;
+    for (const hazard of this.hazards) {
+      if (!isTrackTrap(hazard)) {
+        continue;
+      }
+      if (distance(position, hazard.position) <= reach + hazard.radius) {
+        this.enqueueDetonate(hazard.id);
+      }
+    }
+  }
+
+  private flushDetonations(collisionRadius: number): void {
+    let guard = 32;
+    while (this.pendingDetonations.size > 0 && guard > 0) {
+      guard -= 1;
+      const id = this.pendingDetonations.values().next().value as number;
+      this.pendingDetonations.delete(id);
+      const hazard = this.hazards.find(entry => entry.id === id);
+      if (hazard === undefined) {
+        continue;
+      }
+      this.hazards = this.hazards.filter(entry => entry.id !== id);
+      const contact = this.contactCarByHazard.get(id);
+      if (hazard.kind === HAZARD_KIND.CRATE) {
+        this.smashCrate(hazard, contact);
+      } else if (hazard.kind === HAZARD_KIND.GASOLINE) {
+        this.explodeDrum(hazard, contact, collisionRadius);
+      }
+    }
+  }
+
+  private smashCrate(hazard: TrackHazard, contactCarId: string | undefined): void {
+    this.trapSmashes.push({ kind: TRAP_KIND.CRATE, position: hazard.position });
+    this.woodBursts.push(hazard.position);
+    this.spawnDebris('wood', hazard.position, CRATE_WOOD_CHIP_COUNT, CRATE_WOOD_LIFE_SECONDS, 0.35);
+    if (contactCarId !== undefined) {
+      const racer = this.racers.find(entry => entry.carId === contactCarId);
+      if (racer !== undefined && this.canCollide(racer)) {
+        racer.state = { ...racer.state, velocity: crateHitSpeed(racer.state.velocity) };
+        racer.integrity = applyDirectDamage(racer.integrity, CRATE_ENERGY_LOSS);
+      }
+    }
+    this.chainTrapsNear(hazard.position, hazard.radius);
+  }
+
+  private explodeDrum(
+    hazard: TrackHazard,
+    contactCarId: string | undefined,
+    collisionRadius: number,
+  ): void {
+    this.trapSmashes.push({ kind: TRAP_KIND.GASOLINE, position: hazard.position });
+    this.hazardBursts.push({
+      position: hazard.position,
+      scale: GASOLINE_BURST_SCALE,
+      leaveBurnMark: true,
+    });
+    const blast = drumBlastRadius(hazard.radius, collisionRadius);
+    for (const racer of this.racers) {
+      if (!this.canCollide(racer) || isAirborne(racer.state)) {
+        continue;
+      }
+      const away = distance(hazard.position, racer.state.position);
+      if (away > blast) {
+        continue;
+      }
+      const fraction =
+        racer.carId === contactCarId ? 1 : drumBlastDamage(away, blast);
+      if (fraction <= 0) {
+        continue;
+      }
+      const before = racer.integrity;
+      racer.integrity = applyDirectDamage(before, fraction);
+      if (
+        before.condition !== CAR_CONDITION.DESTROYED &&
+        racer.integrity.condition === CAR_CONDITION.DESTROYED
+      ) {
+        racer.explodedThisStep = true;
+        racer.state = { ...racer.state, velocity: VEC2_ZERO, yawSpin: 0 };
+      }
+    }
+    this.spawnDebris('metal', hazard.position, 3, 1.25, 0.4);
+    this.chainTrapsNear(hazard.position, blast);
+  }
+
+  private spawnDebris(
+    kind: TrackDebris['kind'],
+    origin: Vec2,
+    count: number,
+    lifeSeconds: number,
+    radius: number,
+  ): void {
+    for (let i = 0; i < count; i += 1) {
+      const seed = this.stepIndex * 17 + this.nextDebrisId * 13 + i;
+      const x = Math.sin(seed * 12.9898) * 43758.5453;
+      const y = Math.sin(seed * 78.233) * 43758.5453;
+      const ox = (x - Math.floor(x) - 0.5) * 2.2;
+      const oy = (y - Math.floor(y) - 0.5) * 2.2;
+      this.debris.push({
+        id: this.nextDebrisId,
+        kind,
+        position: add(origin, { x: ox, y: oy }),
+        radius,
+        lifeRemaining: lifeSeconds,
+      });
+      this.nextDebrisId += 1;
+    }
+  }
+
+  private ageDebris(stepSeconds: number): void {
+    const dt = Number.isFinite(stepSeconds) && stepSeconds > 0 ? stepSeconds : 0;
+    this.debris = this.debris
+      .map(scrap => ({ ...scrap, lifeRemaining: scrap.lifeRemaining - dt }))
+      .filter(scrap => scrap.lifeRemaining > 0);
+  }
+
+  /** Shoulder crates and drums picked for this race, already armed. */
+  private spawnTrackTraps(): void {
+    const collisionRadius = this.racers[0]?.stats.collisionRadius ?? 1.7;
+    for (const trap of this.trapPicks) {
+      const distance = this.spline.wrap(trap.distance);
       const frame = this.spline.frameAt(distance);
-      const position = add(frame.position, scale(frame.normal, barrel.lateral));
-      this.hazards.push(placeGasoline(position, collisionRadius, distance));
+      const position = add(frame.position, scale(frame.normal, trap.lateral));
+      const height = Math.max(1, Math.min(3, trap.stackHeight));
+      for (let stack = 0; stack < height; stack += 1) {
+        if (trap.kind === TRAP_KIND.CRATE) {
+          this.hazards.push(placeCrate(position, collisionRadius, distance, stack));
+        } else {
+          this.hazards.push(placeGasoline(position, collisionRadius, distance, stack));
+        }
+      }
     }
   }
 

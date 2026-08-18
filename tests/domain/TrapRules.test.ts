@@ -1,0 +1,124 @@
+import { describe, expect, it } from 'vitest';
+import { thunderBasin } from '../../src/data/tracks/thunder-basin.track.ts';
+import { planetForTrackId } from '../../src/data/tracks/planets.ts';
+import { analyzeTrackTraps } from '../../src/domain/traps/analyzeTrackTraps.ts';
+import { pickRaceTraps, trapSeed } from '../../src/domain/traps/pickRaceTraps.ts';
+import {
+  crateSlotCount,
+  crateSpawnCount,
+  drumBlastDamage,
+  drumBlastRadius,
+  drumSlotCount,
+  drumSpawnCount,
+  crateHitSpeed,
+  CRATE_ENERGY_LOSS,
+  CRATE_SPEED_KEEP,
+} from '../../src/domain/traps/TrapRules.ts';
+import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
+
+describe('TrapRules counts', () => {
+  it('grows crates by 2 slots and 1 spawn each world', () => {
+    expect(crateSlotCount(1)).toBe(10);
+    expect(crateSpawnCount(1)).toBe(4);
+    expect(crateSlotCount(2)).toBe(12);
+    expect(crateSpawnCount(2)).toBe(5);
+    expect(crateSlotCount(10)).toBe(28);
+    expect(crateSpawnCount(10)).toBe(13);
+  });
+
+  it('grows drums by 2 slots and spawns at most half', () => {
+    expect(drumSlotCount(1)).toBe(5);
+    expect(drumSpawnCount(1)).toBe(2);
+    expect(drumSlotCount(2)).toBe(7);
+    expect(drumSpawnCount(2)).toBe(3);
+    expect(drumSlotCount(10)).toBe(23);
+    expect(drumSpawnCount(10)).toBe(11);
+  });
+
+  it('keeps 70% of crate-hit speed', () => {
+    expect(crateHitSpeed({ x: 10, y: -4 })).toEqual({
+      x: 10 * CRATE_SPEED_KEEP,
+      y: -4 * CRATE_SPEED_KEEP,
+    });
+    expect(CRATE_ENERGY_LOSS).toBeCloseTo(0.07, 5);
+  });
+});
+
+describe('drumBlastDamage', () => {
+  const radius = 10;
+
+  it('is 100% inside the first 10% band', () => {
+    expect(drumBlastDamage(0, radius)).toBe(1);
+    expect(drumBlastDamage(0.99, radius)).toBe(1);
+  });
+
+  it('drops 13% every 10% of the blast radius', () => {
+    expect(drumBlastDamage(1.0, radius)).toBeCloseTo(0.87, 5);
+    expect(drumBlastDamage(5.0, radius)).toBeCloseTo(0.35, 5);
+    expect(drumBlastDamage(7.9, radius)).toBeCloseTo(0.09, 5);
+  });
+
+  it('is zero at 80% of the radius and beyond', () => {
+    expect(drumBlastDamage(8, radius)).toBe(0);
+    expect(drumBlastDamage(10, radius)).toBe(0);
+    expect(drumBlastDamage(12, radius)).toBe(0);
+  });
+});
+
+describe('drumBlastRadius', () => {
+  it('is the drum plus two car lengths', () => {
+    const carLength = 2.35 * 1.7;
+    expect(drumBlastRadius(0.5, 1.7)).toBeCloseTo(0.5 + 2 * carLength, 5);
+  });
+});
+
+describe('analyzeTrackTraps', () => {
+  const catalog = analyzeTrackTraps(thunderBasin, 1);
+  const spline = new TrackSpline(thunderBasin.controlPoints);
+
+  it('fills the world-1 pool on Thunder Basin', () => {
+    expect(catalog.trackId).toBe('thunder-basin');
+    expect(catalog.crates).toHaveLength(10);
+    expect(catalog.drums).toHaveLength(5);
+  });
+
+  it('sits on the shoulder and stays off the grid and ramps', () => {
+    const shoulder = thunderBasin.halfWidth + 0.45 * thunderBasin.shoulderWidth;
+    for (const slot of [...catalog.crates, ...catalog.drums]) {
+      expect(Math.abs(slot.lateral)).toBeCloseTo(shoulder, 5);
+      const fromLine = Math.abs(spline.signedDelta(thunderBasin.startLineDistance, slot.distance));
+      expect(fromLine).toBeGreaterThanOrEqual(40);
+      for (const zone of thunderBasin.rampZones ?? []) {
+        const fromStart = spline.signedDelta(zone.triggerDistance - 8, slot.distance);
+        const window = zone.triggerLength + 16;
+        expect(fromStart < 0 || fromStart > window).toBe(true);
+      }
+    }
+  });
+});
+
+describe('pickRaceTraps', () => {
+  const planet = planetForTrackId('thunder-basin')!;
+  const catalog = analyzeTrackTraps(thunderBasin, planet.index);
+  const seed = trapSeed(planet.seed, thunderBasin.id);
+
+  it('spawns world-1 caps, not the old three authored drums', () => {
+    const picked = pickRaceTraps(catalog, 1, seed);
+    expect(picked.filter(trap => trap.kind === 'gasoline')).toHaveLength(2);
+    expect(picked.filter(trap => trap.kind === 'crate')).toHaveLength(4);
+    expect(picked.every(trap => trap.stackHeight >= 1 && trap.stackHeight <= 3)).toBe(true);
+  });
+
+  it('grows world 2 to 5 crates and 3 drums', () => {
+    const later = analyzeTrackTraps(thunderBasin, 2);
+    const picked = pickRaceTraps(later, 2, seed);
+    expect(picked.filter(trap => trap.kind === 'gasoline')).toHaveLength(3);
+    expect(picked.filter(trap => trap.kind === 'crate')).toHaveLength(5);
+  });
+
+  it('is deterministic for a seed', () => {
+    const a = pickRaceTraps(catalog, 1, seed);
+    const b = pickRaceTraps(catalog, 1, seed);
+    expect(a).toEqual(b);
+  });
+});

@@ -1,0 +1,180 @@
+{
+  "trackId": "ash-reach-2",
+  "worldIndex": 8,
+  "crates": [
+    {
+      "distance": 276,
+      "lateral": -28.05
+    },
+    {
+      "distance": 288,
+      "lateral": 28.05
+    },
+    {
+      "distance": 300,
+      "lateral": -28.05
+    },
+    {
+      "distance": 312,
+      "lateral": 28.05
+    },
+    {
+      "distance": 324,
+      "lateral": -28.05
+    },
+    {
+      "distance": 336,
+      "lateral": 28.05
+    },
+    {
+      "distance": 348,
+      "lateral": -28.05
+    },
+    {
+      "distance": 360,
+      "lateral": 28.05
+    },
+    {
+      "distance": 372,
+      "lateral": -28.05
+    },
+    {
+      "distance": 384,
+      "lateral": 28.05
+    },
+    {
+      "distance": 396,
+      "lateral": -28.05
+    },
+    {
+      "distance": 408,
+      "lateral": 28.05
+    },
+    {
+      "distance": 420,
+      "lateral": -28.05
+    },
+    {
+      "distance": 432,
+      "lateral": 28.05
+    },
+    {
+      "distance": 444,
+      "lateral": -28.05
+    },
+    {
+      "distance": 456,
+      "lateral": 28.05
+    },
+    {
+      "distance": 468,
+      "lateral": -28.05
+    },
+    {
+      "distance": 480,
+      "lateral": 28.05
+    },
+    {
+      "distance": 492,
+      "lateral": -28.05
+    },
+    {
+      "distance": 504,
+      "lateral": 28.05
+    },
+    {
+      "distance": 516,
+      "lateral": -28.05
+    },
+    {
+      "distance": 528,
+      "lateral": 28.05
+    },
+    {
+      "distance": 540,
+      "lateral": -28.05
+    },
+    {
+      "distance": 552,
+      "lateral": 28.05
+    }
+  ],
+  "drums": [
+    {
+      "distance": 48,
+      "lateral": 28.05
+    },
+    {
+      "distance": 60,
+      "lateral": -28.05
+    },
+    {
+      "distance": 72,
+      "lateral": 28.05
+    },
+    {
+      "distance": 84,
+      "lateral": -28.05
+    },
+    {
+      "distance": 96,
+      "lateral": 28.05
+    },
+    {
+      "distance": 108,
+      "lateral": -28.05
+    },
+    {
+      "distance": 120,
+      "lateral": 28.05
+    },
+    {
+      "distance": 132,
+      "lateral": -28.05
+    },
+    {
+      "distance": 144,
+      "lateral": 28.05
+    },
+    {
+      "distance": 156,
+      "lateral": -28.05
+    },
+    {
+      "distance": 168,
+      "lateral": 28.05
+    },
+    {
+      "distance": 180,
+      "lateral": -28.05
+    },
+    {
+      "distance": 192,
+      "lateral": 28.05
+    },
+    {
+      "distance": 204,
+      "lateral": -28.05
+    },
+    {
+      "distance": 216,
+      "lateral": 28.05
+    },
+    {
+      "distance": 228,
+      "lateral": -28.05
+    },
+    {
+      "distance": 240,
+      "lateral": 28.05
+    },
+    {
+      "distance": 252,
+      "lateral": -28.05
+    },
+    {
+      "distance": 264,
+      "lateral": 28.05
+    }
+  ]
+}

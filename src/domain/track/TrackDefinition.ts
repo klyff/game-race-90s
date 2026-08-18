@@ -59,8 +59,8 @@ export interface TrackDefinition {
    */
   readonly rampZones?: readonly RampZone[];
   /**
-   * Track-placed gasoline barrels (explode like a mine, larger burst).
-   * Optional; absent means none on this circuit.
+   * Track-placed gasoline barrels (legacy). Runtime reads trap JSON / analyzeTrackTraps
+   * instead; this list is no longer spawned.
    */
   readonly gasolineBarrels?: readonly GasolineBarrelPlacement[];
 }
