@@ -3,9 +3,10 @@
 Pasta base: `public/matrix_car/`
 
 **`car_N_hero.png` = vitrine** — não mexer; fora do array de rotação.  
-**Docs:** `README.md`, `PROMPT_30.md`, `RELOGIO.md`.  
-Contrato: **+12°**; start em `indice[25]=4h=300°`; arquivos `a000`…`a029`.  
-Não regenerar — **renomear**. Não flippar. Nunca sobrescrever o hero.
+Hero base **entre 4h e 3h** (típico 4:00 = 300°). **`0°` = frente** · **`12h` = traseira**.  
+**Docs:** `README.md`, `PROMPT_30.md`, `RELOGIO.md`, gabarito `GABARITO_RELOGIO.png`.  
+**Skill / regras:** `.cursor/skills/matrix-car-rotate/` · `.cursor/rules/car-yaw-clock.mdc`.  
+Contrato: **+12°**; arquivos `a000`…`a029`. Não regenerar — **renomear**. Não flippar. Nunca sobrescrever o hero.
 
 ---
 

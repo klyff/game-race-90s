@@ -1,0 +1,16 @@
+---
+description: >-
+  Always remember matrix_car yaw clock: 0° front, 12h rear, heroes start between
+  4h and 3h, +12° per frame, vitrine files stay untouched.
+alwaysApply: true
+---
+
+# Car yaw clock (matrix_car)
+
+When generating, renaming, or discussing car rotation frames:
+
+1. **`0°` = frente absoluta** · **`12h` = traseira absoluta (`180°`)**.
+2. Step **+12°** clockwise · 30 slots `a000`…`a029`.
+3. **Hero / vitrine pose starts between 4h and 3h** (usually **4:00 = 300° = indice[25]**).
+4. Never edit `car_N_hero.png` (vitrine). Fix index by **rename**, never flip.
+5. Canonical docs: `public/matrix_car/RELOGIO.md`, skill `matrix-car-rotate`.

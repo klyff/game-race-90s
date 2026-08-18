@@ -1,0 +1,17 @@
+---
+description: >-
+  Clock contract for matrix_car rotations — 0° front, 12h rear, hero between 4h–3h,
+  +12° steps, never touch vitrine heroes.
+globs: public/matrix_car/**,tools/art/car-rotate/**,.cursor/skills/matrix-car-rotate/**
+alwaysApply: false
+---
+
+# Matrix car rotate
+
+- Pasta: `public/matrix_car/`. Skill: `.cursor/skills/matrix-car-rotate/`.
+- **`0°` = frente absoluta.** **`12h` (`180°`) = traseira absoluta.**
+- Passo **+12°**. Arquivos `car_N_a000`…`a029` (índice = nome). Não recompactar buracos.
+- **Hero base entre 4h e 3h** (típico `indice[25] = 4:00 = 300°`).
+- **`car_N_hero.png` = vitrine — não mexer / não sobrescrever.**
+- Pose certa + nome errado → **renomear**. Nunca flippar para “corrigir”.
+- Gabarito: `public/matrix_car/GABARITO_RELOGIO.png` + `RELOGIO.md`.
