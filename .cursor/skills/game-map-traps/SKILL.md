@@ -51,4 +51,6 @@ Add a kind to the JSON + `TrapRules` counts + a `HAZARD_KIND`. Same slots, same 
 
 ## Art
 
-World props live in `public/assets/traps/`. HUD `world-gasoline.png` stays HUD-only. Pixel brief: [reference.md](reference.md).
+World props live in `public/assets/traps/`. Run `npm run gen:traps-art` to redraw
+crate / gasoline / wood chips (64×64 iso, hard edges). HUD `world-gasoline.png`
+stays HUD-only. Pixel brief: [reference.md](reference.md).

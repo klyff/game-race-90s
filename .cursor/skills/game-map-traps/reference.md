@@ -57,12 +57,17 @@ Size vs car: same puck as a mine (`GASOLINE_SIZE_OF_CAR = 0.28`).
 - Min arc gap: 2 car lengths (~8 world units).
 - Alternate sides. Prefer straights and sweeper exits.
 
-## Pixel art brief (`/pixel-art-sprites`)
+## Pixel art (`npm run gen:traps-art`)
 
-No crate exists in the repo. Do not import Kenney. Match the 16-bit cars.
+Authored in `tools/art/generate-traps.ts`. Hard edges, light top-left, transparent ground.
 
-- Cell **64×64**, smaller than the 128 car cell. Iso 2:1. Transparent ground. Pin low-center.
-- Light top-left. Hard edges. No AA against the background. If it fails at 1×, cut detail.
-- **Crate:** wood, iron corners. 1 still + 4–5 smash frames. 6 chips `wood-chip-01.png` … `06.png`.
-- **Drum:** dirty red, rust, yellow rim, 3/4 iso (not the front-on HUD barrel). Still + stack-2 and stack-3.
-- Output: `public/assets/traps/`. HUD `world-gasoline.png` stays in HUD.
+| File | Size | Notes |
+| --- | --- | --- |
+| `crate.png` | 64×64 | Iso box, wood + iron corners |
+| `crate-smash-01…04.png` | 64×64 | Crack → split → burst → chips |
+| `crate-stack-2/3.png` | 64×64 | Stacked stills |
+| `gasoline.png` | 64×64 | Dirty red 3/4 iso drum |
+| `gasoline-stack-2/3.png` | 64×64 | Stacked stills |
+| `wood-chip-01…06.png` | 16×16 | Debris for the 4 s settle |
+
+HUD `world-gasoline.png` stays in HUD. Do not import Kenney. If it fails at 1×, cut detail.
