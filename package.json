@@ -34,6 +34,7 @@
     "gen:hud-icons": "node --experimental-strip-types tools/art/generate-hud-icons.ts",
     "gen:scraps": "node --experimental-strip-types tools/art/generate-metal-scraps.ts",
     "gen:carts": "node --experimental-strip-types tools/art/generate-cart-portraits.ts",
+    "gen:car-strip": "bash tools/art/car-rotate/pipeline.sh",
     "gen:voice-lab": "node --experimental-strip-types tools/voicegen/generate-lab.ts"
   },
   "dependencies": {
