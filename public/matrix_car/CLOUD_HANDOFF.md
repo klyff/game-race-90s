@@ -25,8 +25,10 @@ Tudo em **`public/matrix_car/`**:
 - Ordem por carro: `25,26,27,28,29,0,1,…,24`
 - Não mexer no hero
 - Pipeline: gen → chroma → `extent 1700x1254` → `car_N_aXXX.png`
-- Strip no fim: `build_matrix_strip.py`
-- Escala arrays: `64/1700` · magick PNG: `-resize 3.7647%`
+- Strip no fim: `build_matrix_strip.py` → **só** `car_N_strip_64.png` + JSON (**MARGIN_X=16** L+R = **32px**; arte grande descartada; em prod `×64/1700` vira **1 ou 0**)
+- Depois: `pack_matrix_sources.py` → **`car_N_sources.tar.gz`** + apaga `a*.png` soltos (regenerar custa mais que storage)
+- Escala arrays: `64/1700` · magick PNG: `-resize 3.764705882352941%` (dentro do script)
+- **QA primeiro carro (18):** strip/frames devem bater perto do gabarito de qualidade de `public/matrix_car/1_hero/` (centro vertical, canvas 1700×1254, sem flip, hero intocado)
 
 ## Inventário esperado ao começar
 

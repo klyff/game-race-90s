@@ -363,8 +363,8 @@ indice[N] -> {
 
 Gerado com `tools/art/car-rotate/build_matrix_strip.py`:
 
-- `1_hero/car_1_strip.png` — RGBA **21645 × 1254** (26 frames; hero fora)
-- `1_hero/car_1_strip.json` — centros + **um** retângulo de colisão invisível
+- `1_hero/car_1_strip_64.png` — PNG de produção (arte grande **não versionada**)
+- `1_hero/car_1_strip.json` — dims arte + centros + **um** retângulo de colisão (espaço 1700)
 
 ### Colisão (um retângulo só)
 
@@ -377,20 +377,20 @@ As is car_1: **767 × 528** (min 582×388 … max 952×668).
 
 Esse retângulo **anda invisível no centro do carro** (`anchor: center_of_car`):
 - centro X = slot no strip
-- centro Y = `1254 / 2 = 627`
+- centro Y = `strip_h / 2`
 
 ### Escala de produção
 
 Ver **`SCALE.md`**. `const scale = 64 / 1700`.
 
 ```bash
-magick car_1_strip.png -resize 3.7647% car_1_strip_64.png
+python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/1_hero
+# emite só car_1_strip_64.png + JSON (grande descartado)
 ```
 
 Colisão arte `767×528` → produção **`29×20`** (`Math.round`).  
-Strip arte `21645×1254` → produção **`815×47`**.  
-Números em `car_1_strip.json` → `production_scale`.
+Números de arte ficam no JSON (`w`/`h`/`frames`); PNG versionado = **`_64`**.
 
-Algoritmo strip: trim → margem **4px** → soma larguras → canvas `(largura_total, 1254)` → paint L→R com  
-`y = Strip.height/2 - trimCar.height/2` (centro vertical).
+Algoritmo strip: trim → margem **16px L + 16px R (=32)** → soma larguras → canvas `(largura_total, strip_h)` → paint L→R com  
+`y = Strip.height/2 - trimCar.height/2` (centro vertical). Em produção (`×64/1700`) o respiro vira **1 ou 0** px.
 

@@ -1,12 +1,16 @@
 {
   "car": 2,
   "folder": "/Users/klyff/git/game-race-90s/public/matrix_car/2_hero",
-  "strip": "car_2_strip.png",
+  "strip": null,
   "strip_64": "car_2_strip_64.png",
-  "w": 3708,
-  "h": 586,
+  "sources_tar": "car_2_sources.tar.gz",
+  "strip_art_discarded": true,
+  "strip_art_note": "arte grande n\u00e3o versionada; remonta com build_matrix_strip.py (l\u00ea a*.png soltos ou car_N_sources.tar.gz)",
+  "w": 3828,
+  "h": 578,
   "frame_canvas_h": 1254,
-  "margin": 4,
+  "margin_x": 16,
+  "margin_y": 0,
   "strip_breathe": 4,
   "count": 5,
   "hero_excluded": true,
@@ -29,35 +33,35 @@
     {
       "i": 0,
       "index": 25,
-      "x": 412.0,
-      "y": 293.0
+      "x": 424.0,
+      "y": 289.0
     },
     {
       "i": 1,
       "index": 26,
-      "x": 1190.5,
-      "y": 293.0
+      "x": 1226.5,
+      "y": 289.0
     },
     {
       "i": 2,
       "index": 27,
-      "x": 1908.0,
-      "y": 293.0
+      "x": 1968.0,
+      "y": 289.0
     },
     {
       "i": 3,
       "index": 28,
-      "x": 2599.5,
-      "y": 293.0
+      "x": 2683.5,
+      "y": 289.0
     },
     {
       "i": 4,
       "index": 29,
-      "x": 3324.0,
-      "y": 293.0
+      "x": 3432.0,
+      "y": 289.0
     }
   ],
-  "collision_y_fixed": 293.0,
+  "collision_y_fixed": 289.0,
   "frames": [
     {
       "i": 0,
@@ -65,19 +69,19 @@
       "source": "car_2_a025.png",
       "x": 0,
       "y": 6,
-      "w": 824,
-      "h": 574,
+      "w": 848,
+      "h": 566,
       "content_w": 816,
       "content_h": 566,
       "collision_center": {
-        "x": 412.0,
-        "y": 293.0
+        "x": 424.0,
+        "y": 289.0
       },
       "collision_rect": {
-        "x1": 40.0,
-        "y1": 19.0,
-        "x2": 784.0,
-        "y2": 567.0,
+        "x1": 52.0,
+        "y1": 15.0,
+        "x2": 796.0,
+        "y2": 563.0,
         "w": 744,
         "h": 548
       }
@@ -86,21 +90,21 @@
       "i": 1,
       "index": 26,
       "source": "car_2_a026.png",
-      "x": 824,
+      "x": 848,
       "y": 25,
-      "w": 733,
-      "h": 535,
+      "w": 757,
+      "h": 527,
       "content_w": 725,
       "content_h": 527,
       "collision_center": {
-        "x": 1190.5,
-        "y": 293.0
+        "x": 1226.5,
+        "y": 289.0
       },
       "collision_rect": {
-        "x1": 818.5,
-        "y1": 19.0,
-        "x2": 1562.5,
-        "y2": 567.0,
+        "x1": 854.5,
+        "y1": 15.0,
+        "x2": 1598.5,
+        "y2": 563.0,
         "w": 744,
         "h": 548
       }
@@ -109,21 +113,21 @@
       "i": 2,
       "index": 27,
       "source": "car_2_a027.png",
-      "x": 1557,
+      "x": 1605,
       "y": 13,
-      "w": 702,
-      "h": 560,
+      "w": 726,
+      "h": 552,
       "content_w": 694,
       "content_h": 552,
       "collision_center": {
-        "x": 1908.0,
-        "y": 293.0
+        "x": 1968.0,
+        "y": 289.0
       },
       "collision_rect": {
-        "x1": 1536.0,
-        "y1": 19.0,
-        "x2": 2280.0,
-        "y2": 567.0,
+        "x1": 1596.0,
+        "y1": 15.0,
+        "x2": 2340.0,
+        "y2": 563.0,
         "w": 744,
         "h": 548
       }
@@ -132,21 +136,21 @@
       "i": 3,
       "index": 28,
       "source": "car_2_a028.png",
-      "x": 2259,
+      "x": 2331,
       "y": 23,
-      "w": 681,
-      "h": 540,
+      "w": 705,
+      "h": 532,
       "content_w": 673,
       "content_h": 532,
       "collision_center": {
-        "x": 2599.5,
-        "y": 293.0
+        "x": 2683.5,
+        "y": 289.0
       },
       "collision_rect": {
-        "x1": 2227.5,
-        "y1": 19.0,
-        "x2": 2971.5,
-        "y2": 567.0,
+        "x1": 2311.5,
+        "y1": 15.0,
+        "x2": 3055.5,
+        "y2": 563.0,
         "w": 744,
         "h": 548
       }
@@ -155,21 +159,21 @@
       "i": 4,
       "index": 29,
       "source": "car_2_a029.png",
-      "x": 2940,
+      "x": 3036,
       "y": 4,
-      "w": 768,
-      "h": 578,
+      "w": 792,
+      "h": 570,
       "content_w": 760,
       "content_h": 570,
       "collision_center": {
-        "x": 3324.0,
-        "y": 293.0
+        "x": 3432.0,
+        "y": 289.0
       },
       "collision_rect": {
-        "x1": 2952.0,
-        "y1": 19.0,
-        "x2": 3696.0,
-        "y2": 567.0,
+        "x1": 3060.0,
+        "y1": 15.0,
+        "x2": 3804.0,
+        "y2": 563.0,
         "w": 744,
         "h": 548
       }
@@ -182,10 +186,10 @@
     "scale_js": "const SCALE = 64 / 1700; // 0.037647 \u2014 arrays/colisao; NAO usar 3.7647",
     "magick": "magick input.png -resize 3.7647058823529407% output.png",
     "magick_pct": 3.7647058823529407,
-    "scaled_strip_w": 140,
+    "scaled_strip_w": 144,
     "note": "Arrays: value64 = value1700 * (64/1700). Magick % = (64/1700)*100. scaled_w = SCALE * strip.width.",
     "strip": {
-      "w": 140,
+      "w": 144,
       "h": 22
     },
     "collision_rect": {
@@ -209,25 +213,25 @@
       {
         "i": 1,
         "index": 26,
-        "x": 45,
+        "x": 46,
         "y": 11
       },
       {
         "i": 2,
         "index": 27,
-        "x": 72,
+        "x": 74,
         "y": 11
       },
       {
         "i": 3,
         "index": 28,
-        "x": 98,
+        "x": 101,
         "y": 11
       },
       {
         "i": 4,
         "index": 29,
-        "x": 125,
+        "x": 129,
         "y": 11
       }
     ],
@@ -237,8 +241,8 @@
         "index": 25,
         "x": 0,
         "y": 0,
-        "w": 31,
-        "h": 22,
+        "w": 32,
+        "h": 21,
         "collision_center": {
           "x": 16,
           "y": 11
@@ -255,18 +259,18 @@
       {
         "i": 1,
         "index": 26,
-        "x": 31,
+        "x": 32,
         "y": 1,
         "w": 28,
         "h": 20,
         "collision_center": {
-          "x": 45,
+          "x": 46,
           "y": 11
         },
         "collision_rect": {
-          "x1": 31,
+          "x1": 32,
           "y1": 1,
-          "x2": 59,
+          "x2": 60,
           "y2": 21,
           "w": 28,
           "h": 21
@@ -275,18 +279,18 @@
       {
         "i": 2,
         "index": 27,
-        "x": 59,
+        "x": 60,
         "y": 0,
-        "w": 26,
+        "w": 27,
         "h": 21,
         "collision_center": {
-          "x": 72,
+          "x": 74,
           "y": 11
         },
         "collision_rect": {
-          "x1": 58,
+          "x1": 60,
           "y1": 1,
-          "x2": 86,
+          "x2": 88,
           "y2": 21,
           "w": 28,
           "h": 21
@@ -295,18 +299,18 @@
       {
         "i": 3,
         "index": 28,
-        "x": 85,
+        "x": 88,
         "y": 1,
-        "w": 26,
+        "w": 27,
         "h": 20,
         "collision_center": {
-          "x": 98,
+          "x": 101,
           "y": 11
         },
         "collision_rect": {
-          "x1": 84,
+          "x1": 87,
           "y1": 1,
-          "x2": 112,
+          "x2": 115,
           "y2": 21,
           "w": 28,
           "h": 21
@@ -315,18 +319,18 @@
       {
         "i": 4,
         "index": 29,
-        "x": 111,
+        "x": 114,
         "y": 0,
-        "w": 29,
-        "h": 22,
+        "w": 30,
+        "h": 21,
         "collision_center": {
-          "x": 125,
+          "x": 129,
           "y": 11
         },
         "collision_rect": {
-          "x1": 111,
+          "x1": 115,
           "y1": 1,
-          "x2": 139,
+          "x2": 143,
           "y2": 21,
           "w": 28,
           "h": 21
@@ -334,6 +338,6 @@
       }
     ],
     "strip_64": "car_2_strip_64.png",
-    "magick_cmd": "magick car_2_strip.png -resize 3.7647058823529407% car_2_strip_64.png"
+    "magick_cmd": "magick <temp_art_strip.png> -resize 3.7647058823529407% car_2_strip_64.png"
   }
 }

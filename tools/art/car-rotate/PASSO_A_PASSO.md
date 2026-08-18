@@ -50,10 +50,10 @@ Ordem de geração por carro:
 
 | item | estado |
 |------|--------|
-| Frames | **26 / 30** — faltam índices **`4, 12, 15, 25`** |
+| Frames | **26 / 30** — faltam índices **`4, 12, 15, 25`** · fontes em `car_1_sources.tar.gz` |
 | Presentes | `0–3, 5–11, 13–14, 16–24, 26–29` |
 | Mapa as is | `ARRAY_ROTATED_FIRST.md` (inclui **original** pré-rename) |
-| Strip | `1_hero/car_1_strip.png` + `car_1_strip.json` |
+| Strip | `1_hero/car_1_strip_64.png` + `car_1_strip.json` (arte grande descartada) |
 | Colisão | 1 retângulo invisível = `(min+max)/2` → arte **767×528** · prod **29×20** |
 | Escala no JSON | bloco `production_scale` (`SCALE = 64/1700`) |
 
@@ -61,9 +61,9 @@ Ordem de geração por carro:
 
 | item | estado |
 |------|--------|
-| Frames | **5 / 30** — `a025` … `a029` |
+| Frames | **5 / 30** — `a025` … `a029` · fontes em `car_2_sources.tar.gz` |
 | Faltam | `0–24` |
-| Strip parcial | `2_hero/car_2_strip.png` + `.json` (rebuild ao completar) |
+| Strip parcial | `2_hero/car_2_strip_64.png` + `.json` (rebuild ao completar) |
 
 ### cars 3–33
 
@@ -121,9 +121,9 @@ python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/{N}_hero
 O script faz:
 
 1. Lista só `car_N_a*.png` (**hero fora**)
-2. **trim** do alpha + margem **4px** em todos os lados
+2. **trim** do alpha + margem **16px esquerda + 16px direita** (= **32px** horizontal)
 3. `largura_total` = soma das larguras
-4. `strip_h = max(alturas dos trims) + 2×4` (respiro **4px** acima/abaixo)  
+4. `strip_h = max(alturas dos trims) + 2×STRIP_BREATHE` (respiro vertical da strip)  
    canvas RGBA `(largura_total × strip_h)`
 5. Paint L→R com centro vertical:
 
@@ -140,15 +140,24 @@ h = round((min_h + max_h) / 2)
 
 Anda no **centro do carro** (`collision_center`; Y = `strip_h / 2`).
 
-7. Grava arte + JSON, e **já gera** a strip de produção:
+7. Monta strip em memória/temp, grava **só** produção + JSON (arte grande **descartada**):
 
 ```bash
-# SCALE = 64/1700
-# magick % = SCALE * 100
-# scaled_w = SCALE * strip.width
-magick car_N_strip.png -resize 3.764705882352941% car_N_strip_64.png
+# script já faz: temp art → magick → car_N_strip_64.png ; apaga car_N_strip.png
+python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/{N}_hero
+# SCALE = 64/1700 · magick % = SCALE * 100 · arrays no JSON em espaço 1700
+# lê a*.png soltos OU car_N_sources.tar.gz
 ```
 
+8. Empacota fontes (barato guardar; caro regenerar):
+
+```bash
+python3 tools/art/car-rotate/pack_matrix_sources.py public/matrix_car/{N}_hero
+# → car_N_sources.tar.gz + apaga car_N_a*.png soltos
+# mantém: hero + strip_64 + strip.json
+```
+
+Remonta strip quando precisar: `build_matrix_strip.py` (extrai o tar em temp).
 ---
 
 ## 6) Escala de produção
@@ -161,8 +170,8 @@ value64 = Math.round(value1700 * SCALE);
 ```
 
 ```bash
-# só PNG (ImageMagick usa % = scale×100)
-magick car_N_strip.png -resize 3.7647% car_N_strip_64.png
+# só PNG de produção (script descarta o grande)
+# magick % = scale×100 — feito dentro de build_matrix_strip.py
 ```
 
 **Não** multiplicar arrays por `3.7647`.

@@ -30,8 +30,11 @@ Tudo em **`public/matrix_car/`**:
 5. Salvar `public/matrix_car/{N}_hero/car_N_a{III}.png`  
 6. No fim do carro:  
    `python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/{N}_hero`  
-7. PNG 64 (quando quiser): `magick car_N_strip.png -resize 3.7647% car_N_strip_64.png`  
-8. Arrays/colisao: `SCALE = 64/1700` (**não** × 3.7647)
+   → grava **`car_N_strip_64.png` + JSON**; arte grande descartada  
+7. Empacota fontes:  
+   `python3 tools/art/car-rotate/pack_matrix_sources.py public/matrix_car/{N}_hero`  
+   → **`car_N_sources.tar.gz`** + apaga `a*.png` soltos (hero/`_64`/json ficam)  
+8. Arrays/colisao: `SCALE = 64/1700` (**não** × 3.7647) · magick % só no PNG 64
 
 ## Contrato rápido
 
