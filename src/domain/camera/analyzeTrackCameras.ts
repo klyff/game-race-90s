@@ -165,7 +165,26 @@ function referenceZoomOut50(spline: TrackSpline): number {
   }
   const width = Math.max(1, maxX - minX);
   const height = Math.max(1, maxY - minY);
-  return Math.min(REFERENCE_VIEW_WIDTH / (width * 0.5), REFERENCE_VIEW_HEIGHT / (height * 0.5));
+  return zoomToFitFraction(width, height, REFERENCE_VIEW_WIDTH, REFERENCE_VIEW_HEIGHT, 0.5);
+}
+
+/**
+ * Phaser zoom that fits `fraction` of the screen-space AABB into the viewport.
+ * 0.45 = 45% of the map fills the view (debug-IA pack shot). 0.5 is the `]` key.
+ */
+export function zoomToFitFraction(
+  boundsWidth: number,
+  boundsHeight: number,
+  viewWidth: number,
+  viewHeight: number,
+  fraction: number,
+): number {
+  const width = Math.max(1, boundsWidth);
+  const height = Math.max(1, boundsHeight);
+  const viewW = Math.max(1, viewWidth);
+  const viewH = Math.max(1, viewHeight);
+  const frac = Number.isFinite(fraction) ? Math.min(1, Math.max(0.05, fraction)) : 0.5;
+  return Math.min(viewW / (width * frac), viewH / (height * frac));
 }
 
 /** Phaser zoom that fits half the screen-space AABB into the live viewport. */
@@ -175,11 +194,7 @@ export function zoomToFitHalfBounds(
   viewWidth: number,
   viewHeight: number,
 ): number {
-  const width = Math.max(1, boundsWidth);
-  const height = Math.max(1, boundsHeight);
-  const viewW = Math.max(1, viewWidth);
-  const viewH = Math.max(1, viewHeight);
-  return Math.min(viewW / (width * 0.5), viewH / (height * 0.5));
+  return zoomToFitFraction(boundsWidth, boundsHeight, viewWidth, viewHeight, 0.5);
 }
 
 /**

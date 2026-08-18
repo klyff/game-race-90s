@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { FixedStepLoop } from '../app/FixedStepLoop.ts';
 import { RaceAudio } from '../adapters/audio/RaceAudio.ts';
+import { shouldParkEngine } from '../adapters/audio/EngineIdleShutoff.ts';
 import { KeyboardDriver } from '../adapters/input/KeyboardDriver.ts';
 import { CameraZoomPolicy } from '../adapters/render/CameraZoomPolicy.ts';
 import { ChaseCamera } from '../adapters/render/ChaseCamera.ts';
 import { AccidentWatch } from '../domain/camera/AccidentWatch.ts';
-import { analyzeTrackCameras, zoomToFitHalfBounds } from '../domain/camera/analyzeTrackCameras.ts';
+import { analyzeTrackCameras, zoomToFitFraction } from '../domain/camera/analyzeTrackCameras.ts';
 import {
   CAMERA_MAX_ZOOM_IN,
   CAMERA_QUIT_MASTER_SCALE,
@@ -46,7 +47,7 @@ import { NarratorDirector } from '../domain/audio/NarratorDirector.ts';
 import { clipsInPlan, planNarratorRace } from '../domain/audio/NarratorPlan.ts';
 import type { InputCommand } from '../domain/input/InputCommand.ts';
 import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
-import { angleOf, dot, fromAngle } from '../domain/math/Vec2.ts';
+import { angleOf, dot, fromAngle, length } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
 import { assignNpcCars } from '../domain/race/CarAssignment.ts';
 import {
@@ -56,6 +57,16 @@ import {
   watchPilots,
   WATCH_RACER_COUNT,
 } from '../domain/race/WatchField.ts';
+import {
+  DEBUG_IA_CAMERA_MAP_FRACTION,
+  drawDebugIaGrid,
+  type DebugIaSeat,
+} from '../domain/race/DebugIaField.ts';
+import {
+  DEBUG_IA_LOG_INTERVAL_SECONDS,
+  debugIaLogFileName,
+  postDebugIaLogs,
+} from '../adapters/debug/DebugIaReporter.ts';
 import { RaceField } from '../domain/race/RaceField.ts';
 import type { RacerEntry, RacerRuntime } from '../domain/race/RaceField.ts';
 import type { TrackDefinition } from '../domain/track/TrackDefinition.ts';
@@ -149,6 +160,9 @@ interface RaceSceneData {
   readonly trackId?: string;
   /** AI-only ten-car watch. Camera follows the pack; keyboard does not drive. */
   readonly watch?: boolean;
+  /** 14-NPC debug-IA session. Camera locked at 45% of the map on the leader. */
+  readonly debugIa?: boolean;
+  readonly debugIaSeed?: number;
 }
 
 /** One explosion waiting to be presented, queued inside a simulation step. */
@@ -189,7 +203,13 @@ export class RaceScene extends Phaser.Scene {
   private carId: string = PLAYER_CAR_ID;
   private trackId: string = DEFAULT_TRACK_ID;
   private watch = false;
+  private debugIa = false;
+  private debugIaSeed = 1;
+  private debugIaLogElapsed = 0;
+  private debugIaSeats: readonly DebugIaSeat[] = [];
   private watchPinned = false;
+  /** Car id whose telemetry currently feeds `RaceAudio`; hop resets the idle shut-off. */
+  private audioFocusCarId: string | null = null;
   private track!: TrackDefinition;
   private spline!: TrackSpline;
   private projection!: IsoProjection;
@@ -238,8 +258,8 @@ export class RaceScene extends Phaser.Scene {
   private playerPilotName = 'YOU';
   private sittingRivals: readonly string[] = [];
   private narrator: NarratorDirector | undefined;
-  private lastTurboRemaining = 0;
-  private lastPosition = 99;
+  private lastTurboCount = 0;
+  private lastLeaderId: string | undefined;
   private lastPlayerHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
   private hitRewards!: HitRewardEffect;
   private lastPlayerFinished = false;
@@ -256,8 +276,13 @@ export class RaceScene extends Phaser.Scene {
     this.linesByTrack = data.linesByTrack ?? {};
     this.carId = data.carId ?? PLAYER_CAR_ID;
     this.trackId = data.trackId ?? DEFAULT_TRACK_ID;
-    this.watch = data.watch === true;
+    this.debugIa = data.debugIa === true;
+    this.debugIaSeed = data.debugIaSeed ?? 1;
+    this.debugIaLogElapsed = 0;
+    this.debugIaSeats = [];
+    this.watch = data.watch === true || this.debugIa;
     this.watchPinned = false;
+    this.audioFocusCarId = null;
     this.quitedTheRace = false;
     this.cameraDirector = new CameraDirector();
     this.cameraImpulse = new CameraImpulse();
@@ -314,6 +339,9 @@ export class RaceScene extends Phaser.Scene {
     this.trackRenderer.syncToCamera(this.cameras.main);
 
     this.overlay = new TuningOverlay(this, this.cameras.main);
+    if (this.debugIa) {
+      this.overlay.show();
+    }
 
     this.bindSceneKeys();
     this.respawn();
@@ -355,7 +383,7 @@ export class RaceScene extends Phaser.Scene {
     this.presentScraps();
     this.presentWood();
     this.presentTrapSmashes();
-    this.updatePlayerAudio();
+    this.updatePlayerAudio(deltaSeconds);
     this.explosions.update(deltaSeconds);
     this.scraps.update(deltaSeconds);
     this.wood.update(deltaSeconds);
@@ -368,6 +396,7 @@ export class RaceScene extends Phaser.Scene {
     );
     this.trackRenderer.syncToCamera(this.cameras.main);
     this.refreshOverlay();
+    this.tickDebugIaLog(deltaSeconds);
 
     this.maybeFinishRace(deltaSeconds);
   }
@@ -514,6 +543,7 @@ export class RaceScene extends Phaser.Scene {
           impactSpeed: racer.pendingImpactSpeed,
           exploded: true,
         });
+        this.impactThisFrame = true;
         return;
       }
       const before = impactBefore[index] ?? 0;
@@ -527,6 +557,7 @@ export class RaceScene extends Phaser.Scene {
           impactSpeed: racer.pendingImpactSpeed,
           exploded: false,
         });
+        this.impactThisFrame = true;
       }
     });
     for (const position of this.field.weaponBurstsThisStep) {
@@ -756,27 +787,54 @@ export class RaceScene extends Phaser.Scene {
   }
 
   /**
-   * The engine, tyres and impacts the player can hear are their own car's.
+   * The engine, tyres and impacts the player can hear follow ONE car.
    *
-   * Only the player's impacts are voiced: five cars scraping walls at once would be a
-   * wash of noise that tells the driver nothing about their own race.
+   * While racing that is the keyboard car. In watch / quit-spectator it is the
+   * camera target, using that car's last AI throttle so an idle NPC cuts the
+   * motor after 3.5 s and the camera returns to the leader (pin released).
+   *
+   * Only that focus car's impacts are voiced: five cars scraping walls at once
+   * would be a wash of noise that tells the driver nothing about their own race.
    */
-  private updatePlayerAudio(): void {
-    const player = this.player;
-    const maxSpeed = player.stats.maxSpeed;
+  private updatePlayerAudio(deltaSeconds: number): void {
+    const spectator = this.watch || this.quitedTheRace;
+    const focus = spectator ? this.followedRacer() : this.player;
+    const maxSpeed = focus.stats.maxSpeed;
+    const command = spectator ? focus.lastCommand : this.command;
 
-    if (player.telemetry !== null) {
-      this.audio.update(player.telemetry, this.command, maxSpeed);
+    if (focus.carId !== this.audioFocusCarId) {
+      this.audio.clearIdleShutoff();
+      this.audioFocusCarId = focus.carId;
     }
 
-    const impact = this.field.drainImpact(player);
+    const speed = focus.telemetry?.speed ?? length(focus.state.velocity);
+    if (
+      shouldParkEngine({
+        destroyed: focus.integrity.condition === CAR_CONDITION.DESTROYED,
+        finished: this.field.standingOf(focus.carId)?.finished === true,
+        hasTelemetry: focus.telemetry !== null,
+        speed,
+      })
+    ) {
+      this.audio.parkEngine();
+    } else if (focus.telemetry !== null) {
+      this.audio.update(focus.telemetry, command, maxSpeed, deltaSeconds);
+    }
+
+    // Pinned on a stalled NPC whose motor just cut → release pin; followedRacer
+    // falls back to the leader (and accident rules still win when they fire).
+    if (spectator && this.watchPinned && this.audio.isEngineIdleShutOff) {
+      this.watchPinned = false;
+    }
+
+    const impact = this.field.drainImpact(focus);
     if (impact > 0) {
       this.audio.playImpact(impact, maxSpeed);
     }
     // Every other car's impact is drained and discarded, or it would accumulate
     // forever and then fire as one enormous hit the moment anything read it.
     for (const racer of this.field.racers) {
-      if (!racer.isPlayer) {
+      if (racer.carId !== focus.carId) {
         this.field.drainImpact(racer);
       }
     }
@@ -859,6 +917,9 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private buildEntries(): readonly RacerEntry[] {
+    if (this.debugIa) {
+      return this.buildDebugIaEntries();
+    }
     if (this.watch) {
       return this.buildWatchEntries();
     }
@@ -931,12 +992,39 @@ export class RaceScene extends Phaser.Scene {
     });
   }
 
+  private buildDebugIaEntries(): readonly RacerEntry[] {
+    const allIds = this.manifest.cars.map(car => car.id);
+    const grid = drawDebugIaGrid(allIds, this.debugIaSeed);
+    this.debugIaSeats = grid.seats;
+    this.debugIaSeed = grid.seed;
+    this.sittingRivals = [];
+    this.pilotNames = {};
+    this.carId = grid.seats[0]?.carId ?? this.carId;
+    this.publishDebugIaWindow();
+    return grid.seats.map(seat => {
+      const sheet = findCarSheet(this.manifest, seat.carId);
+      this.pilotNames[seat.carId] = seat.name;
+      return {
+        carId: seat.carId,
+        name: seat.name,
+        stats: sheet.stats,
+        perk: sheet.perk,
+        homePlanetId: sheet.homePlanetId,
+        worldAdvantage: sheet.worldAdvantage,
+        isPlayer: false,
+      };
+    });
+  }
+
   private playerSheetStats() {
     return findCarSheet(this.manifest, this.carId).stats;
   }
 
   /** Live policy, then director (manual 10s > trigger 3s > live). */
   private targetZoom(deltaSeconds: number = SIMULATION_STEP_SECONDS): number {
+    if (this.debugIa) {
+      return this.mapFractionZoom(DEBUG_IA_CAMERA_MAP_FRACTION);
+    }
     const player = this.followedRacer();
     const speed = player.telemetry?.speed ?? 0;
     const lookAhead = Math.max(
@@ -982,12 +1070,17 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private manualZoomOut(): number {
+    return this.mapFractionZoom(0.5);
+  }
+
+  private mapFractionZoom(fraction: number): number {
     const bounds = this.trackRenderer.bounds;
-    return zoomToFitHalfBounds(
+    return zoomToFitFraction(
       bounds.width,
       bounds.height,
       this.cameras.main.width,
       this.cameras.main.height,
+      fraction,
     );
   }
 
@@ -1204,8 +1297,8 @@ export class RaceScene extends Phaser.Scene {
     });
     this.narrator = new NarratorDirector(plan);
     this.audio.armNarrator(clipsInPlan(plan));
-    this.lastTurboRemaining = 0;
-    this.lastPosition = this.field.standingOf(this.carId)?.position ?? this.field.racers.length;
+    this.lastTurboCount = 0;
+    this.lastLeaderId = this.field.race.standings[0]?.carId;
     this.lastPlayerHits = { ...this.field.playerWeaponHits };
     this.lastPlayerFinished = false;
     this.impactThisFrame = false;
@@ -1217,17 +1310,23 @@ export class RaceScene extends Phaser.Scene {
     if (this.narrator === undefined) {
       return;
     }
-    const player = this.player;
+    const spectator = this.watch || this.quitedTheRace;
+    const focus = spectator ? this.followedRacer() : this.player;
     const race = this.field.race;
-    const standing = this.field.standingOf(player.carId);
+    const standing = this.field.standingOf(focus.carId);
     const position = standing?.position ?? this.field.racers.length;
-    const playerRace = race.racers.find(racer => racer.carId === this.carId);
-    const finished = playerRace?.progress.finished === true;
-    const turboJustStarted = this.lastTurboRemaining <= 0 && player.turboRemaining > 0;
-    const becameLeader = this.lastPosition > 1 && position === 1 && race.phase === RACE_PHASE.RACING;
-    const impactJustHappened = this.impactThisFrame || player.pendingImpactSpeed > 6;
+    const humanRace = race.racers.find(racer => racer.carId === this.carId);
+    const humanFinished = this.player.isPlayer && humanRace?.progress.finished === true;
+    const turboCount = this.field.racers.filter(racer => racer.turboRemaining > 0).length;
+    const leaderId = race.standings[0]?.carId;
+    const becameLeader =
+      leaderId !== undefined &&
+      this.lastLeaderId !== undefined &&
+      leaderId !== this.lastLeaderId &&
+      race.phase === RACE_PHASE.RACING;
+    const impactJustHappened = this.impactThisFrame || focus.pendingImpactSpeed > 6;
 
-    if (this.isPlayerWrongWay()) {
+    if (this.isFocusWrongWay(focus)) {
       this.wrongWayHold += deltaSeconds;
     } else {
       this.wrongWayHold = 0;
@@ -1239,11 +1338,11 @@ export class RaceScene extends Phaser.Scene {
       elapsedSeconds: race.elapsedSeconds,
       playerLap: (standing?.lapsCompleted ?? 0) + 1,
       totalLaps: this.track.laps,
-      lapFraction: this.playerLapFraction(),
+      lapFraction: this.lapFractionOf(focus),
       playerPosition: position,
       totalRacers: this.field.racers.length,
-      playerFinished: finished && !this.lastPlayerFinished,
-      turboJustStarted,
+      playerFinished: !spectator && humanFinished && !this.lastPlayerFinished,
+      turboJustStarted: turboCount > this.lastTurboCount,
       impactJustHappened,
       weaponJustHappened: this.weaponThisFrame,
       wrongWay: this.wrongWayHold >= 0.7,
@@ -1253,29 +1352,29 @@ export class RaceScene extends Phaser.Scene {
       this.audio.enqueueNarrator(offer.clip, offer.priority);
     }
 
-    this.lastTurboRemaining = player.turboRemaining;
-    this.lastPosition = position;
+    this.lastTurboCount = turboCount;
+    this.lastLeaderId = leaderId;
     this.lastPlayerHits = { ...this.field.playerWeaponHits };
-    this.lastPlayerFinished = finished;
+    this.lastPlayerFinished = humanFinished;
     this.impactThisFrame = false;
     this.weaponThisFrame = false;
   }
 
-  private playerLapFraction(): number {
+  private lapFractionOf(racer: RacerRuntime): number {
     if (this.spline.totalLength <= 0) {
       return 0;
     }
-    const along = this.spline.wrap(this.player.distance - this.track.startLineDistance);
+    const along = this.spline.wrap(racer.distance - this.track.startLineDistance);
     return along / this.spline.totalLength;
   }
 
-  private isPlayerWrongWay(): boolean {
-    const telemetry = this.player.telemetry;
+  private isFocusWrongWay(racer: RacerRuntime): boolean {
+    const telemetry = racer.telemetry;
     if (telemetry === null || telemetry.forwardSpeed < 6) {
       return false;
     }
-    const tangent = this.spline.frameAt(this.player.distance).tangent;
-    return dot(fromAngle(this.player.state.heading), tangent) < -0.25;
+    const tangent = this.spline.frameAt(racer.distance).tangent;
+    return dot(fromAngle(racer.state.heading), tangent) < -0.25;
   }
 
   private refreshOverlay(): void {
@@ -1297,19 +1396,110 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private aiOverlayLines(): readonly string[] {
+    const header = this.debugIaHeaderLines();
     const npcs = this.field.npcNames();
     if (npcs.length === 0) {
-      return [];
+      return header;
     }
     const focus = npcs[this.aiFocusIndex % npcs.length];
     if (focus === undefined) {
-      return [];
+      return header;
     }
     const snapshot = this.field.aiDebug(focus.carId);
     if (snapshot === undefined) {
-      return [`NPC ${focus.name} — no AI snapshot`];
+      return [...header, `NPC ${focus.name} — no AI snapshot`];
     }
-    return formatAiOverlay(snapshot);
+    return [...header, ...formatAiOverlay(snapshot)];
+  }
+
+  private debugIaHeaderLines(): readonly string[] {
+    if (!this.debugIa) {
+      return [];
+    }
+    const planet = planetForTrackId(this.trackId);
+    const terrain = planet?.terrain;
+    const leader = this.field.race.standings[0];
+    const leaderName = leader ? this.pilotNames[leader.carId] ?? leader.carId : '-';
+    const terrainLine = terrain
+      ? `TERRA  straight ${terrain.straightBias.toFixed(2)}  tight ${terrain.cornerTightness.toFixed(2)}  grip ${terrain.surfaceGrip.toFixed(2)}  hw ${terrain.halfWidth}`
+      : `TERRA  surfGrip ${(this.track.surfaceGrip ?? 1).toFixed(2)}  hw ${this.track.halfWidth}`;
+    return [
+      `DEBUG-IA  ${this.track.displayName}  ${this.field.racers.length} NPC  cam 45% map  seed ${this.debugIaSeed}`,
+      terrainLine,
+      `LEADER  ${leaderName}  zoom ${this.cameras.main.zoom.toFixed(2)}  t ${this.field.race.elapsedSeconds.toFixed(1)}s`,
+      '',
+    ];
+  }
+
+  private tickDebugIaLog(deltaSeconds: number): void {
+    if (!this.debugIa) {
+      return;
+    }
+    this.debugIaLogElapsed += deltaSeconds;
+    this.publishDebugIaWindow();
+    if (this.debugIaLogElapsed < DEBUG_IA_LOG_INTERVAL_SECONDS) {
+      return;
+    }
+    this.debugIaLogElapsed = 0;
+    void postDebugIaLogs(this.debugIaLogEntries());
+  }
+
+  private debugIaLogEntries(): { file: string; line: string }[] {
+    const elapsed = this.field.race.elapsedSeconds;
+    const planet = planetForTrackId(this.trackId);
+    const terrain = planet?.terrain;
+    const leaderId = this.field.race.standings[0]?.carId ?? '-';
+    const onTarmac = (offset: number) => Math.abs(offset) <= this.track.halfWidth;
+    return this.field.racers.map(racer => {
+      const standing = this.field.standingOf(racer.carId);
+      const snapshot = this.field.aiDebug(racer.carId);
+      const name = this.pilotNames[racer.carId] ?? racer.carId;
+      const file = debugIaLogFileName(name, racer.carId);
+      const line = [
+        `t=${elapsed.toFixed(2)}`,
+        `pos=${standing?.position ?? '?'}/${this.field.racers.length}`,
+        `lap=${standing?.lapsCompleted ?? 0}/${this.track.laps}`,
+        `dist=${racer.distance.toFixed(1)}`,
+        `spd=${(racer.telemetry?.speed ?? 0).toFixed(1)}`,
+        `lat=${racer.lateralOffset.toFixed(2)}`,
+        `surf=${onTarmac(racer.lateralOffset) ? 'TARMAC' : 'DIRT'}`,
+        `integ=${racer.integrity.integrity.toFixed(2)}`,
+        `cond=${racer.integrity.condition}`,
+        `intent=${snapshot?.intention ?? '-'}`,
+        `atk=${snapshot?.attackMethod ?? '-'}`,
+        `tgt=${snapshot?.targetId ?? '-'}`,
+        `exec=${snapshot?.execution ?? '-'}`,
+        `profile=${snapshot?.profile.id ?? name.toLowerCase()}`,
+        `tier=${snapshot?.profile.tier ?? '-'}`,
+        `leader=${leaderId}`,
+        `zoom=${this.cameras.main.zoom.toFixed(3)}`,
+        terrain
+          ? `terra=${terrain.straightBias.toFixed(2)}/${terrain.cornerTightness.toFixed(2)}/${terrain.surfaceGrip.toFixed(2)}/${terrain.halfWidth}`
+          : `terra=-`,
+      ].join(' ');
+      return { file, line };
+    });
+  }
+
+  private publishDebugIaWindow(): void {
+    if (typeof window === 'undefined' || !this.debugIa) {
+      return;
+    }
+    const payload = {
+      seed: this.debugIaSeed,
+      trackId: this.trackId,
+      cameraFraction: DEBUG_IA_CAMERA_MAP_FRACTION,
+      zoom: this.cameras.main.zoom,
+      elapsed: this.field.race.elapsedSeconds,
+      seats: this.debugIaSeats,
+      standings: this.field.race.standings.map(entry => ({
+        position: entry.position,
+        carId: entry.carId,
+        name: this.pilotNames[entry.carId] ?? entry.carId,
+        laps: entry.lapsCompleted,
+      })),
+    };
+    (window as Window & { __DEBUG_IA?: unknown }).__DEBUG_IA = payload;
   }
 
   private playerView(): VehicleView | undefined {

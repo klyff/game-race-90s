@@ -6,6 +6,12 @@ import type { PlannedClip } from '../../data/audio/NarratorBank.ts';
 import type { NarratorPriority } from '../../domain/audio/NarratorQueue.ts';
 import { BrakeVoice } from './BrakeVoice.ts';
 import { EngineGearbox } from './EngineGearbox.ts';
+import {
+  ENGINE_IDLE_SHUTOFF_INITIAL,
+  ENGINE_IDLE_SHUTOFF_PARKED,
+  tickEngineIdleShutoff,
+  type EngineIdleShutoffState,
+} from './EngineIdleShutoff.ts';
 import { EngineVoice } from './EngineVoice.ts';
 import { ExplosionVoice } from './ExplosionVoice.ts';
 import { ImpactVoice } from './ImpactVoice.ts';
@@ -64,6 +70,7 @@ export class RaceAudio {
   private readonly driftLimit: number;
   private readonly baseMasterVolume: number;
   private engineSilenced = false;
+  private idleShutoff: EngineIdleShutoffState = ENGINE_IDLE_SHUTOFF_INITIAL;
   private muted = isAudioMuted();
 
   /**
@@ -139,7 +146,7 @@ export class RaceAudio {
   /** Cuts the engine/tyre voices without tearing the graph down (quit race). */
   silenceEngine(): void {
     this.engineSilenced = true;
-    this.engine?.update(0, 0, 0);
+    this.engine?.silence();
     this.skid?.update(0);
     this.brake?.update(0, 0);
   }
@@ -156,21 +163,31 @@ export class RaceAudio {
   }
 
   /** Feeds one rendered frame of simulation state to every voice. */
-  update(telemetry: VehicleTelemetry, input: InputCommand, maxSpeed: number): void {
+  update(
+    telemetry: VehicleTelemetry,
+    input: InputCommand,
+    maxSpeed: number,
+    deltaSeconds: number = 0,
+  ): void {
     if (this.context === null || this.muted) return;
-    if (this.engineSilenced) {
-      this.engine?.update(0, 0, 0);
-      this.skid?.update(0);
-      this.brake?.update(0, 0);
-      return;
-    }
 
     // Reverse drives the engine exactly like throttle does: the driver is asking
     // for power either way, and the gearbox already reports reverse as gear 0.
     const drive = Math.max(input.throttle, input.reverse);
-    const gear = this.gearbox.update(telemetry.forwardSpeed, maxSpeed);
-    this.engine?.update(gear.rpmFraction, drive, drive);
-    if (gear.shifted) this.engine?.shift();
+    this.idleShutoff = tickEngineIdleShutoff(
+      this.idleShutoff,
+      telemetry.speed,
+      drive,
+      deltaSeconds,
+    );
+
+    if (this.engineSilenced || this.idleShutoff.shutOff) {
+      this.engine?.silence();
+    } else {
+      const gear = this.gearbox.update(telemetry.forwardSpeed, maxSpeed);
+      this.engine?.update(gear.rpmFraction, drive, drive);
+      if (gear.shifted) this.engine?.shift();
+    }
 
     this.skid?.update(this.skidIntensity(telemetry));
 
@@ -214,7 +231,7 @@ export class RaceAudio {
     this.music?.setMuted(muted);
     this.narrator.setMuted(muted);
     if (!muted) return;
-    this.engine?.update(0, 0, 0);
+    this.engine?.silence();
     this.skid?.update(0);
     this.brake?.update(0, 0);
   }
@@ -223,9 +240,30 @@ export class RaceAudio {
     return this.muted;
   }
 
+  /** True once the idle timer has cut the motor; clears on throttle or {@link clearIdleShutoff}. */
+  get isEngineIdleShutOff(): boolean {
+    return this.idleShutoff.shutOff;
+  }
+
+  /** Reset the idle clock without touching mute/quit state (camera hopped to another car). */
+  clearIdleShutoff(): void {
+    this.idleShutoff = ENGINE_IDLE_SHUTOFF_INITIAL;
+  }
+
+  /**
+   * Kill the rumble without the quit-race latch. Wrecks, parked finishers and
+   * a camera on nobody still hop back to a live motor when focus changes.
+   */
+  parkEngine(): void {
+    this.idleShutoff = ENGINE_IDLE_SHUTOFF_PARKED;
+    this.engine?.silence();
+  }
+
   /** Silences the car without stopping the context, e.g. on respawn. */
   reset(): void {
     this.gearbox.reset();
+    this.idleShutoff = ENGINE_IDLE_SHUTOFF_INITIAL;
+    this.engineSilenced = false;
     this.skid?.update(0);
     this.brake?.update(0, 0);
     this.narrator.reset();

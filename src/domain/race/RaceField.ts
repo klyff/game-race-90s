@@ -212,6 +212,11 @@ export interface RacerRuntime {
   pendingHardLanding: boolean;
   /** Centreline to respawn on after a void landing. Undefined for other wrecks. */
   offTrackRespawnDistance: number | undefined;
+  /**
+   * Last `InputCommand` this car drove with. The audio layer reads throttle/reverse
+   * here so an idle NPC cuts its engine the same way the player does.
+   */
+  lastCommand: InputCommand;
 }
 
 export interface RaceFieldOptions {
@@ -396,6 +401,7 @@ export class RaceField {
         pendingRampFlight: false,
         pendingHardLanding: false,
         offTrackRespawnDistance: undefined,
+        lastCommand: IDLE_INPUT,
       };
     });
 
@@ -554,6 +560,7 @@ export class RaceField {
       racer.pendingRampFlight = false;
       racer.pendingHardLanding = false;
       racer.offTrackRespawnDistance = undefined;
+      racer.lastCommand = IDLE_INPUT;
     });
 
     this.missiles = [];
@@ -644,11 +651,13 @@ export class RaceField {
       }
 
       if (racer.integrity.condition === CAR_CONDITION.DESTROYED) {
+        racer.lastCommand = IDLE_INPUT;
         this.sitOutWreck(racer, stepSeconds);
         return;
       }
 
       if (racer.isPlayer && this.playerRetired) {
+        racer.lastCommand = IDLE_INPUT;
         this.slideRetiredPlayer(racer, stepSeconds);
         return;
       }
@@ -665,6 +674,8 @@ export class RaceField {
         command = IDLE_INPUT;
         racer.landingStunRemaining = Math.max(0, racer.landingStunRemaining - stepSeconds);
       }
+
+      racer.lastCommand = command;
 
       const wasAirborne = isAirborne(racer.state);
 

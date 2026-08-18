@@ -19,6 +19,11 @@ import {
   enableWatchModeFromSearch,
   watchTrackFromSearch,
 } from '../adapters/progress/WatchMode.ts';
+import {
+  debugIaSeed,
+  debugIaTrackFromSearch,
+  enableDebugIaModeFromSearch,
+} from '../adapters/progress/DebugIaMode.ts';
 import { watchPlanetTwoTracks } from '../domain/race/WatchField.ts';
 import { SPLASH_CARDS, splashCardUrl } from '../data/cards/SplashCards.ts';
 import { DRIVER_CARDS, driverCardUrl } from '../data/cards/DriverCards.ts';
@@ -206,6 +211,22 @@ export class BootScene extends Phaser.Scene {
       }
       if (typeof location !== 'undefined') {
         enableTourModeFromSearch(location.search);
+        if (enableDebugIaModeFromSearch(location.search)) {
+          enableTourMode();
+          const trackId =
+            debugIaTrackFromSearch(location.search) ??
+            watchTrackFromSearch(location.search) ??
+            watchPlanetTwoTracks()[0];
+          this.scene.start(SCENE_KEY.RACE, {
+            manifest,
+            linesByTrack,
+            trackId,
+            watch: true,
+            debugIa: true,
+            debugIaSeed: debugIaSeed(),
+          });
+          return;
+        }
         if (enableWatchModeFromSearch(location.search)) {
           enableTourMode();
           const trackId = watchTrackFromSearch(location.search) ?? watchPlanetTwoTracks()[0];

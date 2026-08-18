@@ -68,6 +68,11 @@ export class TuningOverlay {
     }
   }
 
+  show(): void {
+    this.text.setVisible(true);
+    this.pinToViewport();
+  }
+
   destroy(): void {
     this.text.destroy();
   }

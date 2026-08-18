@@ -136,6 +136,17 @@ export class EngineVoice {
   }
 
   /**
+   * Ramps gain to true silence without tearing the oscillators down.
+   * Used when the car has idled long enough that the motor should cut.
+   */
+  silence(): void {
+    if (!this.isUsable()) return;
+    const now = this.context.currentTime;
+    this.masterGain.gain.setTargetAtTime(0, now, EngineVoice.GAIN_TIME_CONSTANT);
+    this.targetGain = 0;
+  }
+
+  /**
    * @param rpmFraction 0..1, from `EngineGearbox`. Mapped linearly to 55–220 Hz.
    * @param throttle 0..1, how hard the driver is pressing the accelerator.
    * @param load 0..1, how hard the engine is working (e.g. reverse power too).
