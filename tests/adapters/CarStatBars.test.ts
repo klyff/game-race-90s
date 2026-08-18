@@ -90,7 +90,8 @@ describe('CarStatBars — real roster', () => {
     for (const carId of carIds) {
       if (carId === 'car-6-tank') continue;
       const otherArmor = statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction;
-      expect(magmaArmor).toBeGreaterThan(otherArmor);
+      // car_18 is the same war-tank perk / armor, so a tie is allowed.
+      expect(magmaArmor).toBeGreaterThanOrEqual(otherArmor);
     }
   });
 

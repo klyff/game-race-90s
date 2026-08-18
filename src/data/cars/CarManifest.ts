@@ -33,6 +33,14 @@ export interface CarSheetManifest {
   /** Cell size when this strip is not the set default (redrawn cars may be 128). */
   readonly frameWidth?: number;
   readonly frameHeight?: number;
+  /** Yaw frames when this strip is not the set default (matrix cars are 30). */
+  readonly frameCount?: number;
+  /**
+   * Public-root path to a matrix strip JSON (`production_scale.frames`).
+   * When set, Boot loads `image` as one picture and crops these boxes —
+   * not a uniform Phaser spritesheet.
+   */
+  readonly framesJson?: string;
 }
 
 /**
@@ -186,6 +194,8 @@ function parseCarSheet(raw: unknown, index: number): CarSheetManifest {
     worldAdvantage: parseWorldAdvantage(source['worldAdvantage'], id),
     frameWidth: parseOptionalSize(source['frameWidth'], id, 'frameWidth'),
     frameHeight: parseOptionalSize(source['frameHeight'], id, 'frameHeight'),
+    frameCount: parseOptionalFrameCount(source['frameCount'], id),
+    framesJson: parseOptionalPath(source['framesJson'], id, 'framesJson'),
   };
 }
 
@@ -195,6 +205,26 @@ function parseOptionalSize(raw: unknown, carId: string, field: string): number |
   }
   if (typeof raw !== 'number' || !Number.isFinite(raw) || raw <= 0) {
     throw new CarManifestError(`car "${carId}" ${field} must be a positive number`);
+  }
+  return raw;
+}
+
+function parseOptionalFrameCount(raw: unknown, carId: string): number | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (typeof raw !== 'number' || !Number.isInteger(raw) || raw <= 0) {
+    throw new CarManifestError(`car "${carId}" frameCount must be a positive integer`);
+  }
+  return raw;
+}
+
+function parseOptionalPath(raw: unknown, carId: string, field: string): string | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (typeof raw !== 'string' || raw.length === 0) {
+    throw new CarManifestError(`car "${carId}" ${field} must be a non-empty string`);
   }
   return raw;
 }
@@ -270,6 +300,51 @@ export function cartPortraitToken(carId: string): string {
   return numbered?.[1] ?? carId.replace(/[^a-z0-9]+/gi, '-');
 }
 
+/**
+ * Matrix vitrine index. `car-1` and `car_1` are both 1.
+ * `delorean` has no folder.
+ */
+export function matrixHeroNumber(carId: string): number | undefined {
+  const match = /(\d+)/.exec(carId);
+  if (match === null) {
+    return undefined;
+  }
+  const n = Number(match[1]);
+  return Number.isInteger(n) && n > 0 ? n : undefined;
+}
+
+/** `car_1_hero.png` */
+export function matrixHeroFile(n: number): string {
+  return `car_${n}_hero.png`;
+}
+
+/** `matrix_car/1_hero/car_1_hero.png` — the garage still. */
+export function matrixHeroUrl(n: number): string {
+  return `matrix_car/${n}_hero/${matrixHeroFile(n)}`;
+}
+
+/**
+ * Load order for a garage still. First hit wins.
+ * Numbered cars start at the matrix vitrine; other files are leftovers.
+ */
+export function portraitCandidateUrls(carId: string): readonly string[] {
+  const n = matrixHeroNumber(carId);
+  const hero = cartHeroFile(carId);
+  const still = cartPortraitFile(carId);
+  const urls: string[] = [];
+  if (n !== undefined) {
+    urls.push(matrixHeroUrl(n));
+  }
+  urls.push(
+    `assets/cars/${hero}`,
+    `assets/cars/new/${hero}`,
+    `assets/cars/${still}`,
+    `assets/${still}`,
+    `assets/cars/${cartPortraitLegacyFile(carId)}`,
+  );
+  return urls;
+}
+
 /** New-fleet garage still and strip source: `car_1_hero.png`. */
 export function cartHeroFile(carId: string): string {
   return `${carId}_hero.png`;
@@ -310,6 +385,11 @@ export function sheetCellSize(
   };
 }
 
+/** Yaw frames for this sheet when it is not the set default. */
+export function sheetFrameCount(sheet: CarSheetManifest, manifest: CarSetManifest): number {
+  return sheet.frameCount ?? manifest.frameCount;
+}
+
 /** Looks up one car, failing loudly rather than returning `undefined`. */
 export function findCarSheet(manifest: CarSetManifest, id: string): CarSheetManifest {
   const sheet = manifest.cars.find(car => car.id === id);
@@ -332,4 +412,147 @@ export function frameIndexForHeading(heading: number, frameCount: number): numbe
   const frameArc = (Math.PI * 2) / frameCount;
   const index = Math.round(heading / frameArc) % frameCount;
   return index < 0 ? index + frameCount : index;
+}
+
+/** Art canvas width → production strip (`SCALE.md`). */
+export const MATRIX_PRODUCTION_SCALE = 64 / 1700;
+
+export interface MatrixStripFrameBox {
+  readonly i: number;
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  readonly pivotX: number;
+  readonly pivotY: number;
+}
+
+/** Crop boxes + one midpoint collision rect from `car_N_strip.json`. */
+export interface MatrixStripAtlas {
+  readonly count: number;
+  readonly frames: readonly MatrixStripFrameBox[];
+  readonly collisionRect: { readonly w: number; readonly h: number };
+  readonly scale: number;
+}
+
+/** True when this sheet is a variable-width matrix strip, not a uniform grid. */
+export function isBBoxSheet(sheet: CarSheetManifest): boolean {
+  return typeof sheet.framesJson === 'string' && sheet.framesJson.length > 0;
+}
+
+/** Phaser / HTTP path: public-root if `image` has a slash, else `assets/cars/`. */
+export function carSheetImageUrl(sheet: CarSheetManifest): string {
+  return sheet.image.includes('/') ? sheet.image : `assets/cars/${sheet.image}`;
+}
+
+export function matrixStripUrl(n: number): string {
+  return `matrix_car/${n}_hero/car_${n}_strip_64.png`;
+}
+
+export function matrixStripJsonUrl(n: number): string {
+  return `matrix_car/${n}_hero/car_${n}_strip.json`;
+}
+
+export function matrixStripCacheKey(carId: string): string {
+  return `car-strip-json:${carId}`;
+}
+
+function readFrameBox(raw: Record<string, unknown>, index: number): MatrixStripFrameBox {
+  const i = typeof raw['i'] === 'number' ? raw['i'] : typeof raw['index'] === 'number' ? raw['index'] : index;
+  const x = raw['x'];
+  const y = raw['y'];
+  const w = raw['w'];
+  const h = raw['h'];
+  if (
+    typeof i !== 'number' ||
+    !Number.isInteger(i) ||
+    typeof x !== 'number' ||
+    typeof y !== 'number' ||
+    typeof w !== 'number' ||
+    typeof h !== 'number' ||
+    !(w > 0) ||
+    !(h > 0)
+  ) {
+    throw new CarManifestError(`strip frame ${index} needs integer i and positive x/y/w/h`);
+  }
+  let pivotX = 0.5;
+  let pivotY = 0.5;
+  const center = raw['collision_center'];
+  if (typeof center === 'object' && center !== null && !Array.isArray(center)) {
+    const point = center as Record<string, unknown>;
+    const cx = point['x'];
+    const cy = point['y'];
+    if (typeof cx === 'number' && typeof cy === 'number') {
+      pivotX = (cx - x) / w;
+      pivotY = (cy - y) / h;
+    }
+  }
+  return { i, x, y, w, h, pivotX, pivotY };
+}
+
+/**
+ * Reads `production_scale.frames` (already at 64/1700). The art-space `frames`
+ * array is the high-res pack and must not be used as Phaser crop boxes.
+ */
+export function parseMatrixStripJson(raw: unknown): MatrixStripAtlas {
+  const source = requireObject(raw, 'matrix strip');
+  const prod = requireObject(source['production_scale'], '"production_scale"');
+  const framesRaw = prod['frames'];
+  if (!Array.isArray(framesRaw) || framesRaw.length === 0) {
+    throw new CarManifestError('"production_scale.frames" must be a non-empty array');
+  }
+  const frames = framesRaw.map((frame, index) =>
+    readFrameBox(requireObject(frame, `production_scale.frames[${index}]`), index),
+  );
+  const count = typeof source['count'] === 'number' ? source['count'] : frames.length;
+  if (!Number.isInteger(count) || count !== frames.length) {
+    throw new CarManifestError(`strip count ${String(source['count'])} does not match frames (${frames.length})`);
+  }
+  const rect = requireObject(prod['collision_rect'], '"production_scale.collision_rect"');
+  const scale = typeof prod['scale'] === 'number' && prod['scale'] > 0 ? prod['scale'] : MATRIX_PRODUCTION_SCALE;
+  return {
+    count,
+    frames,
+    collisionRect: {
+      w: requirePositiveNumber(rect, 'w'),
+      h: requirePositiveNumber(rect, 'h'),
+    },
+    scale,
+  };
+}
+
+/** Half-extents in world units from the one midpoint production rect. */
+export function collisionFromMatrixStrip(
+  strip: MatrixStripAtlas,
+  pixelsPerUnit: number,
+): { readonly along: number; readonly across: number } {
+  if (!(pixelsPerUnit > 0)) {
+    throw new CarManifestError('pixelsPerUnit must be positive to scale matrix collision');
+  }
+  return {
+    along: strip.collisionRect.w / 2 / pixelsPerUnit,
+    across: strip.collisionRect.h / 2 / pixelsPerUnit,
+  };
+}
+
+/** Fold JSON collision (and frame count) onto a sheet after the strip JSON loads. */
+export function applyMatrixStripToSheet(
+  sheet: CarSheetManifest,
+  strip: MatrixStripAtlas,
+  pixelsPerUnit: number,
+): CarSheetManifest {
+  const box = collisionFromMatrixStrip(strip, pixelsPerUnit);
+  return {
+    ...sheet,
+    frameCount: strip.count,
+    stats: withSquares({
+      ...sheet.stats,
+      collisionAlong: box.along,
+      collisionAcross: box.across,
+      collisionRadius: Math.max(box.along, box.across, sheet.stats.collisionRadius),
+      collisionSquareMin: undefined,
+      collisionSquareMax: undefined,
+      collisionSquare: undefined,
+    }),
+  };
 }

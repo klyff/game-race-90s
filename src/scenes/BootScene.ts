@@ -1,13 +1,16 @@
 import Phaser from 'phaser';
 import {
-  cartHeroFile,
-  cartPortraitFile,
+  applyMatrixStripToSheet,
+  carSheetImageUrl,
   cartPortraitKey,
-  cartPortraitLegacyFile,
+  isBBoxSheet,
+  matrixStripCacheKey,
   parseCarSetManifest,
+  parseMatrixStripJson,
+  portraitCandidateUrls,
   sheetCellSize,
 } from '../data/cars/CarManifest.ts';
-import type { CarSetManifest } from '../data/cars/CarManifest.ts';
+import type { CarSetManifest, CarSheetManifest, MatrixStripAtlas } from '../data/cars/CarManifest.ts';
 import { PLANET_THEMES } from '../data/tracks/planetThemes.ts';
 import { parseTrackLinesManifest } from '../data/tracks/TrackLines.ts';
 import { TRACKS } from '../data/tracks/registry.ts';
@@ -31,7 +34,6 @@ import { PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/
 import { SCRAP_SPRITES } from '../adapters/render/MetalScrapRoster.ts';
 import {
   CAR_ASSET_DIRECTORY,
-  NEW_CARS_DIRECTORY,
   CAR_MANIFEST_KEY,
   DEBRIS_ASSET_DIRECTORY,
   GROUND_ASSET_DIRECTORY,
@@ -146,12 +148,19 @@ export class BootScene extends Phaser.Scene {
     }
 
     for (const car of manifest.cars) {
-      // One horizontal strip per car. Most sheets are 64×64; a redrawn car may be larger.
-      const cell = sheetCellSize(car, manifest);
-      this.load.spritesheet(car.id, `${CAR_ASSET_DIRECTORY}/${car.image}`, {
-        frameWidth: cell.width,
-        frameHeight: cell.height,
-      });
+      if (isBBoxSheet(car) && car.framesJson !== undefined) {
+        // Variable-width matrix strip: one image + JSON crop boxes. A fixed
+        // frameWidth spritesheet would slice car_18_strip_64.png wrong.
+        this.load.image(car.id, carSheetImageUrl(car));
+        this.load.json(matrixStripCacheKey(car.id), car.framesJson);
+      } else {
+        // One horizontal strip per car. Most sheets are 64×64; a redrawn car may be larger.
+        const cell = sheetCellSize(car, manifest);
+        this.load.spritesheet(car.id, `${CAR_ASSET_DIRECTORY}/${car.image}`, {
+          frameWidth: cell.width,
+          frameHeight: cell.height,
+        });
+      }
       this.queuePortrait(car.id);
     }
 
@@ -201,7 +210,14 @@ export class BootScene extends Phaser.Scene {
     }
 
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
-      for (const car of manifest.cars) {
+      let liveManifest: CarSetManifest;
+      try {
+        liveManifest = this.installBBoxSheets(manifest);
+      } catch (error) {
+        this.showFatalError(error instanceof Error ? error.message : String(error));
+        return;
+      }
+      for (const car of liveManifest.cars) {
         this.promotePortrait(car.id);
       }
       for (const bed of MUSIC_BEDS) {
@@ -218,7 +234,7 @@ export class BootScene extends Phaser.Scene {
             watchTrackFromSearch(location.search) ??
             watchPlanetTwoTracks()[0];
           this.scene.start(SCENE_KEY.RACE, {
-            manifest,
+            manifest: liveManifest,
             linesByTrack,
             trackId,
             watch: true,
@@ -230,30 +246,57 @@ export class BootScene extends Phaser.Scene {
         if (enableWatchModeFromSearch(location.search)) {
           enableTourMode();
           const trackId = watchTrackFromSearch(location.search) ?? watchPlanetTwoTracks()[0];
-          this.scene.start(SCENE_KEY.RACE, { manifest, linesByTrack, trackId, watch: true });
+          this.scene.start(SCENE_KEY.RACE, {
+            manifest: liveManifest,
+            linesByTrack,
+            trackId,
+            watch: true,
+          });
           return;
         }
       }
-      this.scene.start(SCENE_KEY.SPLASH, { manifest, linesByTrack });
+      this.scene.start(SCENE_KEY.SPLASH, { manifest: liveManifest, linesByTrack });
     });
     this.load.start();
   }
 
   /**
-   * New cars use `car_1_hero.png` (live set or `cars/new/`). Fleet stills are
-   * `{carId}_300px.png`. Older files used `cart_N_300.png`. Queue every
-   * candidate; `promotePortrait` keeps the first one that actually loaded.
+   * Crop variable-width matrix strips from JSON boxes and fold that collision
+   * onto the live manifest. Grid sheets are already Phaser spritesheets.
+   */
+  private installBBoxSheets(manifest: CarSetManifest): CarSetManifest {
+    const cars: CarSheetManifest[] = manifest.cars.map(car => {
+      if (!isBBoxSheet(car) || car.framesJson === undefined) {
+        return car;
+      }
+      const strip = parseMatrixStripJson(this.cache.json.get(matrixStripCacheKey(car.id)));
+      this.addBBoxFrames(car.id, strip);
+      return applyMatrixStripToSheet(car, strip, manifest.pixelsPerUnit);
+    });
+    return { ...manifest, cars };
+  }
+
+  private addBBoxFrames(carId: string, strip: MatrixStripAtlas): void {
+    const texture = this.textures.get(carId);
+    for (const frame of strip.frames) {
+      const added = texture.add(String(frame.i), 0, frame.x, frame.y, frame.w, frame.h);
+      if (added === null) {
+        continue;
+      }
+      added.customPivot = true;
+      added.pivotX = frame.pivotX;
+      added.pivotY = frame.pivotY;
+    }
+  }
+
+  /**
+   * Garage still is the matrix vitrine: `matrix_car/1_hero/car_1_hero.png`
+   * for both `car-1` and `car_1`. Older `*_hero` / `*_300px` files are only
+   * fallbacks when that folder is missing. `promotePortrait` keeps the first
+   * candidate that actually loaded.
    */
   private portraitUrls(carId: string): readonly string[] {
-    const hero = cartHeroFile(carId);
-    const still = cartPortraitFile(carId);
-    return [
-      `${CAR_ASSET_DIRECTORY}/${hero}`,
-      `${NEW_CARS_DIRECTORY}/${hero}`,
-      `${CAR_ASSET_DIRECTORY}/${still}`,
-      `assets/${still}`,
-      `${CAR_ASSET_DIRECTORY}/${cartPortraitLegacyFile(carId)}`,
-    ];
+    return portraitCandidateUrls(carId);
   }
 
   private queuePortrait(carId: string): void {

@@ -2,16 +2,37 @@
  * Debug-IA grid: 14 NPC-only racers. Four signatures (Klyff, Aline, two
  * last-world jokers by skill), then a lottery of medium + derived pilots,
  * each on a shuffled car.
+ *
+ * Skill-mix grids (`drawSkillMixGrid`) pick by control skill, not catalog tier:
+ * expert / medium / bobo bands from vehiclePhysics + localSteering + prediction.
  */
 
 import { JOKER_PILOTS } from '../../data/pilots/PilotRoster.ts';
 import { DERIVED_SPECS, DRIVER_PROFILE_TIER, MEDIUM_PROFILES } from '../ai/DriverProfile.ts';
-import { profileFor } from '../ai/DriverRoster.ts';
+import { ALL_PROFILES, profileFor } from '../ai/DriverRoster.ts';
 import { driverSkill } from './WatchField.ts';
 
 export const DEBUG_IA_RACER_COUNT = 14;
 export const DEBUG_IA_SIGNATURE_COUNT = 4;
 export const DEBUG_IA_CAMERA_MAP_FRACTION = 0.45;
+
+export const SKILL_BAND = {
+  EXPERT: 'expert',
+  MEDIUM: 'medium',
+  BOBO: 'bobo',
+} as const;
+
+export type SkillBand = (typeof SKILL_BAND)[keyof typeof SKILL_BAND];
+
+/** driverSkill = vehiclePhysics + localSteering + opponentPrediction (≈1.3…3.0). */
+export const SKILL_BAND_EXPERT_MIN = 2.6;
+export const SKILL_BAND_BOBO_MAX = 1.85;
+
+export interface SkillMix {
+  readonly experts: number;
+  readonly mediums: number;
+  readonly bobos: number;
+}
 
 const SIGNATURE_LOCK = ['KLYFF', 'ALINE'] as const;
 
@@ -60,11 +81,22 @@ function lotteryPool(): readonly string[] {
   return [...medium, ...derived].filter(name => !locked.has(name));
 }
 
+export function skillBandForName(name: string): SkillBand {
+  const skill = driverSkill(profileFor(name));
+  if (skill >= SKILL_BAND_EXPERT_MIN) {
+    return SKILL_BAND.EXPERT;
+  }
+  if (skill <= SKILL_BAND_BOBO_MAX) {
+    return SKILL_BAND.BOBO;
+  }
+  return SKILL_BAND.MEDIUM;
+}
+
 export interface DebugIaSeat {
   readonly name: string;
   readonly carId: string;
   readonly tier: string;
-  readonly slot: 'signature' | 'lottery';
+  readonly slot: 'signature' | 'lottery' | SkillBand;
 }
 
 export interface DebugIaGrid {
@@ -89,6 +121,85 @@ export function drawDebugIaGrid(carIds: readonly string[], seed: number): DebugI
       carId,
       tier: profile.tier ?? DRIVER_PROFILE_TIER.DERIVED,
       slot: index < signatures.length ? 'signature' : 'lottery',
+    } as const;
+  });
+
+  return { seed, seats };
+}
+
+function catalogNames(): readonly string[] {
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const profile of ALL_PROFILES) {
+    if (seen.has(profile.displayName)) {
+      continue;
+    }
+    seen.add(profile.displayName);
+    names.push(profile.displayName);
+  }
+  return names;
+}
+
+function pickBand(
+  names: readonly string[],
+  band: SkillBand,
+  count: number,
+  preferLowSkill: boolean,
+): string[] {
+  const ranked = names
+    .filter(name => skillBandForName(name) === band)
+    .map(name => ({ name, skill: driverSkill(profileFor(name)) }))
+    .sort((left, right) =>
+      preferLowSkill
+        ? left.skill - right.skill || left.name.localeCompare(right.name)
+        : right.skill - left.skill || left.name.localeCompare(right.name),
+    );
+  if (ranked.length < count) {
+    throw new Error(
+      `skill mix needs ${count} ${band} pilots, catalog has ${ranked.length}`,
+    );
+  }
+  return ranked.slice(0, count).map(entry => entry.name);
+}
+
+/**
+ * Controlled skill test: N experts, N mediums, N bobos on shuffled cars.
+ * Experts = highest skill in the expert band; bobos = lowest in the bobo band.
+ * Seat order is shuffled so the smart ones do not all start at the front.
+ */
+export function drawSkillMixGrid(
+  carIds: readonly string[],
+  seed: number,
+  mix: SkillMix,
+): DebugIaGrid {
+  const experts = Math.max(0, Math.floor(mix.experts));
+  const mediums = Math.max(0, Math.floor(mix.mediums));
+  const bobos = Math.max(0, Math.floor(mix.bobos));
+  const total = experts + mediums + bobos;
+  if (total < 1) {
+    throw new Error('skill mix needs at least one racer');
+  }
+
+  const pool = catalogNames();
+  const names = [
+    ...pickBand(pool, SKILL_BAND.EXPERT, experts, false),
+    ...pickBand(pool, SKILL_BAND.MEDIUM, mediums, false),
+    ...pickBand(pool, SKILL_BAND.BOBO, bobos, true),
+  ];
+
+  const rng = mulberry32(Number.isFinite(seed) && seed > 0 ? seed : 1);
+  const shuffledNames = shuffle(names, rng);
+  const uniqueCars = [...new Set(carIds.filter(id => id.length > 0))];
+  const cars = uniqueCars.length > 0 ? shuffle(uniqueCars, rng) : ['car-1'];
+
+  const seats = shuffledNames.map((name, index) => {
+    const carId = cars[index] ?? cars[index % cars.length] ?? 'car-1';
+    const profile = profileFor(name);
+    return {
+      name,
+      carId,
+      tier: profile.tier ?? DRIVER_PROFILE_TIER.DERIVED,
+      slot: skillBandForName(name),
     } as const;
   });
 

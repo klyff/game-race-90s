@@ -2,8 +2,13 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
+  applyMatrixStripToSheet,
+  carSheetImageUrl,
+  collisionFromMatrixStrip,
   frameIndexForHeading,
+  isBBoxSheet,
   parseCarSetManifest,
+  parseMatrixStripJson,
   findCarSheet,
   cartHeroFile,
   cartPortraitFile,
@@ -11,6 +16,13 @@ import {
   cartPortraitLegacyFile,
   cartStripFile,
   isNewFleetCarId,
+  matrixHeroFile,
+  matrixHeroNumber,
+  matrixHeroUrl,
+  matrixStripJsonUrl,
+  matrixStripUrl,
+  portraitCandidateUrls,
+  sheetFrameCount,
   CarManifestError,
 } from '../../src/data/cars/CarManifest.ts';
 import { CAR_PERK, CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/domain/constants.ts';
@@ -18,6 +30,13 @@ import { CAR_PERK, CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/dom
 const testFileDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(testFileDir, '..', '..');
 const carsJsonPath = join(projectRoot, 'public', 'assets', 'cars', 'cars.json');
+const car18StripJsonPath = join(
+  projectRoot,
+  'public',
+  'matrix_car',
+  '18_hero',
+  'car_18_strip.json',
+);
 
 describe('frameIndexForHeading', () => {
   it('maps heading 0 to frame 0', () => {
@@ -77,6 +96,12 @@ describe('frameIndexForHeading', () => {
     expect(CAR_SPRITE_FRAME_ARC).toBeCloseTo(expectedArc, 10);
   });
 
+  it('maps 30-frame clock: 0° front, 180° rear (a015), 300° hero (a025)', () => {
+    expect(frameIndexForHeading(0, 30)).toBe(0);
+    expect(frameIndexForHeading(Math.PI, 30)).toBe(15);
+    expect(frameIndexForHeading((300 * Math.PI) / 180, 30)).toBe(25);
+  });
+
   it('ensures worst-case angular error never exceeds half a frame arc', () => {
     let maxAngularError = 0;
 
@@ -124,6 +149,46 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     expect(manifest.frameCount).toBe(32);
+  });
+
+  it('matrix car_18 uses the 18_hero strip_64 plus JSON bounding boxes', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    const sheet = findCarSheet(manifest, 'car_18');
+    expect(sheet.image).toBe(matrixStripUrl(18));
+    expect(sheet.framesJson).toBe(matrixStripJsonUrl(18));
+    expect(carSheetImageUrl(sheet)).toBe('matrix_car/18_hero/car_18_strip_64.png');
+    expect(isBBoxSheet(sheet)).toBe(true);
+    expect(sheet.frameCount).toBe(30);
+    expect(sheetFrameCount(sheet, manifest)).toBe(30);
+    expect(sheet.perk).toBe('war-tank');
+    expect(sheet.homePlanetId).toBe('vulkanis');
+    const fallback = findCarSheet(manifest, 'car-1');
+    expect(isBBoxSheet(fallback)).toBe(false);
+    expect(sheetFrameCount(fallback, manifest)).toBe(32);
+    expect(carSheetImageUrl(fallback)).toBe('assets/cars/car-1.png');
+  });
+
+  it('reads car_18 production_scale frames and midpoint collision from JSON', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    const sheet = findCarSheet(manifest, 'car_18');
+    const strip = parseMatrixStripJson(JSON.parse(readFileSync(car18StripJsonPath, 'utf-8')));
+    expect(strip.count).toBe(30);
+    expect(strip.frames).toHaveLength(30);
+    expect(strip.scale).toBeCloseTo(64 / 1700, 10);
+    expect(strip.collisionRect).toEqual({ w: 35, h: 32 });
+    expect(strip.frames[0]).toMatchObject({ i: 0, x: 0, y: 1, w: 25, h: 35 });
+    expect(strip.frames[15]?.i).toBe(15);
+    expect(strip.frames[25]?.i).toBe(25);
+    const box = collisionFromMatrixStrip(strip, manifest.pixelsPerUnit);
+    expect(box.along).toBeCloseTo(35 / 2 / manifest.pixelsPerUnit, 6);
+    expect(box.across).toBeCloseTo(32 / 2 / manifest.pixelsPerUnit, 6);
+    const live = applyMatrixStripToSheet(sheet, strip, manifest.pixelsPerUnit);
+    expect(live.frameCount).toBe(30);
+    expect(live.stats.collisionAlong).toBeCloseTo(box.along, 6);
+    expect(live.stats.collisionAcross).toBeCloseTo(box.across, 6);
+    expect(live.stats.collisionSquare).toBeCloseTo((box.along + box.across) / 2, 6);
   });
 
   it('real manifest has frameWidth and frameHeight of 64', () => {
@@ -489,6 +554,23 @@ describe('cart portraits', () => {
     expect(cartPortraitFile('delorean')).toBe('delorean_300px.png');
     expect(cartPortraitLegacyFile('car-16')).toBe('cart_16_300.png');
     expect(cartPortraitKey('car-1')).toBe('cart-portrait:car-1');
+  });
+
+  it('names matrix production strip and JSON under N_hero', () => {
+    expect(matrixStripUrl(18)).toBe('matrix_car/18_hero/car_18_strip_64.png');
+    expect(matrixStripJsonUrl(18)).toBe('matrix_car/18_hero/car_18_strip.json');
+  });
+
+  it('points car-1 and car_1 at matrix_car/1_hero/car_1_hero.png', () => {
+    expect(matrixHeroNumber('car-1')).toBe(1);
+    expect(matrixHeroNumber('car_1')).toBe(1);
+    expect(matrixHeroFile(1)).toBe('car_1_hero.png');
+    expect(matrixHeroUrl(1)).toBe('matrix_car/1_hero/car_1_hero.png');
+    expect(matrixHeroUrl(6)).toBe('matrix_car/6_hero/car_6_hero.png');
+    expect(matrixHeroNumber('car-6-tank')).toBe(6);
+    expect(matrixHeroNumber('delorean')).toBeUndefined();
+    expect(portraitCandidateUrls('car-1')[0]).toBe('matrix_car/1_hero/car_1_hero.png');
+    expect(portraitCandidateUrls('car_1')[0]).toBe('matrix_car/1_hero/car_1_hero.png');
   });
 });
 

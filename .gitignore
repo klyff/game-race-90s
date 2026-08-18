@@ -1,9 +1,23 @@
 node_modules/
-dist/
+.env
+.env.local
 .DS_Store
 *.log
+*.tsbuildinfo
+coverage/
+__pycache__/
+*.pyc
+
+# vite / deploy
+dist/
 .vite/
 .preview/
 .vercel
-.env
-.env.local
+
+# generated / scratch — not source
+out/
+.tmp/
+_originais/
+graphify-out/
+.graphcache/
+*.original.md

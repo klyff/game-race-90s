@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { CarSetManifest, CarSheetManifest } from '../../data/cars/CarManifest.ts';
-import { frameIndexForHeading, sheetCellSize } from '../../data/cars/CarManifest.ts';
+import { frameIndexForHeading, sheetCellSize, sheetFrameCount } from '../../data/cars/CarManifest.ts';
 import { add, fromAngle, perpendicularLeft, scale } from '../../domain/math/Vec2.ts';
 import type { VehicleState } from '../../domain/vehicle/Vehicle.ts';
 import { IsoProjection } from './IsoProjection.ts';
@@ -45,9 +45,9 @@ export class VehicleView {
   private readonly headlights: readonly Phaser.GameObjects.Ellipse[];
   private readonly taillights: readonly Phaser.GameObjects.Ellipse[];
   private readonly exhaust: readonly Phaser.GameObjects.Ellipse[];
-  private readonly manifest: CarSetManifest;
   private readonly projection: IsoProjection;
   private readonly noseReach: number;
+  private readonly frameCount: number;
   private exhaustPulse = 0;
 
   constructor(
@@ -56,10 +56,10 @@ export class VehicleView {
     sheet: CarSheetManifest,
     projection: IsoProjection,
   ) {
-    this.manifest = manifest;
     this.projection = projection;
     this.noseReach = Math.max(0.8, sheet.stats.collisionRadius);
 
+    this.frameCount = sheetFrameCount(sheet, manifest);
     const cell = sheetCellSize(sheet, manifest);
     const displayScale = manifest.frameWidth / cell.width;
 
@@ -98,7 +98,7 @@ export class VehicleView {
     const air = this.projection.toScreen(state.position, state.height);
 
     this.sprite.setPosition(air.x, air.y);
-    this.sprite.setFrame(frameIndexForHeading(state.heading, this.manifest.frameCount));
+    this.sprite.setFrame(frameIndexForHeading(state.heading, this.frameCount));
 
     this.shadow.setPosition(ground.x, ground.y);
 

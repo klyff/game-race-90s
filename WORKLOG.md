@@ -1,75 +1,50 @@
 # WORKLOG — concurrence-gamming
 
-> Mandatory extension of `~/.claude/CLAUDE.md`. Read this file **before anything else** at session
-> start and immediately after every compaction, then resume from it.
+> Ledger. After compaction: MISSION + `graphify query`, then **Locked technical decisions**. Do not dump this file.
 
 | Field | Value |
 | --- | --- |
-| Repository | `/Users/klyffharlley/scm/concurrence-gamming` |
-| Branch | `main`, **pushed to `https://github.com/klyff/game-race-90s`**. Local and `origin/main` are in sync. |
-| Plan file | `/Users/klyffharlley/.claude/plans/fa-a-um-plano-para-compressed-beaver.md` |
-| Product | Isometric arcade racer inspired by Rock N Roll Racing (web) |
+| Repository | `/Users/klyff/git/game-race-90s` |
+| Branch | `main` → `https://github.com/klyff/game-race-90s` |
+| Plan file | `~/.claude/plans/fa-a-um-plano-para-compressed-beaver.md` |
+| Product | Isometric arcade racer, Rock N Roll Racing (web) |
 | Created | 2026-08-15 16:24 PDT |
-| Last updated | 2026-08-15 22:35 PDT |
-| Compactions so far | 2 |
-| Git | on `main`, remote `origin` = `https://github.com/klyff/game-race-90s`. **The owner wants commit + push at the end of every iteration.** No longer blocked. |
+| Last updated | 2026-08-18 (graphify init + caveman memory) |
+| Graph | `graphify-out/` code-only; wiki `graphify-out/wiki/index.md`. Agent lose graph history OK — re-query, do not stop. |
+| Git | commit + push end of every iteration |
 
 ## Current state in one line
 
-**It is a race now.** Five cars line up on Thunder Basin, the player starts at the back, the NPCs
-drive the same `InputCommand` path the human does, contact between cars is resolved, damage
-accumulates, wrecks explode and respawn, and a real animated HUD reports position, lap, time, ammo,
-integrity and live standings. **599 tests across 25 files, typecheck clean, build clean** (any smaller
-number elsewhere in this file is stale — run the suite). **First commit is in: `fde7654`.**
-**Verified by reading screenshots, not object state:** `/tmp/hud2.png` (grid + countdown + HUD),
-`/tmp/hud_racing.png` (mid-race, player 2nd, standings live), `/tmp/boom.png` (explosion + empty
-integrity bar). Screenshot tooling now lives in `tools/verify/` — **read its README before trying to
-see the screen yourself, it records which browser works and which two flags are load-bearing.**
-**Next: T-018, the splash screen with car select** — `TitleMusic` exists for it but has never been
-heard. Then T-032 (the per-track rival) and T-016/T-017 (weapons).
-
----
+Race live. Trust `npm test` / `npm run typecheck` over numbers here. Screenshot via `tools/verify/` — read README first. Verify by image, not object state.
 
 ## How to resume this work (orchestrator instructions)
 
-If you are picking this up cold — after a compaction, a context cleanup, or in a new session — do
-exactly this, in order:
+Cold start / after compaction:
 
-1. Read the plan file listed above. It holds the architecture, the projection maths, the agent
-   briefs and the verification steps.
-2. Read this whole file, especially **Locked technical decisions** — several encode bugs already paid
-   for once.
-3. Run `npm test` and `npm run typecheck` to learn the true state of the repo. **Trust the repo over
-   any status written here.** Expected right now: 599 tests passing across 25 files, typecheck clean, build clean.
-4. Pick the lowest-numbered task that is not `done`, respecting `Blocked by`.
-5. Spawn subagents per the briefs in **Agent briefs**. Default model **Claude Haiku 4.5**; one
-   narrow, single-file task per agent; the orchestrator writes the agent rows (see decision 8).
-6. Never delete a task. A task may change hands, but it must never be forgotten.
-
-Useful commands:
+1. `graphify query "<task>" --budget 2000` — then wiki. Not GRAPH_REPORT dump.
+2. Locked technical decisions below — bugs paid once.
+3. `npm test` + `npm run typecheck`. Trust repo over this ledger.
+4. Lowest-numbered task not `done`, respect `Blocked by`.
+5. Subagents: one narrow file, Haiku default; orchestrator writes agent rows (decision 8).
+6. Never delete a task.
 
 ```bash
-npm test                          # 599 tests, all headless, no browser
-npm run typecheck                 # tsc --noEmit, must stay clean
-npm run build                     # tsc --noEmit && vite build — works, ~1.5 MB bundle
-npm run gen:sprites               # regenerate public/assets/cars/*.png + cars.json
-npm run gen:preview -- --roster   # .preview/roster.png — all 5 cars side by side, READ THIS IMAGE
+npm test                          # headless, no browser
+npm run typecheck                 # tsc --noEmit
+npm run build                     # tsc --noEmit && vite build
+npm run gen:sprites               # public/assets/cars/*.png + cars.json
+npm run gen:preview -- --roster   # .preview/roster.png — READ THIS IMAGE
 npm run gen:preview -- havac      # one car, 32 angles, magnified
 npm run gen:track                 # .preview/track-*.png + geometry report, READ THIS IMAGE
-npm run dev                       # ASK THE USER TO RUN THIS — an agent session cannot, see below
+npm run dev                       # ASK THE USER — agent session cannot
+graphify query "…" --budget 2000
+graphify update .                 # after code, AST, 0 API
 ```
 
-**Two separate environment limits, do not confuse them.**
+**Two env limits, do not mix.**
 
-1. **An agent session cannot start the dev server at all.** `npm run dev` fails with
-   `listen EPERM: operation not permitted` on any port and with the sandbox both on and off — the same
-   restriction that killed `tsx` in decision 1. It succeeded once early in the session and then stopped,
-   so do not assume it will work. **When the user wants to play, ask them to run
-   `cd /Users/klyffharlley/scm/concurrence-gamming && npm run dev` in their own terminal and open
-   http://localhost:5173.** That works; they did it and accepted the result.
-2. **A headless browser cannot reach `localhost` either**, because the enforced HTTP proxy answers 502.
-   That is what decision 16 works around, and it is how an agent verifies the screen by itself: build and
-   load over `file://`, never through the dev server.
+1. Agent cannot start dev server. `npm run dev` → `listen EPERM`. Owner: `npm run dev` → http://localhost:5173.
+2. Headless browser cannot hit `localhost` (proxy 502). Screenshot: build + `file://` (decision 16).
 
 ---
 

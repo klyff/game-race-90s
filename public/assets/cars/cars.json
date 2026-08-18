@@ -11,7 +11,7 @@
     {
       "id": "car-1",
       "displayName": "Marauder",
-      "archetype": "Balanced muscle — Thunder Basin titular",
+      "archetype": "Balanced muscle \u2014 Thunder Basin titular",
       "image": "car-1.png",
       "shadow": {
         "width": 40,
@@ -42,7 +42,7 @@
     {
       "id": "car-2",
       "displayName": "Dust Fang",
-      "archetype": "Light muscle — Thunder Basin reserva",
+      "archetype": "Light muscle \u2014 Thunder Basin reserva",
       "image": "car-2.png",
       "shadow": {
         "width": 43,
@@ -73,7 +73,7 @@
     {
       "id": "car-5",
       "displayName": "Sand Viper",
-      "archetype": "Dirt muscle — Thunder Basin extra",
+      "archetype": "Dirt muscle \u2014 Thunder Basin extra",
       "image": "car-5.png",
       "shadow": {
         "width": 43,
@@ -104,7 +104,7 @@
     {
       "id": "delorean",
       "displayName": "Delorean",
-      "archetype": "Steel wedge — Chrome Verge titular",
+      "archetype": "Steel wedge \u2014 Chrome Verge titular",
       "image": "delorean.png",
       "shadow": {
         "width": 43,
@@ -135,7 +135,7 @@
     {
       "id": "car-9-turbo",
       "displayName": "Nitro Viper",
-      "archetype": "Turbo reserva — Chrome Verge",
+      "archetype": "Turbo reserva \u2014 Chrome Verge",
       "image": "car-9-turbo.png",
       "shadow": {
         "width": 43,
@@ -166,7 +166,7 @@
     {
       "id": "car-3",
       "displayName": "Swamp Rat",
-      "archetype": "Marsh-runner — Bogmire Deep titular",
+      "archetype": "Marsh-runner \u2014 Bogmire Deep titular",
       "image": "car-3.png",
       "shadow": {
         "width": 43,
@@ -197,7 +197,7 @@
     {
       "id": "car-13",
       "displayName": "Bog Howler",
-      "archetype": "Marsh reserva — Bogmire Deep",
+      "archetype": "Marsh reserva \u2014 Bogmire Deep",
       "image": "car-13.png",
       "shadow": {
         "width": 43,
@@ -228,7 +228,7 @@
     {
       "id": "car-4",
       "displayName": "Frostbite",
-      "archetype": "Ice-crawler — Cryo Hollow titular",
+      "archetype": "Ice-crawler \u2014 Cryo Hollow titular",
       "image": "car-4.png",
       "shadow": {
         "width": 43,
@@ -259,7 +259,7 @@
     {
       "id": "car-17",
       "displayName": "Icebreaker",
-      "archetype": "Ice reserva — Cryo Hollow",
+      "archetype": "Ice reserva \u2014 Cryo Hollow",
       "image": "car-17.png",
       "shadow": {
         "width": 43,
@@ -290,7 +290,7 @@
     {
       "id": "car-8-strong",
       "displayName": "Iron Fist",
-      "archetype": "Immovable bruiser — Ferro Rust titular",
+      "archetype": "Immovable bruiser \u2014 Ferro Rust titular",
       "image": "car-8-strong.png",
       "shadow": {
         "width": 43,
@@ -321,7 +321,7 @@
     {
       "id": "car-12-strong",
       "displayName": "Wrecker",
-      "archetype": "Bulldozer reserva — Ferro Rust",
+      "archetype": "Bulldozer reserva \u2014 Ferro Rust",
       "image": "car-12-strong.png",
       "shadow": {
         "width": 43,
@@ -352,7 +352,7 @@
     {
       "id": "car-6-tank",
       "displayName": "Magma Rex",
-      "archetype": "War tank — Vulkanis titular",
+      "archetype": "War tank \u2014 Vulkanis titular",
       "image": "car-6-tank.png",
       "shadow": {
         "width": 43,
@@ -383,7 +383,7 @@
     {
       "id": "car-18",
       "displayName": "Slag Hammer",
-      "archetype": "Heavy reserva — Vulkanis",
+      "archetype": "Heavy reserva \u2014 Vulkanis",
       "image": "car-18.png",
       "shadow": {
         "width": 40,
@@ -414,7 +414,7 @@
     {
       "id": "car-11",
       "displayName": "Neon Ronin",
-      "archetype": "Street-tuner — Neon Kasbah titular",
+      "archetype": "Street-tuner \u2014 Neon Kasbah titular",
       "image": "car-11.png",
       "shadow": {
         "width": 43,
@@ -445,7 +445,7 @@
     {
       "id": "car-15",
       "displayName": "Volt Sting",
-      "archetype": "Arsenal reserva — Neon Kasbah",
+      "archetype": "Arsenal reserva \u2014 Neon Kasbah",
       "image": "car-15.png",
       "shadow": {
         "width": 43,
@@ -476,7 +476,7 @@
     {
       "id": "car-7-turbo",
       "displayName": "Afterburn",
-      "archetype": "Turbo — Ash Reach titular",
+      "archetype": "Turbo \u2014 Ash Reach titular",
       "image": "car-7-turbo.png",
       "shadow": {
         "width": 43,
@@ -507,7 +507,7 @@
     {
       "id": "car-20",
       "displayName": "Ash Comet",
-      "archetype": "Slipstream reserva — Ash Reach",
+      "archetype": "Slipstream reserva \u2014 Ash Reach",
       "image": "car-20.png",
       "shadow": {
         "width": 43,
@@ -538,7 +538,7 @@
     {
       "id": "car-10",
       "displayName": "Battle Trak",
-      "archetype": "Weapons platform — Voidport titular",
+      "archetype": "Weapons platform \u2014 Voidport titular",
       "image": "car-10.png",
       "shadow": {
         "width": 42,
@@ -569,7 +569,7 @@
     {
       "id": "car-14",
       "displayName": "Void Cannon",
-      "archetype": "Arsenal reserva — Voidport",
+      "archetype": "Arsenal reserva \u2014 Voidport",
       "image": "car-14.png",
       "shadow": {
         "width": 43,
@@ -600,7 +600,7 @@
     {
       "id": "car-16",
       "displayName": "Dirt Devil",
-      "archetype": "Dirt buggy — Verdant Fault titular",
+      "archetype": "Dirt buggy \u2014 Verdant Fault titular",
       "image": "car-16.png",
       "shadow": {
         "width": 43,
@@ -631,7 +631,7 @@
     {
       "id": "car-19",
       "displayName": "Vine Whip",
-      "archetype": "Dirt reserva — Verdant Fault",
+      "archetype": "Dirt reserva \u2014 Verdant Fault",
       "image": "car-19.png",
       "shadow": {
         "width": 43,
@@ -661,8 +661,8 @@
     },
     {
       "id": "car_2",
-      "displayName": "Car 2",
-      "archetype": "Clock-fleet strip",
+      "displayName": "LE\u00c3O",
+      "archetype": "Fortaleza tricolor \u2014 blue body, white band, red pinstripe",
       "image": "car_2_strip.png",
       "shadow": {
         "width": 65,
@@ -694,8 +694,8 @@
     },
     {
       "id": "car_3",
-      "displayName": "Car 3",
-      "archetype": "Clock-fleet strip",
+      "displayName": "TRICOLOR",
+      "archetype": "Fortaleza hatch \u2014 white with red/blue hood stripes",
       "image": "car_3_strip.png",
       "shadow": {
         "width": 65,
@@ -719,9 +719,9 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "trench-grip",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
@@ -752,8 +752,8 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
+      "perk": "off-road-ace",
+      "homePlanetId": "bogmire-deep",
       "worldAdvantage": 0.9,
       "frameWidth": 128,
       "frameHeight": 128
@@ -785,9 +785,9 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "slipstream",
+      "homePlanetId": "cryo-hollow",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
@@ -818,8 +818,8 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
+      "perk": "anvil",
+      "homePlanetId": "ferro-rust",
       "worldAdvantage": 0.9,
       "frameWidth": 128,
       "frameHeight": 128
@@ -851,9 +851,9 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "turbo",
+      "homePlanetId": "vulkanis",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
@@ -884,8 +884,8 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
+      "perk": "arsenal",
+      "homePlanetId": "neon-kasbah",
       "worldAdvantage": 0.9,
       "frameWidth": 128,
       "frameHeight": 128
@@ -917,16 +917,16 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "war-tank",
+      "homePlanetId": "ash-reach",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
     {
       "id": "car_10",
-      "displayName": "Car 10",
-      "archetype": "Clock-fleet strip",
+      "displayName": "RAPOSA",
+      "archetype": "Cruzeiro \u2014 blue muscle, white double stripe",
       "image": "car_10_strip.png",
       "shadow": {
         "width": 65,
@@ -951,7 +951,7 @@
         "collisionSquare": 1.535
       },
       "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
+      "homePlanetId": "voidport",
       "worldAdvantage": 0.9,
       "frameWidth": 128,
       "frameHeight": 128
@@ -983,16 +983,16 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "trench-grip",
+      "homePlanetId": "verdant-fault",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
     {
       "id": "car_12",
-      "displayName": "Car 12",
-      "archetype": "Clock-fleet strip",
+      "displayName": "VERD\u00c3O",
+      "archetype": "Palmeiras pickup \u2014 emerald green",
       "image": "car_12_strip.png",
       "shadow": {
         "width": 65,
@@ -1016,16 +1016,16 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
+      "perk": "off-road-ace",
       "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
     {
       "id": "car_13",
-      "displayName": "Car 13",
-      "archetype": "Clock-fleet strip",
+      "displayName": "ACADEMIA",
+      "archetype": "Palmeiras \u2014 same green kit as the pickup",
       "image": "car_13_strip.png",
       "shadow": {
         "width": 65,
@@ -1049,9 +1049,9 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "slipstream",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
@@ -1082,16 +1082,16 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "anvil",
+      "homePlanetId": "bogmire-deep",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
     {
       "id": "car_15",
-      "displayName": "Car 15",
-      "archetype": "Clock-fleet strip",
+      "displayName": "CELESTE",
+      "archetype": "Cruzeiro coupe \u2014 electric blue",
       "image": "car_15_strip.png",
       "shadow": {
         "width": 65,
@@ -1115,9 +1115,9 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "turbo",
+      "homePlanetId": "cryo-hollow",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
@@ -1148,16 +1148,16 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "arsenal",
+      "homePlanetId": "ferro-rust",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
     {
       "id": "car_17",
-      "displayName": "Car 17",
-      "archetype": "Clock-fleet strip",
+      "displayName": "CABULOSO",
+      "archetype": "Cruzeiro \u2014 bright blue",
       "image": "car_17_strip.png",
       "shadow": {
         "width": 65,
@@ -1181,11 +1181,44 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "war-tank",
+      "homePlanetId": "vulkanis",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
+    },
+    {
+      "id": "car_18",
+      "displayName": "CAMO STAR",
+      "archetype": "Matrix tank \u2014 18_hero, 30-frame clock",
+      "image": "matrix_car/18_hero/car_18_strip_64.png",
+      "framesJson": "matrix_car/18_hero/car_18_strip.json",
+      "shadow": {
+        "width": 35,
+        "height": 13
+      },
+      "stats": {
+        "mass": 1600,
+        "enginePower": 34,
+        "brakeForce": 36,
+        "maxSpeed": 52,
+        "grip": 16,
+        "steerRate": 1.4,
+        "steerSpeedFalloff": 0.72,
+        "armor": 0.88,
+        "ammoCapacity": 8,
+        "collisionRadius": 2.149388,
+        "aimRadius": 2.4,
+        "collisionAlong": 2.149388,
+        "collisionAcross": 1.965155,
+        "collisionSquareMin": 1.965155,
+        "collisionSquareMax": 2.149388,
+        "collisionSquare": 2.057272
+      },
+      "perk": "war-tank",
+      "homePlanetId": "vulkanis",
+      "worldAdvantage": 0.7,
+      "frameCount": 30
     },
     {
       "id": "car_19",
@@ -1214,9 +1247,9 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "trench-grip",
+      "homePlanetId": "ash-reach",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
@@ -1247,15 +1280,15 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "perk": "off-road-ace",
+      "homePlanetId": "voidport",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
     {
       "id": "car_21",
-      "displayName": "Car 21",
+      "displayName": "LARANJA MEC\u00c2NICA",
       "archetype": "Clock-fleet strip",
       "image": "car_21_strip.png",
       "shadow": {
@@ -1280,9 +1313,75 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
-      "perk": "bulldozer",
+      "perk": "slipstream",
+      "homePlanetId": "verdant-fault",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_22",
+      "displayName": "AZUL\u00c3O",
+      "archetype": "Cruzeiro-family blue",
+      "image": "car_22_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "anvil",
       "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_23",
+      "displayName": "MAGENTA",
+      "archetype": "Clock-fleet strip",
+      "image": "car_23_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "turbo",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     },
@@ -1313,9 +1412,702 @@
         "collisionSquareMax": 1.98,
         "collisionSquare": 1.535
       },
+      "perk": "arsenal",
+      "homePlanetId": "bogmire-deep",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_25",
+      "displayName": "RAPOS\u00c3O",
+      "archetype": "Cruzeiro \u2014 full blue body",
+      "image": "car_25_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "war-tank",
+      "homePlanetId": "cryo-hollow",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_26",
+      "displayName": "LAION",
+      "archetype": "Fortaleza mini \u2014 white/red/blue",
+      "image": "car_26_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "bulldozer",
+      "homePlanetId": "ferro-rust",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_27",
+      "displayName": "PINK MINI",
+      "archetype": "Clock-fleet strip",
+      "image": "car_27_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "trench-grip",
+      "homePlanetId": "vulkanis",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_28",
+      "displayName": "PALESTRINA",
+      "archetype": "Palmeiras green",
+      "image": "car_28_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "off-road-ace",
+      "homePlanetId": "neon-kasbah",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_29",
+      "displayName": "Car 29",
+      "archetype": "Clock-fleet strip",
+      "image": "car_29_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "slipstream",
+      "homePlanetId": "ash-reach",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_30",
+      "displayName": "Car 30",
+      "archetype": "Clock-fleet strip",
+      "image": "car_30_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "anvil",
+      "homePlanetId": "voidport",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_31",
+      "displayName": "Car 31",
+      "archetype": "Clock-fleet strip",
+      "image": "car_31_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "turbo",
+      "homePlanetId": "verdant-fault",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_32",
+      "displayName": "NEON VOID",
+      "archetype": "Clock-fleet strip",
+      "image": "car_32_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "arsenal",
+      "homePlanetId": "thunder-basin",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_33",
+      "displayName": "Car 33",
+      "archetype": "Clock-fleet strip",
+      "image": "car_33_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "war-tank",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_34",
+      "displayName": "COLORADO",
+      "archetype": "Internacional \u2014 red with white racing stripes",
+      "image": "car_34_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "bulldozer",
+      "homePlanetId": "bogmire-deep",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_35",
+      "displayName": "Car 35",
+      "archetype": "Clock-fleet strip",
+      "image": "car_35_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "trench-grip",
+      "homePlanetId": "cryo-hollow",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_36",
+      "displayName": "ROXO",
+      "archetype": "Clock-fleet strip",
+      "image": "car_36_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "off-road-ace",
+      "homePlanetId": "ferro-rust",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_37",
+      "displayName": "PEIXE",
+      "archetype": "Santos \u2014 white shirt, red badge",
+      "image": "car_37_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "slipstream",
+      "homePlanetId": "vulkanis",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_38",
+      "displayName": "Car 38",
+      "archetype": "Clock-fleet strip",
+      "image": "car_38_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "anvil",
+      "homePlanetId": "neon-kasbah",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_39",
+      "displayName": "Car 39",
+      "archetype": "Clock-fleet strip",
+      "image": "car_39_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "turbo",
+      "homePlanetId": "ash-reach",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_40",
+      "displayName": "Car 40",
+      "archetype": "Clock-fleet strip",
+      "image": "car_40_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "arsenal",
+      "homePlanetId": "voidport",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_41",
+      "displayName": "Car 41",
+      "archetype": "Clock-fleet strip",
+      "image": "car_41_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "war-tank",
+      "homePlanetId": "verdant-fault",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_42",
+      "displayName": "CRUZEIRO",
+      "archetype": "Cruzeiro blue",
+      "image": "car_42_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 22
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
       "perk": "bulldozer",
       "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_43",
+      "displayName": "Car 43",
+      "archetype": "Clock-fleet strip",
+      "image": "car_43_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "trench-grip",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_44",
+      "displayName": "Car 44",
+      "archetype": "Clock-fleet strip",
+      "image": "car_44_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "off-road-ace",
+      "homePlanetId": "bogmire-deep",
+      "worldAdvantage": 0.7,
+      "frameWidth": 128,
+      "frameHeight": 128
+    },
+    {
+      "id": "car_45",
+      "displayName": "Car 45",
+      "archetype": "Clock-fleet strip",
+      "image": "car_45_strip.png",
+      "shadow": {
+        "width": 65,
+        "height": 23
+      },
+      "stats": {
+        "mass": 1000,
+        "enginePower": 34,
+        "brakeForce": 46,
+        "maxSpeed": 78,
+        "grip": 30,
+        "steerRate": 2.5,
+        "steerSpeedFalloff": 0.45,
+        "armor": 0.4,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.7,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.98,
+        "collisionAcross": 1.09,
+        "collisionSquareMin": 1.09,
+        "collisionSquareMax": 1.98,
+        "collisionSquare": 1.535
+      },
+      "perk": "slipstream",
+      "homePlanetId": "cryo-hollow",
+      "worldAdvantage": 0.7,
       "frameWidth": 128,
       "frameHeight": 128
     }

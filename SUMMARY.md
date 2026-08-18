@@ -1,12 +1,12 @@
 # SUMMARY
 
-Corrida arcade isométrica no browser, no espírito de Rock N' Roll Racing: o carro bate nas paredes, recua, marca o asfalto, dispara, salta, e a câmara respira com a pista.
-Joga-se no Phaser, pixel-art, 32 poses por carro, física arcade, armas (míssil, óleo, mina), hop de quatro cargas, e NPCs que usam o mesmo input que o humano.
-A carreira passa pela garage (três saves, ranking, carteira): top-3 limpa a pista; 1º na última pista do mundo abre o próximo.
-Hoje o mapa ainda é **10 planetas × 3 circuitos** (Thunder Basin → Verdant Fault), cada um com piso, grip e carro titular próprios.
-A transição que vamos fazer: **planetas viram cidades**. O loop de unlock, a purse e o pack mantêm-se; o sítio deixa de ser um mundo alienígena e passa a ser uma cidade que se reconhece da rua.
-Cidades no estilo Rock N' Roll Racing — asfalto, neon, pub no pódio, circuito esculpido no chão da cidade, não um poster de planeta.
-É um jogo **web**: abre no browser, sem install, um URL.
-Vai ser **multiplayer**: o mesmo campo de corrida, vários humanos no pack, NPCs a preencher o que faltar.
-Até o netcode existir, o modo watch (dez carros, pista II de cada mundo) é o laboratório do pack e da frota nova.
-O norte: uma corrida de rua, no browser, com amigos no mesmo grid.
+Arcade isometric race in browser, Rock N' Roll Racing spirit: car hit walls, reverse, mark tarmac, fire, jump, camera breathe with track.
+Phaser, pixel-art, 32 poses per car, arcade physics, weapons (missile, oil, mine), four-charge hop, NPCs on same input as human.
+Career through garage (three saves, ranking, wallet): top-3 clear track; 1st on world's last track open next.
+Map today: **10 planets × 3 circuits** (Thunder Basin → Verdant Fault), each with floor, grip, featured car.
+Transition: **planets become cities**. Unlock loop, purse, pack stay; place stop being alien world, become street you know.
+Rock N' Roll Racing cities — asphalt, neon, pub on podium, circuit cut into city floor, not planet poster.
+**Web** game: open browser, no install, one URL.
+Will be **multiplayer**: same race field, several humans in pack, NPCs fill rest.
+Until netcode: watch mode (ten cars, track II of each world) = lab for pack + new fleet.
+North: street race, in browser, friends on same grid.
