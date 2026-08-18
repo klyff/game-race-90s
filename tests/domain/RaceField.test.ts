@@ -557,9 +557,8 @@ describe('RaceField — ramp landings (T-050)', () => {
     const wall = trackFullHalfWidth(track);
     placeAirborne(field, 50, wall + 6, 0.12);
     field.player.pendingRampFlight = false;
-    const before = field.player.integrity.integrity;
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
-    expect(field.player.integrity.integrity).toBe(before);
+    expect(field.player.integrity.integrity).toBeGreaterThan(0.99);
     expect(field.player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
   });
 

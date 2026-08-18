@@ -25,6 +25,7 @@ import type { InputCommand } from '../../src/domain/input/InputCommand.ts';
 import { createVehicleState } from '../../src/domain/vehicle/Vehicle.ts';
 import type { VehicleStats } from '../../src/domain/vehicle/VehicleStats.ts';
 import { thunderBasin } from '../../src/data/tracks/thunder-basin.track.ts';
+import { TURBO_SPEED_BONUS } from '../../src/domain/vehicle/TurboCharges.ts';
 import { dot, fromAngle, length, scale } from '../../src/domain/math/Vec2.ts';
 
 const STATS: VehicleStats = {

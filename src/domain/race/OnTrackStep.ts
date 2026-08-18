@@ -126,11 +126,10 @@ export function stepVehicleOnTrack(
     searchWindow,
   );
 
-  // 5. Resolve wall contact: clamp the car inside the wall and reflect/scrub velocity
-  //    if it tried to go past. Skipped entirely while airborne — a jump flies OVER
-  //    the wall rather than scraping it, an explicit exception to decision 19, not a
-  //    repurposing of the wall-scrape code.
-  const wall = isAirborne(airborne)
+  // 5. Resolve wall contact. Skipped for the whole airborne arc, INCLUDING the
+  //    landing frame — otherwise the wall shoves a void-landing back onto the
+  //    tarmac before RaceField can explode it.
+  const wall = flying || isAirborne(airborne)
     ? { state: airborne, touchedWall: false, impactSpeed: 0, lateralOffset: after.lateralOffset }
     : resolveWallContact(airborne, after, track, stats.collisionRadius);
 
