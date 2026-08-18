@@ -5,10 +5,12 @@ Algorithm (as specified):
   1. Collect car_N_a*.png sorted by index (skip hero).
   2. For each: trim alpha bbox, then +4px margin on all sides.
   3. largura_total = sum of padded widths.
-  4. Strip canvas RGBA = (largura_total, 1254); y=0; paint left→right.
-  5. collisionCenters[i].x = x + padded.width/2 ; .y = 1254/2 always.
-  6. ONE invisible collision_rect: w,h = (min+max)/2 of content bboxes;
-     rides centered on the car (same center).
+  4. strip_h = max(padded heights) + 2*4; canvas (largura_total, strip_h);
+     y = strip_h/2 - trimCar.height/2
+  5. collisionCenters[i].x = x + padded.width/2 ; .y = strip_h/2 always.
+  6. ONE invisible collision_rect: w,h = (min+max)/2 of content bboxes.
+  7. Production strip: magick -resize (64/1700*100)% ;
+     scaled_w = SCALE * strip.width  (SCALE = 64/1700)
 
 Usage:
   python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/1_hero
@@ -19,16 +21,20 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 from pathlib import Path
 
 from PIL import Image
 
-MARGIN = 4
-STRIP_H = 1254
-# Production scale (document only in JSON; PNG via magick -resize 3.7647%)
+MARGIN = 4  # respiro trim: 4px cada lado
+STRIP_BREATHE = 4  # respiro strip: 4px acima/abaixo
+# Source frame canvas height (reference only). Strip height = max(trim) + 2*STRIP_BREATHE.
+FRAME_H = 1254
 PROD_SRC_W = 1700
 PROD_DST_W = 64
+# Arrays/JS: SCALE = 64/1700. Magick % = SCALE*100. Scaled strip W = SCALE * strip.width
 PROD_SCALE = PROD_DST_W / PROD_SRC_W  # 0.0376470588
+MAGICK_PCT = PROD_SCALE * 100  # 3.764705882352941 → -resize 3.764705882352941%
 
 
 def px(v: float) -> int:
@@ -51,8 +57,13 @@ def production_scale_block(
         "dst_w": PROD_DST_W,
         "scale": PROD_SCALE,
         "scale_js": "const SCALE = 64 / 1700; // 0.037647 — arrays/colisao; NAO usar 3.7647",
-        "magick": "magick input.png -resize 3.7647% output.png  # so PNG; 3.7647 = scale*100",
-        "note": "Arrays: value64 = value1700 * 64/1700. Magick % is only for raster resize.",
+        "magick": f"magick input.png -resize {MAGICK_PCT}% output.png",
+        "magick_pct": MAGICK_PCT,
+        "scaled_strip_w": px(strip_w),  # SCALE * strip.width
+        "note": (
+            "Arrays: value64 = value1700 * (64/1700). "
+            "Magick % = (64/1700)*100. scaled_w = SCALE * strip.width."
+        ),
         "strip": {"w": px(strip_w), "h": px(strip_h)},
         "collision_rect": {
             "w": px(collision_rect["w"]),
@@ -157,16 +168,17 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
         "note": "único retângulo = média (min+max)/2; anda no centro do carro",
     }
 
-    strip = Image.new("RGBA", (largura_total, STRIP_H), (0, 0, 0, 0))
+    strip_h = max(t[2].height for t in trimmed) + 2 * STRIP_BREATHE
+    strip = Image.new("RGBA", (largura_total, strip_h), (0, 0, 0, 0))
     array_centros: list[dict] = []
     x = 0
-    y = 0
     meta_frames: list[dict] = []
 
     for i, (idx, path, pad, cw, ch) in enumerate(trimmed):
-        # centro do carro no strip (= centro da célula padded, margem simétrica)
+        # Vertical center with breathing room: y = strip_h/2 - trim.h/2
+        y = (strip_h - pad.height) // 2
         cx = x + pad.width / 2
-        cy = STRIP_H / 2
+        cy = strip_h / 2
         strip.paste(pad, (x, y), pad)
         # retângulo invisível centrado no carro
         col_x1 = cx - col_w / 2
@@ -197,35 +209,56 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
         x += pad.width
 
     out_png = out_dir / f"car_{car_n}_strip.png"
+    out_png_64 = out_dir / f"car_{car_n}_strip_64.png"
     out_json = out_dir / f"car_{car_n}_strip.json"
     strip.save(out_png)
+
+    # Production PNG: % = (64/1700)*100 ; scaled_w = SCALE * strip.width
+    magick_pct_str = f"{MAGICK_PCT}%"
+    subprocess.run(
+        [
+            "magick",
+            str(out_png),
+            "-resize",
+            magick_pct_str,
+            str(out_png_64),
+        ],
+        check=True,
+    )
 
     payload = {
         "car": car_n,
         "folder": str(folder),
         "strip": out_png.name,
+        "strip_64": out_png_64.name,
         "w": largura_total,
-        "h": STRIP_H,
+        "h": strip_h,
+        "frame_canvas_h": FRAME_H,
         "margin": MARGIN,
+        "strip_breathe": STRIP_BREATHE,
         "count": len(trimmed),
         "hero_excluded": True,
         "collision_rect": collision_rect,
         "collision_centers": array_centros,
-        "collision_y_fixed": STRIP_H / 2,
+        "collision_y_fixed": strip_h / 2,
         "frames": meta_frames,
         "production_scale": production_scale_block(
             strip_w=largura_total,
-            strip_h=STRIP_H,
+            strip_h=strip_h,
             collision_rect=collision_rect,
             array_centros=array_centros,
             meta_frames=meta_frames,
-            collision_y=STRIP_H / 2,
+            collision_y=strip_h / 2,
         ),
     }
+    payload["production_scale"]["strip_64"] = out_png_64.name
+    payload["production_scale"]["magick_cmd"] = (
+        f"magick {out_png.name} -resize {magick_pct_str} {out_png_64.name}"
+    )
     out_json.write_text(json.dumps(payload, indent=2) + "\n")
     print(
-        f"OK car_{car_n}_strip.png  {largura_total}x{STRIP_H}  "
-        f"frames={len(trimmed)}  margin={MARGIN}px  → {out_png}"
+        f"OK car_{car_n}_strip.png  {largura_total}x{strip_h}  "
+        f"frames={len(trimmed)}  margin={MARGIN}px breathe={STRIP_BREATHE}px  → {out_png}"
     )
     print(
         f"OK collision_rect {col_w}x{col_h}  "
@@ -233,9 +266,8 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
     )
     ps = payload["production_scale"]["collision_rect"]
     print(
-        f"OK production_scale {PROD_SCALE:.10f}  "
-        f"collision {ps['w']}x{ps['h']}  "
-        f"(magick -resize 3.7647%)"
+        f"OK strip_64  magick -resize {magick_pct_str}  "
+        f"SCALE*strip.w={px(largura_total)}  collision {ps['w']}x{ps['h']}  → {out_png_64}"
     )
     return out_png, out_json
 

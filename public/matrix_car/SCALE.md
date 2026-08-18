@@ -96,4 +96,11 @@ Para multiplicação direta: **`0.037647`**.
 | centro Y | 627 | **24** |
 
 Números em `car_N_strip.json` → `production_scale` (já com `Math.round`).  
-PNG strip 64: `magick car_N_strip.png -resize 3.7647% car_N_strip_64.png` (quando for gerar).
+PNG strip 64: gerado no fluxo por `build_matrix_strip.py`:
+
+```bash
+# SCALE = 64/1700
+# % magick = SCALE * 100
+# scaled_w = SCALE * strip.width
+magick car_N_strip.png -resize 3.764705882352941% car_N_strip_64.png
+```

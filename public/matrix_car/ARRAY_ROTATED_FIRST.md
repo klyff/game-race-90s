@@ -391,5 +391,6 @@ Colisão arte `767×528` → produção **`29×20`** (`Math.round`).
 Strip arte `21645×1254` → produção **`815×47`**.  
 Números em `car_1_strip.json` → `production_scale`.
 
-Algoritmo strip: trim → margem **4px** → soma larguras → canvas `(largura_total, 1254)` → paint `y=0` L→R.
+Algoritmo strip: trim → margem **4px** → soma larguras → canvas `(largura_total, 1254)` → paint L→R com  
+`y = Strip.height/2 - trimCar.height/2` (centro vertical).
 

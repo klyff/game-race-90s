@@ -1,245 +1,213 @@
-# Passo a passo — matriz de carros
+# Passo a passo — matrix_car (fonte do que já fizemos)
 
-Pasta base: `public/matrix_car/`
-
-**`car_N_hero.png` = vitrine** — não mexer; fora do array de rotação.  
-Hero base **entre 4h e 3h** (típico 4:00 = 300°). **`0°` = frente** · **`12h` = traseira**.  
-**Docs:** `README.md`, `PROMPT_30.md`, `RELOGIO.md`, gabarito `GABARITO_RELOGIO.png`.  
-**Skill / regras:** `.cursor/skills/matrix-car-rotate/` · `.cursor/rules/car-yaw-clock.mdc`.  
-Contrato: **+12°**; arquivos `a000`…`a029`. Não regenerar — **renomear**. Não flippar. Nunca sobrescrever o hero.
+**Pasta base:** `public/matrix_car/`  
+**Status:** em andamento · **NÃO TERMINADO**
 
 ---
 
-## A) Preparar as matrizes (vitrine)
+## 0) Fonte da verdade (ler nesta ordem)
 
-### 1. Renomear em sequência `1…N`
-Ordem estável por número antigo; quem tinha `_e` (olhando esquerda) manteve o sufixo depois.
+| # | arquivo | o que é |
+|---|---------|---------|
+| 1 | **`GABARITO_RELOGIO.png`** | Gabarito visual índice ↔ hora ↔ ângulo |
+| 2 | **`RELOGIO.md`** | Contrato do relógio (tabela completa) |
+| 3 | **`PROMPT_30.md`** | Prompt de geração de cada frame |
+| 4 | **`ARRAY_ROTATED_FIRST.md`** | **As is** do array (car_1): hora, ângulo, imagem, original, w/h, start |
+| 5 | **`SCALE.md`** | Escala produção `64/1700` (arrays) vs `3.7647%` (só magick) |
+| 6 | **`PROCESS_HALVES.md`** | Split metade A/B |
+| 7 | **`CLOUD_HANDOFF.md`** | Brief cloud (metade B = 18–33) |
+| 8 | Skill | `.cursor/skills/matrix-car-rotate/` |
+| 9 | Regras | `.cursor/rules/car-yaw-clock.mdc` · `matrix-car-rotate.mdc` |
+
+Espelho dos docs: `tools/art/car-rotate/`.
+
+---
+
+## 1) Contrato (não negociar)
+
+- **`0°` = frente absoluta** · **`12h` = traseira absoluta (`180°`)**
+- Passo **+12°** horário · 30 slots · `car_N_a000.png` … `a029.png`
+- **Hero / vitrine** (`car_N_hero.png`): pose entre **4h e 3h** (típico `indice[25]=4:00=300°`) — **NÃO MEXER**
+- `start: true` só índices **23–27** (3h–4h)
+- Pose certa + nome errado → **renomear** · **nunca flippar**
+- Buracos no índice **não** se recompactam
+- Canvas frame: **1700 × 1254**
+
+Ordem de geração por carro:
+
+`25 → 26 → 27 → 28 → 29 → 0 → 1 → … → 24`
+
+---
+
+## 2) O que JÁ está feito (as is)
+
+### Vitrines (33 cars)
+
+- Pastas `1_hero` … `33_hero`
+- Cada uma tem `car_N_hero.png` (vitrine, quieta)
+
+### car_1 — array + strip
+
+| item | estado |
+|------|--------|
+| Frames | **26 / 30** — faltam índices **`4, 12, 15, 25`** |
+| Presentes | `0–3, 5–11, 13–14, 16–24, 26–29` |
+| Mapa as is | `ARRAY_ROTATED_FIRST.md` (inclui **original** pré-rename) |
+| Strip | `1_hero/car_1_strip.png` + `car_1_strip.json` |
+| Colisão | 1 retângulo invisível = `(min+max)/2` → arte **767×528** · prod **29×20** |
+| Escala no JSON | bloco `production_scale` (`SCALE = 64/1700`) |
+
+### car_2 — começo da metade A
+
+| item | estado |
+|------|--------|
+| Frames | **5 / 30** — `a025` … `a029` |
+| Faltam | `0–24` |
+| Strip parcial | `2_hero/car_2_strip.png` + `.json` (rebuild ao completar) |
+
+### cars 3–33
+
+- Só vitrine · **0** frames de rotação (exceto o progresso acima no 2)
+
+---
+
+## 3) Split das metades
+
+| metade | quem | cars | pasta inicial |
+|--------|------|------|----------------|
+| **A** | agente local (esta sessão) | **2 → 17** | `2_hero/` |
+| **B** | cloud (você dispara) | **18 → 33** | `18_hero/` |
+
+Detalhe: `PROCESS_HALVES.md` · brief cloud: `CLOUD_HANDOFF.md`.
+
+---
+
+## 4) Passo a passo — um frame
+
+Substituir `{N}`, `{INDEX}`, `{CLOCK}`, `{ANGLE}`.
+
+### 4.1 Gerar
+
+1. Abrir vitrine: `public/matrix_car/{N}_hero/car_{N}_hero.png` (só referência)
+2. Colar prompt de `PROMPT_30.md` com:
+   - `THIS FRAME: indice[{INDEX}] = {CLOCK} = {ANGLE}°`
+   - `Filename: car_{N}_a{INDEX:03d}.png`
+3. Gerar 1:1 (void preto ou transparente)
+
+### 4.2 Normalizar → 1700×1254
 
 ```bash
-# (feito via Python na sessão — resultado:)
-# car_1_hero.png … car_33_hero.png
-# com _e nos que eram esquerda: car_N_hero_e.png
+# IN = PNG gerado (ex. assets/…)
+python3 tools/art/hero_chroma_key.py IN /tmp/chroma.png
+magick /tmp/chroma.png -background none -trim +repage \
+  -gravity center -extent 1700x1254 \
+  public/matrix_car/{N}_hero/car_{N}_a{INDEX}.png
 ```
 
-### 2. Flip horizontal dos `_e`
-Espelha para a mesma orientação dos outros e remove o `_e`.
+**Não** sobrescrever `car_{N}_hero.png`.
+
+### 4.3 Repetir
+
+Ordem: `25,26,27,28,29,0,1,…,24` até ter os 30 (ou documentar buracos).
+
+---
+
+## 5) Passo a passo — strip + colisão (fim do carro)
 
 ```bash
-# Pillow FLIP_LEFT_RIGHT em cada car_*_hero_e.png → car_*_hero.png
-python3 - <<'PY'
-from pathlib import Path
-from PIL import Image
-d = Path('public/matrix_car')
-for src in sorted(d.glob('car_*_hero_e.png')):
-    final = d / src.name.replace('_hero_e.png', '_hero.png')
-    Image.open(src).convert('RGBA').transpose(Image.FLIP_LEFT_RIGHT).save(final)
-    src.unlink()
-    print('OK', final.name)
-PY
+python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/{N}_hero
 ```
 
-*(Na sessão isso rodou antes de criar as pastas `N_hero/`.)*
+O script faz:
 
-### 3. Uma pasta por carro
+1. Lista só `car_N_a*.png` (**hero fora**)
+2. **trim** do alpha + margem **4px** em todos os lados
+3. `largura_total` = soma das larguras
+4. `strip_h = max(alturas dos trims) + 2×4` (respiro **4px** acima/abaixo)  
+   canvas RGBA `(largura_total × strip_h)`
+5. Paint L→R com centro vertical:
+
+```text
+y = strip_h / 2 - trimCar.height / 2
+```
+
+6. **Um** retângulo de colisão invisível:
+
+```text
+w = round((min_w + max_w) / 2)   # bbox conteúdo
+h = round((min_h + max_h) / 2)
+```
+
+Anda no **centro do carro** (`collision_center`; Y = `strip_h / 2`).
+
+7. Grava arte + JSON, e **já gera** a strip de produção:
 
 ```bash
+# SCALE = 64/1700
+# magick % = SCALE * 100
+# scaled_w = SCALE * strip.width
+magick car_N_strip.png -resize 3.764705882352941% car_N_strip_64.png
+```
+
+---
+
+## 6) Escala de produção
+
+Ver **`SCALE.md`**.
+
+```js
+const SCALE = 64 / 1700; // 0.037647 — arrays / colisão / JS
+value64 = Math.round(value1700 * SCALE);
+```
+
+```bash
+# só PNG (ImageMagick usa % = scale×100)
+magick car_N_strip.png -resize 3.7647% car_N_strip_64.png
+```
+
+**Não** multiplicar arrays por `3.7647`.
+
+---
+
+## 7) Checklist por carro
+
+```text
+[ ] Ler gabarito + RELOGIO + PROMPT_30
+[ ] Não tocar car_N_hero.png
+[ ] Gerar/normalizar a025…a029, a000…a024
+[ ] Contar 30 (ou listar buracos)
+[ ] build_matrix_strip.py
+[ ] Conferir collision_rect + production_scale no JSON
+[ ] Commit / push da pasta N_hero
+```
+
+---
+
+## 8) Comandos úteis
+
+```bash
+# inventário rápido
 python3 - <<'PY'
 from pathlib import Path
 import re
-d = Path('public/matrix_car')
-for src in sorted(d.glob('car_*_hero.png'), key=lambda p: int(re.search(r'car_(\d+)', p.name).group(1))):
-    n = int(re.search(r'car_(\d+)', src.name).group(1))
-    folder = d / f'{n}_hero'
-    folder.mkdir(exist_ok=True)
-    src.rename(folder / src.name)
-    print(folder.name)
+base = Path('public/matrix_car')
+for d in sorted(base.glob('*_hero'), key=lambda p: int(p.name.split('_')[0])):
+    n = int(d.name.split('_')[0])
+    frames = sorted(int(re.search(r'_a(\d+)', p.name).group(1))
+                    for p in d.glob(f'car_{n}_a*.png'))
+    miss = [i for i in range(30) if i not in frames]
+    print(f'{n:2d}  {len(frames):2d}/30  miss={miss or "-"}')
 PY
-```
 
-### 4. Canvas só (não escala o desenho) → 1700×1254
-
-```bash
-# ImageMagick: extent, gravity center, fundo transparente
-magick IN.png -background none -gravity center -extent 1700x1254 OUT.png
-```
-
-Loop nas 33 pastas:
-
-```bash
-python3 - <<'PY'
-import subprocess
-from pathlib import Path
-d = Path('public/matrix_car')
-for src in sorted(d.glob('*/car_*_hero.png')):
-    tmp = src.with_suffix('.extent_tmp.png')
-    subprocess.run([
-        'magick', str(src),
-        '-background', 'none', '-gravity', 'center',
-        '-extent', '1700x1254', str(tmp),
-    ], check=True)
-    tmp.replace(src)
-    print('OK', src)
-PY
-```
-
-### 5. Mesmo eixo (centro do carro = centro do canvas)
-
-```bash
-magick IN.png -background none -trim +repage -gravity center -extent 1700x1254 OUT.png
-```
-
-```bash
-python3 - <<'PY'
-import subprocess
-from pathlib import Path
-d = Path('public/matrix_car')
-W, H = 1700, 1254
-for src in sorted(d.glob('*/car_*_hero.png')):
-    tmp = src.with_suffix('.axis_tmp.png')
-    subprocess.run([
-        'magick', str(src),
-        '-background', 'none',
-        '-trim', '+repage',
-        '-gravity', 'center',
-        '-extent', f'{W}x{H}',
-        str(tmp),
-    ], check=True)
-    tmp.replace(src)
-    print('OK', src.parent.name)
-PY
+# strip
+python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/2_hero
 ```
 
 ---
 
-## B) Relógio (contrato de pose)
+## 9) Próximo ato
 
-**Ver `RELOGIO.md` nesta pasta — regra oficial.**
-
-- Zero **único**: **0° = 6h = frente** (`a000`). Vale para frente **e** traseira.
-- **12h = 180° = costas** (não é outro zero).
-- **Hero / matriz = 300° = 4h** (ângulo de partida dos carros).
-- Nariz = ponteiro; giro **horário** a partir do 6; passo **12°** → 30 frames.
-
-### Meia-volta TRASEira (15) — mesmo zero (0=6h)
-`90, 102, 114, 126, 138, 150, 162, 174, 186, 198, 210, 222, 234, 246, 258`  
-(180° ≈ 12h costas)
-
-### Meia-volta FRENTE (15) — mesmo zero (0=6h)
-`270, 282, 294, 306, 318, 330, 342, 0, 12, 24, 36, 48, 60, 72, 84`  
-(0° = 6h frente; 300° = 4h ≈ hero)
-
-Arquivos:
-```
-{N}_hero/car_{N}_a090.png … car_{N}_a258.png   # traseira
-{N}_hero/car_{N}_a270.png … car_{N}_a084.png   # frente (inclui a000)
-{N}_hero/car_{N}_hero.png                      # matriz
-```
-
-Prompts nesta raiz:
-- `PROMPT_REAR_HALF.md`
-- `PROMPT_FRONT_HALF.md`
-
----
-
-## C) Gerar um frame (imagem solta — sem strip)
-
-### STEP 0 — Lock
-Abrir `{N}_hero/car_{N}_hero.png` como referência de identidade.
-
-### STEP 1 — GenerateImage (Cursor)
-- `aspect_ratio`: `1:1`
-- `filename`: `car_{N}_a{ângulo:03d}.png` (ex.: `car_1_a000.png`)
-- `reference_image_paths`: hero da pasta
-- `description`: texto do `PROMPT_*` + ângulo específico
-
-Saída bruta (típico): **1024×1024** em  
-`~/.cursor/projects/Users-klyff-git-game-race-90s/assets/`
-
-### STEP 2 — Chroma (Python)
-Flood-fill preto conectado às bordas → alpha (não fura pneu/arma pretos).
-
-```bash
-python3 tools/art/hero_chroma_key.py \
-  ~/.cursor/projects/Users-klyff-git-game-race-90s/assets/car_1_a000.png \
-  /tmp/car_1_a000_chroma.png
-```
-
-### STEP 3 — Trim + eixo + canvas matriz (ImageMagick)
-
-```bash
-magick /tmp/car_1_a000_chroma.png \
-  -background none \
-  -trim +repage \
-  -gravity center \
-  -extent 1700x1254 \
-  public/matrix_car/1_hero/car_1_a000.png
-```
-
-### STEP 4 — Conferir eixo
-
-```bash
-python3 - <<'PY'
-from PIL import Image
-im = Image.open('public/matrix_car/1_hero/car_1_a000.png').convert('RGBA')
-b = im.getbbox()
-cx = (b[0]+b[2])/2
-print(im.size, 'bbox', b, 'cx', cx, 'dx', cx - 850)
-PY
-```
-
-**Não** rodar `build_strip.py` / `npm run gen:car-strip` nesta etapa — só imagens soltas.
-
----
-
-## D) Pipeline completo de um lote (ex.: frente do carro 1)
-
-```bash
-# 1) Gerar os 15 PNGs via agente/GenerateImage (Cursor) → assets/
-# 2) Ingestão em lote:
-python3 - <<'PY'
-import subprocess, sys
-from pathlib import Path
-from PIL import Image
-sys.path.insert(0, 'tools/art')
-from hero_chroma_key import flood_black_to_alpha
-
-ASSETS = Path.home() / '.cursor/projects/Users-klyff-git-game-race-90s/assets'
-OUT = Path('public/matrix_car/1_hero')
-W, H = 1700, 1254
-angles = [270,282,294,306,318,330,342,0,12,24,36,48,60,72,84]
-
-for a in angles:
-    name = f'car_1_a{a:03d}.png'
-    src = ASSETS / name
-    assert src.exists(), name
-    tmp = OUT / f'__tmp_{a:03d}.png'
-    flood_black_to_alpha(Image.open(src)).save(tmp)
-    dst = OUT / name
-    subprocess.run([
-        'magick', str(tmp),
-        '-background', 'none', '-trim', '+repage',
-        '-gravity', 'center', '-extent', f'{W}x{H}',
-        str(dst),
-    ], check=True)
-    tmp.unlink()
-    print('OK', dst.name)
-PY
-```
-
----
-
-## E) Dependências
-
-```bash
-brew install imagemagick   # comando: magick
-# Pillow (Python)
-pip3 show pillow
-```
-
-Scripts auxiliares no repo:
-- `tools/art/hero_chroma_key.py`
-- `tools/art/accept_frame.py`
-- `tools/art/validate_lot.py`
-- `tools/art/car-rotate/pipeline.sh` + `build_strip.py` *(strip opcional; não usar agora)*
-- `tools/art/car-rotate/PROMPT_FRONT_HALF.md`
-- `tools/art/car-rotate/PROMPT_REAR_HALF.md`
+1. **Metade A:** completar `2_hero` (`a000`–`a024`), depois `3`…`17`  
+2. **Metade B (cloud):** começar em `18_hero` com este passo a passo + `CLOUD_HANDOFF.md`  
+3. Opcional: preencher buracos do `1_hero`  
+4. Atualizar `ARRAY_ROTATED_FIRST.md` / `STATUS.md` quando o as is mudar

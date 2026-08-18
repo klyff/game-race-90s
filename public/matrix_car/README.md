@@ -14,7 +14,7 @@
 | `N_hero/car_N_a000.png` … `a029.png` | Frames (+12° / +0.4 h por slot) |
 | `RELOGIO.md` | Contrato + tabela |
 | `PROMPT_30.md` | Prompt de geração |
-| `PASSO_A_PASSO.md` | Comandos / pipeline |
+| `PASSO_A_PASSO.md` | **Passo a passo completo** + fonte do que já foi feito |
 | `1_hero/INDEX_ANGLES.md` | Inventário do carro 1 |
 
 ## Contrato rápido
