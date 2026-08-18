@@ -1,3 +1,9 @@
+import { isAudioMuted, setAudioMuted } from './AudioPrefs.ts';
+import { BedPlayer } from './BedPlayer.ts';
+import { pickLoadedMusicBed } from './BedRegistry.ts';
+import { musicBedUrl } from '../../data/audio/MusicBeds.ts';
+import type { PlannedClip } from '../../data/audio/NarratorBank.ts';
+import type { NarratorPriority } from '../../domain/audio/NarratorQueue.ts';
 import { BrakeVoice } from './BrakeVoice.ts';
 import { EngineGearbox } from './EngineGearbox.ts';
 import { EngineVoice } from './EngineVoice.ts';
@@ -5,6 +11,7 @@ import { ExplosionVoice } from './ExplosionVoice.ts';
 import { ImpactVoice } from './ImpactVoice.ts';
 import { MusicPlayer } from './MusicPlayer.ts';
 import type { MusicScore } from './MusicScore.ts';
+import { NarratorPlayer } from './NarratorPlayer.ts';
 import { NoiseSource } from './NoiseSource.ts';
 import { SkidVoice } from './SkidVoice.ts';
 import type { InputCommand } from '../../domain/input/InputCommand.ts';
@@ -30,10 +37,10 @@ const SKID_FULL_AT = 2;
 /**
  * The single voice of the car, driven entirely by simulation telemetry.
  *
- * Everything is synthesised (locked decision 20) — there is not one audio file in
- * this project. The facade exists so the race scene never touches an `AudioNode`:
- * it hands over the same telemetry the debug overlay reads, and this class decides
- * what that should sound like.
+ * Engine, tyres and impacts are synthesised. Music beds and the narrator are
+ * recorded files. The facade exists so the race scene never touches an
+ * `AudioNode`: it hands over telemetry and planned voice cues, and this class
+ * decides what that should sound like.
  *
  * All of it is a no-op when the browser refuses to give us audio. `AudioContext`
  * starts suspended until a user gesture, and some environments have no audio device
@@ -52,8 +59,10 @@ export class RaceAudio {
   private readonly noise: NoiseSource | null = null;
   private readonly musicGain: GainNode | null = null;
   private readonly music: MusicPlayer | null = null;
+  private readonly bed: BedPlayer | null = null;
+  private readonly narrator = new NarratorPlayer();
   private readonly driftLimit: number;
-  private muted = false;
+  private muted = isAudioMuted();
 
   /**
    * `score` is the current world's theme (T-040) — optional so tests and any
@@ -81,12 +90,27 @@ export class RaceAudio {
     this.impact = new ImpactVoice(this.context, this.master);
     this.explosion = new ExplosionVoice(this.context, this.noise, this.master);
 
-    if (score !== undefined) {
+    const bed = pickLoadedMusicBed();
+    if (bed !== undefined) {
+      this.bed = new BedPlayer(musicBedUrl(bed));
+      this.bed.setMuted(this.muted);
+    } else if (score !== undefined) {
       this.musicGain = this.context.createGain();
       this.musicGain.gain.value = MUSIC_VOLUME;
       this.musicGain.connect(this.context.destination);
       this.music = new MusicPlayer(this.context, this.noise, this.musicGain, score);
+      this.music.setMuted(this.muted);
     }
+    this.narrator.setMuted(this.muted);
+  }
+
+  /** Preload the clips this race already rolled so GO does not hitch. */
+  armNarrator(clips: readonly PlannedClip[]): void {
+    this.narrator.preload(clips);
+  }
+
+  enqueueNarrator(clip: PlannedClip, priority: NarratorPriority): void {
+    this.narrator.enqueue(clip, priority);
   }
 
   /** True when the browser gave us a working audio graph. */
@@ -100,6 +124,7 @@ export class RaceAudio {
    * Safe to call repeatedly — the scene calls it on every key press until it takes.
    */
   resume(): void {
+    this.bed?.start();
     if (this.context === null || this.context.state !== 'suspended') return;
     void this.context.resume().catch(() => {
       /* Autoplay policy or no device: stay silent rather than break the game. */
@@ -144,7 +169,10 @@ export class RaceAudio {
   /** Silences everything without tearing the graph down, for a mute key. */
   setMuted(muted: boolean): void {
     this.muted = muted;
+    setAudioMuted(muted);
+    this.bed?.setMuted(muted);
     this.music?.setMuted(muted);
+    this.narrator.setMuted(muted);
     if (!muted) return;
     this.engine?.update(0, 0, 0);
     this.skid?.update(0);
@@ -160,6 +188,7 @@ export class RaceAudio {
     this.gearbox.reset();
     this.skid?.update(0);
     this.brake?.update(0, 0);
+    this.narrator.reset();
   }
 
   destroy(): void {
@@ -168,7 +197,9 @@ export class RaceAudio {
     this.brake?.stop();
     this.impact?.stop();
     this.explosion?.destroy();
+    this.bed?.stop();
     this.music?.destroy();
+    this.narrator.destroy();
     this.noise?.stop();
     void this.context?.close().catch(() => {
       /* Already closed. Nothing to do and nothing worth reporting. */

@@ -137,6 +137,8 @@ export interface ExplosionEffectOptions {
 export interface BurstOptions {
   /** Stamp a dark asphalt scorch that outlives the fireball. Car wrecks only. */
   readonly leaveBurnMark?: boolean;
+  /** Skip geometric shards when the scrap roster is handling debris. */
+  readonly skipShards?: boolean;
 }
 
 /** One spark: world position, planar velocity, height arc, and colour fade. */
@@ -284,7 +286,9 @@ export class ExplosionEffect {
     this.nextBurstId += 1;
 
     const sparks = this.spawnSparks(position, clampedIntensity, burstIdSeed);
-    const shards = this.spawnShards(position, clampedIntensity, burstIdSeed);
+    const shards = options.skipShards
+      ? []
+      : this.spawnShards(position, clampedIntensity, burstIdSeed);
 
     this.bursts.push({
       positionWorld: position,

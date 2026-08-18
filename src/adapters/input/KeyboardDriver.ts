@@ -32,7 +32,8 @@
  *   C             = fire missile (edge-triggered)
  *   Z             = drop oil (edge-triggered)
  *   X             = drop landmine (edge-triggered)
- *   Left Shift    = turbo (edge-triggered; 4 charges, +35% for 2s)
+ *   Left Shift / A = turbo (hold; 4 charges, +35% for 2s). Hold, not tap:
+ *                   JustDown is eaten if Shift is pressed during countdown.
  *   Space         = hop (edge-triggered; 4 charges, refill at the line)
  *
  * Movement is arrows only so C/X/Z can be the weapon buttons without
@@ -55,6 +56,7 @@ export class KeyboardDriver {
   private readonly keyMine: Phaser.Input.Keyboard.Key;
   private readonly keyJump: Phaser.Input.Keyboard.Key;
   private readonly keyTurbo: Phaser.Input.Keyboard.Key;
+  private readonly keyTurboAlt: Phaser.Input.Keyboard.Key;
   private readonly reverseLatch: ReverseLatch;
 
   constructor(keyboard: Phaser.Input.Keyboard.KeyboardPlugin) {
@@ -78,6 +80,7 @@ export class KeyboardDriver {
     this.keyMine = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.keyJump = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.keyTurbo = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+    this.keyTurboAlt = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
   }
 
   /**
@@ -111,7 +114,9 @@ export class KeyboardDriver {
       dropOil: Phaser.Input.Keyboard.JustDown(this.keyOil),
       dropMine: Phaser.Input.Keyboard.JustDown(this.keyMine),
       jump: Phaser.Input.Keyboard.JustDown(this.keyJump),
-      boost: Phaser.Input.Keyboard.JustDown(this.keyTurbo),
+      // isDown, not JustDown: the sim already refuses a second charge while
+      // turboRemaining > 0, and a tap during the lights is otherwise lost.
+      boost: this.keyTurbo.isDown || this.keyTurboAlt.isDown,
     };
   }
 
@@ -125,5 +130,6 @@ export class KeyboardDriver {
     this.keyboardPlugin.removeKey(this.keyMine);
     this.keyboardPlugin.removeKey(this.keyJump);
     this.keyboardPlugin.removeKey(this.keyTurbo);
+    this.keyboardPlugin.removeKey(this.keyTurboAlt);
   }
 }

@@ -19,7 +19,7 @@ import { PNG } from 'pngjs';
 
 const SIZE = 256;
 
-type Pattern = 'crack' | 'blotch' | 'grating' | 'ripple' | 'plate' | 'speckle';
+type Pattern = 'crack' | 'blotch' | 'grating' | 'ripple' | 'plate' | 'speckle' | 'coral-grain';
 
 interface Swatch {
   readonly slug: string;
@@ -31,7 +31,7 @@ interface Swatch {
 }
 
 const SWATCHES: readonly Swatch[] = [
-  { slug: 'thunder-basin', a: [90, 42, 22], b: [140, 72, 36], accent: [60, 26, 12], accentChance: 0.06, pattern: 'crack' },
+  { slug: 'thunder-basin', a: [212, 120, 98], b: [190, 96, 78], accent: [160, 78, 64], accentChance: 0.14, pattern: 'coral-grain' },
   { slug: 'chrome-verge', a: [42, 42, 40], b: [28, 28, 30], accent: [90, 70, 40], accentChance: 0.05, pattern: 'grating' },
   { slug: 'bogmire-deep', a: [14, 26, 12], b: [22, 40, 18], accent: [60, 130, 40], accentChance: 0.07, pattern: 'blotch' },
   { slug: 'cryo-hollow', a: [184, 212, 224], b: [140, 180, 200], accent: [220, 236, 244], accentChance: 0.08, pattern: 'ripple' },
@@ -155,6 +155,22 @@ function writeTile(swatch: Swatch, outDir: string): void {
           } else if (localX <= 5 && localY <= 5 && n2 < 0.5) {
             useAccent = true;
           }
+          break;
+        }
+        case 'coral-grain': {
+          // Coarse 4px grain so it survives the race camera zoom, plus thin
+          // grooves. No Worley cracks — those dark cell edges read as ramps.
+          const cellX = Math.floor(wrap(x) / 4);
+          const cellY = Math.floor(wrap(y) / 4);
+          const cell = hash(cellX, cellY, salt + 4);
+          const wander = Math.floor(hash(cellX, 0, salt + 9) * 4);
+          const groove = wrap(y + wander) % 18;
+          if (groove <= 2) {
+            base = swatch.accent;
+          } else {
+            base = cell > 0.5 ? swatch.a : swatch.b;
+          }
+          useAccent = cell < swatch.accentChance && groove > 3;
           break;
         }
         case 'speckle':

@@ -25,7 +25,9 @@ import {
 } from '../../domain/progress/SaveSlots.ts';
 import type { SaveData } from '../../domain/progress/SaveSlots.ts';
 import { cashInValue } from '../../domain/progress/SeasonPoints.ts';
-import { listPrice, sellPrice } from '../../domain/progress/GarageCatalog.ts';
+import { highestUnlockedPlanetIndex } from '../../data/tracks/campaign.ts';
+import { isCarUnlocked, listPrice, sellPrice } from '../../domain/progress/GarageCatalog.ts';
+import { isTourModeOn } from './TourMode.ts';
 
 const STORAGE_KEY = 'rockn90s.save';
 const CAREER_KEY = 'rockn90s.career';
@@ -175,7 +177,15 @@ export function loadPoints(): number {
 export function buyCar(carId: string): CareerSlot | null {
   const price = listPrice(carId);
   const current = loadActiveCareer();
-  if (current === null || price <= 0 || current.ownedCarIds.includes(carId) || current.cash < price) {
+  const planet = highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn());
+  const cleared = current?.clearedTrackIds.length ?? 0;
+  if (
+    current === null ||
+    price <= 0 ||
+    current.ownedCarIds.includes(carId) ||
+    current.cash < price ||
+    !isCarUnlocked(carId, planet, cleared)
+  ) {
     return null;
   }
   return mutateActive(slot => ({

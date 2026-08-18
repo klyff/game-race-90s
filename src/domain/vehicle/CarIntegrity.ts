@@ -55,7 +55,7 @@ export interface CarIntegrity {
  * from destroying the car over a single lap. A car scraping a wall at 5 u/s
  * while cornering costs nothing; hitting a wall head-on at 70 u/s is severe.
  */
-const IMPACT_DAMAGE_THRESHOLD = 6;
+export const IMPACT_DAMAGE_THRESHOLD = 6;
 
 /**
  * Denominator for scaling wall impact damage. Impact damage is computed as:

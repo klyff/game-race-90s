@@ -11,9 +11,10 @@ import type { ScreenPoint } from './IsoProjection.ts';
 
 /**
  * Draws the whole circuit once, as flat static geometry, into a single
- * `Phaser.GameObjects.Graphics`. The racing surface is a carved rock bed —
- * packed slabs, jagged lips, cliff walls — not a painted highway. There is
- * no dashed centreline: that marking would not exist on a stone path.
+ * `Phaser.GameObjects.Graphics`. World 1 (Thunder Basin) is coral asphalt
+ * with longitudinal grooves and grain — painted shadows, never a channel
+ * that reads as a raceable ramp. Later worlds keep the carved rock bed.
+ * There is no dashed centreline.
  *
  * The track never changes shape after authoring, so everything is built once
  * in the constructor. Re-tessellating a static circuit every frame would just
@@ -43,6 +44,18 @@ const ROCK_EDGE_JITTER_UNITS = 1.1;
 /** Typical flagstone width across the bed, world units. Large on purpose so
  * the path reads as separate stones, not a sprayed grey ribbon. */
 const SLAB_WIDTH_UNITS = 8;
+
+/** Parallel drainage grooves across an asphalt ribbon. Enough to read as
+ * ranhuras, not so many they become a barcode. */
+const ASPHALT_GROOVE_COUNT = 7;
+
+/** Half-width of one groove, world units. Thin on purpose: a fat dark strip
+ * is exactly the fake-ramp look we are killing. */
+const ASPHALT_GROOVE_HALF_UNITS = 0.22;
+
+/** Speckles per centreline sample — the grain that keeps coral from reading
+ * as a flat fill. Drawn once, so the count can be generous. */
+const ASPHALT_GRAIN_PER_SAMPLE = 11;
 
 /**
  * Length of the start/finish chequered band along the direction of travel,
@@ -225,17 +238,22 @@ export class TrackRenderer {
     this.graphics = scene.add.graphics();
     this.graphics.setDepth(ROAD_DEPTH);
 
-    // Back to front: cliff, scree, stone bed, rock lip, start stones, ramps, boulders.
+    // Back to front: cliff, scree, racing surface, lip, start, ramps, boulders.
     this.fillJaggedBand(frames, wallOuter, shoulderOuter, this.theme.wall, 11);
     this.fillJaggedBand(frames, -shoulderOuter, -wallOuter, this.theme.wall, 12);
 
     this.fillRockyBand(frames, shoulderOuter, track.halfWidth, this.theme.shoulder, 21);
     this.fillRockyBand(frames, -track.halfWidth, -shoulderOuter, this.theme.shoulder, 22);
 
-    this.fillRockyBed(frames, track.halfWidth, this.theme.tarmac);
-
-    this.fillJaggedBand(frames, track.halfWidth + 1.2, track.halfWidth - 0.6, shade(this.theme.wall, 0.65), 31);
-    this.fillJaggedBand(frames, -(track.halfWidth - 0.6), -(track.halfWidth + 1.2), shade(this.theme.wall, 0.65), 32);
+    if (this.theme.surface === 'asphalt') {
+      this.fillAsphaltBed(frames, track.halfWidth, this.theme.tarmac);
+      this.fillBand(frames, track.halfWidth + 0.7, track.halfWidth - 0.35, this.theme.kerb);
+      this.fillBand(frames, -(track.halfWidth - 0.35), -(track.halfWidth + 0.7), this.theme.kerb);
+    } else {
+      this.fillRockyBed(frames, track.halfWidth, this.theme.tarmac);
+      this.fillJaggedBand(frames, track.halfWidth + 1.2, track.halfWidth - 0.6, shade(this.theme.wall, 0.65), 31);
+      this.fillJaggedBand(frames, -(track.halfWidth - 0.6), -(track.halfWidth + 1.2), shade(this.theme.wall, 0.65), 32);
+    }
 
     this.drawStoneThreshold(track, spline);
     this.drawRockRamps(track, spline);
@@ -335,6 +353,79 @@ export class TrackRenderer {
         );
         lateral = far;
         slab += 1;
+      }
+    }
+  }
+
+  /**
+   * Coral asphalt: a flat ribbon, longitudinal grooves, and hashed grain.
+   * Soft edge darkening is lighting, not a trench — contrast stays low so
+   * nothing on the bed can be mistaken for a raceable ramp. Real ramps are
+   * the authored `rampZones`, drawn later with height.
+   */
+  private fillAsphaltBed(frames: readonly TrackFrame[], halfWidth: number, color: number): void {
+    const count = frames.length;
+    this.fillBand(frames, halfWidth, -halfWidth, color);
+
+    // Wide, low-contrast edge shade. A dark 0.38 grout strip is what made
+    // the old bed look like a channel you could drive down.
+    this.fillBand(frames, halfWidth, halfWidth * 0.78, shade(color, 0.9));
+    this.fillBand(frames, -halfWidth * 0.78, -halfWidth, shade(color, 0.9));
+
+    // Occasional wide stains — painted shadows, never a recessed channel.
+    const stainEvery = 9;
+    for (let i = 0; i < count; i += stainEvery) {
+      const next = (i + 3) % count;
+      const lateral = (propHash(i, 190) * 2 - 1) * halfWidth * 0.45;
+      const span = 3.2 + propHash(i, 191) * 2.4;
+      this.graphics.fillStyle(shade(color, 0.91), 1);
+      this.graphics.fillPoints(
+        [
+          this.edgeScreen(frames[i]!, lateral - span),
+          this.edgeScreen(frames[next]!, lateral - span * 0.7),
+          this.edgeScreen(frames[next]!, lateral + span * 0.7),
+          this.edgeScreen(frames[i]!, lateral + span),
+        ],
+        true,
+      );
+    }
+
+    for (let groove = 0; groove < ASPHALT_GROOVE_COUNT; groove += 1) {
+      const t = (groove + 1) / (ASPHALT_GROOVE_COUNT + 1);
+      const base = -halfWidth + t * halfWidth * 2;
+      this.graphics.fillStyle(shade(color, 0.84), 1);
+      for (let i = 0; i < count; i += 1) {
+        const next = (i + 1) % count;
+        const wanderA = (propHash(i, 210 + groove) - 0.5) * 0.28;
+        const wanderB = (propHash(next, 210 + groove) - 0.5) * 0.28;
+        this.graphics.fillPoints(
+          [
+            this.edgeScreen(frames[i]!, base + wanderA - ASPHALT_GROOVE_HALF_UNITS),
+            this.edgeScreen(frames[next]!, base + wanderB - ASPHALT_GROOVE_HALF_UNITS),
+            this.edgeScreen(frames[next]!, base + wanderB + ASPHALT_GROOVE_HALF_UNITS),
+            this.edgeScreen(frames[i]!, base + wanderA + ASPHALT_GROOVE_HALF_UNITS),
+          ],
+          true,
+        );
+      }
+    }
+
+    for (let i = 0; i < count; i += 1) {
+      const next = (i + 1) % count;
+      for (let speck = 0; speck < ASPHALT_GRAIN_PER_SAMPLE; speck += 1) {
+        const lateral = (propHash(i, 80 + speck) * 2 - 1) * (halfWidth - 0.8);
+        const width = 0.5 + propHash(i, 90 + speck) * 0.55;
+        const tone = propHash(i, 100 + speck) > 0.55 ? 1.14 : 0.8;
+        this.graphics.fillStyle(shade(color, tone), 1);
+        this.graphics.fillPoints(
+          [
+            this.edgeScreen(frames[i]!, lateral),
+            this.edgeScreen(frames[next]!, lateral + width * 0.15),
+            this.edgeScreen(frames[next]!, lateral + width),
+            this.edgeScreen(frames[i]!, lateral + width * 0.85),
+          ],
+          true,
+        );
       }
     }
   }
@@ -460,9 +551,16 @@ export class TrackRenderer {
       const sR1 = this.projection.toScreen(right1, h1);
       this.graphics.fillStyle(shade(this.theme.tarmac, 0.95 + t0 * 0.2), 1);
       this.graphics.fillPoints([sL0, sL1, sR1, sR0], true);
-      this.graphics.fillStyle(shade(this.theme.wall, 0.7), 1);
+      // Dark vertical face so a real ramp reads as height, not as a painted
+      // shadow on the bed — the distinction the old grout channels failed.
+      this.graphics.fillStyle(shade(this.theme.wall, 0.45), 1);
       this.graphics.fillPoints(
         [this.projection.toScreen(left0), sL0, sL1, this.projection.toScreen(left1)],
+        true,
+      );
+      this.graphics.fillStyle(shade(this.theme.wall, 0.32), 1);
+      this.graphics.fillPoints(
+        [this.projection.toScreen(right0), sR0, sR1, this.projection.toScreen(right1)],
         true,
       );
     }

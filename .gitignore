@@ -5,3 +5,5 @@ dist/
 .vite/
 .preview/
 .vercel
+.env
+.env.local

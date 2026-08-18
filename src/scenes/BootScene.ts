@@ -1,22 +1,29 @@
 import Phaser from 'phaser';
 import {
+  cartHeroFile,
   cartPortraitFile,
   cartPortraitKey,
   cartPortraitLegacyFile,
   parseCarSetManifest,
+  sheetCellSize,
 } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import { PLANET_THEMES } from '../data/tracks/planetThemes.ts';
 import { parseTrackLinesManifest } from '../data/tracks/TrackLines.ts';
 import { TRACKS } from '../data/tracks/registry.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
+import { markMusicBedLoaded } from '../adapters/audio/BedRegistry.ts';
+import { MUSIC_BEDS, musicBedKey, musicBedUrl } from '../data/audio/MusicBeds.ts';
 import { enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
 import { SPLASH_CARDS, splashCardUrl } from '../data/cards/SplashCards.ts';
 import { DRIVER_CARDS, driverCardUrl } from '../data/cards/DriverCards.ts';
 import { PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/PubBackgrounds.ts';
+import { SCRAP_SPRITES } from '../adapters/render/MetalScrapRoster.ts';
 import {
   CAR_ASSET_DIRECTORY,
+  NEW_CARS_DIRECTORY,
   CAR_MANIFEST_KEY,
+  DEBRIS_ASSET_DIRECTORY,
   GROUND_ASSET_DIRECTORY,
   linesCacheKey,
   LINES_ASSET_DIRECTORY,
@@ -65,8 +72,10 @@ export class BootScene extends Phaser.Scene {
     // Any OTHER load failure is fatal and reported on screen.
     for (const key of [
       ...WEAPON_SPRITES.map(sprite => sprite.key),
+      ...SCRAP_SPRITES.map(sprite => sprite.key),
       ...PLANET_THEMES.map(theme => theme.artKey),
       ...PLANET_THEMES.map(theme => theme.groundKey),
+      ...MUSIC_BEDS.map(bed => musicBedKey(bed)),
       ...DRIVER_CARDS.map(card => card.key),
       ...PUB_BACKGROUNDS.map(pub => pubBackgroundKey(pub)),
     ]) {
@@ -103,10 +112,11 @@ export class BootScene extends Phaser.Scene {
     }
 
     for (const car of manifest.cars) {
-      // One horizontal strip per car, 32 frames of 64x64 (locked decision 6).
+      // One horizontal strip per car. Most sheets are 64×64; a redrawn car may be larger.
+      const cell = sheetCellSize(car, manifest);
       this.load.spritesheet(car.id, `${CAR_ASSET_DIRECTORY}/${car.image}`, {
-        frameWidth: manifest.frameWidth,
-        frameHeight: manifest.frameHeight,
+        frameWidth: cell.width,
+        frameHeight: cell.height,
       });
       this.queuePortrait(car.id);
     }
@@ -137,9 +147,23 @@ export class BootScene extends Phaser.Scene {
       });
     }
 
+    // Optional metal scraps: missing files fall back to gunmetal rects in race.
+    for (const scrap of SCRAP_SPRITES) {
+      this.load.image(scrap.key, `${DEBRIS_ASSET_DIRECTORY}/${scrap.file}`);
+    }
+
+    for (const bed of MUSIC_BEDS) {
+      this.load.audio(musicBedKey(bed), musicBedUrl(bed));
+    }
+
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
       for (const car of manifest.cars) {
         this.promotePortrait(car.id);
+      }
+      for (const bed of MUSIC_BEDS) {
+        if (this.cache.audio.exists(musicBedKey(bed))) {
+          markMusicBedLoaded(bed.id);
+        }
       }
       if (typeof location !== 'undefined') {
         enableTourModeFromSearch(location.search);
@@ -150,13 +174,16 @@ export class BootScene extends Phaser.Scene {
   }
 
   /**
-   * Garage stills are `{carId}_300px.png` under cars/ or assets/. Older files
-   * used `cart_N_300.png`. Queue every candidate; `promotePortrait` keeps the
-   * first one that actually loaded.
+   * New cars use `car_1_hero.png` (live set or `cars/new/`). Fleet stills are
+   * `{carId}_300px.png`. Older files used `cart_N_300.png`. Queue every
+   * candidate; `promotePortrait` keeps the first one that actually loaded.
    */
   private portraitUrls(carId: string): readonly string[] {
+    const hero = cartHeroFile(carId);
     const still = cartPortraitFile(carId);
     return [
+      `${CAR_ASSET_DIRECTORY}/${hero}`,
+      `${NEW_CARS_DIRECTORY}/${hero}`,
       `${CAR_ASSET_DIRECTORY}/${still}`,
       `assets/${still}`,
       `${CAR_ASSET_DIRECTORY}/${cartPortraitLegacyFile(carId)}`,

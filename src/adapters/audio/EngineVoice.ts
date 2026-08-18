@@ -57,9 +57,9 @@ export class EngineVoice {
   private static readonly FILTER_Q = 0.7;
 
   /** Quiet but present at idle — a silent idle reads as broken audio. */
-  private static readonly IDLE_GAIN = 0.05;
+  private static readonly IDLE_GAIN = 0.04;
   /** Full send at wide-open throttle under load. */
-  private static readonly PEAK_GAIN = 0.4;
+  private static readonly PEAK_GAIN = 0.32;
 
   /** Time constant for pitch and filter moves: fast enough to track a foot on
    * the throttle, slow enough not to zipper. */

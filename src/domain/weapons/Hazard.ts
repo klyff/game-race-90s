@@ -3,7 +3,7 @@ import type { Vec2 } from '../math/Vec2.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
   DROP_BEHIND_CAR_LENGTHS,
-  MINE_RADIUS_FACTOR,
+  MINE_SIZE_OF_CAR,
   OIL_SIZE_OF_CAR,
   OIL_YAW_SPIN,
 } from './WeaponConstants.ts';
@@ -88,7 +88,8 @@ export function dropMine(
   collisionRadius: number,
   distanceAlongTrack: number,
 ): TrackHazard {
-  const radius = Math.max(0.1, collisionRadius * MINE_RADIUS_FACTOR);
+  const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * collisionRadius;
+  const radius = Math.max(0.1, (carLength * MINE_SIZE_OF_CAR) / 2);
   return {
     id: nextHazardId++,
     kind: HAZARD_KIND.MINE,

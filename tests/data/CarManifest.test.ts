@@ -5,6 +5,11 @@ import {
   frameIndexForHeading,
   parseCarSetManifest,
   findCarSheet,
+  cartHeroFile,
+  cartPortraitFile,
+  cartPortraitKey,
+  cartPortraitLegacyFile,
+  cartStripFile,
   CarManifestError,
 } from '../../src/data/cars/CarManifest.ts';
 import { CAR_PERK, CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/domain/constants.ts';
@@ -396,6 +401,67 @@ describe('parseCarSetManifest', () => {
     }
   });
 
+  it('real manifest gives every fleet car collisionAlong/Across on stats', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    for (const car of manifest.cars) {
+      expect(car.stats.collisionAlong).toBeGreaterThan(0);
+      expect(car.stats.collisionAcross).toBeGreaterThan(0);
+      expect(car.stats.collisionSquareMin).toBe(Math.min(car.stats.collisionAlong!, car.stats.collisionAcross!));
+      expect(car.stats.collisionSquareMax).toBe(Math.max(car.stats.collisionAlong!, car.stats.collisionAcross!));
+      expect(car.stats.collisionSquare).toBeCloseTo(
+        (car.stats.collisionSquareMin! + car.stats.collisionSquareMax!) / 2,
+        4,
+      );
+    }
+  });
+
+  it('folds a legacy sheet collisionBox into stats', () => {
+    const valid = {
+      frameWidth: 64,
+      frameHeight: 64,
+      frameCount: 32,
+      pixelsPerUnit: 8.0,
+      origin: { x: 0.5, y: 0.5 },
+      cars: [
+        {
+          id: 'test',
+          image: 'test.png',
+          shadow: { width: 10, height: 10 },
+          stats: {},
+          collisionMap: [
+            { along: 2.2, across: 1.1 },
+            { along: 1.6, across: 0.7 },
+          ],
+        },
+      ],
+    };
+    const manifest = parseCarSetManifest(valid);
+    expect(manifest.cars[0]?.stats.collisionAlong).toBe(2.2);
+    expect(manifest.cars[0]?.stats.collisionAcross).toBe(1.1);
+    expect(manifest.cars[0]?.stats.collisionSquare).toBeCloseTo(1.65, 4);
+  });
+
+  it('rejects a collisionBox without along/across', () => {
+    const invalid = {
+      frameWidth: 64,
+      frameHeight: 64,
+      frameCount: 32,
+      pixelsPerUnit: 8.0,
+      origin: { x: 0.5, y: 0.5 },
+      cars: [
+        {
+          id: 'test',
+          image: 'test.png',
+          shadow: { width: 10, height: 10 },
+          stats: {},
+          collisionBox: { along: 0, across: 1 },
+        },
+      ],
+    };
+    expect(() => parseCarSetManifest(invalid)).toThrow(CarManifestError);
+  });
+
   it('real manifest gives every fleet car a perk that is a member of CAR_PERK', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
@@ -405,6 +471,19 @@ describe('parseCarSetManifest', () => {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
     }
+  });
+});
+
+describe('cart portraits', () => {
+  it('names stills {carId}_300px.png so tank/turbo/strong keep their suffix', () => {
+    expect(cartHeroFile('car_1')).toBe('car_1_hero.png');
+    expect(cartStripFile('car_1')).toBe('car_1_strip.png');
+    expect(cartPortraitFile('car-16')).toBe('car-16_300px.png');
+    expect(cartPortraitFile('car-6-tank')).toBe('car-6-tank_300px.png');
+    expect(cartPortraitFile('car-12-strong')).toBe('car-12-strong_300px.png');
+    expect(cartPortraitFile('delorean')).toBe('delorean_300px.png');
+    expect(cartPortraitLegacyFile('car-16')).toBe('cart_16_300.png');
+    expect(cartPortraitKey('car-1')).toBe('cart-portrait:car-1');
   });
 });
 

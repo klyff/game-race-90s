@@ -1,3 +1,7 @@
+import { isAudioMuted, setAudioMuted } from './AudioPrefs.ts';
+import { BedPlayer } from './BedPlayer.ts';
+import { pickLoadedMusicBed } from './BedRegistry.ts';
+import { musicBedUrl } from '../../data/audio/MusicBeds.ts';
 import { NoiseSource } from './NoiseSource.ts';
 import { TitleMusic } from './TitleMusic.ts';
 
@@ -26,24 +30,32 @@ const CLOSE_DELAY_MILLISECONDS = 600;
  * one, so a `start()` from `create()` produces no sound and no error. The splash calls
  * this on the first key press, which is the earliest honest opportunity.
  *
- * **The music connects straight to `context.destination`, with no attenuating gain of
- * its own.** `TitleMusic` already holds its own master gain, and the owner signed the
- * composition off at that loudness on the listening bench; inserting another gain here
- * would quietly change the thing that was approved.
+ * **Recorded beds play at half volume when present.** Otherwise the procedural
+ * title riff still connects straight to `context.destination` — `TitleMusic`
+ * already holds its own master gain.
  */
 export class TitleAudio {
   private readonly context: AudioContext | null;
   private readonly noise: NoiseSource | null = null;
   private readonly music: TitleMusic | null = null;
-  private muted = false;
+  private readonly bed: BedPlayer | null = null;
+  private muted = isAudioMuted();
 
   constructor() {
     this.context = createAudioContext();
+    const bed = pickLoadedMusicBed();
+    if (bed !== undefined) {
+      this.bed = new BedPlayer(musicBedUrl(bed));
+      this.bed.setMuted(this.muted);
+    }
     if (this.context === null) {
       return;
     }
     this.noise = new NoiseSource(this.context);
-    this.music = new TitleMusic(this.context, this.noise, this.context.destination);
+    if (this.bed === null) {
+      this.music = new TitleMusic(this.context, this.noise, this.context.destination);
+      this.music.setMuted(this.muted);
+    }
   }
 
   /** True when the browser gave us a working audio graph. */
@@ -52,7 +64,7 @@ export class TitleAudio {
   }
 
   get isPlaying(): boolean {
-    return this.music?.isPlaying ?? false;
+    return this.bed?.isPlaying ?? this.music?.isPlaying ?? false;
   }
 
   get isMuted(): boolean {
@@ -65,20 +77,20 @@ export class TitleAudio {
    * this to a bare `keydown` and stop worrying about which press was the first.
    */
   start(): void {
-    if (this.context === null || this.music === null) {
-      return;
-    }
-    if (this.context.state === 'suspended') {
+    if (this.context !== null && this.context.state === 'suspended') {
       void this.context.resume().catch(() => {
         /* Autoplay policy or no device: stay silent rather than break the splash. */
       });
     }
-    this.music.start();
+    this.bed?.start();
+    this.music?.start();
   }
 
   /** Silences the loop without stopping it, so unmuting resumes in place. */
   setMuted(muted: boolean): void {
     this.muted = muted;
+    setAudioMuted(muted);
+    this.bed?.setMuted(muted);
     this.music?.setMuted(muted);
   }
 
@@ -93,6 +105,7 @@ export class TitleAudio {
    * Phaser scene ends, so without it the title riff plays straight over the race.
    */
   destroy(): void {
+    this.bed?.stop();
     this.music?.stop();
     this.noise?.stop();
 

@@ -72,6 +72,7 @@ export class HudScene extends Phaser.Scene {
   private positionText!: Phaser.GameObjects.Text;
   private lapText!: Phaser.GameObjects.Text;
   private cashText!: Phaser.GameObjects.Text;
+  private pointsText!: Phaser.GameObjects.Text;
   private timeText!: Phaser.GameObjects.Text;
   private ammoText!: Phaser.GameObjects.Text;
   private ammoIcons: Phaser.GameObjects.Sprite[] = [];
@@ -84,6 +85,9 @@ export class HudScene extends Phaser.Scene {
   /** Last rendered values, so a pulse fires on CHANGE rather than every frame. */
   private lastPosition = '';
   private lastLap = '';
+  private lastCash = '';
+  private lastCashAmount = 0;
+  private lastPoints = '';
   private lastCountdown: string | null = null;
 
   constructor() {
@@ -94,6 +98,7 @@ export class HudScene extends Phaser.Scene {
     this.positionText = this.add.text(0, 0, '', this.bigStyle()).setDepth(HUD_DEPTH);
     this.lapText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
     this.cashText = this.add.text(0, 0, '', this.cashStyle()).setDepth(HUD_DEPTH);
+    this.pointsText = this.add.text(0, 0, '', this.pointsStyle()).setDepth(HUD_DEPTH);
     this.timeText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
     this.standingsText = this.add.text(0, 0, '', this.smallStyle()).setDepth(HUD_DEPTH);
     this.ammoText = this.add.text(0, 0, '', this.labelStyle()).setDepth(HUD_DEPTH);
@@ -144,13 +149,43 @@ export class HudScene extends Phaser.Scene {
 
     this.timeText.setText(text.time);
     this.ammoText.setText(text.ammo);
-    this.cashText.setText(formatCash(readout.cash ?? 0));
+    this.applyCash(readout.cash ?? 0);
+    this.applyPoints(readout.points ?? 0);
     this.applyPosition(text);
     this.applyLap(text);
     this.applyIntegrity(text);
     this.applySpeed(text);
     this.applyCountdown(text);
     this.applyStandings(source, readout);
+    this.applyTurbo(readout);
+  }
+
+  private applyCash(amount: number): void {
+    const safe = Number.isFinite(amount) ? Math.max(0, Math.round(amount)) : 0;
+    const next = formatCash(safe);
+    this.cashText.setText(next);
+    if (safe === this.lastCashAmount && next === this.lastCash) {
+      return;
+    }
+    const grew = this.lastCash !== '' && safe > this.lastCashAmount;
+    this.lastCashAmount = safe;
+    this.lastCash = next;
+    if (grew) {
+      this.pulse(this.cashText, 1.12);
+    }
+  }
+
+  private applyPoints(amount: number): void {
+    const next = `${amount} PTS`;
+    this.pointsText.setText(next);
+    if (next === this.lastPoints) {
+      return;
+    }
+    const grew = this.lastPoints !== '';
+    this.lastPoints = next;
+    if (grew) {
+      this.pulse(this.pointsText, 1.28);
+    }
   }
 
   /** The position is the number the player watches, so it pulses when it changes. */
@@ -242,6 +277,22 @@ export class HudScene extends Phaser.Scene {
     this.standingsText.setAlpha(readout.phase === 'finished' ? 1 : 0.72);
   }
 
+  private applyTurbo(readout: HudReadout): void {
+    const icon = this.ammoIcons[3];
+    if (icon === undefined) {
+      return;
+    }
+    const active = readout.turboActive === true;
+    icon.setDisplaySize(active ? 28 : 22, active ? 28 : 22);
+    if (active) {
+      icon.setTint(0xffe066);
+      icon.setAlpha(1);
+    } else {
+      icon.clearTint();
+      icon.setAlpha(0.9);
+    }
+  }
+
   /** A short scale-up that settles back, for a value the player should notice. */
   private pulse(target: Phaser.GameObjects.Text, scale: number): void {
     this.tweens.killTweensOf(target);
@@ -268,6 +319,7 @@ export class HudScene extends Phaser.Scene {
     this.positionText.setPosition(MARGIN, MARGIN);
     this.lapText.setPosition(MARGIN, MARGIN + 58);
     this.cashText.setPosition(MARGIN, MARGIN + 88);
+    this.pointsText.setPosition(MARGIN, MARGIN + 112);
 
     this.timeText.setPosition(width - MARGIN, MARGIN).setOrigin(1, 0);
     this.standingsText.setPosition(width - MARGIN, MARGIN + 34).setOrigin(1, 0);
@@ -324,8 +376,18 @@ export class HudScene extends Phaser.Scene {
   private cashStyle(): Phaser.Types.GameObjects.Text.TextStyle {
     return {
       fontFamily: 'monospace',
-      fontSize: '20px',
+      fontSize: '24px',
       color: '#8bff9b',
+      stroke: '#101014',
+      strokeThickness: 5,
+    };
+  }
+
+  private pointsStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#ffd85c',
       stroke: '#101014',
       strokeThickness: 5,
     };

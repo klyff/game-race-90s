@@ -100,15 +100,15 @@ export const NPC_WEAPON_COOLDOWN_SECONDS = 1.2;
 
 /**
  * Oil slick diameter as a fraction of the dropper's car length.
- * Owner: double the original 0.8× car length.
+ * Owner: at most 0.9 of a car.
  */
-export const OIL_SIZE_OF_CAR = 1.6;
+export const OIL_SIZE_OF_CAR = 0.9;
 
 /**
- * Landmine radius as a multiple of the dropper's `collisionRadius`.
- * Owner: double the original half-car radius (now a full collision radius).
+ * Landmine / grenade diameter as a fraction of the dropper's car length.
+ * Owner: a quarter of a car, plus a little.
  */
-export const MINE_RADIUS_FACTOR = 1.0;
+export const MINE_SIZE_OF_CAR = 0.28;
 
 /**
  * Oil lifetime as a multiple of one estimated lap on the current track.

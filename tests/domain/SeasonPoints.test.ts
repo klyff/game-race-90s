@@ -20,6 +20,7 @@ describe('SeasonPoints', () => {
     expect(weaponHitPoints({ missiles: 1, oil: 0, mines: 0 }, 1)).toBe(10);
     expect(weaponHitPoints({ missiles: 0, oil: 0, mines: 1 }, 1)).toBe(8);
     expect(weaponHitPoints({ missiles: 0, oil: 1, mines: 0 }, 1)).toBe(4);
+    expect(weaponHitPoints({ missiles: 0, oil: 0, mines: 0, contacts: 1 }, 1)).toBe(3);
   });
 
   it('cashes 400 points for $50k and can repeat', () => {

@@ -17,7 +17,7 @@ import { oilYawSpinForArmor, resetHazardIds } from '../../src/domain/weapons/Haz
 import { resetMissileIds } from '../../src/domain/weapons/Missile.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
-  MINE_RADIUS_FACTOR,
+  MINE_SIZE_OF_CAR,
   MISSILE_START_COUNT,
   OIL_SIZE_OF_CAR,
 } from '../../src/domain/weapons/WeaponConstants.ts';
@@ -54,12 +54,12 @@ describe('tank loadout', () => {
 });
 
 describe('hazard size', () => {
-  it('oil and mine constants are double the original authoring', () => {
-    expect(OIL_SIZE_OF_CAR).toBe(1.6);
-    expect(MINE_RADIUS_FACTOR).toBe(1);
+  it('oil is at most 0.9 of a car and a mine is a quarter plus a little', () => {
+    expect(OIL_SIZE_OF_CAR).toBe(0.9);
+    expect(MINE_SIZE_OF_CAR).toBe(0.28);
   });
 
-  it('a dropped oil slick is a full car-length across', () => {
+  it('a dropped oil slick uses the authored car-length multiple', () => {
     const car = manifest.cars[0]!;
     const field = new RaceField(
       [{ carId: car.id, stats: car.stats, perk: car.perk, isPlayer: true }],
@@ -71,6 +71,20 @@ describe('hazard size', () => {
     const oil = field.activeHazards[0]!;
     const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * car.stats.collisionRadius;
     expect(oil.radius).toBeCloseTo((carLength * OIL_SIZE_OF_CAR) / 2, 5);
+  });
+
+  it('a dropped mine uses a quarter-car diameter plus a little', () => {
+    const car = manifest.cars[0]!;
+    const field = new RaceField(
+      [{ carId: car.id, stats: car.stats, perk: car.perk, isPlayer: true }],
+      track,
+      freshSpline(),
+      { countdownSeconds: 0, npcWeapons: false },
+    );
+    field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
+    const mine = field.activeHazards[0]!;
+    const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * car.stats.collisionRadius;
+    expect(mine.radius).toBeCloseTo((carLength * MINE_SIZE_OF_CAR) / 2, 5);
   });
 });
 
@@ -90,6 +104,29 @@ describe('tank ram spin', () => {
     rival.state = { ...rival.state, position: field.player.state.position };
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
     expect(rival.state.yawSpin).toBeGreaterThanOrEqual(oilYawSpinForArmor(rival.stats.armor) * 0.99);
+  });
+
+  it('credits the player for a hard ram as the aggressor', () => {
+    const tank = findCarSheet(manifest, 'car-6-tank');
+    const other = findCarSheet(manifest, 'car-1');
+    const field = new RaceField(
+      [
+        { carId: tank.id, stats: tank.stats, perk: tank.perk, isPlayer: true },
+        { carId: other.id, stats: other.stats, perk: other.perk, isPlayer: false },
+      ],
+      track,
+      freshSpline(),
+      { countdownSeconds: 0, npcWeapons: false },
+    );
+    const rival = field.racers.find(racer => !racer.isPlayer)!;
+    field.player.state = { ...field.player.state, velocity: { x: 40, y: 0 } };
+    rival.state = {
+      ...rival.state,
+      position: add(field.player.state.position, { x: 2, y: 0 }),
+      velocity: { x: 0, y: 0 },
+    };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(field.playerWeaponHits.contacts).toBeGreaterThan(0);
   });
 });
 

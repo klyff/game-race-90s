@@ -40,15 +40,25 @@ export interface PlanetTheme {
   readonly propColor: number;
   /** Tip/highlight colour — a glow, a metal fleck, a chevron stripe. */
   readonly propAccent: number;
+  /**
+   * How the racing surface is drawn. `asphalt` is a flat ribbon with grooves
+   * and grain — shadows stay painted, they never read as raceable ramps.
+   * `rock` is the packed-slab bed the later worlds use.
+   */
+  readonly surface: 'asphalt' | 'rock';
 }
 
 function theme(
   planetId: string,
-  colours: Omit<PlanetTheme, 'planetId' | 'groundKey' | 'artKey' | 'groundFile' | 'artFile'>,
+  colours: Omit<PlanetTheme, 'planetId' | 'groundKey' | 'artKey' | 'groundFile' | 'artFile' | 'surface'> & {
+    readonly surface?: PlanetTheme['surface'];
+  },
 ): PlanetTheme {
+  const { surface, ...rest } = colours;
   return {
     planetId,
-    ...colours,
+    ...rest,
+    surface: surface ?? 'rock',
     groundKey: `ground-${planetId}`,
     artKey: `planet-${planetId}`,
     groundFile: `${planetId}.png`,
@@ -56,20 +66,21 @@ function theme(
   };
 }
 
-/** Thunder Basin defaults — the colours the renderer shipped with before themes. */
+/** Thunder Basin — coral asphalt, grainy, grooved. Shadows stay flat paint. */
 export const DEFAULT_THEME: PlanetTheme = theme('thunder-basin', {
-  wall: 0x8a7060,
-  shoulder: 0x5a3c28,
-  tarmac: 0x8a6a48,
-  kerb: 0x3a2a1c,
-  marking: 0xb89870,
-  chequerDark: 0x2a2018,
-  ground: 0x4a3018,
+  wall: 0x7a3a2c,
+  shoulder: 0x8a4030,
+  tarmac: 0xd47862,
+  kerb: 0x5a241c,
+  marking: 0xf0b090,
+  chequerDark: 0x2a1410,
+  ground: 0xa05038,
   propShape: 'blob',
   propHeight: 1.6,
   propWidth: 1.8,
-  propColor: 0x7a5840,
-  propAccent: 0xc8a070,
+  propColor: 0x9a4a34,
+  propAccent: 0xf0b090,
+  surface: 'asphalt',
 });
 
 export const PLANET_THEMES: readonly PlanetTheme[] = [

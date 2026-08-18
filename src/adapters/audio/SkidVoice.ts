@@ -28,7 +28,7 @@ export class SkidVoice {
    * sound like a pure test tone. */
   private static readonly FILTER_Q = 1.4;
   /** Ceiling so skid noise sits under the engine, not over it. */
-  private static readonly MAX_GAIN = 0.5;
+  private static readonly MAX_GAIN = 0.25;
   /** Quick attack so a flick of oversteer is audible immediately. */
   private static readonly ATTACK_TIME_CONSTANT = 0.03;
   /** Slower release so the tail fades instead of clicking off, while still

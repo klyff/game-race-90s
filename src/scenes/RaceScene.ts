@@ -5,6 +5,7 @@ import { KeyboardDriver } from '../adapters/input/KeyboardDriver.ts';
 import { CameraZoomPolicy } from '../adapters/render/CameraZoomPolicy.ts';
 import { ChaseCamera } from '../adapters/render/ChaseCamera.ts';
 import { ExplosionEffect } from '../adapters/render/ExplosionEffect.ts';
+import { MetalScrapEffect } from '../adapters/render/MetalScrapEffect.ts';
 import type { HudReadout } from '../adapters/render/HudFormat.ts';
 import { IsoProjection } from '../adapters/render/IsoProjection.ts';
 import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
@@ -21,11 +22,15 @@ import { themeForTrackId } from '../data/tracks/planetThemes.ts';
 import { musicForTrackId } from '../data/tracks/planetMusic.ts';
 import { findTrack } from '../data/tracks/registry.ts';
 import { CEREMONY_HOLD_SECONDS } from '../domain/race/Coast.ts';
-import { loadActiveCareer, loadActiveName, loadWallet, rememberLastTrack } from '../adapters/progress/ProgressStore.ts';
+import { loadActiveCareer, loadActiveName, loadPoints, loadWallet, rememberLastTrack } from '../adapters/progress/ProgressStore.ts';
 import { npcRosterForPlanet } from '../domain/progress/GarageCatalog.ts';
 import { rivalsForPlanet } from '../data/pilots/PilotRoster.ts';
 import { weaponHitEarnings } from '../domain/progress/Wallet.ts';
-import { SIMULATION_STEP_SECONDS } from '../domain/constants.ts';
+import { weaponHitPoints } from '../domain/progress/SeasonPoints.ts';
+import { HitRewardEffect } from '../adapters/render/HitRewardEffect.ts';
+import { RACE_PHASE, SIMULATION_STEP_SECONDS } from '../domain/constants.ts';
+import { NarratorDirector } from '../domain/audio/NarratorDirector.ts';
+import { clipsInPlan, planNarratorRace } from '../domain/audio/NarratorPlan.ts';
 import type { InputCommand } from '../domain/input/InputCommand.ts';
 import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
 import { angleOf, dot, fromAngle } from '../domain/math/Vec2.ts';
@@ -35,7 +40,7 @@ import { RaceField } from '../domain/race/RaceField.ts';
 import type { RacerEntry, RacerRuntime } from '../domain/race/RaceField.ts';
 import type { TrackDefinition } from '../domain/track/TrackDefinition.ts';
 import { TrackSpline } from '../domain/track/TrackSpline.ts';
-import { CAR_CONDITION } from '../domain/vehicle/CarIntegrity.ts';
+import { CAR_CONDITION, IMPACT_DAMAGE_THRESHOLD } from '../domain/vehicle/CarIntegrity.ts';
 import { missileCapacity } from '../domain/weapons/WeaponInventory.ts';
 import { HAZARD_KIND } from '../domain/weapons/Hazard.ts';
 import {
@@ -135,6 +140,13 @@ interface PendingExplosion {
   readonly leaveBurnMark?: boolean;
 }
 
+interface PendingScrap {
+  readonly racerIndex: number;
+  readonly position: Vec2;
+  readonly impactSpeed: number;
+  readonly exploded: boolean;
+}
+
 /**
  * The playable scene: a full grid of cars on one circuit, keyboard control.
  *
@@ -161,6 +173,7 @@ export class RaceScene extends Phaser.Scene {
   private trackRenderer!: TrackRenderer;
   private tyreMarks!: TyreMarks;
   private explosions!: ExplosionEffect;
+  private scraps!: MetalScrapEffect;
   private chaseCamera!: ChaseCamera;
   private zoomPolicy!: CameraZoomPolicy;
   private driver!: KeyboardDriver;
@@ -173,6 +186,7 @@ export class RaceScene extends Phaser.Scene {
   private views: VehicleView[] = [];
   private command: InputCommand = IDLE_INPUT;
   private pendingExplosions: PendingExplosion[] = [];
+  private pendingScraps: PendingScrap[] = [];
   /** Drawn every frame from live domain state — missiles, oil, mines. */
   private weaponLayer!: Phaser.GameObjects.Graphics;
   /**
@@ -194,6 +208,15 @@ export class RaceScene extends Phaser.Scene {
   private pilotNames: Record<string, string> = {};
   private playerPilotName = 'YOU';
   private sittingRivals: readonly string[] = [];
+  private narrator: NarratorDirector | undefined;
+  private lastTurboRemaining = 0;
+  private lastPosition = 99;
+  private lastPlayerHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
+  private hitRewards!: HitRewardEffect;
+  private lastPlayerFinished = false;
+  private impactThisFrame = false;
+  private weaponThisFrame = false;
+  private wrongWayHold = 0;
 
   constructor() {
     super(SCENE_KEY.RACE);
@@ -224,6 +247,8 @@ export class RaceScene extends Phaser.Scene {
       theme: themeForTrackId(this.track.id),
     });
     this.tyreMarks = new TyreMarks(this, this.projection);
+    this.hitRewards = new HitRewardEffect(this, this.projection);
+    this.scraps = new MetalScrapEffect(this, this.projection);
     this.explosions = new ExplosionEffect(this, this.projection, {
       burnMarkLifetimeSeconds:
         BURN_MARK_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED),
@@ -273,15 +298,20 @@ export class RaceScene extends Phaser.Scene {
     // once stopped (decision 18).
     this.command = this.driver.read(deltaSeconds, this.forwardSpeed());
     this.loop.advance(deltaSeconds, stepSeconds => this.stepSimulation(stepSeconds));
+    this.presentHitRewards();
 
+    this.tickNarrator(deltaSeconds);
     this.syncViews();
+    this.hitRewards.update(this.player.state.position, deltaSeconds, this.cameras.main.zoom);
     this.drawWeapons();
     // Once per frame, whatever the number of cars: ageing marks is a property of time
     // passing. Calling it per car aged them five times too fast.
     this.tyreMarks.update(deltaSeconds);
     this.presentExplosions();
+    this.presentScraps();
     this.updatePlayerAudio();
     this.explosions.update(deltaSeconds);
+    this.scraps.update(deltaSeconds);
     this.chaseCamera.follow(this.player.state, deltaSeconds, this.targetZoom());
     this.trackRenderer.syncToCamera(this.cameras.main);
     this.refreshOverlay();
@@ -380,6 +410,7 @@ export class RaceScene extends Phaser.Scene {
       mines: player.inventory.mines,
       jumps: player.jumps,
       turbos: player.turbos,
+      turboActive: player.turboRemaining > 0,
       integrity: player.integrity.integrity,
       standings: race.standings.map(entry => ({
         carId: entry.carId,
@@ -388,6 +419,7 @@ export class RaceScene extends Phaser.Scene {
       speed: player.telemetry?.speed ?? 0,
       maxSpeed: player.stats.maxSpeed,
       cash: this.startingCash + weaponHitEarnings(this.field.playerWeaponHits, this.planetIndex),
+      points: loadPoints() + weaponHitPoints(this.field.playerWeaponHits, this.planetIndex),
     };
   }
 
@@ -404,22 +436,73 @@ export class RaceScene extends Phaser.Scene {
    * all this does is notice what the presentation layer owes the player as a result.
    */
   private stepSimulation(stepSeconds: number): void {
+    const impactBefore = this.field.racers.map(racer => racer.pendingImpactSpeed);
     this.field.step(this.command, stepSeconds);
 
     // Collected here rather than in `update`, because `explodedThisStep` is true for
     // one step only and a frame can contain several steps.
-    for (const racer of this.field.racers) {
+    this.field.racers.forEach((racer, index) => {
       if (racer.explodedThisStep) {
         this.pendingExplosions.push({
           position: racer.state.position,
           intensity: this.explosionIntensity(racer),
           leaveBurnMark: true,
         });
+        this.pendingScraps = this.pendingScraps.filter(scrap => scrap.racerIndex !== index);
+        this.pendingScraps.push({
+          racerIndex: index,
+          position: racer.state.position,
+          impactSpeed: racer.pendingImpactSpeed,
+          exploded: true,
+        });
+        return;
       }
-    }
+      const before = impactBefore[index] ?? 0;
+      if (
+        racer.pendingImpactSpeed > before &&
+        racer.pendingImpactSpeed > IMPACT_DAMAGE_THRESHOLD
+      ) {
+        this.pendingScraps.push({
+          racerIndex: index,
+          position: racer.state.position,
+          impactSpeed: racer.pendingImpactSpeed,
+          exploded: false,
+        });
+      }
+    });
     for (const position of this.field.weaponBurstsThisStep) {
       this.pendingExplosions.push({ position, intensity: 0.4 });
+      this.weaponThisFrame = true;
     }
+    if (this.field.racers.some(racer => racer.explodedThisStep)) {
+      this.weaponThisFrame = true;
+    }
+    const hits = this.field.playerWeaponHits;
+    if (
+      hits.missiles > this.lastPlayerHits.missiles ||
+      hits.oil > this.lastPlayerHits.oil ||
+      hits.mines > this.lastPlayerHits.mines ||
+      hits.contacts > this.lastPlayerHits.contacts
+    ) {
+      this.weaponThisFrame = true;
+    }
+  }
+
+  private presentHitRewards(): void {
+    const hits = this.field.playerWeaponHits;
+    const prev = this.lastPlayerHits;
+    const delta = {
+      missiles: hits.missiles - prev.missiles,
+      oil: hits.oil - prev.oil,
+      mines: hits.mines - prev.mines,
+      contacts: hits.contacts - prev.contacts,
+    };
+    const cash = weaponHitEarnings(delta, this.planetIndex);
+    const points = weaponHitPoints(delta, this.planetIndex);
+    if (cash <= 0 && points <= 0) {
+      return;
+    }
+    this.hitRewards.spawn(this.player.state.position, cash, points);
   }
 
   /** Draws every car, and lays tyre marks for all of them, not just the player's. */
@@ -438,7 +521,7 @@ export class RaceScene extends Phaser.Scene {
         return;
       }
 
-      view.sync(racer.state);
+      view.sync(racer.state, { turboActive: racer.turboRemaining > 0 });
       if (racer.telemetry !== null) {
         // Per-car index: `TyreMarks` keeps a wheel trail per car, and sharing one
         // would join two cars' wheels with a streak across the track.
@@ -492,12 +575,13 @@ export class RaceScene extends Phaser.Scene {
           .setPosition(screen.x, screen.y)
           .setFrame(0)
           .setDepth(this.projection.depthOf(hazard.position) - 0.2);
-        const display = isOil
-          ? hazard.radius * 2
-          : Math.max(hazard.radius * 2, CAR_LENGTH_PER_COLLISION_RADIUS * hazard.radius * 2 * 0.55);
+        const display = hazard.radius * 2;
         this.scaleWeaponSprite(sprite, display * px);
+        if (isOil) {
+          sprite.setFrame(Math.floor(this.time.now / 90) % WEAPON_SHEET.frameCount);
+        }
       } else {
-        const radius = Math.max(4, hazard.radius * px * 0.55);
+        const radius = Math.max(10, hazard.radius * px * 0.85);
         if (isOil) {
           this.weaponLayer.fillStyle(0x1a1208, 0.85);
           this.weaponLayer.fillEllipse(screen.x, screen.y, radius * 2, radius);
@@ -547,10 +631,18 @@ export class RaceScene extends Phaser.Scene {
     for (const explosion of this.pendingExplosions) {
       this.explosions.burst(explosion.position, explosion.intensity, {
         leaveBurnMark: explosion.leaveBurnMark === true,
+        skipShards: explosion.leaveBurnMark === true,
       });
       this.audio.playExplosion(explosion.intensity);
     }
     this.pendingExplosions = [];
+  }
+
+  private presentScraps(): void {
+    for (const scrap of this.pendingScraps) {
+      this.scraps.burst(scrap.position, scrap.impactSpeed, scrap.exploded);
+    }
+    this.pendingScraps = [];
   }
 
   /**
@@ -625,10 +717,11 @@ export class RaceScene extends Phaser.Scene {
 
     // The perk travels with the car, for the NPCs exactly as for the player: an advantage
     // the player can feel is an advantage they must also race against.
-    const npcs = npcIds.map(carId => {
+    const npcs = npcIds.map((carId, index) => {
       const sheet = findCarSheet(this.manifest, carId);
       return {
         carId,
+        name: rivals[index] ?? `RIV${index + 1}`,
         stats: sheet.stats,
         perk: sheet.perk,
         homePlanetId: sheet.homePlanetId,
@@ -745,6 +838,13 @@ export class RaceScene extends Phaser.Scene {
       respawnRemaining: DEBUG_RESPAWN_SECONDS,
     };
     this.pendingExplosions.push({ position: player.state.position, intensity: 1, leaveBurnMark: true });
+    const playerIndex = this.field.racers.findIndex(racer => racer.isPlayer);
+    this.pendingScraps.push({
+      racerIndex: playerIndex,
+      position: player.state.position,
+      impactSpeed: 80,
+      exploded: true,
+    });
   }
 
   /** Puts the whole field back on the grid and restarts the countdown. */
@@ -752,15 +852,105 @@ export class RaceScene extends Phaser.Scene {
     this.field.reset();
     this.command = IDLE_INPUT;
     this.pendingExplosions = [];
+    this.pendingScraps = [];
     this.loop.reset();
     this.tyreMarks.clear();
     this.explosions.clear();
+    this.scraps.clear();
     this.audio.reset();
     this.field.racers.forEach((racer, index) => {
       this.views[index]?.setVisible(true);
       this.views[index]?.sync(racer.state);
     });
     this.chaseCamera.snapTo(this.player.state, this.targetZoom());
+    this.rebuildNarrator();
+  }
+
+  /**
+   * Rolls every line this race will speak, then preloads those files.
+   *
+   * Banter is pinned to the clock of the three laps. Damage / weapons /
+   * behind keep shuffled index pools and fire when the world does the thing.
+   */
+  private rebuildNarrator(): void {
+    const plan = planNarratorRace({
+      lapCount: this.track.laps,
+      parSeconds: this.trackLines?.parTime ?? 50,
+    });
+    this.narrator = new NarratorDirector(plan);
+    this.audio.armNarrator(clipsInPlan(plan));
+    this.lastTurboRemaining = 0;
+    this.lastPosition = this.field.standingOf(this.carId)?.position ?? this.field.racers.length;
+    this.lastPlayerHits = { ...this.field.playerWeaponHits };
+    this.lastPlayerFinished = false;
+    this.impactThisFrame = false;
+    this.weaponThisFrame = false;
+    this.wrongWayHold = 0;
+  }
+
+  private tickNarrator(deltaSeconds: number): void {
+    if (this.narrator === undefined) {
+      return;
+    }
+    const player = this.player;
+    const race = this.field.race;
+    const standing = this.field.standingOf(player.carId);
+    const position = standing?.position ?? this.field.racers.length;
+    const playerRace = race.racers.find(racer => racer.carId === this.carId);
+    const finished = playerRace?.progress.finished === true;
+    const turboJustStarted = this.lastTurboRemaining <= 0 && player.turboRemaining > 0;
+    const becameLeader = this.lastPosition > 1 && position === 1 && race.phase === RACE_PHASE.RACING;
+    const impactJustHappened = this.impactThisFrame || player.pendingImpactSpeed > 6;
+
+    if (this.isPlayerWrongWay()) {
+      this.wrongWayHold += deltaSeconds;
+    } else {
+      this.wrongWayHold = 0;
+    }
+
+    const offer = this.narrator.update({
+      phase: race.phase,
+      countdownRemaining: race.countdownRemaining,
+      elapsedSeconds: race.elapsedSeconds,
+      playerLap: (standing?.lapsCompleted ?? 0) + 1,
+      totalLaps: this.track.laps,
+      lapFraction: this.playerLapFraction(),
+      playerPosition: position,
+      totalRacers: this.field.racers.length,
+      playerFinished: finished && !this.lastPlayerFinished,
+      turboJustStarted,
+      impactJustHappened,
+      weaponJustHappened: this.weaponThisFrame,
+      wrongWay: this.wrongWayHold >= 0.7,
+      becameLeader,
+    });
+    if (offer !== undefined) {
+      this.audio.enqueueNarrator(offer.clip, offer.priority);
+    }
+
+    this.lastTurboRemaining = player.turboRemaining;
+    this.lastPosition = position;
+    this.lastPlayerHits = { ...this.field.playerWeaponHits };
+    this.lastPlayerFinished = finished;
+    this.impactThisFrame = false;
+    this.weaponThisFrame = false;
+  }
+
+  private playerLapFraction(): number {
+    if (this.spline.totalLength <= 0) {
+      return 0;
+    }
+    const along = this.spline.wrap(this.player.distance - this.track.startLineDistance);
+    return along / this.spline.totalLength;
+  }
+
+  private isPlayerWrongWay(): boolean {
+    const telemetry = this.player.telemetry;
+    if (telemetry === null || telemetry.forwardSpeed < 6) {
+      return false;
+    }
+    const tangent = this.spline.frameAt(this.player.distance).tangent;
+    return dot(fromAngle(this.player.state.heading), tangent) < -0.25;
   }
 
   private refreshOverlay(): void {
@@ -834,6 +1024,8 @@ export class RaceScene extends Phaser.Scene {
     }
     this.hazardSprites = [];
     this.tyreMarks.destroy();
+    this.hitRewards.destroy();
+    this.scraps.destroy();
     this.explosions.destroy();
     this.trackRenderer.destroy();
     this.overlay.destroy();

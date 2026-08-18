@@ -34,6 +34,9 @@ export const LINES_ASSET_DIRECTORY = 'assets/lines';
 /** Where `npm run gen:sprites` writes its output, relative to the served root. */
 export const CAR_ASSET_DIRECTORY = 'assets/cars';
 
+/** Drop folder for new-fleet heroes (`car_1_hero.png`). Strips are `car_1_strip.png`. */
+export const NEW_CARS_DIRECTORY = `${CAR_ASSET_DIRECTORY}/new`;
+
 /** Where the authored (non-generated) interface art lives, relative to the served root. */
 export const UI_ASSET_DIRECTORY = 'assets/ui';
 
@@ -45,6 +48,9 @@ export const GROUND_ASSET_DIRECTORY = 'assets/ground';
 
 /** Where owner-provided weapon art (missile / oil / mine) lives, relative to the served root. */
 export const WEAPON_ASSET_DIRECTORY = 'assets/weapons';
+
+/** Where the metal-scrap pieces live (`scrap-01.png` …). */
+export const DEBRIS_ASSET_DIRECTORY = 'assets/debris';
 
 /**
  * Texture keys and filenames for the weapon sprites. These are OPTIONAL: the game

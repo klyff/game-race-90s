@@ -16,6 +16,11 @@
     "typecheck": "tsc --noEmit",
     "gen:sprites": "node --experimental-strip-types tools/spritegen/import-fleet.ts",
     "gen:fleet": "node --experimental-strip-types tools/spritegen/import-fleet.ts",
+    "gen:pack-redrawn": "node --experimental-strip-types tools/spritegen/pack-redrawn.ts",
+    "gen:qa-strip": "node --experimental-strip-types tools/spritegen/qa-strip.ts",
+    "gen:fit-redrawn": "node --experimental-strip-types tools/spritegen/fit-redrawn.ts",
+    "gen:fit-raw": "node --experimental-strip-types tools/spritegen/fit-raw-frames.ts",
+    "gen:collision-maps": "node --experimental-strip-types tools/spritegen/write-collision-maps.ts",
     "gen:sprites-proc": "node tools/spritegen/generate.ts",
     "gen:preview": "node tools/spritegen/preview.ts",
     "gen:track": "node tools/trackgen/preview.ts",
@@ -23,7 +28,10 @@
     "gen:lines": "node tools/linegen/generate.ts",
     "gen:ground": "node --experimental-strip-types tools/art/generate-ground-tiles.ts",
     "gen:planet-select": "node --experimental-strip-types tools/art/generate-planet-select.ts",
-    "gen:weapons": "node --experimental-strip-types tools/art/generate-weapons.ts"
+    "gen:weapons": "node --experimental-strip-types tools/art/generate-weapons.ts",
+    "gen:scraps": "node --experimental-strip-types tools/art/generate-metal-scraps.ts",
+    "gen:carts": "node --experimental-strip-types tools/art/generate-cart-portraits.ts",
+    "gen:voice-lab": "node --experimental-strip-types tools/voicegen/generate-lab.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"

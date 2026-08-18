@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { resolveCarContact } from '../../src/domain/vehicle/CarCollision.ts';
+import { CONTACT_ATTACKER, contactAttackCredit, resolveCarContact } from '../../src/domain/vehicle/CarCollision.ts';
+import { collisionBox } from '../../src/domain/vehicle/CollisionMap.ts';
 import { createVehicleState } from '../../src/domain/vehicle/Vehicle.ts';
 import type { VehicleState } from '../../src/domain/vehicle/Vehicle.ts';
 import type { VehicleStats } from '../../src/domain/vehicle/VehicleStats.ts';
 import { vec2 } from '../../src/domain/math/Vec2.ts';
+
+const MARAUDER_BOX = collisionBox(2.0, 0.93);
 
 // Load real stats from the car manifest.
 const MARAUDER_STATS: VehicleStats = {
@@ -475,4 +478,72 @@ describe('CarCollision', () => {
     expect(finalDist).toBeGreaterThanOrEqual(initialDist - 1e-5);
   });
 
+});
+
+describe('contactAttackCredit', () => {
+  it('gives the rear-ending car the bounty', () => {
+    const a: VehicleState = {
+      ...createVehicleState(vec2(0, 0), 0),
+      velocity: vec2(40, 0),
+    };
+    const b: VehicleState = {
+      ...createVehicleState(vec2(3, 0), 0),
+      velocity: vec2(0, 0),
+    };
+    const contact = resolveCarContact(a, MARAUDER_STATS, b, MARAUDER_STATS);
+    const credit = contactAttackCredit(contact);
+    expect(credit.attacker).toBe(CONTACT_ATTACKER.A);
+    expect(credit.factor).toBeGreaterThan(0.4);
+  });
+
+  it('on a head-on, the car that bounced less attacked more', () => {
+    const heavy: VehicleState = {
+      ...createVehicleState(vec2(0, 0), 0),
+      velocity: vec2(12, 0),
+    };
+    const light: VehicleState = {
+      ...createVehicleState(vec2(3.4, 0), 0),
+      velocity: vec2(-12, 0),
+    };
+    const contact = resolveCarContact(heavy, HAVAC_STATS, light, AIR_BLADE_STATS);
+    const credit = contactAttackCredit(contact);
+    expect(contact.returnA).toBeLessThan(contact.returnB);
+    expect(credit.attacker).toBe(CONTACT_ATTACKER.A);
+    expect(credit.factor).toBeGreaterThan(0);
+    expect(credit.factor).toBeLessThan(1);
+  });
+
+  it('pays almost nothing when two equal cars meet head-on', () => {
+    const a: VehicleState = {
+      ...createVehicleState(vec2(0, 0), 0),
+      velocity: vec2(10, 0),
+    };
+    const b: VehicleState = {
+      ...createVehicleState(vec2(3.2, 0), 0),
+      velocity: vec2(-10, 0),
+    };
+    const contact = resolveCarContact(a, MARAUDER_STATS, b, MARAUDER_STATS);
+    const credit = contactAttackCredit(contact);
+    expect(credit.factor).toBeLessThan(0.05);
+  });
+});
+
+describe('resolveCarContact with a shared box', () => {
+  it('side-by-side cars inside the circle but outside the OBB do not touch', () => {
+    const a = createVehicleState(vec2(0, 0), 0);
+    const b = createVehicleState(vec2(0, 2.4), 0);
+    const circle = resolveCarContact(a, MARAUDER_STATS, b, MARAUDER_STATS);
+    const boxed = resolveCarContact(a, MARAUDER_STATS, b, MARAUDER_STATS, MARAUDER_BOX, MARAUDER_BOX);
+    expect(circle.touched).toBe(true);
+    expect(boxed.touched).toBe(false);
+  });
+
+  it('nose-to-tail overlap separates along the heading', () => {
+    const a = createVehicleState(vec2(0, 0), 0);
+    const b = createVehicleState(vec2(3.2, 0), 0);
+    const result = resolveCarContact(a, MARAUDER_STATS, b, MARAUDER_STATS, MARAUDER_BOX, MARAUDER_BOX);
+    expect(result.touched).toBe(true);
+    const gap = result.b.position.x - result.a.position.x;
+    expect(gap).toBeGreaterThanOrEqual(4 - 1e-6);
+  });
 });

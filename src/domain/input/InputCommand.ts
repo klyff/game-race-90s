@@ -6,7 +6,7 @@
  * is what keeps the AI honest. An NPC cannot cheat by writing velocity directly
  * because it has no way to express that.
  *
- * Weapon keys: missile `C`, oil `Z`, landmine `X`, turbo Left-Shift. Hop is `Space`.
+ * Weapon keys: missile `C`, oil `Z`, landmine `X`, turbo Left-Shift or `A`. Hop is `Space`.
  * Adapters edge-trigger these so holding a key cannot dump the whole inventory
  * or spend every jump in one frame.
  */

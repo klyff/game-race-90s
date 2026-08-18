@@ -31,6 +31,9 @@ export const OIL_HIT_BOUNTY = 4_000;
 /** Bounty when the player's mine hits a rival, on planet 1. */
 export const MINE_HIT_BOUNTY = 8_000;
 
+/** Bounty when the player rams a rival hard enough to deal damage, planet 1. */
+export const CONTACT_HIT_BOUNTY = 2_500;
+
 /** Hit bounties grow this much per planet after the first. */
 export const HIT_BOUNTY_PLANET_GROWTH = 0.25;
 
@@ -44,9 +47,11 @@ export interface WeaponHits {
   readonly missiles: number;
   readonly oil: number;
   readonly mines: number;
+  /** Weighted ram credit (0..n). A planted hit is ~1; a mutual head-on is near 0. */
+  readonly contacts?: number;
 }
 
-export const EMPTY_WEAPON_HITS: WeaponHits = { missiles: 0, oil: 0, mines: 0 };
+export const EMPTY_WEAPON_HITS: WeaponHits = { missiles: 0, oil: 0, mines: 0, contacts: 0 };
 
 function safeIndex(value: number, fallback: number): number {
   if (!Number.isFinite(value) || value < 1) {
@@ -111,15 +116,21 @@ export function mineHitBounty(planetIndex: number): number {
   return roundPurse(MINE_HIT_BOUNTY * hitScale(planetIndex));
 }
 
-/** Cash earned this race from the player's weapon hits. */
+export function contactHitBounty(planetIndex: number): number {
+  return roundPurse(CONTACT_HIT_BOUNTY * hitScale(planetIndex));
+}
+
+/** Cash earned this race from the player's weapon hits and rams. */
 export function weaponHitEarnings(hits: WeaponHits, planetIndex: number): number {
   const missiles = Number.isFinite(hits.missiles) ? Math.max(0, hits.missiles) : 0;
   const oil = Number.isFinite(hits.oil) ? Math.max(0, hits.oil) : 0;
   const mines = Number.isFinite(hits.mines) ? Math.max(0, hits.mines) : 0;
+  const contacts = Number.isFinite(hits.contacts) ? Math.max(0, hits.contacts ?? 0) : 0;
   return (
     missiles * missileHitBounty(planetIndex) +
     oil * oilHitBounty(planetIndex) +
-    mines * mineHitBounty(planetIndex)
+    mines * mineHitBounty(planetIndex) +
+    contacts * contactHitBounty(planetIndex)
   );
 }
 

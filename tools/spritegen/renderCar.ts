@@ -7,6 +7,7 @@ import {
   ISO_Y,
 } from '../../src/domain/constants.ts';
 import { resolvePalette } from './color.ts';
+import { collisionBoxFromDef, withCollisionBox } from './collision-map.ts';
 import { buildFaces, groundExtents, rotateZ } from './geometry.ts';
 import type { Face } from './geometry.ts';
 import { Framebuffer } from './raster/Framebuffer.ts';
@@ -182,7 +183,7 @@ export function renderCar(def: CarModelDef, fit: ProjectionFit): RenderedCar {
         width: Math.round(footprint * 2 * ISO_X),
         height: Math.round(footprint * 2 * ISO_Y),
       },
-      stats: def.stats,
+      stats: withCollisionBox(def.stats, collisionBoxFromDef(def)),
       perk: def.perk,
     },
   };

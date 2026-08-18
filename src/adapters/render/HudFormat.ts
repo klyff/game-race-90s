@@ -37,6 +37,8 @@ export interface HudReadout {
   readonly jumps?: number;
   /** Turbo charges remaining. */
   readonly turbos?: number;
+  /** True while a turbo charge is burning. */
+  readonly turboActive?: boolean;
   readonly integrity: number; // 0..1 (0% to 100%)
   readonly standings: readonly { readonly carId: string; readonly position: number }[];
   /** The player's current speed, world units per second. */
@@ -48,6 +50,8 @@ export interface HudReadout {
    * `formatHud` tests stay unchanged; the HUD scene formats it itself.
    */
   readonly cash?: number;
+  /** Live season points plus this race's hit bonuses. */
+  readonly points?: number;
 }
 
 /**
