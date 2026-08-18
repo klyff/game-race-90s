@@ -3,8 +3,9 @@
 Isto não é física da Terra com um desenho em cima. É um jogo de corrida dos 90s:
 a rampa é um *trick* — o `launchSpeed` da zona é só o **chão fixo**; o impulso
 real é essa base **mais** as variáveis do carro no instante em que encosta.
-Ângulo + ritmo + turbo decidem se o salto é um hopzinho, um voo estúpido, ou
-uma ré sozinha porque a rampa ganhou.
+Ângulo + ritmo + turbo decidem se o salto é um hopzinho, um voo estúpido, uma
+ré sozinha porque a rampa ganhou, ou um arco que sai da pista — cai lá fora,
+explode, e volta na linha a seguir à rampa.
 
 A gravidade terrestre (`RAMP_GRAVITY = 40`) continua a ser a **linha de base
 do ar**. Os bónus abaixo são multiplicadores em cima do impulso já somado,
@@ -156,12 +157,52 @@ uma 45° fria, é silencioso.
   ombros; um vidro sente). Não é impacto de parede (não há `impactSpeed`).
 - Hop nunca paga esta taxa.
 
-### 6. O que o ângulo **não** muda
+### 6. Trajetória fora da pista → cai, explode, volta depois da rampa
+
+No ar as paredes já são skipped (excepção à decisão 19). Isso é o que
+permite o arco sair da pista. A punição **não** é uma parede invisível
+no ar — é o chão do lado de lá.
+
+No instante da aterragem (`wasAirborne && !isAirborne`), se o launch
+foi de rampa (`pendingRampFlight`) e
+
+```
+|lateralOffset| > track.halfWidth + track.shoulderWidth
+```
+
+o carro **cai lá fora e explode**:
+
+- `integrity → 0` / `DESTROYED`, armadura ignorada (cair no vazio não é
+  um toque — não passa por `applyWeaponDamage`)
+- para onde caiu, `velocity = 0`, o `ExplosionEffect` já existente dispara
+  no sítio do impacto (o mesmo path que mina / contacto fatal)
+- `sitOutWreck` corre o timer normal (`RESPAWN_TIME_SECONDS`, 2 s)
+
+Quando o timer acaba, **não** respawna no sítio da morte (o default de
+`sitOutWreck`). Vai para a **linha a seguir à rampa**:
+
+```
+respawnDistance = wrap(zone.triggerDistance + zone.triggerLength)
+```
+
+Centro da pista, `lateralOffset = 0`, heading = tangente. A zona é
+`distance < end`, portanto aterrar em `end` **não** relança. Guardar
+`offTrackRespawnDistance` no runtime no momento do launch; limpar num
+landing limpo. Hop (Space) não usa esta porta — um hop curto que
+esfrega o berm continua offroad normal.
+
+Aterrar no shoulder (`halfWidth < |offset| ≤ halfWidth + shoulderWidth`)
+é ainda “na pista”: offroad, sem explode. Só o outro lado da parede é
+o vazio.
+
+### 7. O que o ângulo **não** muda
 
 - `RAMP_GRAVITY` continua 40 para toda a gente
-- Paredes e contacto no ar continuam skipped
+- Paredes e contacto no ar continuam skipped — o explode é na aterragem
 - Sem animação de rolagem / pitch do sprite nesta tarefa
 - Sem segundo eixo Z na spline — altura continua só no carro
+- `sitOutWreck` no resto dos wrecks (mina, contacto) continua a
+  respawnar no sítio da morte; só o void-da-rampa desvia a linha
 
 ---
 
@@ -206,18 +247,20 @@ que se lê como “grande”.
 
 ### B. Turbo aéreo e stun / dano
 
-5. `RacerRuntime`: `landingStunRemaining: number` e `airTurboKicked: boolean`
-   (reset no aterrar: `height` passa a 0).
+5. `RacerRuntime`: `landingStunRemaining`, `airTurboKicked`,
+   `pendingRampFlight`, `pendingHardLanding`, `offTrackRespawnDistance`
+   (reset no landing limpo / no explode).
 6. `RaceField.resolveTurboCommand`: se `isAirborne` e ainda não kicked,
    aplicar `applyAirTurboKick` e marcar o flag.
 7. `RaceField` no step: se `landingStunRemaining > 0`, substituir o command
    por `NEUTRAL_INPUT` e decrementar. Armas/hop/turbo também bloqueados
    no stun (o `frozen` local já existe para DESTROYED — reutilizar o
    padrão, não inventar um segundo freeze).
-8. Detetar aterragem: `wasAirborne && !isAirborne(next)`. Se o launch tinha
-   sido 45° hot, aplicar dano + `landingStunRemaining = 1`. Guardar
-   `pendingHardLanding` no runtime no momento do launch, não adivinhar
-   no chão.
+8. Detetar aterragem: `wasAirborne && !isAirborne(next)`.
+   - Fora das paredes + `pendingRampFlight` → DESTROYED no sítio,
+     `offTrackRespawnDistance` já gravado no launch; `sitOutWreck` usa
+     essa distância em vez de `racer.distance`.
+   - Senão, se o launch tinha sido 45° hot → dano 4% + stun 1 s.
 
 ### C. Desenho (mínimo — a física já projecta altura)
 
@@ -251,14 +294,18 @@ que se lê como “grande”.
     mesmo voo; paredes skipped só no ar.
 14. `RaceField` — aterragem 45° hot: integrity cai ~4% (antes da armadura)
     e input é neutro durante 1 s; 15°/30° e hop não pagam.
-15. Thunder Basin: as 3 zonas existem, ângulos 45/30/15.
+15. `RaceField` — aterragem de rampa com `|lateralOffset|` past the wall:
+    `DESTROYED` no sítio; após o timer, posição = `frameAt(triggerDistance
+    + triggerLength)`, `lateralOffset === 0`; hop e landing no shoulder
+    não explodem. `sitOutWreck` de uma mina continua a respawnar onde morreu.
+16. Thunder Basin: as 3 zonas existem, ângulos 45/30/15.
 
 ### E. Fechar a tarefa
 
-16. Screenshot de um carro no ar na reta de baixo (decisão 25). Não
+17. Screenshot de um carro no ar na reta de baixo (decisão 25). Não
     confiar em `window.game` / object state.
-17. `WORKLOG` T-050 → `done` só depois do screenshot.
-18. Typecheck + suíte verde. Sem animação de rolagem neste fecho.
+18. `WORKLOG` T-050 → `done` só depois do screenshot.
+19. Typecheck + suíte verde. Sem animação de rolagem neste fecho.
 
 ---
 
@@ -266,7 +313,7 @@ que se lê como “grande”.
 
 1. Soma + reject + testes (A / 11–12) — o feel fica locked
 2. `resolveRampContact` em `OnTrackStep` + `turboActive` no caller (A.3)
-3. Kick aéreo + hard landing em `RaceField` (B)
+3. Kick aéreo + hard landing + void-landing em `RaceField` (B)
 4. Ângulos em Thunder Basin + laje mais íngreme na 45° (C / A.4)
 5. Screenshot na reta de baixo (E) — e um segundo take a rastejar na 45°
    a ver a ré, se o primeiro take for o voo quente
@@ -274,4 +321,5 @@ que se lê como “grande”.
 
 Não reabrir `integrateAirborne`, `AIRBORNE_SURFACE`, skip de paredes, nem
 o hop. A gravidade terrestre é o chão do ar; o launch é base da zona +
-carro no ponto zero; abaixo do mínimo a rampa manda-te para trás.
+carro no ponto zero; abaixo do mínimo a rampa manda-te para trás; um arco
+para o outro lado da parede explode e volta na linha a seguir à rampa.
