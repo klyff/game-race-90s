@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { garageBayRect, garageHeroLayout } from '../adapters/render/GarageLayout.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
-import { cartPortraitKey, findCarSheet, sheetCellSize } from '../data/cars/CarManifest.ts';
+import { cartPortraitKey, findCarSheet, matrixHeroNumber, sheetCellSize } from '../data/cars/CarManifest.ts';
+import { garageCarouselIds, isMatrixCarIndex, MATRIX_CAR_INDEX_SIZE, matrixCarRow } from '../data/cars/MatrixCarIndex.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import { STAT_BAR_FIELDS, statBars } from '../adapters/render/CarStatBars.ts';
 import type { StatBar } from '../adapters/render/CarStatBars.ts';
@@ -11,11 +12,11 @@ import { highestUnlockedPlanetIndex } from '../data/tracks/campaign.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import {
+  catalogEntry,
   carUnlockHint,
   isCarUnlocked,
   listPrice,
   sellPrice,
-  shopCarIds,
 } from '../domain/progress/GarageCatalog.ts';
 import { cashInValue } from '../domain/progress/SeasonPoints.ts';
 import { PLAYER_NAME_LENGTH } from '../domain/progress/SaveSlots.ts';
@@ -420,6 +421,11 @@ export class GarageScene extends Phaser.Scene {
         this.handleHub('equip');
         return;
       }
+      if (catalogEntry(carId) === undefined) {
+        this.status = isTourModeOn() ? 'TOUR INDEX · PREVIEW' : 'LOCKED';
+        this.refresh();
+        return;
+      }
       this.tryBuy(carId);
       return;
     }
@@ -589,9 +595,7 @@ export class GarageScene extends Phaser.Scene {
   }
 
   private shopCars(): string[] {
-    const career = loadActiveCareer();
-    const planet = highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn());
-    return [...shopCarIds(career?.ownedCarIds ?? [], planet, loadCleared().length)];
+    return [...garageCarouselIds()];
   }
 
   private slotLabel(index: number, save: ReturnType<typeof loadSave>): string {
@@ -605,6 +609,10 @@ export class GarageScene extends Phaser.Scene {
   }
 
   private carName(carId: string): string {
+    const n = matrixHeroNumber(carId);
+    if (n !== undefined && isMatrixCarIndex(n)) {
+      return matrixCarRow(n).displayName.toUpperCase();
+    }
     try {
       return findCarSheet(this.payload.manifest, carId).displayName.toUpperCase();
     } catch {
@@ -665,7 +673,9 @@ export class GarageScene extends Phaser.Scene {
       this.helpText.setText(formatHelpBody());
       this.hintText.setText('Esc or Enter to get back');
     } else {
-      this.titleText.setText(`${name || 'PILOT'}'S GARAGE`);
+      this.titleText.setText(
+        isTourModeOn() ? `${name || 'PILOT'}'S GARAGE  ·  TOUR INDEX` : `${name || 'PILOT'}'S GARAGE`,
+      );
       this.moneyText.setText(formatCash(career?.cash ?? 0));
       const deal = cashInValue(career?.points ?? 0);
       this.pointsText.setText(
@@ -683,23 +693,35 @@ export class GarageScene extends Phaser.Scene {
       const equipped = career?.equippedCarId === carId;
       const unlocked = this.carUnlocked(carId);
       const hint = this.unlockHint(carId);
+      const tour = isTourModeOn();
+      const n = matrixHeroNumber(carId);
       this.carNameText.setText(this.carName(carId));
-      this.valueText.setColor(owned ? GO : unlocked ? GOLD : LOCKED);
-      this.valueText.setText(
+      this.valueText.setColor(owned ? GO : unlocked || tour ? GOLD : LOCKED);
+      const indexBit = n !== undefined ? `INDEX  ${n} / ${MATRIX_CAR_INDEX_SIZE}` : '';
+      const statusBit = owned
+        ? equipped
+          ? 'OWNED  ·  EQUIPPED'
+          : 'OWNED'
+        : unlocked
+          ? `BUY FOR  ${formatCash(listPrice(carId))}`
+          : hint ?? 'LOCKED';
+      this.valueText.setText(indexBit === '' ? statusBit : `${indexBit}  ·  ${statusBit}`);
+      this.btnBuy.setText(
         owned
           ? equipped
-            ? `OWNED  ·  EQUIPPED  ·  SELL ${formatCash(sellPrice(carId))}`
-            : `OWNED  ·  SELL ${formatCash(sellPrice(carId))}`
+            ? 'EQUIPPED'
+            : 'EQUIP'
           : unlocked
-            ? `BUY FOR  ${formatCash(listPrice(carId))}`
-            : hint ?? 'LOCKED',
+            ? `BUY  ${formatCash(listPrice(carId))}`
+            : tour
+              ? 'PREVIEW'
+              : 'LOCKED',
       );
-      this.btnBuy.setText(owned ? (equipped ? 'EQUIPPED' : 'EQUIP') : unlocked ? `BUY  ${formatCash(listPrice(carId))}` : 'LOCKED');
       this.btnSell.setText(owned ? `SELL  ${formatCash(sellPrice(carId))}` : 'SELL');
       this.btnRace.setText(career?.equippedCarId ? 'GO RACE' : 'BUY A CAR FIRST');
       this.paintArsenal(carId);
       this.paintSpecs(carId);
-      this.paintPortrait(carId, owned || unlocked);
+      this.paintPortrait(carId, owned || unlocked || tour);
       this.hintText.setText(
         'Browse / navigate with mouse, arrows and tab\nEsc to get back, Enter to accept, H for controls',
       );
@@ -836,12 +858,17 @@ export class GarageScene extends Phaser.Scene {
     try {
       bars = statBars(this.payload.manifest, carId);
       const sheet = findCarSheet(this.payload.manifest, carId);
-      const perk = perkProfile(sheet.perk);
-      this.specPerkText.setText(
-        perk.displayName === 'None'
-          ? sheet.archetype.toUpperCase()
-          : `${perk.displayName.toUpperCase()}  ·  ${perk.description.toUpperCase()}`,
-      );
+      const n = matrixHeroNumber(carId);
+      if (isTourModeOn() && n !== undefined && isMatrixCarIndex(n)) {
+        this.specPerkText.setText(matrixCarRow(n).archetype.toUpperCase());
+      } else {
+        const perk = perkProfile(sheet.perk);
+        this.specPerkText.setText(
+          perk.displayName === 'None'
+            ? sheet.archetype.toUpperCase()
+            : `${perk.displayName.toUpperCase()}  ·  ${perk.description.toUpperCase()}`,
+        );
+      }
     } catch {
       this.specPerkText.setText('');
     }
