@@ -408,12 +408,13 @@ export class RaceScene extends Phaser.Scene {
     this.scraps.update(deltaSeconds);
     this.wood.update(deltaSeconds);
     this.chaseCamera.follow(this.followedRacer().state, deltaSeconds, this.targetZoom(deltaSeconds));
-    const impulse = this.cameraImpulse.sample(deltaSeconds);
-    this.chaseCamera.applyOverlay(
-      impulse.x * this.cameras.main.width,
-      impulse.y * this.cameras.main.height,
-      impulse.zoomScale,
-    );
+    // Hit / explosion camera kick — off while we try the start without the sway.
+    // const impulse = this.cameraImpulse.sample(deltaSeconds);
+    // this.chaseCamera.applyOverlay(
+    //   impulse.x * this.cameras.main.width,
+    //   impulse.y * this.cameras.main.height,
+    //   impulse.zoomScale,
+    // );
     this.trackRenderer.syncToCamera(this.cameras.main);
     this.refreshOverlay();
     this.tickDebugIaLog(deltaSeconds);
@@ -592,7 +593,7 @@ export class RaceScene extends Phaser.Scene {
       IMPACT_DAMAGE_THRESHOLD,
       stepSeconds,
     );
-    this.notePlayerCameraImpulse(impactBefore);
+    // this.notePlayerCameraImpulse(impactBefore);
 
     // Collected here rather than in `update`, because `explodedThisStep` is true for
     // one step only and a frame can contain several steps.
@@ -960,28 +961,29 @@ export class RaceScene extends Phaser.Scene {
     return racers[this.aiFocusIndex % racers.length] ?? this.player;
   }
 
-  private notePlayerCameraImpulse(impactBefore: readonly number[]): void {
-    const player = this.player;
-    if (!player.isPlayer) {
-      return;
-    }
-    if (player.explodedThisStep) {
-      this.cameraImpulse.punchExplosion();
-      return;
-    }
-    if (player.respawnedThisStep) {
-      this.cameraImpulse.recoverFromExplosion();
-      return;
-    }
-    const index = this.field.racers.indexOf(player);
-    const before = impactBefore[index] ?? 0;
-    if (
-      player.pendingImpactSpeed > before &&
-      player.pendingImpactSpeed > IMPACT_DAMAGE_THRESHOLD
-    ) {
-      this.cameraImpulse.punchHit();
-    }
-  }
+  // Hit shake + wreck zoom punch. Commented: the start grid made it look messy.
+  // private notePlayerCameraImpulse(impactBefore: readonly number[]): void {
+  //   const player = this.player;
+  //   if (!player.isPlayer) {
+  //     return;
+  //   }
+  //   if (player.explodedThisStep) {
+  //     this.cameraImpulse.punchExplosion();
+  //     return;
+  //   }
+  //   if (player.respawnedThisStep) {
+  //     this.cameraImpulse.recoverFromExplosion();
+  //     return;
+  //   }
+  //   const index = this.field.racers.indexOf(player);
+  //   const before = impactBefore[index] ?? 0;
+  //   if (
+  //     player.pendingImpactSpeed > before &&
+  //     player.pendingImpactSpeed > IMPACT_DAMAGE_THRESHOLD
+  //   ) {
+  //     this.cameraImpulse.punchHit();
+  //   }
+  // }
 
   private buildEntries(): readonly RacerEntry[] {
     if (this.debugIa) {
@@ -1325,7 +1327,7 @@ export class RaceScene extends Phaser.Scene {
       respawnRemaining: DEBUG_RESPAWN_SECONDS,
     };
     this.pendingExplosions.push({ position: player.state.position, intensity: 1, leaveBurnMark: true });
-    this.cameraImpulse.punchExplosion();
+    // this.cameraImpulse.punchExplosion();
     const playerIndex = this.field.racers.findIndex(racer => racer.isPlayer);
     this.pendingScraps.push({
       racerIndex: playerIndex,

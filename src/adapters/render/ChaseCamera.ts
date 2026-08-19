@@ -139,11 +139,17 @@ export class ChaseCamera {
   /**
    * Presentation overlay (shake / wreck punch). Does not update the chase pose
    * or the smoothed zoom, so the kick dies without dragging the follow.
+   *
+   * Off for now: start pile-ups made the kick look messy. Uncomment the body
+   * (and RaceScene's sample / applyOverlay) to restore.
    */
   applyOverlay(offsetX: number, offsetY: number, zoomScale: number): void {
-    this.camera.centerOn(this.currentX + offsetX, this.currentY + offsetY);
-    const scale = Number.isFinite(zoomScale) && zoomScale > 0 ? zoomScale : 1;
-    this.camera.setZoom(this.currentZoom * scale);
+    void offsetX;
+    void offsetY;
+    void zoomScale;
+    // this.camera.centerOn(this.currentX + offsetX, this.currentY + offsetY);
+    // const scale = Number.isFinite(zoomScale) && zoomScale > 0 ? zoomScale : 1;
+    // this.camera.setZoom(this.currentZoom * scale);
   }
 
   get zoom(): number {
