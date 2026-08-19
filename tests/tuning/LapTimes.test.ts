@@ -144,37 +144,44 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     }
   });
 
+  it('Thunder Basin starters stay under the old Marauder PaceDriver top of 75.3', () => {
+    for (const carId of ['car-1', 'car-2', 'car-5'] as const) {
+      const sheet = findCarSheet(manifest, carId);
+      const result = driveLap(sheet.stats, track, spline);
+      expect(result.topSpeed).toBeLessThan(75.3);
+    }
+  });
+
   it('lap times fit measured bands (±25% margin)', () => {
-    // Measured on 2026-08-15 with PaceDriver pure pursuit fix:
-    // lap length 1505.4   halfWidth 20
-    // marauder     LAP  33.23s  top 75.3  slide 0.0%  walls 0  maxLat 9.00
-    // dirt-devil   LAP  33.58s  top 62.4  slide 0.0%  walls 0  maxLat 9.00
-    // havac        LAP  40.88s  top 62.4  slide 0.0%  walls 0  maxLat 9.00
-    // air-blade    LAP  39.15s  top 89.1  slide 0.0%  walls 0  maxLat 9.00
-    // battle-trak  LAP  34.15s  top 71.3  slide 0.0%  walls 0  maxLat 9.00
+    // Measured on 2026-08-18 after CarStatMatrix (Basin teaching band slower):
+    // car-1 37.08  car-2 37.27  car-5 37.47  delorean 35.53  car-9-turbo 39.35
+    // car-3 34.07  car-13 34.12  car-4 33.90  car-17 34.33
+    // car-8-strong 41.93  car-12-strong 41.47  car-6-tank 46.97  car-18 45.20
+    // car-11 33.30  car-15 32.97  car-7-turbo 40.10  car-20 38.50
+    // car-10 35.05  car-14 35.67  car-16 34.65  car-19 34.77
 
     const bands: Record<string, { min: number; max: number }> = {
-      'car-1': { min: 24.91, max: 41.52 },
-      'car-2': { min: 24.5, max: 42.0 },
-      'car-5': { min: 24.5, max: 42.0 },
-      'delorean': { min: 25.98, max: 43.29 },
-      'car-9-turbo': { min: 29.35, max: 48.92 },
-      'car-3': { min: 24.77, max: 41.29 },
-      'car-13': { min: 24.77, max: 41.29 },
-      'car-4': { min: 24.62, max: 41.04 },
-      'car-17': { min: 24.62, max: 41.04 },
-      'car-8-strong': { min: 30.65, max: 51.08 },
-      'car-12-strong': { min: 30.65, max: 51.08 },
-      'car-6-tank': { min: 34.30, max: 57.16 },
-      'car-18': { min: 30.65, max: 51.08 },
-      'car-11': { min: 24.22, max: 40.38 },
-      'car-15': { min: 24.22, max: 40.38 },
-      'car-7-turbo': { min: 29.35, max: 48.92 },
-      'car-20': { min: 29.35, max: 48.92 },
-      'car-10': { min: 25.60, max: 42.67 },
-      'car-14': { min: 25.60, max: 42.67 },
-      'car-16': { min: 25.17, max: 41.96 },
-      'car-19': { min: 25.17, max: 41.96 },
+      'car-1': { min: 27.81, max: 46.35 },
+      'car-2': { min: 27.95, max: 46.59 },
+      'car-5': { min: 28.10, max: 46.84 },
+      'delorean': { min: 26.65, max: 44.41 },
+      'car-9-turbo': { min: 29.51, max: 49.19 },
+      'car-3': { min: 25.55, max: 42.59 },
+      'car-13': { min: 25.59, max: 42.65 },
+      'car-4': { min: 25.43, max: 42.38 },
+      'car-17': { min: 25.75, max: 42.91 },
+      'car-8-strong': { min: 31.45, max: 52.41 },
+      'car-12-strong': { min: 31.10, max: 51.84 },
+      'car-6-tank': { min: 35.23, max: 58.71 },
+      'car-18': { min: 33.90, max: 56.50 },
+      'car-11': { min: 24.98, max: 41.63 },
+      'car-15': { min: 24.73, max: 41.21 },
+      'car-7-turbo': { min: 30.08, max: 50.13 },
+      'car-20': { min: 28.88, max: 48.13 },
+      'car-10': { min: 26.29, max: 43.81 },
+      'car-14': { min: 26.75, max: 44.59 },
+      'car-16': { min: 25.99, max: 43.31 },
+      'car-19': { min: 26.08, max: 43.46 },
     };
 
     const results: Array<{ id: string; lapSeconds: number }> = [];

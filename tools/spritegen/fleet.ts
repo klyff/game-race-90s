@@ -1,11 +1,12 @@
 import { CAR_PERK, WORLD_ADVANTAGE } from '../../src/domain/constants.ts';
 import type { CarPerkId, WorldAdvantage } from '../../src/domain/constants.ts';
+import { carStatRow } from '../../src/data/cars/CarStatMatrix.ts';
 import type { VehicleStats } from '../../src/domain/vehicle/VehicleStats.ts';
 
 /**
  * One imported fleet car. Art comes from `fleet-src/{source}`; stats/perk/world
- * are authored here. Junior agents copy `_template.car.ts` and only change
- * the fields on this type.
+ * for numbered cars come from `CarStatMatrix` (folder `N_hero`). Delorean has
+ * no matrix number and keeps its own template.
  */
 export interface FleetCarDef {
   readonly id: string;
@@ -19,33 +20,17 @@ export interface FleetCarDef {
   readonly stats: VehicleStats;
 }
 
-const STATS_MARAUDER: VehicleStats = {
-  mass: 1000,
-  enginePower: 34,
-  brakeForce: 46,
-  maxSpeed: 78,
-  grip: 30,
-  steerRate: 2.5,
-  steerSpeedFalloff: 0.45,
-  armor: 0.4,
-  ammoCapacity: 10,
-  collisionRadius: 1.7,
-  aimRadius: 3.5,
-};
-
-const STATS_MARAUDER_LIGHT: VehicleStats = {
-  mass: 900,
-  enginePower: 33,
-  brakeForce: 44,
-  maxSpeed: 76,
-  grip: 31,
-  steerRate: 2.6,
-  steerSpeedFalloff: 0.42,
-  armor: 0.35,
-  ammoCapacity: 10,
-  collisionRadius: 1.65,
-  aimRadius: 3.4,
-};
+function matrixFields(
+  n: number,
+): Pick<FleetCarDef, 'perk' | 'homePlanetId' | 'worldAdvantage' | 'stats'> {
+  const row = carStatRow(n);
+  return {
+    perk: row.perk,
+    homePlanetId: row.homePlanetId,
+    worldAdvantage: row.worldAdvantage,
+    stats: row.stats,
+  };
+}
 
 const STATS_DELOREAN: VehicleStats = {
   mass: 900,
@@ -61,118 +46,6 @@ const STATS_DELOREAN: VehicleStats = {
   aimRadius: 3,
 };
 
-const STATS_AIR_BLADE: VehicleStats = {
-  mass: 650,
-  enginePower: 36,
-  brakeForce: 36,
-  maxSpeed: 95,
-  grip: 18,
-  steerRate: 3.1,
-  steerSpeedFalloff: 0.68,
-  armor: 0.15,
-  ammoCapacity: 8,
-  collisionRadius: 1.8,
-  aimRadius: 3.2,
-};
-
-const STATS_AIR_BOAT: VehicleStats = {
-  mass: 720,
-  enginePower: 30,
-  brakeForce: 42,
-  maxSpeed: 70,
-  grip: 34,
-  steerRate: 3,
-  steerSpeedFalloff: 0.4,
-  armor: 0.3,
-  ammoCapacity: 8,
-  collisionRadius: 1.7,
-  aimRadius: 3,
-};
-
-const STATS_SNOW_CAR: VehicleStats = {
-  mass: 1320,
-  enginePower: 36,
-  brakeForce: 50,
-  maxSpeed: 62,
-  grip: 38,
-  steerRate: 2.3,
-  steerSpeedFalloff: 0.46,
-  armor: 0.7,
-  ammoCapacity: 10,
-  collisionRadius: 1.95,
-  aimRadius: 3,
-};
-
-const STATS_HAVAC: VehicleStats = {
-  mass: 1200,
-  enginePower: 40,
-  brakeForce: 42,
-  maxSpeed: 65,
-  grip: 18,
-  steerRate: 1.8,
-  steerSpeedFalloff: 0.65,
-  armor: 0.6,
-  ammoCapacity: 10,
-  collisionRadius: 1.85,
-  aimRadius: 2.5,
-};
-
-const STATS_MAGMA_REX: VehicleStats = {
-  mass: 1600,
-  enginePower: 34,
-  brakeForce: 36,
-  maxSpeed: 52,
-  grip: 16,
-  steerRate: 1.4,
-  steerSpeedFalloff: 0.72,
-  armor: 0.88,
-  ammoCapacity: 8,
-  collisionRadius: 2.15,
-  aimRadius: 2.4,
-};
-
-const STATS_NEON_RONIN: VehicleStats = {
-  mass: 780,
-  enginePower: 35,
-  brakeForce: 44,
-  maxSpeed: 80,
-  grip: 32,
-  steerRate: 3.3,
-  steerSpeedFalloff: 0.5,
-  armor: 0.28,
-  ammoCapacity: 10,
-  collisionRadius: 1.65,
-  aimRadius: 3.4,
-};
-
-const STATS_BATTLE_TRAK: VehicleStats = {
-  mass: 1080,
-  enginePower: 32,
-  brakeForce: 44,
-  maxSpeed: 74,
-  grip: 29,
-  steerRate: 2.4,
-  steerSpeedFalloff: 0.45,
-  armor: 0.42,
-  ammoCapacity: 30,
-  collisionRadius: 1.85,
-  aimRadius: 5,
-};
-
-const STATS_DIRT_DEVIL: VehicleStats = {
-  mass: 750,
-  enginePower: 28,
-  brakeForce: 40,
-  maxSpeed: 65,
-  grip: 35,
-  steerRate: 3.2,
-  steerSpeedFalloff: 0.35,
-  armor: 0.25,
-  ammoCapacity: 8,
-  collisionRadius: 1.55,
-  aimRadius: 3,
-};
-
 /** Official 20-car roster, car-select order. */
 export const FLEET_CARS: readonly FleetCarDef[] = [
   {
@@ -180,42 +53,21 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
     source: 'Car_1.png',
     displayName: 'Marauder',
     archetype: 'Balanced muscle — Thunder Basin titular',
-    perk: CAR_PERK.BULLDOZER,
-    homePlanetId: 'thunder-basin',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_MARAUDER,
+    ...matrixFields(1),
   },
   {
     id: 'car-2',
     source: 'Car_2.png',
     displayName: 'Dust Fang',
     archetype: 'Light muscle — Thunder Basin reserva',
-    perk: CAR_PERK.TRENCH_GRIP,
-    homePlanetId: 'thunder-basin',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_MARAUDER_LIGHT,
+    ...matrixFields(2),
   },
   {
     id: 'car-5',
     source: 'Car_5.png',
     displayName: 'Sand Viper',
     archetype: 'Dirt muscle — Thunder Basin extra',
-    perk: CAR_PERK.TRENCH_GRIP,
-    homePlanetId: 'thunder-basin',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: {
-      mass: 880,
-      enginePower: 32,
-      brakeForce: 44,
-      maxSpeed: 74,
-      grip: 32,
-      steerRate: 2.7,
-      steerSpeedFalloff: 0.4,
-      armor: 0.32,
-      ammoCapacity: 10,
-      collisionRadius: 1.6,
-      aimRadius: 3.3,
-    },
+    ...matrixFields(5),
   },
   {
     id: 'delorean',
@@ -232,169 +84,118 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
     source: 'Car_9_turbo.png',
     displayName: 'Nitro Viper',
     archetype: 'Turbo reserva — Chrome Verge',
-    perk: CAR_PERK.TURBO,
-    homePlanetId: 'chrome-verge',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_AIR_BLADE,
+    ...matrixFields(9),
   },
   {
     id: 'car-3',
     source: 'Car_3.png',
     displayName: 'Swamp Rat',
     archetype: 'Marsh-runner — Bogmire Deep titular',
-    perk: CAR_PERK.OFF_ROAD_ACE,
-    homePlanetId: 'bogmire-deep',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_AIR_BOAT,
+    ...matrixFields(3),
   },
   {
     id: 'car-13',
     source: 'Car_13.png',
     displayName: 'Bog Howler',
     archetype: 'Marsh reserva — Bogmire Deep',
-    perk: CAR_PERK.OFF_ROAD_ACE,
-    homePlanetId: 'bogmire-deep',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_AIR_BOAT,
+    ...matrixFields(13),
   },
   {
     id: 'car-4',
     source: 'Car_4.png',
     displayName: 'Frostbite',
     archetype: 'Ice-crawler — Cryo Hollow titular',
-    perk: CAR_PERK.TRENCH_GRIP,
-    homePlanetId: 'cryo-hollow',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_SNOW_CAR,
+    ...matrixFields(4),
   },
   {
     id: 'car-17',
     source: 'Car_17.png',
     displayName: 'Icebreaker',
     archetype: 'Ice reserva — Cryo Hollow',
-    perk: CAR_PERK.TRENCH_GRIP,
-    homePlanetId: 'cryo-hollow',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_SNOW_CAR,
+    ...matrixFields(17),
   },
   {
     id: 'car-8-strong',
     source: 'Car_8_strong.png',
     displayName: 'Iron Fist',
     archetype: 'Immovable bruiser — Ferro Rust titular',
-    perk: CAR_PERK.ANVIL,
-    homePlanetId: 'ferro-rust',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_HAVAC,
+    ...matrixFields(8),
   },
   {
     id: 'car-12-strong',
     source: 'Car_12_strong.png',
     displayName: 'Wrecker',
     archetype: 'Bulldozer reserva — Ferro Rust',
-    perk: CAR_PERK.BULLDOZER,
-    homePlanetId: 'ferro-rust',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_HAVAC,
+    ...matrixFields(12),
   },
   {
     id: 'car-6-tank',
     source: 'Car_6_tank.png',
     displayName: 'Magma Rex',
     archetype: 'War tank — Vulkanis titular',
-    perk: CAR_PERK.WAR_TANK,
-    homePlanetId: 'vulkanis',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_MAGMA_REX,
+    ...matrixFields(6),
   },
   {
     id: 'car-18',
     source: 'Car_18.png',
     displayName: 'Slag Hammer',
     archetype: 'Heavy reserva — Vulkanis',
-    perk: CAR_PERK.ANVIL,
-    homePlanetId: 'vulkanis',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_HAVAC,
+    ...matrixFields(18),
   },
   {
     id: 'car-11',
     source: 'Car_11.png',
     displayName: 'Neon Ronin',
     archetype: 'Street-tuner — Neon Kasbah titular',
-    perk: CAR_PERK.SLIPSTREAM,
-    homePlanetId: 'neon-kasbah',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_NEON_RONIN,
+    ...matrixFields(11),
   },
   {
     id: 'car-15',
     source: 'Car_15.png',
     displayName: 'Volt Sting',
     archetype: 'Arsenal reserva — Neon Kasbah',
-    perk: CAR_PERK.ARSENAL,
-    homePlanetId: 'neon-kasbah',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_NEON_RONIN,
+    ...matrixFields(15),
   },
   {
     id: 'car-7-turbo',
     source: 'Car_7_turbo.png',
     displayName: 'Afterburn',
     archetype: 'Turbo — Ash Reach titular',
-    perk: CAR_PERK.TURBO,
-    homePlanetId: 'ash-reach',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_AIR_BLADE,
+    ...matrixFields(7),
   },
   {
     id: 'car-20',
     source: 'Car_20.png',
     displayName: 'Ash Comet',
     archetype: 'Slipstream reserva — Ash Reach',
-    perk: CAR_PERK.SLIPSTREAM,
-    homePlanetId: 'ash-reach',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_AIR_BLADE,
+    ...matrixFields(20),
   },
   {
     id: 'car-10',
     source: 'Car_10.png',
     displayName: 'Battle Trak',
     archetype: 'Weapons platform — Voidport titular',
-    perk: CAR_PERK.ARSENAL,
-    homePlanetId: 'voidport',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_BATTLE_TRAK,
+    ...matrixFields(10),
   },
   {
     id: 'car-14',
     source: 'Car_14.png',
     displayName: 'Void Cannon',
     archetype: 'Arsenal reserva — Voidport',
-    perk: CAR_PERK.ARSENAL,
-    homePlanetId: 'voidport',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_BATTLE_TRAK,
+    ...matrixFields(14),
   },
   {
     id: 'car-16',
     source: 'Car_16.png',
     displayName: 'Dirt Devil',
     archetype: 'Dirt buggy — Verdant Fault titular',
-    perk: CAR_PERK.OFF_ROAD_ACE,
-    homePlanetId: 'verdant-fault',
-    worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
-    stats: STATS_DIRT_DEVIL,
+    ...matrixFields(16),
   },
   {
     id: 'car-19',
     source: 'Car_19.png',
     displayName: 'Vine Whip',
     archetype: 'Dirt reserva — Verdant Fault',
-    perk: CAR_PERK.OFF_ROAD_ACE,
-    homePlanetId: 'verdant-fault',
-    worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
-    stats: STATS_DIRT_DEVIL,
+    ...matrixFields(19),
   },
 ];

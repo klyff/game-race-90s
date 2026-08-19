@@ -2,8 +2,17 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CAR_SPRITE_FRAMES } from '../../src/domain/constants.ts';
-import { cartStripFile, parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
+import {
+  cartStripFile,
+  matrixHeroNumber,
+  parseCarSetManifest,
+} from '../../src/data/cars/CarManifest.ts';
 import type { CarSetManifest, CarSheetManifest } from '../../src/data/cars/CarManifest.ts';
+import {
+  carStatRow,
+  isCarStatMatrixIndex,
+  overlayAuthoredStats,
+} from '../../src/data/cars/CarStatMatrix.ts';
 import { collisionBoxForCarId, withCollisionBox } from './collision-map.ts';
 import { packStrip, writePng } from './raster/png.ts';
 import {
@@ -70,17 +79,38 @@ function pinFrames(frames: readonly Uint8Array[], frameSize: number): Uint8Array
   return frames.map((frame) => translateFrame(frame, frameSize, frameSize, shift.dx, shift.dy));
 }
 
+function matrixOverlay(carId: string, stats: CarSheetManifest['stats']): {
+  readonly homePlanetId?: CarSheetManifest['homePlanetId'];
+  readonly worldAdvantage?: CarSheetManifest['worldAdvantage'];
+  readonly perk?: CarSheetManifest['perk'];
+  readonly stats: CarSheetManifest['stats'];
+} | undefined {
+  const n = matrixHeroNumber(carId);
+  if (n === undefined || !isCarStatMatrixIndex(n)) {
+    return undefined;
+  }
+  const row = carStatRow(n);
+  return {
+    homePlanetId: row.homePlanetId,
+    worldAdvantage: row.worldAdvantage,
+    perk: row.perk,
+    stats: overlayAuthoredStats(stats, row.stats),
+  };
+}
+
 function newFleetSheet(base: CarSheetManifest, carId: string): CarSheetManifest {
   const number = carId.replace(/^car_/, '');
+  const overlay = matrixOverlay(carId, base.stats);
   return {
     ...base,
     id: carId,
     displayName: `Car ${number}`,
     archetype: 'Clock-fleet strip',
     image: cartStripFile(carId),
-    homePlanetId: base.homePlanetId,
-    worldAdvantage: base.worldAdvantage,
-    perk: base.perk,
+    homePlanetId: overlay?.homePlanetId ?? base.homePlanetId,
+    worldAdvantage: overlay?.worldAdvantage ?? base.worldAdvantage,
+    perk: overlay?.perk ?? base.perk,
+    stats: overlay?.stats ?? base.stats,
   };
 }
 
@@ -100,13 +130,18 @@ function installStrip(
 
   const existing = manifest.cars.find((entry) => entry.id === carId);
   const template = existing ?? newFleetSheet(manifest.cars[0]!, carId);
+  const overlay = matrixOverlay(carId, template.stats);
+  const physics = overlay?.stats ?? template.stats;
   const installed: CarSheetManifest = {
     ...template,
     image,
     shadow,
+    homePlanetId: overlay?.homePlanetId ?? template.homePlanetId,
+    worldAdvantage: overlay?.worldAdvantage ?? template.worldAdvantage,
+    perk: overlay?.perk ?? template.perk,
     frameWidth: frameSize === manifest.frameWidth ? undefined : frameSize,
     frameHeight: frameSize === manifest.frameHeight ? undefined : frameSize,
-    stats: withCollisionBox(template.stats, collisionBoxForCarId(carId)),
+    stats: withCollisionBox(physics, collisionBoxForCarId(carId)),
   };
   const next: CarSetManifest = {
     ...manifest,

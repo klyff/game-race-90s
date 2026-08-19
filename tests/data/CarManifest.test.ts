@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
+  applyAvailableMatrixStrips,
   applyMatrixStripToSheet,
   carSheetImageUrl,
   collisionFromMatrixStrip,
@@ -39,38 +40,22 @@ const car18StripJsonPath = join(
 );
 
 describe('frameIndexForHeading', () => {
-  it('maps heading 0 to frame 0', () => {
-    expect(frameIndexForHeading(0, CAR_SPRITE_FRAMES)).toBe(0);
+  it('maps world NE (π/4) to frame 0 — nose to screen down / 6h', () => {
+    expect(frameIndexForHeading(Math.PI / 4, CAR_SPRITE_FRAMES)).toBe(0);
+    expect(frameIndexForHeading(Math.PI / 4, 30)).toBe(0);
   });
 
-  it('maps exactly one frame arc to frame 1', () => {
-    const index = frameIndexForHeading(CAR_SPRITE_FRAME_ARC, CAR_SPRITE_FRAMES);
-    expect(index).toBe(1);
+  it('maps world +X to hero ~4h, not a000 (Basin bottom straight)', () => {
+    expect(frameIndexForHeading(0, 30)).toBe(25);
+    expect(frameIndexForHeading(0, CAR_SPRITE_FRAMES)).toBe(26);
   });
 
-  it('maps a full turn (2π) back to frame 0', () => {
-    const index = frameIndexForHeading(Math.PI * 2, CAR_SPRITE_FRAMES);
-    expect(index).toBe(0);
+  it('maps world SW (5π/4) to rear — 12h, facing the camera', () => {
+    expect(frameIndexForHeading((5 * Math.PI) / 4, 30)).toBe(15);
   });
 
-  it('wraps negative headings to the top of the range', () => {
-    // Negative one frame arc should wrap to the last frame (31 at 32 frames)
-    const index = frameIndexForHeading(-CAR_SPRITE_FRAME_ARC, CAR_SPRITE_FRAMES);
-    expect(index).toBe(CAR_SPRITE_FRAMES - 1);
-  });
-
-  it('rounds down values just under half a frame arc', () => {
-    // Half frame arc minus a small epsilon
-    const halfArc = CAR_SPRITE_FRAME_ARC / 2;
-    const index = frameIndexForHeading(halfArc - 0.001, CAR_SPRITE_FRAMES);
-    expect(index).toBe(0);
-  });
-
-  it('rounds up values just over half a frame arc', () => {
-    // Half frame arc plus a small epsilon
-    const halfArc = CAR_SPRITE_FRAME_ARC / 2;
-    const index = frameIndexForHeading(halfArc + 0.001, CAR_SPRITE_FRAMES);
-    expect(index).toBe(1);
+  it('wraps a full turn to the same frame as heading 0', () => {
+    expect(frameIndexForHeading(Math.PI * 2, 30)).toBe(frameIndexForHeading(0, 30));
   });
 
   it('always returns an integer in [0, frameCount) for large positive headings', () => {
@@ -94,39 +79,6 @@ describe('frameIndexForHeading', () => {
   it('asserts the frame arc convention is 2π / frameCount', () => {
     const expectedArc = (Math.PI * 2) / CAR_SPRITE_FRAMES;
     expect(CAR_SPRITE_FRAME_ARC).toBeCloseTo(expectedArc, 10);
-  });
-
-  it('maps 30-frame clock: 0° front, 180° rear (a015), 300° hero (a025)', () => {
-    expect(frameIndexForHeading(0, 30)).toBe(0);
-    expect(frameIndexForHeading(Math.PI, 30)).toBe(15);
-    expect(frameIndexForHeading((300 * Math.PI) / 180, 30)).toBe(25);
-  });
-
-  it('ensures worst-case angular error never exceeds half a frame arc', () => {
-    let maxAngularError = 0;
-
-    // Test a sweep of several hundred headings
-    for (let i = 0; i < 500; i += 1) {
-      // Mix positive and negative, with both regular and large magnitudes
-      const heading = (i - 250) * 0.1;
-      const index = frameIndexForHeading(heading, CAR_SPRITE_FRAMES);
-      const frameHeading = index * CAR_SPRITE_FRAME_ARC;
-
-      // Calculate the angular difference, accounting for wrap-around
-      let delta = heading - frameHeading;
-      while (delta > Math.PI) {
-        delta -= Math.PI * 2;
-      }
-      while (delta < -Math.PI) {
-        delta += Math.PI * 2;
-      }
-
-      const angularError = Math.abs(delta);
-      maxAngularError = Math.max(maxAngularError, angularError);
-    }
-
-    const halfFrameArc = CAR_SPRITE_FRAME_ARC / 2;
-    expect(maxAngularError).toBeLessThanOrEqual(halfFrameArc + 1e-10); // Small epsilon for floating point
   });
 });
 
@@ -161,12 +113,21 @@ describe('parseCarSetManifest', () => {
     expect(isBBoxSheet(sheet)).toBe(true);
     expect(sheet.frameCount).toBe(30);
     expect(sheetFrameCount(sheet, manifest)).toBe(30);
-    expect(sheet.perk).toBe('war-tank');
+    expect(sheet.perk).toBe('anvil');
     expect(sheet.homePlanetId).toBe('vulkanis');
     const fallback = findCarSheet(manifest, 'car-1');
     expect(isBBoxSheet(fallback)).toBe(false);
     expect(sheetFrameCount(fallback, manifest)).toBe(32);
     expect(carSheetImageUrl(fallback)).toBe('assets/cars/car-1.png');
+  });
+
+  it('wires car-1 onto the matrix 1 bbox strip when that pair exists', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = applyAvailableMatrixStrips(parseCarSetManifest(JSON.parse(rawJson)));
+    const sheet = findCarSheet(manifest, 'car-1');
+    expect(isBBoxSheet(sheet)).toBe(true);
+    expect(sheet.image).toBe(matrixStripUrl(1));
+    expect(sheet.framesJson).toBe(matrixStripJsonUrl(1));
   });
 
   it('reads car_18 production_scale frames and midpoint collision from JSON', () => {
@@ -569,8 +530,9 @@ describe('cart portraits', () => {
     expect(matrixHeroUrl(6)).toBe('matrix_car/6_hero/car_6_hero.png');
     expect(matrixHeroNumber('car-6-tank')).toBe(6);
     expect(matrixHeroNumber('delorean')).toBeUndefined();
-    expect(portraitCandidateUrls('car-1')[0]).toBe('matrix_car/1_hero/car_1_hero.png');
-    expect(portraitCandidateUrls('car_1')[0]).toBe('matrix_car/1_hero/car_1_hero.png');
+    expect(portraitCandidateUrls('car-1')[0]).toBe('matrix_car/1_hero/car_1_hero_300.png');
+    expect(portraitCandidateUrls('car_1')[0]).toBe('matrix_car/1_hero/car_1_hero_300.png');
+    expect(portraitCandidateUrls('car-1')).toHaveLength(1);
   });
 });
 

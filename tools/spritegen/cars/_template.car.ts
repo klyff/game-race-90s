@@ -3,7 +3,7 @@ import type { FleetCarDef } from '../fleet.ts';
 
 /**
  * TEMPLATE — copy this object, change ONLY the fields marked "muda só isto".
- * Do not invent stats: copy a STATS_* block from fleet.ts.
+ * Do not invent stats: copy a row from `src/data/cars/CarStatMatrix.ts`.
  *
  * muda só isto:
  *   id, source, displayName, archetype, perk, homePlanetId, worldAdvantage, stats

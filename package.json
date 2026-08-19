@@ -17,6 +17,7 @@
     "gen:sprites": "node --experimental-strip-types tools/spritegen/import-fleet.ts",
     "gen:fleet": "node --experimental-strip-types tools/spritegen/import-fleet.ts",
     "gen:pack-redrawn": "node --experimental-strip-types tools/spritegen/pack-redrawn.ts",
+    "gen:car-stats": "node --experimental-strip-types tools/spritegen/apply-car-stats.ts",
     "gen:qa-strip": "node --experimental-strip-types tools/spritegen/qa-strip.ts",
     "gen:fit-redrawn": "node --experimental-strip-types tools/spritegen/fit-redrawn.ts",
     "gen:fit-raw": "node --experimental-strip-types tools/spritegen/fit-raw-frames.ts",
