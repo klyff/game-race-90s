@@ -1,5 +1,5 @@
 /**
- * Debug-IA grid: 14 NPC-only racers. Four signatures (Klyff, Aline, two
+ * Debug-IA grid: 15 NPC-only racers by default. Four signatures (Klyff, Aline, two
  * last-world jokers by skill), then a lottery of medium + derived pilots,
  * each on a shuffled car.
  *
@@ -12,9 +12,9 @@ import { DERIVED_SPECS, DRIVER_PROFILE_TIER, MEDIUM_PROFILES, SIGNATURE_PROFILES
 import { profileFor } from '../ai/DriverRoster.ts';
 import { driverSkill } from './WatchField.ts';
 
-export const DEBUG_IA_RACER_COUNT = 14;
+export const DEBUG_IA_RACER_COUNT = 15;
 export const DEBUG_IA_SIGNATURE_COUNT = 4;
-export const DEBUG_IA_CAMERA_MAP_FRACTION = 0.45;
+export const DEBUG_IA_CAMERA_MAP_FRACTION = 0.9;
 
 export const SKILL_BAND = {
   EXPERT: 'expert',
@@ -104,17 +104,23 @@ export interface DebugIaGrid {
   readonly seats: readonly DebugIaSeat[];
 }
 
-export function drawDebugIaGrid(carIds: readonly string[], seed: number): DebugIaGrid {
+export function drawDebugIaGrid(
+  carIds: readonly string[],
+  seed: number,
+  racerCount: number = DEBUG_IA_RACER_COUNT,
+): DebugIaGrid {
   const rng = mulberry32(Number.isFinite(seed) && seed > 0 ? seed : 1);
   const signatures = debugIaSignaturePilots();
-  const lotteryCount = Math.max(0, DEBUG_IA_RACER_COUNT - signatures.length);
+  const wanted = Math.max(signatures.length, Math.floor(racerCount));
+  const lotteryCount = Math.max(0, wanted - signatures.length);
   const lottery = shuffle(lotteryPool(), rng).slice(0, lotteryCount);
   const names = [...signatures, ...lottery];
   const uniqueCars = [...new Set(carIds.filter(id => id.length > 0))];
   const cars = uniqueCars.length > 0 ? shuffle(uniqueCars, rng) : ['car-1'];
 
   const seats = names.map((name, index) => {
-    const carId = cars[index] ?? cars[index % cars.length] ?? 'car-1';
+    const base = cars[index] ?? cars[index % cars.length] ?? 'car-1';
+    const carId = `${base}#${index}`;
     const profile = profileFor(name);
     return {
       name,
@@ -187,7 +193,8 @@ export function drawSkillMixGrid(
   const cars = uniqueCars.length > 0 ? shuffle(uniqueCars, rng) : ['car-1'];
 
   const seats = shuffledNames.map((name, index) => {
-    const carId = cars[index] ?? cars[index % cars.length] ?? 'car-1';
+    const base = cars[index] ?? cars[index % cars.length] ?? 'car-1';
+    const carId = `${base}#${index}`;
     const profile = profileFor(name);
     return {
       name,

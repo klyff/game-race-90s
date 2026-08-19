@@ -124,6 +124,19 @@ export function campaignSlotForTrackId(
   return null;
 }
 
+/** Resolve world + circuit numbers to a campaign track id, e.g. world 3 / pista 2 → bogmire-deep-2. */
+export function campaignTrackId(planetIndex: number, trackN: number): string | undefined {
+  const planet = PLANETS.find(candidate => candidate.index === planetIndex);
+  if (planet === undefined) {
+    return undefined;
+  }
+  const n = Math.floor(trackN);
+  if (n < 1 || n > TRACKS_PER_PLANET) {
+    return undefined;
+  }
+  return planetTrackId(planet, n);
+}
+
 export function nextCampaignTrack(trackId: string): CampaignTrack | null {
   const all = campaignTracks();
   const index = all.findIndex(track => track.id === trackId);

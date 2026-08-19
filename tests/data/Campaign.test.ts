@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   campaignSlotForTrackId,
+  campaignTrackId,
   campaignTracks,
   isPlanetUnlocked,
   isTrackUnlocked,
@@ -75,6 +76,13 @@ describe('campaign — slot lookup', () => {
 
   it('returns null for an unknown track', () => {
     expect(campaignSlotForTrackId('not-a-track')).toBeNull();
+  });
+
+  it('resolves world and circuit numbers to a track id', () => {
+    expect(campaignTrackId(3, 2)).toBe('bogmire-deep-2');
+    expect(campaignTrackId(1, 1)).toBe('thunder-basin');
+    expect(campaignTrackId(99, 1)).toBeUndefined();
+    expect(campaignTrackId(3, 9)).toBeUndefined();
   });
 });
 

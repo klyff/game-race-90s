@@ -1,27 +1,42 @@
 #!/usr/bin/env node
 /**
  * Debug-IA log collector. Writes one file per driver under /tmp/reportIA/drivers.
+ * Auto-purges all logs when the store reaches 10 MB.
+ *
+ *   node --experimental-strip-types tools/debug/ia-log-server.ts
  */
 import { createServer } from 'node:http';
-import { mkdirSync, appendFileSync, writeFileSync } from 'node:fs';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pruneIaLogsIfNeeded } from './ia-log-store.ts';
 
 const ROOT = '/tmp/reportIA';
 const DRIVERS = join(ROOT, 'drivers');
+const LOGS = join(ROOT, 'logs');
 mkdirSync(DRIVERS, { recursive: true });
 mkdirSync(join(ROOT, 'screenshots'), { recursive: true });
-mkdirSync(join(ROOT, 'logs'), { recursive: true });
+mkdirSync(LOGS, { recursive: true });
 
-const seen = new Set();
-const sessionLog = join(ROOT, 'logs', 'collector.log');
+const seen = new Set<string>();
+const sessionLog = join(LOGS, 'collector.log');
 
-function cors(res) {
+function cors(res: ServerResponse): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'content-type');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
 }
 
-const server = createServer((req, res) => {
+function notePurge(result: { readonly purged: boolean; readonly bytes: number }): void {
+  if (!result.purged) {
+    return;
+  }
+  seen.clear();
+  const mb = (result.bytes / (1024 * 1024)).toFixed(1);
+  console.log(`debug-ia logs purged at ${mb}MB (10MB cap)`);
+}
+
+const server = createServer((req: IncomingMessage, res: ServerResponse) => {
   cors(res);
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -38,11 +53,15 @@ const server = createServer((req, res) => {
     res.end();
     return;
   }
-  const chunks = [];
+  const chunks: Buffer[] = [];
   req.on('data', chunk => chunks.push(chunk));
   req.on('end', () => {
     try {
-      const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      notePurge(pruneIaLogsIfNeeded(ROOT));
+
+      const body = JSON.parse(Buffer.concat(chunks).toString('utf8')) as {
+        entries?: Array<{ file?: string; line?: string }>;
+      };
       const entries = Array.isArray(body.entries) ? body.entries : [];
       for (const entry of entries) {
         if (typeof entry?.file !== 'string' || typeof entry?.line !== 'string') {
@@ -68,5 +87,6 @@ const server = createServer((req, res) => {
 });
 
 server.listen(8765, '127.0.0.1', () => {
-  console.log('debug-ia log collector on http://127.0.0.1:8765');
+  notePurge(pruneIaLogsIfNeeded(ROOT));
+  console.log('debug-ia log collector on http://127.0.0.1:8765 (10MB cap, auto-purge)');
 });

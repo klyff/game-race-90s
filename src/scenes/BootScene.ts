@@ -24,6 +24,7 @@ import {
 } from '../adapters/progress/WatchMode.ts';
 import {
   debugIaMix,
+  debugIaNpcCount,
   debugIaSeed,
   debugIaTrackFromSearch,
   enableDebugIaModeFromSearch,
@@ -242,6 +243,7 @@ export class BootScene extends Phaser.Scene {
             debugIa: true,
             debugIaSeed: debugIaSeed(),
             debugIaMix: debugIaMix(),
+            debugIaNpcCount: debugIaNpcCount(),
           });
           return;
         }

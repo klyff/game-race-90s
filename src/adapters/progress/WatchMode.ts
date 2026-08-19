@@ -5,6 +5,8 @@
  * Launch with `?watch=1` (also `?watch=true`). Optional `?track=thunder-basin-2`.
  */
 
+import { TRACKS } from '../../data/tracks/registry.ts';
+import { campaignTrackFromSearch } from './CampaignSearch.ts';
 import { watchPlanetTwoTracks } from '../../domain/race/WatchField.ts';
 
 let sessionOn = false;
@@ -40,6 +42,10 @@ export function watchModeFromSearch(search: string): boolean {
 }
 
 export function watchTrackFromSearch(search: string): string | undefined {
+  const fromCampaign = campaignTrackFromSearch(search);
+  if (fromCampaign !== undefined) {
+    return fromCampaign;
+  }
   const raw = typeof search === 'string' ? search : '';
   const query = raw.startsWith('?') ? raw.slice(1) : raw;
   let params: URLSearchParams;
@@ -52,7 +58,9 @@ export function watchTrackFromSearch(search: string): string | undefined {
   if (track === undefined || track.length === 0) {
     return undefined;
   }
-  return watchPlanetTwoTracks().includes(track) ? track : undefined;
+  return TRACKS.some(entry => entry.id === track) || watchPlanetTwoTracks().includes(track)
+    ? track
+    : undefined;
 }
 
 export function enableWatchModeFromSearch(search: string): boolean {

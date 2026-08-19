@@ -50,6 +50,7 @@ import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
 import { angleOf, dot, fromAngle, length } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
 import { assignNpcCars } from '../domain/race/CarAssignment.ts';
+import { CAREER_NPC_COUNT, npcPilotNames } from '../domain/race/CareerGrid.ts';
 import {
   nextWatchTrack,
   splitWatchRoster,
@@ -59,6 +60,7 @@ import {
 } from '../domain/race/WatchField.ts';
 import {
   DEBUG_IA_CAMERA_MAP_FRACTION,
+  DEBUG_IA_RACER_COUNT,
   drawDebugIaGrid,
   drawSkillMixGrid,
   type DebugIaSeat,
@@ -126,11 +128,8 @@ const ZOOM_CURVATURE_SPAN_UNITS = 45;
 /**
  * How many cars line up, the player included.
  *
- * Seven fits the wide circuits: two-wide rows of `gridLateralOffsets` and a
- * last row of one. The 20-car roster is big enough that `assignNpcCars` still
- * hands every NPC a unique model.
+ * Career uses `CareerGrid`; watch and debug-IA keep their own denser fields.
  */
-const RACER_COUNT = 7;
 
 /**
  * World distance at which another car's explosion is inaudible.
@@ -162,10 +161,11 @@ interface RaceSceneData {
   readonly trackId?: string;
   /** AI-only ten-car watch. Camera follows the pack; keyboard does not drive. */
   readonly watch?: boolean;
-  /** 14-NPC debug-IA session. Camera locked at 45% of the map on the leader. */
+  /** 15-NPC debug-IA session. Camera locked at 45% of the map on the leader. */
   readonly debugIa?: boolean;
   readonly debugIaSeed?: number;
   readonly debugIaMix?: SkillMix;
+  readonly debugIaNpcCount?: number;
 }
 
 /** One explosion waiting to be presented, queued inside a simulation step. */
@@ -209,6 +209,7 @@ export class RaceScene extends Phaser.Scene {
   private debugIa = false;
   private debugIaSeed = 1;
   private debugIaMix: SkillMix | undefined;
+  private debugIaNpcCount = DEBUG_IA_RACER_COUNT;
   private debugIaLogElapsed = 0;
   private debugIaSeats: readonly DebugIaSeat[] = [];
   private watchPinned = false;
@@ -283,6 +284,7 @@ export class RaceScene extends Phaser.Scene {
     this.debugIa = data.debugIa === true;
     this.debugIaSeed = data.debugIaSeed ?? 1;
     this.debugIaMix = data.debugIaMix;
+    this.debugIaNpcCount = data.debugIaNpcCount ?? DEBUG_IA_RACER_COUNT;
     this.debugIaLogElapsed = 0;
     this.debugIaSeats = [];
     this.watch = data.watch === true || this.debugIa;
@@ -929,7 +931,7 @@ export class RaceScene extends Phaser.Scene {
       return this.buildWatchEntries();
     }
     const rosterIds = npcRosterForPlanet(this.planetIndex);
-    const npcIds = assignNpcCars(rosterIds, this.carId, RACER_COUNT - 1);
+    const npcIds = assignNpcCars(rosterIds, this.carId, CAREER_NPC_COUNT);
     this.playerPilotName = loadActiveName() || 'YOU';
     const career = loadActiveCareer();
     const rivals = rivalsForPlanet(
@@ -937,11 +939,12 @@ export class RaceScene extends Phaser.Scene {
       career?.rivalPoints ?? [],
       this.planetIndex,
     );
+    const npcPilots = npcPilotNames(rivals, CAREER_NPC_COUNT);
     this.pilotNames = { [this.carId]: this.playerPilotName };
     npcIds.forEach((id, index) => {
-      this.pilotNames[id] = rivals[index] ?? `RIV${index + 1}`;
+      this.pilotNames[id] = npcPilots[index] ?? `RIV${index + 1}`;
     });
-    this.sittingRivals = rivals.slice(npcIds.length);
+    this.sittingRivals = rivals.filter(name => !npcPilots.includes(name));
 
     // The perk travels with the car, for the NPCs exactly as for the player: an advantage
     // the player can feel is an advantage they must also race against.
@@ -949,7 +952,7 @@ export class RaceScene extends Phaser.Scene {
       const sheet = findCarSheet(this.manifest, carId);
       return {
         carId,
-        name: rivals[index] ?? `RIV${index + 1}`,
+        name: npcPilots[index] ?? `RIV${index + 1}`,
         stats: sheet.stats,
         perk: sheet.perk,
         homePlanetId: sheet.homePlanetId,
@@ -1001,7 +1004,7 @@ export class RaceScene extends Phaser.Scene {
     const allIds = this.manifest.cars.map(car => car.id);
     const grid = this.debugIaMix
       ? drawSkillMixGrid(allIds, this.debugIaSeed, this.debugIaMix)
-      : drawDebugIaGrid(allIds, this.debugIaSeed);
+      : drawDebugIaGrid(allIds, this.debugIaSeed, this.debugIaNpcCount);
     this.debugIaSeats = grid.seats;
     this.debugIaSeed = grid.seed;
     this.sittingRivals = [];
@@ -1184,6 +1187,7 @@ export class RaceScene extends Phaser.Scene {
       debugIa: this.debugIa,
       debugIaSeed: this.debugIaSeed,
       debugIaMix: this.debugIaMix,
+      debugIaNpcCount: this.debugIaNpcCount,
     } satisfies RaceSceneData);
   }
 

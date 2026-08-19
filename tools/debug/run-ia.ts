@@ -11,12 +11,13 @@
  *
  * Writes `.tmp/reportIA/drivers/*.log` and `.tmp/reportIA/summary.json`.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { parseCarSetManifest, findCarSheet } from '../../src/data/cars/CarManifest.ts';
+import { parseCarSetManifest, findCarSheet, applyAvailableMatrixStrips, playableCarIds } from '../../src/data/cars/CarManifest.ts';
 import { findTrack } from '../../src/data/tracks/registry.ts';
+import { campaignTrackId } from '../../src/data/tracks/campaign.ts';
 import { planetForTrackId } from '../../src/data/tracks/planets.ts';
 import { parseTrackLinesManifest } from '../../src/data/tracks/TrackLines.ts';
 import { SIMULATION_STEP_SECONDS } from '../../src/domain/constants.ts';
@@ -35,6 +36,7 @@ import {
 import { profileFor } from '../../src/domain/ai/DriverRoster.ts';
 import { driverSkill, watchPlanetTwoTracks } from '../../src/domain/race/WatchField.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
+import { isAirborne } from '../../src/domain/vehicle/Vehicle.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
@@ -65,7 +67,13 @@ function parseMix(raw: string): SkillMix | undefined {
 
 const seconds = Math.max(3, Number(argValue('--seconds', '180')) || 180);
 const seed = Math.max(1, Math.floor(Number(argValue('--seed', '1')) || 1));
-const trackId = argValue('--track', watchPlanetTwoTracks()[0] ?? 'thunder-basin-2');
+const worldArg = argValue('--world', '');
+const pistaArg = argValue('--pista', '');
+const trackFromCampaign =
+  worldArg.length > 0 && pistaArg.length > 0
+    ? campaignTrackId(Number(worldArg), Number(pistaArg))
+    : undefined;
+const trackId = trackFromCampaign ?? argValue('--track', watchPlanetTwoTracks()[0] ?? 'thunder-basin-2');
 const mix = parseMix(argValue('--mix', ''));
 const outRoot = argValue(
   '--out',
@@ -75,17 +83,23 @@ const outRoot = argValue(
 );
 const driversDir = join(outRoot, 'drivers');
 
+const { pruneIaLogsIfNeeded } = await import('./ia-log-store.ts');
+const pruned = pruneIaLogsIfNeeded(outRoot);
+if (pruned.purged) {
+  console.log(`purged debug-ia logs at ${(pruned.bytes / (1024 * 1024)).toFixed(1)}MB (10MB cap)`);
+}
+
 mkdirSync(driversDir, { recursive: true });
 mkdirSync(join(outRoot, 'logs'), { recursive: true });
 
 const carsJson = JSON.parse(readFileSync(join(root, 'public/assets/cars/cars.json'), 'utf8'));
-const manifest = parseCarSetManifest(carsJson);
+const manifest = applyAvailableMatrixStrips(parseCarSetManifest(carsJson));
 const authoredTrack = findTrack(trackId);
 const lapsArg = argValue('--laps', '');
 const lapsOverride = lapsArg.length > 0 ? Math.max(1, Math.floor(Number(lapsArg) || 1)) : undefined;
 const laps =
   lapsOverride ??
-  (mix ? Math.max(authoredTrack.laps, Math.ceil(seconds / 20)) : authoredTrack.laps);
+  (seconds >= 120 ? Math.max(authoredTrack.laps, Math.ceil(seconds / 20)) : authoredTrack.laps);
 const track = laps === authoredTrack.laps ? authoredTrack : { ...authoredTrack, laps };
 const spline = new TrackSpline(track.controlPoints);
 const planet = planetForTrackId(trackId);
@@ -94,7 +108,7 @@ const trackLines = existsSync(linesPath)
   ? parseTrackLinesManifest(JSON.parse(readFileSync(linesPath, 'utf8')))
   : undefined;
 
-const carIds = manifest.cars.map(car => car.id);
+const carIds = playableCarIds(manifest);
 const grid = mix ? drawSkillMixGrid(carIds, seed, mix) : drawDebugIaGrid(carIds, seed);
 
 const field = new RaceField(
@@ -152,6 +166,13 @@ function logEntries(elapsed: number): void {
       `surf=${onTarmac(racer.lateralOffset) ? 'TARMAC' : 'DIRT'}`,
       `integ=${racer.integrity.integrity.toFixed(2)}`,
       `cond=${racer.integrity.condition}`,
+      `th=${racer.lastCommand.throttle.toFixed(2)}`,
+      `st=${racer.lastCommand.steer.toFixed(2)}`,
+      `brk=${racer.lastCommand.brake.toFixed(2)}`,
+      `wpn=${racer.lastCommand.fire ? 'MISSILE' : racer.lastCommand.dropOil ? 'OIL' : racer.lastCommand.dropMine ? 'MINE' : racer.lastCommand.boost ? 'TURBO' : racer.lastCommand.jump ? 'HOP' : '-'}`,
+      `air=${isAirborne(racer.state) ? 1 : 0}`,
+      `h=${racer.state.height.toFixed(2)}`,
+      `u=${racer.distance.toFixed(1)}`,
       `intent=${snapshot?.intention ?? '-'}`,
       `atk=${snapshot?.attackMethod ?? '-'}`,
       `tgt=${snapshot?.targetId ?? '-'}`,
@@ -186,10 +207,37 @@ console.log(
     .join('\n'),
 );
 
+const decisions = createWriteStream(join(outRoot, 'decisions.jsonl'));
+function writeDecisions(elapsed: number): void {
+  for (const racer of field.racers) {
+    const name = grid.seats.find(seat => seat.carId === racer.carId)?.name ?? racer.carId;
+    const snapshot = field.aiDebug(racer.carId);
+    const cmd = racer.lastCommand;
+    decisions.write(
+      `${JSON.stringify({
+        t: Number(elapsed.toFixed(3)),
+        name,
+        carId: racer.carId,
+        th: Number(cmd.throttle.toFixed(3)),
+        st: Number(cmd.steer.toFixed(3)),
+        brk: Number(cmd.brake.toFixed(3)),
+        wpn: cmd.fire ? 'MISSILE' : cmd.dropOil ? 'OIL' : cmd.dropMine ? 'MINE' : cmd.boost ? 'TURBO' : cmd.jump ? 'HOP' : '-',
+        u: Number(racer.distance.toFixed(2)),
+        lat: Number(racer.lateralOffset.toFixed(3)),
+        air: isAirborne(racer.state) ? 1 : 0,
+        intent: snapshot?.intention ?? '-',
+        exec: snapshot?.execution ?? '-',
+      })}\n`,
+    );
+  }
+}
+
 logEntries(field.race.elapsedSeconds);
+writeDecisions(field.race.elapsedSeconds);
 
 for (let step = 1; step <= steps; step += 1) {
   field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+  writeDecisions(field.race.elapsedSeconds);
   if (step % logEvery === 0) {
     logEntries(field.race.elapsedSeconds);
   }
@@ -202,6 +250,7 @@ for (let step = 1; step <= steps; step += 1) {
   }
 }
 
+decisions.end();
 const wallMs = Date.now() - started;
 const files: string[] = [];
 for (const [file, lines] of buffers) {
@@ -239,6 +288,7 @@ const summary = {
   trackName: track.displayName,
   seed,
   mix: mix ?? null,
+  ramps: track.rampZones?.length ?? 0,
   laps: track.laps,
   simSeconds: field.race.elapsedSeconds,
   requestedSeconds: seconds,

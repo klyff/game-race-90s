@@ -22,13 +22,13 @@ describe('DebugIaField', () => {
     expect(lastWorldBestPilots(2)[1]).toBe('LUCA');
   });
 
-  it('draws 14 unique cars with four signatures then a lottery', () => {
+  it('draws 15 unique cars with four signatures then a lottery', () => {
     const grid = drawDebugIaGrid(FLEET, 42);
     expect(grid.seats).toHaveLength(DEBUG_IA_RACER_COUNT);
     expect(grid.seats.slice(0, 4).map(seat => seat.name)).toEqual(debugIaSignaturePilots());
     expect(grid.seats.filter(seat => seat.slot === 'signature')).toHaveLength(4);
     expect(new Set(grid.seats.map(seat => seat.carId)).size).toBe(DEBUG_IA_RACER_COUNT);
-    expect(grid.seats.every(seat => FLEET.includes(seat.carId))).toBe(true);
+    expect(grid.seats.every(seat => FLEET.includes(seat.carId.split('#')[0] ?? ''))).toBe(true);
     expect(profileFor(grid.seats[0]!.name).tier).toBe(DRIVER_PROFILE_TIER.SIGNATURE);
   });
 
