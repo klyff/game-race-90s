@@ -12,8 +12,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   formatHud,
+  formatMph,
   formatSpeed,
   formatSpeedDigits,
+  HUD_IDLE_RPM_FRACTION,
   positionOrdinal,
   formatRaceTime,
   type HudReadout,
@@ -848,6 +850,25 @@ describe('formatHud (integration)', () => {
       const hud = formatHud(readout({ speed: 50, maxSpeed: Infinity }));
       expect(hud.speedFraction).toBe(0);
       expect(Number.isFinite(hud.speedFraction)).toBe(true);
+    });
+  });
+
+  describe('analog cluster fields', () => {
+    it('mph matches formatMph and the text readout', () => {
+      const hud = formatHud(readout({ speed: 78 }));
+      expect(hud.mph).toBe(formatMph(78));
+      expect(hud.speed).toBe(`${hud.mph} MPH`);
+    });
+
+    it('defaults rpmFraction to idle when the readout omits it', () => {
+      expect(formatHud(readout()).rpmFraction).toBe(HUD_IDLE_RPM_FRACTION);
+    });
+
+    it('passes through and clamps a live gearbox reading', () => {
+      expect(formatHud(readout({ rpmFraction: 0.92 })).rpmFraction).toBeCloseTo(0.92, 8);
+      expect(formatHud(readout({ rpmFraction: 1.4 })).rpmFraction).toBe(1);
+      expect(formatHud(readout({ rpmFraction: -0.2 })).rpmFraction).toBe(0);
+      expect(formatHud(readout({ rpmFraction: Number.NaN })).rpmFraction).toBe(HUD_IDLE_RPM_FRACTION);
     });
   });
 

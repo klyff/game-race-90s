@@ -568,6 +568,7 @@ export class RaceScene extends Phaser.Scene {
       points: loadPoints() + weaponHitPoints(this.field.playerWeaponHits, this.planetIndex),
       podiumTimeoutRemaining: this.podiumTimeoutRemaining ?? undefined,
       podiumTimeoutDuration: this.podiumTimeoutRemaining === null ? undefined : this.podiumTimeoutDuration,
+      rpmFraction: this.audio.rpmFraction,
     };
   }
 

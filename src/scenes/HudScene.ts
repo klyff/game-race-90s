@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { formatHud } from '../adapters/render/HudFormat.ts';
 import type { HudReadout, HudText } from '../adapters/render/HudFormat.ts';
-import { SpeedoGauge } from '../adapters/render/SpeedoGauge.ts';
+import { AnalogGauges } from '../adapters/render/AnalogGauges.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import {
   HUD_JUMP_KEY,
@@ -115,7 +115,7 @@ export class HudScene extends Phaser.Scene {
   private standingsText!: Phaser.GameObjects.Text;
   private barBackground!: Phaser.GameObjects.Rectangle;
   private barFill!: Phaser.GameObjects.Rectangle;
-  private gauge!: SpeedoGauge;
+  private gauge!: AnalogGauges;
 
   /** Last rendered values, so a pulse fires on CHANGE rather than every frame. */
   private lastPosition = '';
@@ -164,7 +164,7 @@ export class HudScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setDepth(HUD_DEPTH + 1);
 
-    this.gauge = new SpeedoGauge(this);
+    this.gauge = new AnalogGauges(this);
     this.gauge.setDepth(HUD_DEPTH);
 
     this.countdownText = this.add
@@ -215,7 +215,7 @@ export class HudScene extends Phaser.Scene {
     this.applyPosition(text);
     this.applyLap(text);
     this.applyIntegrity(text);
-    this.applySpeed(text);
+    this.applySpeed(text, deltaMilliseconds);
     this.applyCountdown(text);
     this.applyPodiumTimeout(text, deltaMilliseconds);
     this.applyStandings(source, readout);
@@ -279,8 +279,11 @@ export class HudScene extends Phaser.Scene {
    * `applyLap` this never pulses: `pulse()` fires on CHANGE, and a value that changes
    * constantly would tween constantly, which reads as broken rather than alive.
    */
-  private applySpeed(text: HudText): void {
-    this.gauge.update(text.speedDigits, text.speedFraction);
+  private applySpeed(text: HudText, deltaMilliseconds: number): void {
+    const dt = prefersReducedMotion()
+      ? 0
+      : (Number.isFinite(deltaMilliseconds) ? deltaMilliseconds : 0) / 1000;
+    this.gauge.update(text.mph, text.rpmFraction, dt);
   }
 
   /**
@@ -473,10 +476,9 @@ export class HudScene extends Phaser.Scene {
       this.loadoutCounts[index]?.setPosition(slotX + ICON_SIZE + ICON_COUNT_GAP, iconY);
     });
 
-    // Speedometer: bottom-right, the only free corner — top corners hold position/lap
-    // and time/standings, and bottom-left is the integrity bar with the ammo readout
-    // above it. Right-aligned using the gauge's own reported size, so this scene never
-    // needs to know the arc/panel geometry inside `SpeedoGauge`.
+    // Analog cluster: bottom-right, the only free corner — top corners hold
+    // position/lap and time/standings, bottom-left is the integrity + loadout rail.
+    // Right-aligned using the cluster's own reported size, title-safe MARGIN 32.
     const gaugeSize = this.gauge.size;
     const gaugeX = width - MARGIN - gaugeSize.width;
     const gaugeY = height - MARGIN - gaugeSize.height;

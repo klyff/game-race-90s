@@ -60,6 +60,11 @@ export interface HudReadout {
   readonly podiumTimeoutRemaining?: number;
   /** Total length of that grace clock, so the HUD can drop "TIME OUT" at half. */
   readonly podiumTimeoutDuration?: number;
+  /**
+   * Sound-only gearbox reading, idle..1. Optional so existing `formatHud` tests
+   * stay unchanged; missing values sit at idle so the tach never shows a dead needle.
+   */
+  readonly rpmFraction?: number;
 }
 
 /**
@@ -88,6 +93,10 @@ export interface HudText {
    * a real seven-segment dash blanks its leading digits instead of showing "095".
    */
   readonly speedDigits: string;
+  /** Honest MPH for the analog speedo needle (same rounding as `speed` / `speedDigits`). */
+  readonly mph: number;
+  /** Gearbox 0..1 for the analog tach. Defaults to idle when the readout omitted it. */
+  readonly rpmFraction: number;
 }
 
 /**
@@ -100,6 +109,9 @@ export interface HudText {
  * nothing in the simulation may depend on it, and a change here must never move a car.
  */
 export const MPH_PER_WORLD_UNIT = 2.5;
+
+/** Idle floor of `EngineGearbox` — tach rest when the readout has no live gearbox. */
+export const HUD_IDLE_RPM_FRACTION = 0.15;
 
 /**
  * Ordinal for a race position: 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 4 -> "4th", 11 -> "11th".
@@ -242,10 +254,15 @@ function formatIntegrityPercent(integrity: number): number {
  * scale factor, and `Math.round` would push its dial reading a whole MPH past the number
  * the car was tuned to represent.
  */
-export function formatSpeed(speed: number): string {
+/** Honest MPH number (round-half-down). Shared by the text readout and the analog needle. */
+export function formatMph(speed: number): number {
   const safe = Number.isFinite(speed) ? speed : 0;
   const mph = Math.abs(safe) * MPH_PER_WORLD_UNIT;
-  return `${Math.ceil(mph - 0.5)} MPH`;
+  return Math.ceil(mph - 0.5);
+}
+
+export function formatSpeed(speed: number): string {
+  return `${formatMph(speed)} MPH`;
 }
 
 /**
@@ -262,10 +279,7 @@ export function formatSpeed(speed: number): string {
  * @returns Exactly three characters, right-aligned and space-padded, e.g. "195", " 95", "  0".
  */
 export function formatSpeedDigits(speed: number): string {
-  const safe = Number.isFinite(speed) ? speed : 0;
-  const mph = Math.abs(safe) * MPH_PER_WORLD_UNIT;
-  const rounded = Math.ceil(mph - 0.5);
-  const clamped = Math.min(999, rounded);
+  const clamped = Math.min(999, formatMph(speed));
   return String(clamped).padStart(3, ' ');
 }
 
@@ -346,6 +360,9 @@ export function formatHud(readout: HudReadout): HudText {
   const speed = formatSpeed(readout.speed);
   const speedFraction = formatSpeedFraction(readout.speed, readout.maxSpeed);
   const speedDigits = formatSpeedDigits(readout.speed);
+  const mph = formatMph(readout.speed);
+  const rawRpm = Number.isFinite(readout.rpmFraction) ? readout.rpmFraction! : HUD_IDLE_RPM_FRACTION;
+  const rpmFraction = Math.max(0, Math.min(1, rawRpm));
 
   return {
     position,
@@ -359,5 +376,7 @@ export function formatHud(readout: HudReadout): HudText {
     speed,
     speedFraction,
     speedDigits,
+    mph,
+    rpmFraction,
   };
 }

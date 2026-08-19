@@ -72,6 +72,7 @@ export class RaceAudio {
   private engineSilenced = false;
   private idleShutoff: EngineIdleShutoffState = ENGINE_IDLE_SHUTOFF_INITIAL;
   private muted = isAudioMuted();
+  private lastRpmFraction = 0.15;
 
   /**
    * `score` is the current world's theme (T-040) — optional so tests and any
@@ -146,6 +147,7 @@ export class RaceAudio {
   /** Cuts the engine/tyre voices without tearing the graph down (quit race). */
   silenceEngine(): void {
     this.engineSilenced = true;
+    this.lastRpmFraction = 0.15;
     this.engine?.silence();
     this.skid?.update(0);
     this.brake?.update(0, 0);
@@ -162,6 +164,14 @@ export class RaceAudio {
     );
   }
 
+  /**
+   * Live gearbox reading for the analog tach. Ticks even when muted or when the
+   * browser gave us no AudioContext — the needle is presentation, not a voice.
+   */
+  get rpmFraction(): number {
+    return this.lastRpmFraction;
+  }
+
   /** Feeds one rendered frame of simulation state to every voice. */
   update(
     telemetry: VehicleTelemetry,
@@ -169,8 +179,6 @@ export class RaceAudio {
     maxSpeed: number,
     deltaSeconds: number = 0,
   ): void {
-    if (this.context === null || this.muted) return;
-
     // Reverse drives the engine exactly like throttle does: the driver is asking
     // for power either way, and the gearbox already reports reverse as gear 0.
     const drive = Math.max(input.throttle, input.reverse);
@@ -181,10 +189,15 @@ export class RaceAudio {
       deltaSeconds,
     );
 
+    const gear = this.gearbox.update(telemetry.forwardSpeed, maxSpeed);
+    this.lastRpmFraction =
+      this.engineSilenced || this.idleShutoff.shutOff ? 0.15 : gear.rpmFraction;
+
+    if (this.context === null || this.muted) return;
+
     if (this.engineSilenced || this.idleShutoff.shutOff) {
       this.engine?.silence();
     } else {
-      const gear = this.gearbox.update(telemetry.forwardSpeed, maxSpeed);
       this.engine?.update(gear.rpmFraction, drive, drive);
       if (gear.shifted) this.engine?.shift();
     }
@@ -256,12 +269,14 @@ export class RaceAudio {
    */
   parkEngine(): void {
     this.idleShutoff = ENGINE_IDLE_SHUTOFF_PARKED;
+    this.lastRpmFraction = 0.15;
     this.engine?.silence();
   }
 
   /** Silences the car without stopping the context, e.g. on respawn. */
   reset(): void {
     this.gearbox.reset();
+    this.lastRpmFraction = 0.15;
     this.idleShutoff = ENGINE_IDLE_SHUTOFF_INITIAL;
     this.engineSilenced = false;
     this.skid?.update(0);
