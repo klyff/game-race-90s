@@ -41,6 +41,11 @@ export interface DriverProfile extends DriverWeights {
   readonly tier: DriverProfileTier;
   /** Medium parent when this row was derived. Signatures and mediums omit it. */
   readonly parentId?: string;
+  /** Optional V2 traits — omitted rows use `decisionTraits()` defaults. */
+  readonly riskTolerance?: number;
+  readonly raceFocus?: number;
+  readonly patience?: number;
+  readonly commitment?: number;
 }
 
 export function clampWeights(weights: DriverWeights): DriverWeights {

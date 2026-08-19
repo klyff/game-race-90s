@@ -114,10 +114,10 @@ export function evaluateUtilities(
   const scores: ScoredIntention[] = [
     score(
       TACTICAL_INTENTION.RACE,
-      0.85,
-      opportunities.race,
-      capabilities.overtakingCapability,
-      raceTactical,
+      1,
+      Math.max(opportunities.race, 0.82),
+      Math.max(0.72, capabilities.overtakingCapability),
+      Math.max(0.72, raceTactical),
       0,
       situation.offRoad ? 0.08 : 0.02,
       noise('RACE'),
@@ -181,16 +181,6 @@ export function evaluateUtilities(
       0,
       0.02,
       noise('EVADE'),
-    ),
-    score(
-      TACTICAL_INTENTION.RECOVER,
-      0.9,
-      opportunities.recover,
-      0.8,
-      0.85,
-      0,
-      0,
-      noise('RECOVER'),
     ),
   ];
 

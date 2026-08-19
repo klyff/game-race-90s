@@ -25,6 +25,12 @@ describe('trajectory planner', () => {
     expect(offsets.some(offset => offset > 0)).toBe(true);
   });
 
+  it('near a wall reports fewer unique laterals than generated ids', () => {
+    const offsets = candidateOffsets(8.5, 10);
+    expect(offsets).toHaveLength(7);
+    expect(new Set(offsets.map(offset => offset.toFixed(3))).size).toBeLessThan(7);
+  });
+
   it('penalises accidental overlap more than a RAM on the target', () => {
     const nearby = [
       { carId: 'target', lateralOffset: 2, gap: 8, isTarget: true },

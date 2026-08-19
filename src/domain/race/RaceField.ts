@@ -76,8 +76,6 @@ import {
   MISSILE_HIT_RADIUS_SCALE,
   MISSILE_RAW_DAMAGE,
   scaledWeaponDamage,
-  NPC_MINE_DROP_GAP_UNITS,
-  NPC_OIL_DROP_GAP_UNITS,
   NPC_WEAPON_COOLDOWN_SECONDS,
   GASOLINE_BURST_SCALE,
   OIL_LAP_REFERENCE_SPEED,
@@ -441,7 +439,7 @@ export class RaceField {
       const driveOptions = racing.skillOptions(driveOptionsFor(agent, this.pace.options));
       return {
         agent,
-        driver: new AIDriver(driveOptions, agent.aggression, agent.traits),
+        driver: new AIDriver(driveOptions, agent.aggression, undefined),
         line,
         racing,
         name: seed,
@@ -1530,6 +1528,7 @@ export class RaceField {
           velocity: other.state.velocity,
           heading: other.state.heading,
           lateralOffset: other.lateralOffset,
+          collisionRadius: other.stats.collisionRadius,
         })),
         trackLength: this.spline.totalLength,
         halfWidth: this.track.halfWidth,
@@ -1538,7 +1537,7 @@ export class RaceField {
       this.pace.options,
     );
 
-    const drive = brain === undefined
+    const steered = brain === undefined
       ? this.pace.command(racer.state, projection, effective, this.spline)
       : brain.driver.command(
           racer.state,
@@ -1550,6 +1549,10 @@ export class RaceField {
           brain.agent.laneRegister,
           decision?.lateralOffset,
         );
+    const drive =
+      decision !== undefined && decision.reverse > 0
+        ? { ...steered, reverse: decision.reverse, throttle: 0 }
+        : steered;
 
     if (!this.npcWeapons || racer.weaponCooldownRemaining > 0 || decision === undefined) {
       return drive;
@@ -1560,16 +1563,13 @@ export class RaceField {
       return { ...drive, fire: true };
     }
 
-    const behind = this.closestRivalBehind(racer);
-    if (behind !== null) {
-      if (racer.inventory.mines > 0 && behind.gap < NPC_MINE_DROP_GAP_UNITS) {
-        this.armWeaponCooldown(racer);
-        return { ...drive, dropMine: true };
-      }
-      if (racer.inventory.oil > 0 && behind.gap < NPC_OIL_DROP_GAP_UNITS) {
-        this.armWeaponCooldown(racer);
-        return { ...drive, dropOil: true };
-      }
+    if (decision.wantMine && racer.inventory.mines > 0) {
+      this.armWeaponCooldown(racer);
+      return { ...drive, dropMine: true };
+    }
+    if (decision.wantOil && racer.inventory.oil > 0) {
+      this.armWeaponCooldown(racer);
+      return { ...drive, dropOil: true };
     }
 
     return drive;
@@ -1592,33 +1592,6 @@ export class RaceField {
       NPC_WEAPON_COOLDOWN_SECONDS,
       racer.perk,
     );
-  }
-
-  /**
-   * The nearest rival tailing `racer`, by live arc-length gap.
-   * No player flag ? NPCs contest the whole field.
-   */
-  private closestRivalBehind(
-    racer: RacerRuntime,
-  ): { carId: string; gap: number } | null {
-    const total = this.spline.totalLength;
-    let best: { carId: string; gap: number } | null = null;
-
-    for (const other of this.racers) {
-      if (other === racer || !this.canCollide(other)) {
-        continue;
-      }
-      let gap = racer.distance - other.distance;
-      if (gap <= 0) gap += total;
-      if (gap <= 0 || gap > total * 0.5) {
-        continue;
-      }
-      if (best === null || gap < best.gap) {
-        best = { carId: other.carId, gap };
-      }
-    }
-
-    return best;
   }
 
   private freshRaceState(): RaceState {

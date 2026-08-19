@@ -122,6 +122,17 @@ describe('utility evaluator', () => {
     expect(afterRam?.terms.final).toBeGreaterThan(beforeRam?.terms.final ?? 0);
   });
 
+  it('does not offer RECOVER as a competing tactic even when damaged', () => {
+    const roster = [stats(), stats({ mass: 1400 })];
+    const capabilities = capsFor(roster, stats({ mass: 1200 }));
+    const damaged = situation({ integrity: 0.3, canAim: true, missiles: 4 });
+    const klyff = evaluateUtilities(profileFor('KLYFF'), capabilities, damaged, null);
+    const berserker = evaluateUtilities(profileFor('BERSERKER'), capabilities, damaged, null);
+    expect(klyff.scores.some(score => score.intention === TACTICAL_INTENTION.RECOVER)).toBe(false);
+    expect(klyff.selected).not.toBe(TACTICAL_INTENTION.RECOVER);
+    expect(berserker.selected).not.toBe(TACTICAL_INTENTION.RECOVER);
+  });
+
   it('final stretch values the win over a low-value fight', () => {
     const roster = [stats(), stats({ mass: 1400 })];
     const capabilities = capsFor(roster, stats());

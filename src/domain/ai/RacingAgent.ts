@@ -1,6 +1,6 @@
 /**
- * Facade: utility decides WHAT, trajectory decides WHERE, pursuit (AIDriver) decides HOW.
- * Physics is untouched. Intention updates are staggered and hysteretic.
+ * Futures first: world → envelope → candidates → rollout → RaceCore + personality bias.
+ * Recovery is an orthogonal control mode. Pursuit (AIDriver) only executes the chosen lateral.
  */
 
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
@@ -9,6 +9,7 @@ import type { RacingLine } from '../race/RacingLine.ts';
 import type { CarPerkProfile } from '../vehicle/CarPerk.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 import type { VehicleState } from '../vehicle/Vehicle.ts';
+import { isAirborne } from '../vehicle/Vehicle.ts';
 import type { DriverProfile } from './DriverProfile.ts';
 import { profileFor } from './DriverRoster.ts';
 import {
@@ -26,29 +27,30 @@ import {
 import { type NearbyRival, type RaceSituation } from './SituationEvaluator.ts';
 import {
   planningCapabilities,
+  planningStats,
   type StatNormalizer,
   type VehicleCapabilities,
 } from './VehicleCapabilityModel.ts';
-import { interceptPoint, relativeSpeedAlong } from './Intercept.ts';
 import {
   baselineOffset,
-  planTrajectory,
-  type NearbyLateral,
+  planFutures,
   type TrajectoryPlan,
 } from './TrajectoryPlanner.ts';
 import { applySkillToDriveOptions } from './skillLimits.ts';
 import type { PaceDriverOptions } from '../vehicle/PaceDriver.ts';
 import { length } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
+import {
+  CONTROL_MODE,
+  RecoverController,
+  headingErrorOnTrack,
+  type ControlMode,
+} from './ControlMode.ts';
+import { decisionTraits } from './PersonalityTraits.ts';
+import type { OccupancyRival } from './OpponentOccupancy.ts';
 
-export const EXECUTION_STATE = {
-  NORMAL: 'NORMAL',
-  SPINNING: 'SPINNING',
-  RECOVERING: 'RECOVERING',
-  FINISHED: 'FINISHED',
-} as const;
-
-export type ExecutionState = (typeof EXECUTION_STATE)[keyof typeof EXECUTION_STATE];
+export const EXECUTION_STATE = CONTROL_MODE;
+export type ExecutionState = ControlMode;
 
 const UTILITY_PERIOD = 6;
 const TRAJECTORY_PERIOD = 3;
@@ -62,6 +64,7 @@ export interface AgentRival {
   readonly velocity: Vec2;
   readonly heading: number;
   readonly lateralOffset: number;
+  readonly collisionRadius?: number;
 }
 
 export interface AgentTickInput {
@@ -106,6 +109,8 @@ export interface AgentDecision {
   readonly wantMine: boolean;
   readonly execution: ExecutionState;
   readonly driveOptions: PaceDriverOptions;
+  readonly reverse: number;
+  readonly recoverReason: string | null;
 }
 
 export interface AgentDebugSnapshot {
@@ -119,6 +124,7 @@ export interface AgentDebugSnapshot {
   readonly trajectory: TrajectoryPlan | null;
   readonly memory: readonly OpponentMemoryEntry[];
   readonly execution: ExecutionState;
+  readonly recoverReason: string | null;
 }
 
 export class RacingAgent {
@@ -135,8 +141,11 @@ export class RacingAgent {
   private lastTrajectory: TrajectoryPlan | null = null;
   private lateralOffset = 0;
   private commitLeft = 0;
-  private lastUtilityFinal = 0;
   private execution: ExecutionState = EXECUTION_STATE.NORMAL;
+  private readonly recover = new RecoverController();
+  private lastPlanScore = 0;
+  private reverse = 0;
+  private recoverReason: string | null = null;
 
   constructor(name: string, carId: string, stagger: number) {
     this.profile = profileFor(name);
@@ -150,7 +159,26 @@ export class RacingAgent {
 
   decide(input: AgentTickInput, normalizer: StatNormalizer, baseOptions: PaceDriverOptions): AgentDecision {
     this.memory.tick(input.stepSeconds);
-    this.execution = executionOf(input);
+    const driveOptions = this.skillOptions(baseOptions);
+    const control = this.recover.step(
+      {
+        finished: input.finished,
+        integrity: input.integrity,
+        lateralOffset: input.lateralOffset,
+        halfWidth: input.halfWidth,
+        yawSpin: input.state.yawSpin,
+        headingError: headingErrorOnTrack(input.state, input.spline, input.distance),
+        speed: length(input.state.velocity),
+        progressVelocity: 0,
+        airborne: isAirborne(input.state),
+      },
+      input.distance,
+      input.trackLength,
+      input.stepSeconds,
+    );
+    this.execution = control.mode;
+    this.reverse = control.reverse;
+    this.recoverReason = control.mode === CONTROL_MODE.RECOVERING ? control.reason : null;
 
     const dueUtility = (input.stepIndex + this.stagger) % UTILITY_PERIOD === 0 || this.lastUtility === null;
     const dueTrajectory =
@@ -159,24 +187,28 @@ export class RacingAgent {
     if (dueUtility && this.execution !== EXECUTION_STATE.FINISHED) {
       this.refreshUtility(input, normalizer);
     }
-    if (dueTrajectory && this.execution !== EXECUTION_STATE.FINISHED) {
-      this.refreshTrajectory(input);
+
+    if (this.execution === CONTROL_MODE.RECOVERING || this.execution === CONTROL_MODE.RESPAWNING) {
+      this.intention = TACTICAL_INTENTION.RECOVER;
+      this.lateralOffset = 0;
+      this.targetId = null;
+    } else if (dueTrajectory && this.execution !== EXECUTION_STATE.FINISHED) {
+      this.refreshTrajectory(input, driveOptions);
     }
 
     const intention = this.effectiveIntention();
-    const wantFire = intention === TACTICAL_INTENTION.USE_WEAPON && input.canAim && input.missiles > 0;
+    const wantFire =
+      this.execution === CONTROL_MODE.NORMAL &&
+      intention === TACTICAL_INTENTION.USE_WEAPON &&
+      input.canAim &&
+      input.missiles > 0;
     const behind = closestBehind(input);
-    const wantMine =
-      (intention === TACTICAL_INTENTION.DEFEND || intention === TACTICAL_INTENTION.BLOCK) &&
-      input.mines > 0 &&
-      behind !== null &&
-      behind.gapBehind < 10;
+    const fighting =
+      this.execution === CONTROL_MODE.NORMAL &&
+      (intention === TACTICAL_INTENTION.DEFEND || intention === TACTICAL_INTENTION.BLOCK);
+    const wantMine = fighting && input.mines > 0 && behind !== null && behind.gapBehind < 10;
     const wantOil =
-      (intention === TACTICAL_INTENTION.DEFEND || intention === TACTICAL_INTENTION.BLOCK) &&
-      input.oil > 0 &&
-      behind !== null &&
-      behind.gapBehind < 16 &&
-      !wantMine;
+      fighting && input.oil > 0 && behind !== null && behind.gapBehind < 16 && !wantMine;
 
     return {
       intention,
@@ -187,7 +219,9 @@ export class RacingAgent {
       wantOil,
       wantMine,
       execution: this.execution,
-      driveOptions: this.skillOptions(baseOptions),
+      driveOptions,
+      reverse: this.reverse,
+      recoverReason: this.recoverReason,
     };
   }
 
@@ -203,6 +237,7 @@ export class RacingAgent {
       trajectory: this.lastTrajectory,
       memory: this.memory.all(),
       execution: this.execution,
+      recoverReason: this.recoverReason,
     };
   }
 
@@ -226,98 +261,98 @@ export class RacingAgent {
       `${this.profile.id}:${this.carId}:${Math.floor(input.elapsedSeconds * 2)}`,
     );
     this.lastUtility = result;
-
-    const emergency =
-      result.selected === TACTICAL_INTENTION.RECOVER || result.selected === TACTICAL_INTENTION.EVADE;
-    const winner = result.scores.find(score => score.intention === result.selected);
-    const nextFinal = winner?.terms.final ?? 0;
-    const canSwitch =
-      emergency ||
-      this.commitLeft <= 0 &&
-        (nextFinal > this.lastUtilityFinal + HYSTERESIS || result.selected === this.intention);
-
-    if (canSwitch) {
-      this.intention = result.selected === TACTICAL_INTENTION.ATTACK
-        ? result.attackMethod ?? TACTICAL_INTENTION.USE_WEAPON
-        : result.selected;
-      this.attackMethod = result.attackMethod;
-      this.targetId = result.targetId;
-      this.lastUtilityFinal = nextFinal;
-      this.commitLeft = MIN_COMMIT_STEPS;
-    } else {
-      this.commitLeft = Math.max(0, this.commitLeft - UTILITY_PERIOD);
-    }
+    this.targetId = result.targetId;
+    this.attackMethod = result.attackMethod;
   }
 
-  private refreshTrajectory(input: AgentTickInput): void {
-    const base = baselineOffset(input.line, input.distance, input.spline, input.laneBias);
-    const interceptLateral = this.interceptLateral(input);
-    const nearby: NearbyLateral[] = input.rivals.map(rival => ({
+  private refreshTrajectory(input: AgentTickInput, driveOptions: PaceDriverOptions): void {
+    const lineOffset = baselineOffset(input.line, input.distance, input.spline, input.laneBias);
+    const ahead = closestAhead(input);
+    const behind = closestBehind(input);
+    const gapLateral = ahead !== null ? input.lateralOffset + Math.sign(ahead.lateralDelta || 1) * 3.2 : null;
+    const stats = planningStats(
+      input.stats,
+      input.perk,
+      input.homePlanetId,
+      input.worldAdvantage,
+      input.planetId,
+    );
+    const rivals: OccupancyRival[] = nearbyForHorizon(input).map(rival => ({
       carId: rival.carId,
-      lateralOffset: rival.lateralOffset,
-      gap: wrappedGap(input.distance, rival.distance, input.trackLength),
+      s: rival.distance,
+      d: rival.lateralOffset,
+      speed: length(rival.velocity),
+      collisionRadius: rival.collisionRadius ?? 1.65,
       isTarget: rival.carId === this.targetId,
     }));
-    const plan = planTrajectory(
-      base,
-      input.lateralOffset,
-      input.track,
-      input.stats.collisionRadius,
-      this.effectiveIntention(),
-      nearby,
-      interceptLateral,
-    );
-    this.lastTrajectory = plan;
-    this.lateralOffset = plan.selected.offset;
-  }
-
-  private interceptLateral(input: AgentTickInput): number | null {
-    const intention = this.effectiveIntention();
-    const chase =
-      intention === TACTICAL_INTENTION.RAM ||
-      intention === TACTICAL_INTENTION.BLOCK ||
-      intention === TACTICAL_INTENTION.DEFEND ||
-      intention === TACTICAL_INTENTION.OVERTAKE;
-    if (!chase || this.targetId === null) {
-      return null;
+    const traits = decisionTraits(this.profile);
+    const switchPenalty = this.lastTrajectory === null ? 0 : 0.05 + traits.commitment * 0.12;
+    const capabilities = this.lastCapabilities;
+    const memory = strongestGrudge(this.memory.all(), this.profile.opponentMemory);
+    const mem = memory === null ? 0 : memory.grudge * this.profile.opponentMemory;
+    const planned = planFutures({
+      currentOffset: input.lateralOffset,
+      lineOffset,
+      gapLateral,
+      track: input.track,
+      collisionRadius: input.stats.collisionRadius,
+      state: input.state,
+      stats,
+      spline: input.spline,
+      distance: input.distance,
+      lookAheadBase: driveOptions.lookAheadBase,
+      lookAheadScale: driveOptions.lookAheadScaleFactor,
+      fullLockBearing: driveOptions.fullLockBearing,
+      rivals,
+      trackLength: input.trackLength,
+      profile: this.profile,
+      rammingCapability: capabilities?.rammingCapability ?? 0.5,
+      weaponCapability: capabilities?.weaponCapability ?? 0.5,
+      canAim: input.canAim,
+      missiles: input.missiles,
+      memory: mem,
+      switchPenalty,
+      aheadGap: ahead?.gapAhead ?? null,
+      behindGap: behind?.gapBehind ?? null,
+    });
+    const threshold = HYSTERESIS + traits.commitment * 0.18;
+    const keep =
+      this.lastTrajectory !== null &&
+      this.commitLeft > 0 &&
+      planned.winnerScore < this.lastPlanScore + threshold &&
+      planned.plan.selected.feasible !== false;
+    if (!keep) {
+      this.lastTrajectory = planned.plan;
+      this.lateralOffset = planned.plan.selected.offset;
+      this.intention = planned.intention;
+      this.lastPlanScore = planned.winnerScore;
+      this.commitLeft = MIN_COMMIT_STEPS;
+    } else {
+      this.commitLeft = Math.max(0, this.commitLeft - TRAJECTORY_PERIOD);
     }
-    const target = input.rivals.find(rival => rival.carId === this.targetId);
-    if (target === undefined) {
-      return null;
-    }
-    const point = interceptPoint(
-      target.position,
-      target.velocity,
-      wrappedGap(input.distance, target.distance, input.trackLength),
-      relativeSpeedAlong(input.state.velocity, target.velocity),
-      this.profile.opponentPrediction,
-    );
-    const projected = input.spline.projectNear(point, target.distance, 40);
-    return projected.lateralOffset;
   }
 
   private effectiveIntention(): TacticalIntention {
     if (this.execution === EXECUTION_STATE.FINISHED) {
       return TACTICAL_INTENTION.RACE;
     }
-    if (this.execution === EXECUTION_STATE.SPINNING || this.execution === EXECUTION_STATE.RECOVERING) {
+    if (this.execution === CONTROL_MODE.RECOVERING || this.execution === CONTROL_MODE.RESPAWNING) {
       return TACTICAL_INTENTION.RECOVER;
     }
     return this.intention;
   }
 }
 
-function executionOf(input: AgentTickInput): ExecutionState {
-  if (input.finished) {
-    return EXECUTION_STATE.FINISHED;
-  }
-  if (Math.abs(input.state.yawSpin) > 4) {
-    return EXECUTION_STATE.SPINNING;
-  }
-  if (Math.abs(input.lateralOffset) > input.halfWidth || input.integrity < 0.2) {
-    return EXECUTION_STATE.RECOVERING;
-  }
-  return EXECUTION_STATE.NORMAL;
+function nearbyForHorizon(input: AgentTickInput): AgentRival[] {
+  return input.rivals
+    .filter(rival => wrappedGap(input.distance, rival.distance, input.trackLength) < 38)
+    .slice()
+    .sort(
+      (left, right) =>
+        wrappedGap(input.distance, left.distance, input.trackLength) -
+        wrappedGap(input.distance, right.distance, input.trackLength),
+    )
+    .slice(0, 6);
 }
 
 function situationFrom(input: AgentTickInput): RaceSituation {

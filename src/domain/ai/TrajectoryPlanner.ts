@@ -1,6 +1,6 @@
 /**
- * 7 lateral candidates around the current racing-line offset.
- * Intention reweights the score. Intentional RAM collision ≠ accidental collision.
+ * 7-15 corridor futures from the live car state. Intention is a label of the winner.
+ * Legacy `candidateOffsets` remains for tests that check spacing.
  */
 
 import { offsetAt, type RacingLine } from '../race/RacingLine.ts';
@@ -8,6 +8,13 @@ import { trackFullHalfWidth, type TrackDefinition } from '../track/TrackDefiniti
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import { TACTICAL_INTENTION, type TacticalIntention } from './UtilityEvaluator.ts';
 import { clamp, clamp01 } from './math.ts';
+import { generatePathCandidates } from './CandidateGenerator.ts';
+import { ROLLOUT_HORIZON, rolloutCandidate } from './PredictiveRollout.ts';
+import { scoreFuture } from './OutcomeEvaluator.ts';
+import type { VehicleState } from '../vehicle/Vehicle.ts';
+import type { VehicleStats } from '../vehicle/VehicleStats.ts';
+import type { DriverProfile } from './DriverProfile.ts';
+import type { OccupancyRival } from './OpponentOccupancy.ts';
 
 const LATERAL_FRACTIONS = [-1, -2 / 3, -1 / 3, 0, 1 / 3, 2 / 3, 1] as const;
 
@@ -15,6 +22,9 @@ export interface TrajectoryCandidate {
   readonly offset: number;
   readonly score: number;
   readonly terms: TrajectoryTerms;
+  readonly id?: string;
+  readonly kind?: string;
+  readonly feasible?: boolean;
 }
 
 export interface TrajectoryTerms {
@@ -30,6 +40,8 @@ export interface TrajectoryTerms {
 export interface TrajectoryPlan {
   readonly selected: TrajectoryCandidate;
   readonly candidates: readonly TrajectoryCandidate[];
+  readonly generatedCandidates?: number;
+  readonly uniqueCandidates?: number;
 }
 
 export interface NearbyLateral {
@@ -170,3 +182,137 @@ export function planTrajectory(
   }
   return { selected, candidates };
 }
+
+export interface FuturePlanInput {
+  readonly currentOffset: number;
+  readonly lineOffset: number;
+  readonly gapLateral: number | null;
+  readonly track: TrackDefinition;
+  readonly collisionRadius: number;
+  readonly state: VehicleState;
+  readonly stats: VehicleStats;
+  readonly spline: TrackSpline;
+  readonly distance: number;
+  readonly lookAheadBase: number;
+  readonly lookAheadScale: number;
+  readonly fullLockBearing: number;
+  readonly rivals: readonly OccupancyRival[];
+  readonly trackLength: number;
+  readonly profile: DriverProfile;
+  readonly rammingCapability: number;
+  readonly weaponCapability: number;
+  readonly canAim: boolean;
+  readonly missiles: number;
+  readonly memory: number;
+  readonly switchPenalty: number;
+  readonly aheadGap: number | null;
+  readonly behindGap: number | null;
+}
+
+export function planFutures(input: FuturePlanInput): {
+  readonly plan: TrajectoryPlan;
+  readonly intention: TacticalIntention;
+  readonly winnerScore: number;
+} {
+  const maxOffset = maxSafeOffset(input.track, input.collisionRadius);
+  const generated = 11 + (input.gapLateral === null ? 0 : 1);
+  const unique = generatePathCandidates(input.currentOffset, input.lineOffset, maxOffset, input.gapLateral);
+  const scored: TrajectoryCandidate[] = [];
+  let bestIntention: TacticalIntention = TACTICAL_INTENTION.RACE;
+  let bestScore = Number.NEGATIVE_INFINITY;
+  let selected: TrajectoryCandidate | undefined;
+  const cap = Math.max(8, ROLLOUT_HORIZON * 28);
+  for (const candidate of unique) {
+    const rollout = rolloutCandidate({
+      candidate,
+      state: input.state,
+      stats: input.stats,
+      spline: input.spline,
+      track: input.track,
+      distance: input.distance,
+      collisionRadius: input.collisionRadius,
+      lookAheadBase: input.lookAheadBase,
+      lookAheadScale: input.lookAheadScale,
+      fullLockBearing: input.fullLockBearing,
+      rivals: input.rivals,
+      trackLength: input.trackLength,
+      opponentPrediction: input.profile.opponentPrediction,
+      vehiclePhysics: input.profile.vehiclePhysics,
+    });
+    const future = scoreFuture(candidate, rollout, {
+      profile: input.profile,
+      rammingCapability: input.rammingCapability,
+      weaponCapability: input.weaponCapability,
+      canAim: input.canAim,
+      missiles: input.missiles,
+      memory: input.memory,
+      switchPenalty: input.switchPenalty,
+      aheadGap: input.aheadGap,
+      behindGap: input.behindGap,
+    }, cap);
+    if (future === null) {
+      scored.push({
+        offset: candidate.targetLateral,
+        score: -99,
+        terms: emptyTerms(),
+        id: candidate.id,
+        kind: candidate.kind,
+        feasible: false,
+      });
+      continue;
+    }
+    const row: TrajectoryCandidate = {
+      offset: candidate.targetLateral,
+      score: future.score,
+      terms: {
+        progressValue: future.outcome.progressGain,
+        speedValue: future.outcome.exitSpeed,
+        tacticalValue: clamp01(future.tactical / 4),
+        collisionPenalty: future.outcome.accidentalCollision,
+        wallPenalty: future.outcome.wallRisk,
+        offRoadPenalty: future.outcome.offTrackRisk,
+        instabilityPenalty: future.outcome.selfLoss,
+      },
+      id: candidate.id,
+      kind: candidate.kind,
+      feasible: true,
+    };
+    scored.push(row);
+    if (future.score > bestScore) {
+      bestScore = future.score;
+      selected = row;
+      bestIntention = future.intention;
+    }
+  }
+  const fallback = selected ?? {
+    offset: input.currentOffset,
+    score: 0,
+    terms: emptyTerms(),
+    id: 'KEEP',
+    kind: 'KEEP',
+    feasible: true,
+  };
+  return {
+    plan: {
+      selected: fallback,
+      candidates: scored,
+      generatedCandidates: generated,
+      uniqueCandidates: unique.length,
+    },
+    intention: bestIntention,
+    winnerScore: bestScore,
+  };
+}
+
+function emptyTerms(): TrajectoryTerms {
+  return {
+    progressValue: 0,
+    speedValue: 0,
+    tacticalValue: 0,
+    collisionPenalty: 0,
+    wallPenalty: 0,
+    offRoadPenalty: 0,
+    instabilityPenalty: 0,
+  };
+}
+

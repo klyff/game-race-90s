@@ -17,7 +17,7 @@ export function formatAiOverlay(snapshot: AgentDebugSnapshot): readonly string[]
   const selected = snapshot.intention;
   const lines: string[] = [
     `NPC: ${snapshot.carId.toUpperCase()}  PROFILE: ${snapshot.profile.displayName}  (${snapshot.profile.tier})`,
-    `INTENT ${selected}${snapshot.attackMethod !== null ? ` / ${snapshot.attackMethod}` : ''}  TARGET: ${snapshot.targetId ?? '-'}  ${snapshot.execution}`,
+    `INTENT ${selected}${snapshot.attackMethod !== null ? ` / ${snapshot.attackMethod}` : ''}  TARGET: ${snapshot.targetId ?? '-'}  ${snapshot.execution}${snapshot.recoverReason ? ` ${snapshot.recoverReason}` : ''}`,
   ];
 
   const order = [
@@ -58,8 +58,10 @@ export function formatAiOverlay(snapshot: AgentDebugSnapshot): readonly string[]
 
   const traj = snapshot.trajectory;
   if (traj !== undefined && traj !== null) {
+    const unique = traj.uniqueCandidates ?? traj.candidates.length;
+    const generated = traj.generatedCandidates ?? traj.candidates.length;
     lines.push(
-      `TRAJ off ${safe(traj.selected.offset, 1)} score ${safe(traj.selected.score)}  (${traj.candidates.length} candidates)`,
+      `TRAJ off ${safe(traj.selected.offset, 1)} score ${safe(traj.selected.score)}  (${unique}/${generated} unique)`,
     );
   }
 

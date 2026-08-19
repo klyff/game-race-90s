@@ -67,6 +67,7 @@ describe('formatAiOverlay', () => {
         },
       ],
       execution: EXECUTION_STATE.NORMAL,
+      recoverReason: null,
     });
     expect(lines[0]).toContain('NEGAO');
     expect(lines.some(line => line.includes('RAM') && line.includes('<'))).toBe(true);
