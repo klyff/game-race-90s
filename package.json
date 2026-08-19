@@ -28,6 +28,7 @@
     "gen:tracks": "node tools/trackgen/generate.ts",
     "gen:cameras": "node --experimental-strip-types tools/camgen/analyze.ts",
     "gen:traps": "node --experimental-strip-types tools/trapgen/analyze.ts",
+    "gen:traps-art": "node --experimental-strip-types tools/art/generate-traps.ts",
     "gen:lines": "node tools/linegen/generate.ts",
     "gen:ground": "node --experimental-strip-types tools/art/generate-ground-tiles.ts",
     "gen:planet-select": "node --experimental-strip-types tools/art/generate-planet-select.ts",
@@ -37,7 +38,9 @@
     "gen:carts": "node --experimental-strip-types tools/art/generate-cart-portraits.ts",
     "gen:car-strip": "bash tools/art/car-rotate/pipeline.sh",
     "gen:voice-lab": "node --experimental-strip-types tools/voicegen/generate-lab.ts",
-    "debug:ia": "node --experimental-strip-types tools/debug/run-ia.ts"
+    "debug:ia": "node --experimental-strip-types tools/debug/run-ia.ts",
+    "debug:ia-capture": "node tools/debug/capture-ia.mjs",
+    "gen:hero-300": "bash tools/art/gen-hero-300.sh"
   },
   "dependencies": {
     "phaser": "^3.90.0"

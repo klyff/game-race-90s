@@ -9,6 +9,7 @@ import {
   JUMP_START_COUNT,
   refillJumpCharges,
 } from '../../src/domain/vehicle/JumpCharges.ts';
+import { JUMP_HEIGHT_SCALE, RAMP_GRAVITY, RAMP_GRAVITY_REF } from '../../src/domain/track/RampZone.ts';
 
 describe('JumpCharges', () => {
   it('starts every car with 4 hops', () => {
@@ -39,18 +40,30 @@ describe('hopLaunchSpeed', () => {
   const tank = { mass: 1600, maxSpeed: 52 };
 
   it('keeps the mid-table car on the authored baseline', () => {
-    expect(hopLaunchSpeed(mid)).toBeCloseTo(HOP_LAUNCH_SPEED, 5);
+    expect(hopLaunchSpeed(mid)).toBeCloseTo(HOP_LAUNCH_SPEED * JUMP_HEIGHT_SCALE, 5);
+  });
+
+  it('keeps hop airtime (horizontal) and only lowers the apex', () => {
+    const launch = hopLaunchSpeed(mid);
+    expect((2 * launch) / RAMP_GRAVITY).toBeCloseTo((2 * HOP_LAUNCH_SPEED) / RAMP_GRAVITY_REF, 5);
+    expect((launch * launch) / (2 * RAMP_GRAVITY)).toBeCloseTo(
+      ((HOP_LAUNCH_SPEED * HOP_LAUNCH_SPEED) / (2 * RAMP_GRAVITY_REF)) * JUMP_HEIGHT_SCALE,
+      5,
+    );
   });
 
   it('lets a light, fast car hop higher than a heavy, slow one', () => {
     expect(hopLaunchSpeed(sprinter)).toBeGreaterThan(hopLaunchSpeed(mid));
     expect(hopLaunchSpeed(tank)).toBeLessThan(hopLaunchSpeed(mid));
-    expect(hopLaunchSpeed(sprinter)).toBeCloseTo(HOP_LAUNCH_SPEED * HOP_SCALE_MAX, 5);
-    expect(hopLaunchSpeed(tank)).toBeCloseTo(HOP_LAUNCH_SPEED * HOP_SCALE_MIN, 5);
+    expect(hopLaunchSpeed(sprinter)).toBeCloseTo(HOP_LAUNCH_SPEED * HOP_SCALE_MAX * JUMP_HEIGHT_SCALE, 5);
+    expect(hopLaunchSpeed(tank)).toBeCloseTo(HOP_LAUNCH_SPEED * HOP_SCALE_MIN * JUMP_HEIGHT_SCALE, 5);
   });
 
   it('falls back to the baseline when mass or speed is unusable', () => {
-    expect(hopLaunchSpeed({ mass: 0, maxSpeed: 78 })).toBeCloseTo(HOP_LAUNCH_SPEED, 5);
-    expect(hopLaunchSpeed({ mass: 1000, maxSpeed: Number.NaN })).toBeCloseTo(HOP_LAUNCH_SPEED, 5);
+    expect(hopLaunchSpeed({ mass: 0, maxSpeed: 78 })).toBeCloseTo(HOP_LAUNCH_SPEED * JUMP_HEIGHT_SCALE, 5);
+    expect(hopLaunchSpeed({ mass: 1000, maxSpeed: Number.NaN })).toBeCloseTo(
+      HOP_LAUNCH_SPEED * JUMP_HEIGHT_SCALE,
+      5,
+    );
   });
 });

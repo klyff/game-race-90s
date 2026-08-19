@@ -3,19 +3,23 @@ import type { Vec2 } from '../math/Vec2.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 
+/** How far down the line we read start heading (world units ≈ metres). */
+export const GRID_LOOK_AHEAD_UNITS = 50;
+
 /**
  * A single position on the starting grid.
  *
  * Slots fill across `track.gridLateralOffsets` first, then step back one
  * `track.gridRowSpacing` per row, starting from `setbackUnits` before the
- * start line.
+ * start line. Every car faces the start-line arrow (point zero → 50 units
+ * ahead), not the tangent at its own slot — back rows can sit in a hairpin.
  */
 export interface GridSlot {
   readonly index: number;           // 0 = pole
   readonly distance: number;        // arc length along the centreline
   readonly lateralOffset: number;   // signed, positive left
   readonly position: Vec2;
-  readonly heading: number;         // radians, along the tangent
+  readonly heading: number;         // radians, start-line arrow (zero → 50 m)
 }
 
 /**
@@ -52,6 +56,7 @@ export function buildStartingGrid(
   const offsets = track.gridLateralOffsets;
   const rowSpacing = track.gridRowSpacing;
   const halfWidth = track.halfWidth;
+  const heading = lookAheadHeading(spline, track.startLineDistance);
 
   let index = 0;
   for (let slot = 0; slot < count; slot += 1) {
@@ -81,9 +86,6 @@ export function buildStartingGrid(
     // Calculate world position: frame.position + normal * lateralOffset.
     const position = add(frame.position, scale(frame.normal, lateralOffset));
 
-    // Heading is the angle of the tangent vector.
-    const heading = angleOf(frame.tangent);
-
     slots.push({
       index,
       distance: slotDistance,
@@ -96,4 +98,19 @@ export function buildStartingGrid(
   }
 
   return slots;
+}
+
+/** World heading from `distance` toward a point `ahead` units along the centreline. */
+export function lookAheadHeading(
+  spline: TrackSpline,
+  distance: number,
+  ahead: number = GRID_LOOK_AHEAD_UNITS,
+): number {
+  const here = spline.positionAt(distance);
+  const there = spline.positionAt(spline.wrap(distance + ahead));
+  const chord = { x: there.x - here.x, y: there.y - here.y };
+  if (chord.x * chord.x + chord.y * chord.y < 1e-8) {
+    return angleOf(spline.frameAt(distance).tangent);
+  }
+  return angleOf(chord);
 }

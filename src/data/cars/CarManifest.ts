@@ -1,4 +1,5 @@
 import { CAR_PERK, CAR_SPRITE_FRAMES, WORLD_ADVANTAGE } from '../../domain/constants.ts';
+import { frameIndexForClockHeading } from '../../domain/math/IsoClock.ts';
 import type { CarPerkId, WorldAdvantage } from '../../domain/constants.ts';
 import { collisionBox } from '../../domain/vehicle/CollisionMap.ts';
 import type { CollisionBox } from '../../domain/vehicle/CollisionMap.ts';
@@ -323,26 +324,83 @@ export function matrixHeroUrl(n: number): string {
   return `matrix_car/${n}_hero/${matrixHeroFile(n)}`;
 }
 
+/** Runtime garage still. Never GPU-upload the 1700px vitrine. */
+export function matrixHero300File(n: number): string {
+  return `car_${n}_hero_300.png`;
+}
+
+export function matrixHero300Url(n: number): string {
+  return `matrix_car/${n}_hero/${matrixHero300File(n)}`;
+}
+
 /**
- * Load order for a garage still. First hit wins.
- * Numbered cars start at the matrix vitrine; other files are leftovers.
+ * Production yaw strips that actually exist on disk. Boot only queues these.
+ * `car-1` / `car_1` share folder 1; hyphen and underscore ids both remap here.
+ */
+export const MATRIX_STRIP_NUMBERS = [1, 2, 18, 19, 20, 21] as const;
+
+export function matrixStripReady(n: number): boolean {
+  return (MATRIX_STRIP_NUMBERS as readonly number[]).includes(n);
+}
+
+/**
+ * Point roster ids at matrix bbox strips when the PNG+JSON pair is on disk.
+ * Cars without a strip stay in the catalog for garage stills but are not raced.
+ */
+export function applyAvailableMatrixStrips(manifest: CarSetManifest): CarSetManifest {
+  return {
+    ...manifest,
+    cars: manifest.cars.map(car => {
+      if (isBBoxSheet(car)) {
+        return car;
+      }
+      const n = matrixHeroNumber(car.id);
+      if (n === undefined || !matrixStripReady(n)) {
+        return car;
+      }
+      return {
+        ...car,
+        image: matrixStripUrl(n),
+        framesJson: matrixStripJsonUrl(n),
+        frameCount: 30,
+      };
+    }),
+  };
+}
+
+export function isPlayableCarSheet(car: CarSheetManifest): boolean {
+  return isBBoxSheet(car);
+}
+
+export function playableCarIds(manifest: CarSetManifest): readonly string[] {
+  const seen = new Set<number>();
+  const ids: string[] = [];
+  for (const car of manifest.cars) {
+    if (!isPlayableCarSheet(car)) {
+      continue;
+    }
+    const n = matrixHeroNumber(car.id);
+    if (n !== undefined) {
+      if (seen.has(n)) {
+        continue;
+      }
+      seen.add(n);
+    }
+    ids.push(car.id);
+  }
+  return ids;
+}
+
+/**
+ * Load order for a garage still. One URL: the 300px matrix still.
+ * Missing files are optional at Boot; garage falls back to the yaw strip.
  */
 export function portraitCandidateUrls(carId: string): readonly string[] {
   const n = matrixHeroNumber(carId);
-  const hero = cartHeroFile(carId);
-  const still = cartPortraitFile(carId);
-  const urls: string[] = [];
   if (n !== undefined) {
-    urls.push(matrixHeroUrl(n));
+    return [matrixHero300Url(n)];
   }
-  urls.push(
-    `assets/cars/${hero}`,
-    `assets/cars/new/${hero}`,
-    `assets/cars/${still}`,
-    `assets/${still}`,
-    `assets/cars/${cartPortraitLegacyFile(carId)}`,
-  );
-  return urls;
+  return [`assets/cars/${cartPortraitFile(carId)}`];
 }
 
 /** New-fleet garage still and strip source: `car_1_hero.png`. */
@@ -392,7 +450,8 @@ export function sheetFrameCount(sheet: CarSheetManifest, manifest: CarSetManifes
 
 /** Looks up one car, failing loudly rather than returning `undefined`. */
 export function findCarSheet(manifest: CarSetManifest, id: string): CarSheetManifest {
-  const sheet = manifest.cars.find(car => car.id === id);
+  const sheetId = id.includes('#') ? id.slice(0, id.indexOf('#')) : id;
+  const sheet = manifest.cars.find(car => car.id === sheetId);
   if (sheet === undefined) {
     const known = manifest.cars.map(car => car.id).join(', ');
     throw new CarManifestError(`unknown car "${id}". Known cars: ${known}`);
@@ -401,17 +460,11 @@ export function findCarSheet(manifest: CarSetManifest, id: string): CarSheetMani
 }
 
 /**
- * Sprite frame showing a car facing `heading`.
- *
- * The generator renders frame `f` at a yaw of `f * 2π / frameCount` about +Z in
- * car local space, where +X is forward — exactly the convention `VehicleState.heading`
- * uses. So this is a plain rounding, and the nearest frame is never more than
- * half a frame arc (5.6° at 32 frames) away from the true heading.
+ * Sprite frame for a world heading on the 2:1 clock.
+ * 6h (screen down) is indice[0]. World +X is down-right ≈ 4h (hero), not a000.
  */
 export function frameIndexForHeading(heading: number, frameCount: number): number {
-  const frameArc = (Math.PI * 2) / frameCount;
-  const index = Math.round(heading / frameArc) % frameCount;
-  return index < 0 ? index + frameCount : index;
+  return frameIndexForClockHeading(heading, frameCount);
 }
 
 /** Art canvas width → production strip (`SCALE.md`). */

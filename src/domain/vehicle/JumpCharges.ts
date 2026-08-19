@@ -1,3 +1,4 @@
+import { JUMP_HEIGHT_SCALE } from '../track/RampZone.ts';
 import type { VehicleStats } from './VehicleStats.ts';
 
 /**
@@ -16,7 +17,8 @@ export const JUMP_START_COUNT = 4;
 /**
  * Vertical launch speed of a hop for a mid-table car, world units/s.
  *
- * Under `RAMP_GRAVITY` (40) this is ~0.5 s of airtime and a peak of ~1.25 u,
+ * Under `RAMP_GRAVITY` this is ~0.5 s of airtime (same range as the old
+ * 10 / 40 hop) and a lower peak after `JUMP_HEIGHT_SCALE`.
  * long enough to clear an oil slick or mine at race speed. Light, fast cars
  * launch a little harder; heavy, slow cars a little softer.
  */
@@ -39,7 +41,7 @@ export function hopLaunchSpeed(stats: Pick<VehicleStats, 'mass' | 'maxSpeed'>): 
   const mass = Number.isFinite(stats.mass) && stats.mass > 0 ? stats.mass : HOP_REF_MASS;
   const speed = Number.isFinite(stats.maxSpeed) && stats.maxSpeed > 0 ? stats.maxSpeed : HOP_REF_SPEED;
   const scale = clamp(Math.sqrt((HOP_REF_MASS / mass) * (speed / HOP_REF_SPEED)), HOP_SCALE_MIN, HOP_SCALE_MAX);
-  return HOP_LAUNCH_SPEED * scale;
+  return HOP_LAUNCH_SPEED * scale * JUMP_HEIGHT_SCALE;
 }
 
 function clamp(value: number, min: number, max: number): number {

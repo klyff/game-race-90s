@@ -5,7 +5,7 @@ import { dot, fromAngle, scale } from '../math/Vec2.ts';
 import { TURBO_SPEED_BONUS } from '../vehicle/TurboCharges.ts';
 import type { VehicleState } from '../vehicle/Vehicle.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
-import type { RampIncline, RampZone } from './RampZone.ts';
+import { JUMP_HEIGHT_SCALE, type RampIncline, type RampZone } from './RampZone.ts';
 
 /**
  * How much the car's contact sum adds to the zone's fixed launchSpeed.
@@ -171,7 +171,7 @@ export function resolveRampContact(
     {
       ...state,
       height: 0,
-      verticalVelocity: vertRaw * heightSpeedScale(bonus.height),
+      verticalVelocity: vertRaw * JUMP_HEIGHT_SCALE * heightSpeedScale(bonus.height),
     },
     horizRaw * rangeScale(bonus.range),
   );

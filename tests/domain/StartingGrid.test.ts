@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { angleOf, distance } from '../../src/domain/math/Vec2.ts';
-import { buildStartingGrid } from '../../src/domain/race/StartingGrid.ts';
+import { distance } from '../../src/domain/math/Vec2.ts';
+import { buildStartingGrid, GRID_LOOK_AHEAD_UNITS, lookAheadHeading } from '../../src/domain/race/StartingGrid.ts';
+import { frameIndexForHeading } from '../../src/data/cars/CarManifest.ts';
 import { findTrack } from '../../src/data/tracks/registry.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
 
@@ -57,13 +58,20 @@ describe('buildStartingGrid', () => {
       expect(pole.distance).toBeCloseTo(expectedDistance, 5);
     });
 
-    it('pole has correct heading along track tangent', () => {
+    it('pole faces the start-line arrow (zero → 50 m), not the slot tangent', () => {
       const grid = buildStartingGrid(1, track, spline);
       const pole = grid[0]!;
+      const startHeading = lookAheadHeading(spline, track.startLineDistance);
+      expect(pole.heading).toBeCloseTo(startHeading, 5);
 
-      const frame = spline.frameAt(pole.distance);
-      const expectedHeading = angleOf(frame.tangent);
-      expect(pole.heading).toBeCloseTo(expectedHeading, 5);
+      const here = spline.positionAt(track.startLineDistance);
+      const there = spline.positionAt(spline.wrap(track.startLineDistance + GRID_LOOK_AHEAD_UNITS));
+      expect(there.x - here.x).not.toBeCloseTo(0, 2);
+    });
+
+    it('Basin pole uses 4h (a025), not a000 facing the screen', () => {
+      const grid = buildStartingGrid(1, track, spline);
+      expect(frameIndexForHeading(grid[0]!.heading, 30)).toBe(25);
     });
   });
 
@@ -159,16 +167,32 @@ describe('buildStartingGrid', () => {
   });
 
   describe('heading consistency', () => {
-    it('heading matches spline tangent at each slot distance', () => {
+    it('every slot faces the start-line arrow, even back rows in a hairpin', () => {
+      const expectedHeading = lookAheadHeading(spline, track.startLineDistance);
       const grid = buildStartingGrid(5, track, spline);
 
       for (const slot of grid) {
-        const frame = spline.frameAt(slot.distance);
-        const expectedHeading = angleOf(frame.tangent);
+        expect(Math.abs(slot.heading - expectedHeading)).toBeLessThan(1e-5);
+      }
+    });
 
-        // Allow small floating-point tolerance.
-        const diff = Math.abs(slot.heading - expectedHeading);
-        expect(diff).toBeLessThan(1e-5);
+    it('Basin II and Bogmire back rows keep the start index, not the slot curve', () => {
+      const basinTwo = findTrack('thunder-basin-2');
+      const basinTwoSpline = new TrackSpline(basinTwo.controlPoints);
+      const basinTwoGrid = buildStartingGrid(6, basinTwo, basinTwoSpline);
+      for (const slot of basinTwoGrid) {
+        expect(frameIndexForHeading(slot.heading, 30)).toBe(25);
+      }
+
+      const bogmire = findTrack('bogmire-deep-1');
+      const bogmireSpline = new TrackSpline(bogmire.controlPoints);
+      const startIndex = frameIndexForHeading(
+        lookAheadHeading(bogmireSpline, bogmire.startLineDistance),
+        30,
+      );
+      expect(startIndex).toBe(7);
+      for (const slot of buildStartingGrid(6, bogmire, bogmireSpline)) {
+        expect(frameIndexForHeading(slot.heading, 30)).toBe(startIndex);
       }
     });
   });
@@ -359,7 +383,7 @@ describe('buildStartingGrid', () => {
       //   const frame = this.spline.frameAt(spawnDistance);
       //   const lateralOffset = this.track.gridLateralOffsets[0] ?? 0;
       //   position = add(frame.position, scale(frame.normal, lateralOffset));
-      //   heading = angleOf(frame.tangent);
+      //   heading = lookAheadHeading(spline, track.startLineDistance);
 
       const grid = buildStartingGrid(1, track, spline, 14);
       const slot = grid[0]!;
@@ -378,7 +402,7 @@ describe('buildStartingGrid', () => {
         expectedFrame.position.y + expectedFrame.normal.y * expectedLateralOffset,
         5,
       );
-      expect(slot.heading).toBeCloseTo(angleOf(expectedFrame.tangent), 5);
+      expect(slot.heading).toBeCloseTo(lookAheadHeading(spline, track.startLineDistance), 5);
     });
   });
 });

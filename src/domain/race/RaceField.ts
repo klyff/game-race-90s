@@ -1,7 +1,7 @@
 import { RACE_PHASE } from '../constants.ts';
 import type { InputCommand } from '../input/InputCommand.ts';
 import { IDLE_INPUT } from '../input/InputCommand.ts';
-import { add, angleOf, distance, dot, length, lerp, normalize, scale, subtract, VEC2_ZERO } from '../math/Vec2.ts';
+import { add, distance, dot, length, lerp, normalize, scale, subtract, VEC2_ZERO } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
 import { resolveWallContact } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
@@ -125,7 +125,7 @@ import type { DraftCandidate } from './Slipstream.ts';
 import { advanceRace, createRaceState } from './RaceSimulation.ts';
 import type { RaceState, RacerStep } from './RaceSimulation.ts';
 import type { RacerStanding } from './PositionRanker.ts';
-import { buildStartingGrid } from './StartingGrid.ts';
+import { buildStartingGrid, lookAheadHeading } from './StartingGrid.ts';
 import { stepVehicleOnTrack } from './OnTrackStep.ts';
 import { coastInput, isNearlyStopped } from './Coast.ts';
 
@@ -157,6 +157,7 @@ export interface RacerEntry {
  */
 export interface RacerRuntime {
   readonly carId: string;
+  readonly name: string;
   readonly stats: VehicleStats;
   readonly isPlayer: boolean;
   /**
@@ -377,6 +378,7 @@ export class RaceField {
           : { ...entry.stats, grip: entry.stats.grip * surfaceGrip };
       return {
         carId: entry.carId,
+        name: entry.name ?? entry.carId,
         stats,
         isPlayer: entry.isPlayer,
         perk: perkProfile(entry.perk),
@@ -756,6 +758,7 @@ export class RaceField {
       if (previous !== undefined) {
         stepped.push({
           carId: racer.carId,
+          racerIndex: index,
           previousDistance: previous,
           currentDistance: step.distance,
         });
@@ -1377,8 +1380,9 @@ export class RaceField {
 
     if (racer.integrity.condition !== CAR_CONDITION.DESTROYED) {
       const distance = racer.offTrackRespawnDistance ?? racer.distance;
-      const frame = this.spline.frameAt(this.spline.wrap(distance));
-      racer.state = createVehicleState(frame.position, angleOf(frame.tangent));
+      const wrapped = this.spline.wrap(distance);
+      const frame = this.spline.frameAt(wrapped);
+      racer.state = createVehicleState(frame.position, lookAheadHeading(this.spline, wrapped));
       racer.distance = this.spline.wrap(distance);
       racer.lateralOffset = 0;
       racer.pendingImpactSpeed = 0;

@@ -19,7 +19,13 @@ import {
   rampArcadeBonus,
   resolveRampContact,
 } from '../../src/domain/track/RampLaunch.ts';
-import type { RampZone } from '../../src/domain/track/RampZone.ts';
+import {
+  JUMP_HEIGHT_SCALE,
+  RAMP_GRAVITY_REF,
+  rampAirtimeSeconds,
+  rampPeakHeight,
+  type RampZone,
+} from '../../src/domain/track/RampZone.ts';
 import { IDLE_INPUT } from '../../src/domain/input/InputCommand.ts';
 import type { InputCommand } from '../../src/domain/input/InputCommand.ts';
 import { createVehicleState } from '../../src/domain/vehicle/Vehicle.ts';
@@ -137,7 +143,7 @@ describe('resolveRampContact', () => {
     const force = carForceAtContact(atSpeed(0.6), STATS, THROTTLE, false);
     const vertRaw = ZONE_45.launchSpeed + LAUNCH_CAR_SCALE * force;
     const horizRaw = STATS.maxSpeed * 0.6 * (1 + LAUNCH_HORIZ_SCALE * Math.max(0, force));
-    expect(result.state.verticalVelocity).toBeCloseTo(vertRaw, 5);
+    expect(result.state.verticalVelocity).toBeCloseTo(vertRaw * JUMP_HEIGHT_SCALE, 5);
     expect(length(result.state.velocity)).toBeCloseTo(horizRaw, 5);
   });
 
@@ -151,7 +157,10 @@ describe('resolveRampContact', () => {
     const force = carForceAtContact(atSpeed(0.95), STATS, THROTTLE, true);
     const vertRaw = ZONE_45.launchSpeed + LAUNCH_CAR_SCALE * force;
     const horizRaw = STATS.maxSpeed * 0.95 * (1 + LAUNCH_HORIZ_SCALE * Math.max(0, force));
-    expect(result.state.verticalVelocity).toBeCloseTo(vertRaw * Math.sqrt(1 + HOT_45_HEIGHT_BONUS), 5);
+    expect(result.state.verticalVelocity).toBeCloseTo(
+      vertRaw * JUMP_HEIGHT_SCALE * Math.sqrt(1 + HOT_45_HEIGHT_BONUS),
+      5,
+    );
     expect(length(result.state.velocity)).toBeCloseTo(horizRaw * (1 + HOT_45_RANGE_BONUS), 5);
   });
 
@@ -165,7 +174,7 @@ describe('resolveRampContact', () => {
       const force = carForceAtContact(atSpeed(0.95), STATS, THROTTLE, true);
       const vertRaw = zone.launchSpeed + LAUNCH_CAR_SCALE * force;
       expect(result.state.verticalVelocity).toBeCloseTo(
-        vertRaw * Math.sqrt(1 + HOT_FLAT_HEIGHT_BONUS),
+        vertRaw * JUMP_HEIGHT_SCALE * Math.sqrt(1 + HOT_FLAT_HEIGHT_BONUS),
         5,
       );
     }
@@ -187,10 +196,20 @@ describe('resolveRampContact', () => {
   });
 });
 
+describe('jump flatten', () => {
+  it('lowers the apex and keeps the same airtime as the 40-g table', () => {
+    expect(rampAirtimeSeconds(ZONE_15)).toBeCloseTo((2 * ZONE_15.launchSpeed) / RAMP_GRAVITY_REF, 5);
+    expect(rampPeakHeight(ZONE_15)).toBeCloseTo(
+      ((ZONE_15.launchSpeed * ZONE_15.launchSpeed) / (2 * RAMP_GRAVITY_REF)) * JUMP_HEIGHT_SCALE,
+      5,
+    );
+  });
+});
+
 describe('Thunder Basin ramps', () => {
   it('authors 15° then 30° on Basin I', () => {
-    expect(thunderBasin.rampZones?.map(z => z.inclineDegrees)).toEqual([15, 30]);
-    expect(thunderBasin.rampZones?.map(z => z.triggerDistance)).toEqual([200, 1240]);
+    expect(thunderBasin.rampZones?.map(z => z.inclineDegrees)).toEqual([15, 15, 30]);
+    expect(thunderBasin.rampZones?.map(z => z.triggerDistance)).toEqual([200, 720, 1240]);
   });
 
   it('authors 45° then 30° on Basin II', () => {
