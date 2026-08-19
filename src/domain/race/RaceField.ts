@@ -73,6 +73,7 @@ import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 import { decideMissileAim } from '../weapons/WeaponAim.ts';
 import {
   MINE_RAW_DAMAGE,
+  MISSILE_HIT_RADIUS_SCALE,
   MISSILE_RAW_DAMAGE,
   scaledWeaponDamage,
   NPC_MINE_DROP_GAP_UNITS,
@@ -996,7 +997,7 @@ export class RaceField {
             racer.state.position,
             racer.state.heading,
             racer.stats.maxSpeed,
-            racer.stats.collisionRadius,
+            racer.stats.collisionRadius * MISSILE_HIT_RADIUS_SCALE,
           ),
         );
       }

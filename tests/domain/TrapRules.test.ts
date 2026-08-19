@@ -17,22 +17,22 @@ import {
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
 
 describe('TrapRules counts', () => {
-  it('grows crates by 2 slots and 1 spawn each world', () => {
-    expect(crateSlotCount(1)).toBe(10);
-    expect(crateSpawnCount(1)).toBe(4);
-    expect(crateSlotCount(2)).toBe(12);
-    expect(crateSpawnCount(2)).toBe(5);
-    expect(crateSlotCount(10)).toBe(28);
-    expect(crateSpawnCount(10)).toBe(13);
+  it('grows crates by 2 slots and 1 spawn each world, then +60%', () => {
+    expect(crateSlotCount(1)).toBe(16);
+    expect(crateSpawnCount(1)).toBe(6);
+    expect(crateSlotCount(2)).toBe(19);
+    expect(crateSpawnCount(2)).toBe(8);
+    expect(crateSlotCount(10)).toBe(45);
+    expect(crateSpawnCount(10)).toBe(21);
   });
 
-  it('grows drums by 2 slots and spawns at most half', () => {
-    expect(drumSlotCount(1)).toBe(5);
-    expect(drumSpawnCount(1)).toBe(2);
-    expect(drumSlotCount(2)).toBe(7);
-    expect(drumSpawnCount(2)).toBe(3);
-    expect(drumSlotCount(10)).toBe(23);
-    expect(drumSpawnCount(10)).toBe(11);
+  it('grows drums by 2 slots and spawns half the unscaled pool, then +60%', () => {
+    expect(drumSlotCount(1)).toBe(8);
+    expect(drumSpawnCount(1)).toBe(3);
+    expect(drumSlotCount(2)).toBe(11);
+    expect(drumSpawnCount(2)).toBe(5);
+    expect(drumSlotCount(10)).toBe(37);
+    expect(drumSpawnCount(10)).toBe(18);
   });
 
   it('keeps 70% of crate-hit speed', () => {
@@ -78,8 +78,8 @@ describe('analyzeTrackTraps', () => {
 
   it('fills the world-1 pool on Thunder Basin', () => {
     expect(catalog.trackId).toBe('thunder-basin');
-    expect(catalog.crates).toHaveLength(10);
-    expect(catalog.drums).toHaveLength(5);
+    expect(catalog.crates).toHaveLength(16);
+    expect(catalog.drums).toHaveLength(8);
   });
 
   it('sits on the shoulder and stays off the grid and ramps', () => {
@@ -104,16 +104,16 @@ describe('pickRaceTraps', () => {
 
   it('spawns world-1 caps, not the old three authored drums', () => {
     const picked = pickRaceTraps(catalog, 1, seed);
-    expect(picked.filter(trap => trap.kind === 'gasoline')).toHaveLength(2);
-    expect(picked.filter(trap => trap.kind === 'crate')).toHaveLength(4);
+    expect(picked.filter(trap => trap.kind === 'gasoline')).toHaveLength(3);
+    expect(picked.filter(trap => trap.kind === 'crate')).toHaveLength(6);
     expect(picked.every(trap => trap.stackHeight >= 1 && trap.stackHeight <= 3)).toBe(true);
   });
 
-  it('grows world 2 to 5 crates and 3 drums', () => {
+  it('grows world 2 to 8 crates and 5 drums', () => {
     const later = analyzeTrackTraps(thunderBasin, 2);
     const picked = pickRaceTraps(later, 2, seed);
-    expect(picked.filter(trap => trap.kind === 'gasoline')).toHaveLength(3);
-    expect(picked.filter(trap => trap.kind === 'crate')).toHaveLength(5);
+    expect(picked.filter(trap => trap.kind === 'gasoline')).toHaveLength(5);
+    expect(picked.filter(trap => trap.kind === 'crate')).toHaveLength(8);
   });
 
   it('is deterministic for a seed', () => {

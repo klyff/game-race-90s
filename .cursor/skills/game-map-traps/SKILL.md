@@ -25,7 +25,7 @@ energy, asphalt burn, sound, camera impulse.
 1. Run `npm run gen:traps` (or `npm run gen:traps -- <trackId>`).
 2. Read `public/assets/traps/<trackId>.json`.
 3. Check: slots on the shoulder, not on the grid, not on ramps, spaced ≥ 2 car lengths.
-4. World 1 = 10 crate slots / 5 drum slots. Later worlds grow — see [reference.md](reference.md).
+4. World 1 = 16 crate slots / 8 drum slots (pool ×1.6). Later worlds grow — see [reference.md](reference.md).
 
 Analyzer: `src/domain/traps/analyzeTrackTraps.ts`. Pick: `src/domain/traps/pickRaceTraps.ts`. Rules: `src/domain/traps/TrapRules.ts`. CLI: `tools/trapgen/analyze.ts`.
 

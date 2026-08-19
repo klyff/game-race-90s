@@ -3,67 +3,107 @@
   "worldIndex": 4,
   "crates": [
     {
-      "distance": 360,
-      "lateral": -23.05
-    },
-    {
-      "distance": 372,
-      "lateral": 23.05
-    },
-    {
-      "distance": 384,
-      "lateral": -23.05
-    },
-    {
-      "distance": 396,
-      "lateral": 23.05
-    },
-    {
-      "distance": 408,
-      "lateral": -23.05
-    },
-    {
-      "distance": 420,
-      "lateral": 23.05
-    },
-    {
-      "distance": 516,
-      "lateral": -23.05
-    },
-    {
       "distance": 528,
-      "lateral": 23.05
+      "lateral": -23.05
     },
     {
       "distance": 600,
-      "lateral": -23.05
+      "lateral": 23.05
     },
     {
       "distance": 612,
-      "lateral": 23.05
+      "lateral": -23.05
     },
     {
       "distance": 624,
-      "lateral": -23.05
+      "lateral": 23.05
     },
     {
       "distance": 636,
-      "lateral": 23.05
+      "lateral": -23.05
     },
     {
       "distance": 648,
-      "lateral": -23.05
-    },
-    {
-      "distance": 660,
       "lateral": 23.05
     },
     {
-      "distance": 672,
+      "distance": 660,
       "lateral": -23.05
     },
     {
+      "distance": 672,
+      "lateral": 23.05
+    },
+    {
       "distance": 684,
+      "lateral": -23.05
+    },
+    {
+      "distance": 696,
+      "lateral": 23.05
+    },
+    {
+      "distance": 708,
+      "lateral": -23.05
+    },
+    {
+      "distance": 720,
+      "lateral": 23.05
+    },
+    {
+      "distance": 732,
+      "lateral": -23.05
+    },
+    {
+      "distance": 744,
+      "lateral": 23.05
+    },
+    {
+      "distance": 756,
+      "lateral": -23.05
+    },
+    {
+      "distance": 768,
+      "lateral": 23.05
+    },
+    {
+      "distance": 876,
+      "lateral": -23.05
+    },
+    {
+      "distance": 888,
+      "lateral": 23.05
+    },
+    {
+      "distance": 900,
+      "lateral": -23.05
+    },
+    {
+      "distance": 912,
+      "lateral": 23.05
+    },
+    {
+      "distance": 924,
+      "lateral": -23.05
+    },
+    {
+      "distance": 936,
+      "lateral": 23.05
+    },
+    {
+      "distance": 948,
+      "lateral": -23.05
+    },
+    {
+      "distance": 960,
+      "lateral": 23.05
+    },
+    {
+      "distance": 1068,
+      "lateral": -23.05
+    },
+    {
+      "distance": 1080,
       "lateral": 23.05
     }
   ],
@@ -111,6 +151,34 @@
     {
       "distance": 348,
       "lateral": 23.05
+    },
+    {
+      "distance": 360,
+      "lateral": -23.05
+    },
+    {
+      "distance": 372,
+      "lateral": 23.05
+    },
+    {
+      "distance": 384,
+      "lateral": -23.05
+    },
+    {
+      "distance": 396,
+      "lateral": 23.05
+    },
+    {
+      "distance": 408,
+      "lateral": -23.05
+    },
+    {
+      "distance": 420,
+      "lateral": 23.05
+    },
+    {
+      "distance": 516,
+      "lateral": -23.05
     }
   ]
 }

@@ -19,14 +19,21 @@ export const CRATE_WOOD_LIFE_SECONDS = 4;
 
 export const CRATE_WOOD_CHIP_COUNT = 6;
 
-/** World-1 crate candidate count. Each later world adds 2. */
+/** Extra density on the authored pool and spawn caps. */
+export const TRAP_COUNT_SCALE = 1.6;
+
+/** World-1 crate candidate count, before `TRAP_COUNT_SCALE`. Each later world adds 2. */
 export const CRATE_BASE_SLOTS = 10;
 
-/** World-1 crate spawn cap. Each later world adds 1. */
+/** World-1 crate spawn cap, before scale. Each later world adds 1. */
 export const CRATE_BASE_SPAWN = 4;
 
-/** World-1 drum candidate count. Each later world adds 2. */
+/** World-1 drum candidate count, before scale. Each later world adds 2. */
 export const DRUM_BASE_SLOTS = 5;
+
+function scaledCount(base: number): number {
+  return Math.max(1, Math.round(base * TRAP_COUNT_SCALE));
+}
 
 /** Extra blast beyond the drum itself: two car lengths. */
 export const DRUM_BLAST_CAR_LENGTHS = 2;
@@ -38,21 +45,22 @@ export const DRUM_BLAST_BAND = 0.1;
 export const DRUM_BLAST_FALLOFF = 0.13;
 
 export function crateSlotCount(worldIndex: number): number {
-  return CRATE_BASE_SLOTS + Math.max(0, worldIndex - 1) * 2;
+  return scaledCount(CRATE_BASE_SLOTS + Math.max(0, worldIndex - 1) * 2);
 }
 
 export function crateSpawnCount(worldIndex: number): number {
   const slots = crateSlotCount(worldIndex);
-  return Math.min(slots, CRATE_BASE_SPAWN + Math.max(0, worldIndex - 1));
+  return Math.min(slots, scaledCount(CRATE_BASE_SPAWN + Math.max(0, worldIndex - 1)));
 }
 
 export function drumSlotCount(worldIndex: number): number {
-  return DRUM_BASE_SLOTS + Math.max(0, worldIndex - 1) * 2;
+  return scaledCount(DRUM_BASE_SLOTS + Math.max(0, worldIndex - 1) * 2);
 }
 
-/** Half the pool, rounded down — world 1 is 2 of 5. */
+/** Half the unscaled pool, then +60% — world 1 is 3 of 8. */
 export function drumSpawnCount(worldIndex: number): number {
-  return Math.floor(drumSlotCount(worldIndex) / 2);
+  const unscaledSlots = DRUM_BASE_SLOTS + Math.max(0, worldIndex - 1) * 2;
+  return scaledCount(Math.floor(unscaledSlots / 2));
 }
 
 export function carLengthFromRadius(collisionRadius: number): number {

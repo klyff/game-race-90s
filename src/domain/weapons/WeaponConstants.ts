@@ -106,12 +106,18 @@ export const OIL_SIZE_OF_CAR = 0.9;
 
 /**
  * Landmine / grenade diameter as a fraction of the dropper's car length.
- * Owner: a quarter of a car, plus a little.
+ * Owner: a quarter of a car, plus a little, then +45% so it reads on the asphalt.
  */
-export const MINE_SIZE_OF_CAR = 0.28;
+export const MINE_SIZE_OF_CAR = 0.406;
 
-/** Gasoline barrel diameter as a fraction of a typical car length. Same puck as a mine. */
-export const GASOLINE_SIZE_OF_CAR = MINE_SIZE_OF_CAR;
+/** Gasoline barrel diameter as a fraction of a typical car length. Uncoupled from the mine. */
+export const GASOLINE_SIZE_OF_CAR = 0.28;
+
+/** Missile sprite width as a fraction of the firer's car length. */
+export const MISSILE_SIZE_OF_CAR = 0.7;
+
+/** Hit and draw scale vs the firer's collision radius. +30% so the dart reads. */
+export const MISSILE_HIT_RADIUS_SCALE = 1.3;
 
 /** Visual explosion scale for a gasoline barrel vs a car wreck (1.8×). */
 export const GASOLINE_BURST_SCALE = 1.8;

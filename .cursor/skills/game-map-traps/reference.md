@@ -6,16 +6,17 @@
 
 | World | Crate slots | Crates spawn | Drum slots | Drums spawn |
 | --- | --- | --- | --- | --- |
-| 1 | 10 | 4 | 5 | 2 |
-| 2 | 12 | 5 | 7 | 3 |
-| 3 | 14 | 6 | 9 | 4 |
-| 10 | 28 | 13 | 23 | 11 |
+| 1 | 16 | 6 | 8 | 3 |
+| 2 | 19 | 8 | 11 | 5 |
+| 3 | 22 | 10 | 14 | 6 |
+| 10 | 45 | 21 | 37 | 18 |
 
 ```
-crateSlots = 10 + (worldIndex - 1) * 2
-crateSpawn = min(crateSlots, 4 + (worldIndex - 1))
-drumSlots  = 5 + (worldIndex - 1) * 2
-drumSpawn  = floor(drumSlots / 2)
+scale = 1.6
+crateSlots = round((10 + (worldIndex - 1) * 2) * scale)
+crateSpawn = min(crateSlots, round((4 + (worldIndex - 1)) * scale))
+drumSlots  = round((5 + (worldIndex - 1) * 2) * scale)
+drumSpawn  = round(floor((5 + (worldIndex - 1) * 2) / 2) * scale)
 ```
 
 ## Crate hit

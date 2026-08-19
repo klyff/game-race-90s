@@ -3,22 +3,6 @@
   "worldIndex": 2,
   "crates": [
     {
-      "distance": 132,
-      "lateral": -26.05
-    },
-    {
-      "distance": 144,
-      "lateral": 26.05
-    },
-    {
-      "distance": 156,
-      "lateral": -26.05
-    },
-    {
-      "distance": 168,
-      "lateral": 26.05
-    },
-    {
       "distance": 180,
       "lateral": -26.05
     },
@@ -49,6 +33,50 @@
     {
       "distance": 264,
       "lateral": 26.05
+    },
+    {
+      "distance": 276,
+      "lateral": -26.05
+    },
+    {
+      "distance": 288,
+      "lateral": 26.05
+    },
+    {
+      "distance": 300,
+      "lateral": -26.05
+    },
+    {
+      "distance": 312,
+      "lateral": 26.05
+    },
+    {
+      "distance": 324,
+      "lateral": -26.05
+    },
+    {
+      "distance": 336,
+      "lateral": 26.05
+    },
+    {
+      "distance": 348,
+      "lateral": -26.05
+    },
+    {
+      "distance": 360,
+      "lateral": 26.05
+    },
+    {
+      "distance": 372,
+      "lateral": -26.05
+    },
+    {
+      "distance": 384,
+      "lateral": 26.05
+    },
+    {
+      "distance": 396,
+      "lateral": -26.05
     }
   ],
   "drums": [
@@ -78,6 +106,22 @@
     },
     {
       "distance": 120,
+      "lateral": 26.05
+    },
+    {
+      "distance": 132,
+      "lateral": -26.05
+    },
+    {
+      "distance": 144,
+      "lateral": 26.05
+    },
+    {
+      "distance": 156,
+      "lateral": -26.05
+    },
+    {
+      "distance": 168,
       "lateral": 26.05
     }
   ]

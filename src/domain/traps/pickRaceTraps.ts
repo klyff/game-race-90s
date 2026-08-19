@@ -1,6 +1,6 @@
 import type { PickedRaceTrap, TrackTrapCatalog, TrapSlot } from './TrapCatalog.ts';
 import { TRAP_KIND } from './TrapCatalog.ts';
-import { crateSpawnCount, drumSpawnCount } from './TrapRules.ts';
+import { crateSpawnCount, drumSpawnCount, TRAP_COUNT_SCALE } from './TrapRules.ts';
 
 function hash32(text: string): number {
   let hash = 2166136261;
@@ -40,10 +40,10 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
 
 function stackHeight(random: () => number): number {
   const roll = random();
-  if (roll < 0.08) {
+  if (roll < 0.08 * TRAP_COUNT_SCALE) {
     return 3;
   }
-  if (roll < 0.22) {
+  if (roll < 0.22 * TRAP_COUNT_SCALE) {
     return 2;
   }
   return 1;
@@ -66,7 +66,7 @@ function take(
 
 /**
  * Subset of the catalog that actually appears this race.
- * World 1: up to 4 crates and 2 drums. Later worlds grow; drums never exceed half the pool.
+ * World 1: up to 6 crates and 3 drums. Later worlds grow; drums stay half the unscaled pool, then +60%.
  */
 export function pickRaceTraps(
   catalog: TrackTrapCatalog,

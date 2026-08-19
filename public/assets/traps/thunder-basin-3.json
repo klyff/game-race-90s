@@ -3,43 +3,67 @@
   "worldIndex": 1,
   "crates": [
     {
-      "distance": 204,
-      "lateral": -24.05
-    },
-    {
-      "distance": 216,
-      "lateral": 24.05
-    },
-    {
-      "distance": 228,
-      "lateral": -24.05
-    },
-    {
       "distance": 240,
-      "lateral": 24.05
+      "lateral": -24.05
     },
     {
       "distance": 252,
-      "lateral": -24.05
+      "lateral": 24.05
     },
     {
       "distance": 264,
-      "lateral": 24.05
+      "lateral": -24.05
     },
     {
       "distance": 276,
-      "lateral": -24.05
-    },
-    {
-      "distance": 288,
       "lateral": 24.05
     },
     {
-      "distance": 300,
+      "distance": 288,
       "lateral": -24.05
     },
     {
+      "distance": 300,
+      "lateral": 24.05
+    },
+    {
       "distance": 312,
+      "lateral": -24.05
+    },
+    {
+      "distance": 324,
+      "lateral": 24.05
+    },
+    {
+      "distance": 336,
+      "lateral": -24.05
+    },
+    {
+      "distance": 348,
+      "lateral": 24.05
+    },
+    {
+      "distance": 360,
+      "lateral": -24.05
+    },
+    {
+      "distance": 372,
+      "lateral": 24.05
+    },
+    {
+      "distance": 384,
+      "lateral": -24.05
+    },
+    {
+      "distance": 396,
+      "lateral": 24.05
+    },
+    {
+      "distance": 408,
+      "lateral": -24.05
+    },
+    {
+      "distance": 420,
       "lateral": 24.05
     }
   ],
@@ -63,6 +87,18 @@
     {
       "distance": 192,
       "lateral": 24.05
+    },
+    {
+      "distance": 204,
+      "lateral": -24.05
+    },
+    {
+      "distance": 216,
+      "lateral": 24.05
+    },
+    {
+      "distance": 228,
+      "lateral": -24.05
     }
   ]
 }

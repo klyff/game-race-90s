@@ -3,46 +3,6 @@
   "worldIndex": 7,
   "crates": [
     {
-      "distance": 444,
-      "lateral": -20.05
-    },
-    {
-      "distance": 456,
-      "lateral": 20.05
-    },
-    {
-      "distance": 468,
-      "lateral": -20.05
-    },
-    {
-      "distance": 480,
-      "lateral": 20.05
-    },
-    {
-      "distance": 492,
-      "lateral": -20.05
-    },
-    {
-      "distance": 504,
-      "lateral": 20.05
-    },
-    {
-      "distance": 516,
-      "lateral": -20.05
-    },
-    {
-      "distance": 528,
-      "lateral": 20.05
-    },
-    {
-      "distance": 624,
-      "lateral": -20.05
-    },
-    {
-      "distance": 636,
-      "lateral": 20.05
-    },
-    {
       "distance": 648,
       "lateral": -20.05
     },
@@ -89,6 +49,98 @@
     {
       "distance": 864,
       "lateral": 20.05
+    },
+    {
+      "distance": 876,
+      "lateral": -20.05
+    },
+    {
+      "distance": 888,
+      "lateral": 20.05
+    },
+    {
+      "distance": 900,
+      "lateral": -20.05
+    },
+    {
+      "distance": 912,
+      "lateral": 20.05
+    },
+    {
+      "distance": 924,
+      "lateral": -20.05
+    },
+    {
+      "distance": 936,
+      "lateral": 20.05
+    },
+    {
+      "distance": 948,
+      "lateral": -20.05
+    },
+    {
+      "distance": 960,
+      "lateral": 20.05
+    },
+    {
+      "distance": 1056,
+      "lateral": -20.05
+    },
+    {
+      "distance": 1068,
+      "lateral": 20.05
+    },
+    {
+      "distance": 1080,
+      "lateral": -20.05
+    },
+    {
+      "distance": 1092,
+      "lateral": 20.05
+    },
+    {
+      "distance": 1104,
+      "lateral": -20.05
+    },
+    {
+      "distance": 1116,
+      "lateral": 20.05
+    },
+    {
+      "distance": 1128,
+      "lateral": -20.05
+    },
+    {
+      "distance": 1140,
+      "lateral": 20.05
+    },
+    {
+      "distance": 1152,
+      "lateral": -20.05
+    },
+    {
+      "distance": 1164,
+      "lateral": 20.05
+    },
+    {
+      "distance": 1176,
+      "lateral": -20.05
+    },
+    {
+      "distance": 1188,
+      "lateral": 20.05
+    },
+    {
+      "distance": 1200,
+      "lateral": -20.05
+    },
+    {
+      "distance": 1212,
+      "lateral": 20.05
+    },
+    {
+      "distance": 1224,
+      "lateral": -20.05
     }
   ],
   "drums": [
@@ -158,6 +210,46 @@
     },
     {
       "distance": 432,
+      "lateral": 20.05
+    },
+    {
+      "distance": 444,
+      "lateral": -20.05
+    },
+    {
+      "distance": 456,
+      "lateral": 20.05
+    },
+    {
+      "distance": 468,
+      "lateral": -20.05
+    },
+    {
+      "distance": 480,
+      "lateral": 20.05
+    },
+    {
+      "distance": 492,
+      "lateral": -20.05
+    },
+    {
+      "distance": 504,
+      "lateral": 20.05
+    },
+    {
+      "distance": 516,
+      "lateral": -20.05
+    },
+    {
+      "distance": 528,
+      "lateral": 20.05
+    },
+    {
+      "distance": 624,
+      "lateral": -20.05
+    },
+    {
+      "distance": 636,
       "lateral": 20.05
     }
   ]

@@ -54,9 +54,9 @@ describe('tank loadout', () => {
 });
 
 describe('hazard size', () => {
-  it('oil is at most 0.9 of a car and a mine is a quarter plus a little', () => {
+  it('oil is at most 0.9 of a car and a mine is 0.406 of a car', () => {
     expect(OIL_SIZE_OF_CAR).toBe(0.9);
-    expect(MINE_SIZE_OF_CAR).toBe(0.28);
+    expect(MINE_SIZE_OF_CAR).toBe(0.406);
   });
 
   it('a dropped oil slick uses the authored car-length multiple', () => {
