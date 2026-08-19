@@ -12,6 +12,7 @@ import type { TrackSpline } from '../track/TrackSpline.ts';
  */
 export interface RacerRaceState {
   readonly carId: string;
+  readonly racerIndex: number;
   readonly progress: LapProgress;
   /** Elapsed race seconds at which this racer finished; undefined while still racing. */
   readonly finishedAtSeconds?: number;
@@ -37,6 +38,7 @@ export interface RaceState {
  */
 export interface RacerStep {
   readonly carId: string;
+  readonly racerIndex?: number;
   readonly previousDistance: number;
   readonly currentDistance: number;
 }
@@ -52,8 +54,9 @@ export function createRaceState(
   startDistance: number,
   countdownSeconds: number = 3,
 ): RaceState {
-  const racers = carIds.map((carId) => ({
+  const racers = carIds.map((carId, racerIndex) => ({
     carId,
+    racerIndex,
     progress: {
       lapsCompleted: 0,
       nextCheckpoint: 0,
@@ -71,6 +74,7 @@ export function createRaceState(
     standings: rankRacers(
       racers.map((racer) => ({
         carId: racer.carId,
+        racerIndex: racer.racerIndex,
         progress: racer.progress,
       })),
     ),
@@ -131,9 +135,12 @@ export function advanceRace(
   // RACING phase: advance lap progress and elapsed time.
   const newElapsed = state.elapsedSeconds + safeDelta;
 
-  // Build a map of carId -> step for O(1) lookup.
+  const stepsByIndex = new Map<number, RacerStep>();
   const stepsByCarId = new Map<string, RacerStep>();
   for (const step of steps) {
+    if (step.racerIndex !== undefined) {
+      stepsByIndex.set(step.racerIndex, step);
+    }
     stepsByCarId.set(step.carId, step);
   }
 
@@ -144,7 +151,7 @@ export function advanceRace(
       return racer;
     }
 
-    const step = stepsByCarId.get(racer.carId);
+    const step = stepsByIndex.get(racer.racerIndex) ?? stepsByCarId.get(racer.carId);
     if (step === undefined) {
       // No step provided for this racer; do not advance.
       return racer;
@@ -183,6 +190,7 @@ export function advanceRace(
   const newStandings = rankRacers(
     newRacers.map((racer) => ({
       carId: racer.carId,
+      racerIndex: racer.racerIndex,
       progress: racer.progress,
       finishedAtProgress: racer.finishedAtProgress,
     })),

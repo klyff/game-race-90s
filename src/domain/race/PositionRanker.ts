@@ -2,6 +2,8 @@ import type { LapProgress } from './LapTracker.ts';
 
 export interface RacerProgress {
   readonly carId: string;
+  /** Grid seat. Required when two racers share a car model. */
+  readonly racerIndex?: number;
   readonly progress: LapProgress;
   /** Arc length at which this car finished, for ordering the cars that already finished. */
   readonly finishedAtProgress?: number;
@@ -9,6 +11,7 @@ export interface RacerProgress {
 
 export interface RacerStanding {
   readonly carId: string;
+  readonly racerIndex: number;
   /** 1-based race position. */
   readonly position: number;
   readonly lapsCompleted: number;
@@ -30,11 +33,16 @@ export function rankRacers(racers: readonly RacerProgress[]): readonly RacerStan
     return [];
   }
 
+  const seated = racers.map((racer, index) => ({
+    ...racer,
+    racerIndex: racer.racerIndex ?? index,
+  }));
+
   // Separate finished and unfinished cars
   const finished: RacerProgress[] = [];
   const unfinished: RacerProgress[] = [];
 
-  for (const racer of racers) {
+  for (const racer of seated) {
     if (racer.progress.finished) {
       finished.push(racer);
     } else {
@@ -66,7 +74,11 @@ export function rankRacers(racers: readonly RacerProgress[]): readonly RacerStan
       }
     }
 
-    return a.carId.localeCompare(b.carId);
+    const byId = a.carId.localeCompare(b.carId);
+    if (byId !== 0) {
+      return byId;
+    }
+    return (a.racerIndex ?? 0) - (b.racerIndex ?? 0);
   });
 
   // Sort unfinished cars: by totalProgress descending, then by carId for determinism.
@@ -75,7 +87,11 @@ export function rankRacers(racers: readonly RacerProgress[]): readonly RacerStan
       return b.progress.totalProgress - a.progress.totalProgress;
     }
 
-    return a.carId.localeCompare(b.carId);
+    const byId = a.carId.localeCompare(b.carId);
+    if (byId !== 0) {
+      return byId;
+    }
+    return (a.racerIndex ?? 0) - (b.racerIndex ?? 0);
   });
 
   // Combine: finished first, then unfinished.
@@ -84,6 +100,7 @@ export function rankRacers(racers: readonly RacerProgress[]): readonly RacerStan
   // Build standings with 1-based position numbers.
   return sorted.map((racer, index) => ({
     carId: racer.carId,
+    racerIndex: racer.racerIndex ?? 0,
     position: index + 1,
     lapsCompleted: racer.progress.lapsCompleted,
     finished: racer.progress.finished,

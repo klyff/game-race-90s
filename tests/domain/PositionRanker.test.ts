@@ -39,6 +39,7 @@ describe('PositionRanker', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         carId: 'car-1',
+        racerIndex: 0,
         position: 1,
         lapsCompleted: 1,
         finished: false,
@@ -175,15 +176,15 @@ describe('PositionRanker', () => {
     });
 
     it('handles duplicate carId deterministically', () => {
-      // The function should remain deterministic even with duplicate carId,
-      // though this is an edge case. We ensure the output is consistent.
       const racers: RacerProgress[] = [
         {
           carId: 'car-1',
+          racerIndex: 0,
           progress: progress(1, 2, 150, false),
         },
         {
-          carId: 'car-1', // Duplicate
+          carId: 'car-1',
+          racerIndex: 3,
           progress: progress(1, 2, 150, false),
         },
       ];
@@ -191,9 +192,10 @@ describe('PositionRanker', () => {
       const result = rankRacers(racers);
 
       expect(result).toHaveLength(2);
-      // Both should have position 1 and 2
-      expect(result[0].position).toBe(1);
-      expect(result[1].position).toBe(2);
+      expect(result[0]?.position).toBe(1);
+      expect(result[1]?.position).toBe(2);
+      expect(result[0]?.racerIndex).toBe(0);
+      expect(result[1]?.racerIndex).toBe(3);
     });
 
     it('ranks five cars in jumbled input order correctly', () => {
@@ -229,6 +231,7 @@ describe('PositionRanker', () => {
       // Finished cars first, ordered by finishedAtProgress
       expect(result[0]).toEqual({
         carId: 'car-2',
+        racerIndex: 3,
         position: 1,
         lapsCompleted: 2,
         finished: true,
@@ -236,6 +239,7 @@ describe('PositionRanker', () => {
 
       expect(result[1]).toEqual({
         carId: 'car-1',
+        racerIndex: 1,
         position: 2,
         lapsCompleted: 2,
         finished: true,
@@ -244,6 +248,7 @@ describe('PositionRanker', () => {
       // Unfinished cars, ordered by totalProgress descending
       expect(result[2]).toEqual({
         carId: 'car-4',
+        racerIndex: 4,
         position: 3,
         lapsCompleted: 1,
         finished: false,
@@ -251,6 +256,7 @@ describe('PositionRanker', () => {
 
       expect(result[3]).toEqual({
         carId: 'car-3',
+        racerIndex: 0,
         position: 4,
         lapsCompleted: 1,
         finished: false,
@@ -258,6 +264,7 @@ describe('PositionRanker', () => {
 
       expect(result[4]).toEqual({
         carId: 'car-5',
+        racerIndex: 2,
         position: 5,
         lapsCompleted: 1,
         finished: false,
