@@ -4,7 +4,7 @@ import type { TrackDefinition } from '../../domain/track/TrackDefinition.ts';
 import type { TrackFrame } from '../../domain/track/TrackSpline.ts';
 import { TrackSpline } from '../../domain/track/TrackSpline.ts';
 import { DEFAULT_THEME, type PlanetTheme } from '../../data/tracks/planetThemes.ts';
-import { rampPeakHeight } from '../../domain/track/RampZone.ts';
+import { rampVisualPeak } from '../../domain/track/RampZone.ts';
 import type { RampZone } from '../../domain/track/RampZone.ts';
 import { IsoProjection } from './IsoProjection.ts';
 import type { ScreenPoint } from './IsoProjection.ts';
@@ -516,8 +516,9 @@ export class TrackRenderer {
   }
 
   /**
-   * Raised rock wedges on authored ramp zones. Height matches `rampPeakHeight`
-   * so the slab the player sees is the same launch the physics uses.
+   * Raised rock wedges on authored ramp zones. The slab uses the invented
+   * lip angle across the full trigger — ballistic peak is a separate, lower
+   * trick that pops at one-third of the way up.
    */
   private drawRockRamps(track: TrackDefinition, spline: TrackSpline): void {
     const zones = track.rampZones;
@@ -530,12 +531,9 @@ export class TrackRenderer {
   }
 
   private drawRockRamp(spline: TrackSpline, halfWidth: number, zone: RampZone): void {
-    const peak = rampPeakHeight(zone);
-    const incline = (zone.inclineDegrees * Math.PI) / 180;
-    const tan = Math.tan(incline);
-    const visualLength =
-      tan > 0 ? Math.min(zone.triggerLength, Math.max(2, peak / tan)) : zone.triggerLength;
-    const start = zone.triggerDistance + zone.triggerLength - visualLength;
+    const peak = rampVisualPeak(zone);
+    const visualLength = zone.triggerLength;
+    const start = zone.triggerDistance;
     const steps = Math.max(4, Math.round(visualLength / 2));
     for (let i = 0; i < steps; i += 1) {
       const t0 = i / steps;

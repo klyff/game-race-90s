@@ -22,8 +22,12 @@ import {
 import {
   JUMP_HEIGHT_SCALE,
   RAMP_GRAVITY_REF,
+  RAMP_LAUNCH_PROGRESS,
+  isRampLaunchWindow,
   rampAirtimeSeconds,
   rampPeakHeight,
+  rampProgress,
+  rampVisualPeak,
   type RampZone,
 } from '../../src/domain/track/RampZone.ts';
 import { IDLE_INPUT } from '../../src/domain/input/InputCommand.ts';
@@ -203,6 +207,26 @@ describe('jump flatten', () => {
       ((ZONE_15.launchSpeed * ZONE_15.launchSpeed) / (2 * RAMP_GRAVITY_REF)) * JUMP_HEIGHT_SCALE,
       5,
     );
+  });
+});
+
+describe('arcade takeoff at one-third', () => {
+  it('rides the toe and pops at 1/3 of the authored slab', () => {
+    expect(RAMP_LAUNCH_PROGRESS).toBeCloseTo(1 / 3, 10);
+    expect(isRampLaunchWindow(ZONE_45.triggerDistance, ZONE_45)).toBe(false);
+    expect(isRampLaunchWindow(ZONE_45.triggerDistance + ZONE_45.triggerLength * 0.3, ZONE_45)).toBe(
+      false,
+    );
+    expect(isRampLaunchWindow(ZONE_45.triggerDistance + ZONE_45.triggerLength / 3, ZONE_45)).toBe(
+      true,
+    );
+    expect(rampProgress(ZONE_45.triggerDistance + 4, ZONE_45)).toBeCloseTo(4 / 12, 5);
+  });
+
+  it('draws the lip from the invented angle, not the ballistic peak', () => {
+    expect(rampVisualPeak(ZONE_15)).toBeCloseTo(12 * Math.tan((15 * Math.PI) / 180), 5);
+    expect(rampVisualPeak(ZONE_45)).toBeCloseTo(12, 5);
+    expect(rampVisualPeak(ZONE_45)).toBeGreaterThan(rampPeakHeight(ZONE_45));
   });
 });
 

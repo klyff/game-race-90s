@@ -550,19 +550,23 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
       };
     }
 
+    function launchDistance(zone: { triggerDistance: number; triggerLength: number }): number {
+      return zone.triggerDistance + zone.triggerLength / 3 + 0.5;
+    }
+
     it('launches a fast car off the 15° bottom-straight ramp', () => {
       const { track, spline } = getTrackAndSpline();
       const stats = getCarStats();
       const zone = track.rampZones![0]!;
       expect(zone.inclineDegrees).toBe(15);
-      const { state } = poseOnRamp(spline, zone.triggerDistance + 1, stats.maxSpeed * 0.9);
+      const { state } = poseOnRamp(spline, launchDistance(zone), stats.maxSpeed * 0.9);
       const result = stepVehicleOnTrack(
         state,
         throttle,
         stats,
         track,
         spline,
-        zone.triggerDistance + 1,
+        launchDistance(zone),
         window,
         SIMULATION_STEP_SECONDS,
         undefined,
@@ -578,7 +582,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
       const zone = track.rampZones![0]!;
       const { heading, state } = poseOnRamp(
         spline,
-        zone.triggerDistance + 1,
+        launchDistance(zone),
         stats.maxSpeed * 0.1,
       );
       const result = stepVehicleOnTrack(
@@ -587,7 +591,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         stats,
         track,
         spline,
-        zone.triggerDistance + 1,
+        launchDistance(zone),
         window,
         SIMULATION_STEP_SECONDS,
       );
@@ -601,7 +605,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
       const { track, spline } = getTrackAndSpline();
       const stats = getCarStats();
       const zone = track.rampZones![0]!;
-      const { state } = poseOnRamp(spline, zone.triggerDistance + 1, stats.maxSpeed * 0.9);
+      const { state } = poseOnRamp(spline, launchDistance(zone), stats.maxSpeed * 0.9);
       const flying = { ...state, height: 2, verticalVelocity: 8 };
       const result = stepVehicleOnTrack(
         flying,
@@ -609,7 +613,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         stats,
         track,
         spline,
-        zone.triggerDistance + 1,
+        launchDistance(zone),
         window,
         SIMULATION_STEP_SECONDS,
         undefined,
@@ -617,6 +621,28 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
       );
       expect(result.rampEvent).toBeNull();
       expect(result.touchedWall).toBe(false);
+    });
+
+    it('rides the first third of the slab without launching', () => {
+      const { track, spline } = getTrackAndSpline();
+      const stats = getCarStats();
+      const zone = track.rampZones![0]!;
+      const toe = zone.triggerDistance + 1;
+      const { state } = poseOnRamp(spline, toe, stats.maxSpeed * 0.9);
+      const result = stepVehicleOnTrack(
+        state,
+        throttle,
+        stats,
+        track,
+        spline,
+        toe,
+        window,
+        SIMULATION_STEP_SECONDS,
+        undefined,
+        true,
+      );
+      expect(result.rampEvent).toBeNull();
+      expect(result.state.height).toBe(0);
     });
   });
 });

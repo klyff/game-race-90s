@@ -1,7 +1,7 @@
 import { resolveWallContact, surfaceAt } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
-import { rampZoneAt } from '../track/RampZone.ts';
+import { isRampLaunchWindow, rampZoneAt } from '../track/RampZone.ts';
 import type { RampZone } from '../track/RampZone.ts';
 import { resolveRampContact } from '../track/RampLaunch.ts';
 import { AIRBORNE_SURFACE, stepVehicle } from '../vehicle/ArcadeCarPhysics.ts';
@@ -98,7 +98,12 @@ export function stepVehicleOnTrack(
   const zone = rampZoneAt(before.distance, track);
   let rampEvent: RampStepEvent = null;
   let launched = state;
-  if (zone !== null && !isAirborne(state) && state.verticalVelocity <= 0) {
+  if (
+    zone !== null &&
+    isRampLaunchWindow(before.distance, zone) &&
+    !isAirborne(state) &&
+    state.verticalVelocity <= 0
+  ) {
     const contact = resolveRampContact(state, zone, stats, command, turboActive);
     launched = contact.state;
     rampEvent =
