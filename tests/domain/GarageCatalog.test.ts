@@ -8,7 +8,6 @@ import {
   npcRosterForPlanet,
   sellPrice,
   shopCarIds,
-  STARTER_CAR_IDS,
   STARTER_PRICE,
   WORLD_ONE_EXTRA_PRICE,
 } from '../../src/domain/progress/GarageCatalog.ts';
@@ -37,6 +36,7 @@ describe('GarageCatalog', () => {
     expect(carUnlockHint('car-16', 1, 1)).toBeNull();
     expect(carUnlockHint('car-6-tank', 1, 0)).toBe('UNLOCKS IN WORLD 6');
     expect(carUnlockHint('car-1', 1, 0)).toBeNull();
+    expect(carUnlockHint('car_21', 1, 0)).toBe('LOCKED');
   });
 
   it('does not spend the first podium on a later-world car', () => {
@@ -44,12 +44,11 @@ describe('GarageCatalog', () => {
     expect(isCarUnlocked('car-5', 1, 2)).toBe(true);
   });
 
-  it('offers only starters when the garage is empty', () => {
-    expect(shopCarIds([], 1, 0)).toEqual([...STARTER_CAR_IDS]);
-    expect(shopCarIds([], 1, 0)).not.toContain('car-3');
-    expect(shopCarIds(['car-1'], 1, 0)).toContain('car-1');
-    expect(shopCarIds(['car-1'], 1, 0)).toContain('car-3');
+  it('lists every catalog car even when the garage is empty', () => {
+    expect(shopCarIds([], 1, 0)).toEqual(GARAGE_CATALOG.map(entry => entry.carId));
+    expect(shopCarIds(['car-1'], 1, 0)).toContain('car-6-tank');
     expect(isCarUnlocked('car-3', 1, 0)).toBe(false);
+    expect(isCarUnlocked('car-1', 1, 0)).toBe(true);
   });
 
   it('unlocks every catalog car once planet 8 is open', () => {

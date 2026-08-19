@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { matrixHeroNumber } from '../../src/data/cars/CarManifest.ts';
+import { isMatrixCarIndex, matrixCarRow } from '../../src/data/cars/MatrixCarIndex.ts';
 import {
   carStatRow,
   isCarStatMatrixIndex,
@@ -14,6 +15,8 @@ const MANIFEST_PATH = join(REPO_ROOT, 'public', 'assets', 'cars', 'cars.json');
 
 interface RawCar {
   id?: unknown;
+  displayName?: unknown;
+  archetype?: unknown;
   stats?: VehicleStats;
   perk?: unknown;
   homePlanetId?: unknown;
@@ -36,19 +39,24 @@ function main(): void {
       continue;
     }
     const n = matrixHeroNumber(car.id);
-    if (n === undefined || !isCarStatMatrixIndex(n)) {
+    if (n === undefined || !isMatrixCarIndex(n)) {
       continue;
     }
-    const row = carStatRow(n);
-    car.stats = overlayAuthoredStats(car.stats, row.stats);
-    car.perk = row.perk;
-    car.homePlanetId = row.homePlanetId;
-    car.worldAdvantage = row.worldAdvantage;
+    const identity = matrixCarRow(n);
+    car.displayName = identity.displayName;
+    car.archetype = identity.archetype;
+    if (isCarStatMatrixIndex(n) && car.stats !== undefined) {
+      const row = carStatRow(n);
+      car.stats = overlayAuthoredStats(car.stats, row.stats);
+      car.perk = row.perk;
+      car.homePlanetId = row.homePlanetId;
+      car.worldAdvantage = row.worldAdvantage;
+    }
     updated += 1;
   }
 
   writeFileSync(MANIFEST_PATH, `${JSON.stringify(raw, null, 2)}\n`);
-  console.log(`applied CarStatMatrix to ${updated} cars in ${MANIFEST_PATH}`);
+  console.log(`applied MatrixCarIndex + CarStatMatrix to ${updated} cars in ${MANIFEST_PATH}`);
 }
 
 main();

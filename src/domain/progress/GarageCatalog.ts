@@ -1,8 +1,9 @@
 /**
  * Shop prices, unlock waves and NPC roster tiers. Pure: no storage, no Phaser.
  *
- * Starters are $50k. Later waves grow ~40% per world. Everything is buyable
- * once planet 8 is unlocked. Sell price is 80% of list.
+ * Starters are $50k. Later waves grow ~40% per world. Everything in this
+ * catalog is buyable once planet 8 is unlocked. Sell price is 80% of list.
+ * The garage carousel lists every car; unlock only gates the buy button.
  */
 
 export const STARTER_PRICE = 50_000;
@@ -99,7 +100,7 @@ export function isCarUnlocked(
   if (isStarterCar(carId)) {
     return true;
   }
-  // Swamp Rat / Dirt Devil stay locked until the first world-1 podium.
+  // World-1 extras (Swamp Rat / Pink Mini) stay locked until the first podium.
   if ((WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(carId)) {
     return clearedTrackCount >= 1 || highestUnlockedPlanet > 1;
   }
@@ -117,26 +118,15 @@ export function isCarUnlocked(
 }
 
 /**
- * Cars the garage carousel may show. An empty garage is starters only —
- * locked teasers would tell a new player to finish a race they cannot start.
+ * Cars the garage carousel may show. Always the full catalog — locked cars
+ * stay in the list so the player can see what the next worlds unlock.
  */
 export function shopCarIds(
-  ownedCarIds: readonly string[],
-  highestUnlockedPlanet: number,
-  clearedTrackCount: number,
+  _ownedCarIds: readonly string[] = [],
+  _highestUnlockedPlanet = 1,
+  _clearedTrackCount = 0,
 ): readonly string[] {
-  if (ownedCarIds.length === 0) {
-    return [...STARTER_CAR_IDS];
-  }
-  return GARAGE_CATALOG.filter(entry => {
-    const id = entry.carId;
-    return (
-      ownedCarIds.includes(id) ||
-      isCarUnlocked(id, highestUnlockedPlanet, clearedTrackCount) ||
-      isStarterCar(id) ||
-      (WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(id)
-    );
-  }).map(entry => entry.carId);
+  return GARAGE_CATALOG.map(entry => entry.carId);
 }
 
 /** Why a shop car is still locked, or null when it can be bought. */
@@ -152,7 +142,10 @@ export function carUnlockHint(
     return 'FINISH TOP 3 TO UNLOCK';
   }
   const entry = catalogEntry(carId);
-  if (entry !== undefined && entry.unlockPlanet > highestUnlockedPlanet) {
+  if (entry === undefined) {
+    return 'LOCKED';
+  }
+  if (entry.unlockPlanet > highestUnlockedPlanet) {
     return `UNLOCKS IN WORLD ${entry.unlockPlanet}`;
   }
   return 'WIN MORE RACES TO UNLOCK';

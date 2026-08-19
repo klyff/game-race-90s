@@ -11,6 +11,7 @@
 | `ARRAY_ROTATED_FIRST.md` | **As is** — cada índice: hora, ângulo, imagem, original, w:1700, h:1254, start |
 | `GABARITO_RELOGIO.png` | Diagrama índice ↔ hora ↔ ângulo |
 | `N_hero/car_N_hero.png` | **Vitrine** — não mexer; fora do array |
+| [`INDEX.md`](./INDEX.md) | **Índice 1–33** — nome ↔ still; tour garage |
 | `N_hero/car_N_a000.png` … `a029.png` | Frames (+12° / +0.4 h por slot) |
 | `RELOGIO.md` | Contrato + tabela |
 | `PROMPT_30.md` | Prompt de geração |
