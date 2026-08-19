@@ -6,11 +6,18 @@ import { coverRect, promptAnchor, voidRect } from '../adapters/render/SplashLayo
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { enableTourMode, feedTourCode, isTourModeOn } from '../adapters/progress/TourMode.ts';
+import { enableWatchMode } from '../adapters/progress/WatchMode.ts';
+import { enableDebugIaMode, debugIaSeed } from '../adapters/progress/DebugIaMode.ts';
+import {
+  WATCH_ATTRACT_RACER_COUNT,
+  watchAttractTracks,
+} from '../domain/race/WatchField.ts';
 import { SCENE_KEY, SPLASH_ART_KEY } from './sceneKeys.ts';
 import { SplashAttractShow } from './SplashAttractShow.ts';
 
 const BLINK_PERIOD_SECONDS = 1.2;
 const PROMPT_TEXT = 'press space bar to start';
+const WATCH_HINT = 'P  WATCH  ·  15 BOTS';
 
 interface SplashSceneData {
   readonly manifest: CarSetManifest;
@@ -28,6 +35,7 @@ export class SplashScene extends Phaser.Scene {
   private art!: Phaser.GameObjects.Image;
   private promptText!: Phaser.GameObjects.Text;
   private tourText!: Phaser.GameObjects.Text;
+  private watchHint!: Phaser.GameObjects.Text;
   private attract!: SplashAttractShow;
 
   private readonly blink = new BlinkClock(BLINK_PERIOD_SECONDS);
@@ -48,6 +56,7 @@ export class SplashScene extends Phaser.Scene {
   create(): void {
     this.art = this.add.image(0, 0, SPLASH_ART_KEY).setOrigin(0, 0);
     this.promptText = this.add.text(0, 0, PROMPT_TEXT, this.promptStyle()).setOrigin(0.5, 0.5);
+    this.watchHint = this.add.text(0, 0, WATCH_HINT, this.watchHintStyle()).setOrigin(0.5, 0.5);
     this.tourText = this.add
       .text(0, 0, 'TOUR MODE · ALL MAPS OPEN', this.tourStyle())
       .setOrigin(0.5, 0.5)
@@ -70,6 +79,7 @@ export class SplashScene extends Phaser.Scene {
     this.blink.advance(deltaSeconds);
     this.attract.update(deltaSeconds);
     this.promptText.setVisible(this.leaving ? false : this.blink.isOn);
+    this.watchHint.setVisible(!this.leaving);
   }
 
   private bindKeys(): void {
@@ -83,6 +93,7 @@ export class SplashScene extends Phaser.Scene {
     });
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.audio.start());
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => this.leaveToGarage());
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P).on('down', () => this.leaveToWatch());
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.audio.toggleMute());
   }
 
@@ -94,6 +105,7 @@ export class SplashScene extends Phaser.Scene {
     const region = voidRect(viewport, image);
     const prompt = promptAnchor(viewport, image);
     this.promptText.setPosition(prompt.x, prompt.y).setDepth(8);
+    this.watchHint.setPosition(prompt.x, prompt.y + region.height * 0.1).setDepth(8);
     this.tourText.setPosition(prompt.x, prompt.y + region.height * 0.18).setDepth(8);
     this.attract?.layout(viewport, image);
   }
@@ -111,6 +123,33 @@ export class SplashScene extends Phaser.Scene {
     this.tourText.setVisible(true);
   }
 
+  private leaveToWatch(): void {
+    if (this.leaving) {
+      return;
+    }
+    const tracks = watchAttractTracks();
+    const trackId = tracks[0];
+    if (trackId === undefined) {
+      return;
+    }
+    this.leaving = true;
+    this.attract.destroy();
+    this.audio.destroy();
+    enableWatchMode();
+    enableTourMode();
+    enableDebugIaMode(undefined, undefined, WATCH_ATTRACT_RACER_COUNT);
+    this.scene.start(SCENE_KEY.RACE, {
+      manifest: this.manifest,
+      linesByTrack: this.linesByTrack,
+      trackId,
+      watch: true,
+      debugIa: true,
+      debugIaSeed: debugIaSeed(),
+      debugIaNpcCount: WATCH_ATTRACT_RACER_COUNT,
+      watchTrackPool: tracks,
+    });
+  }
+
   private leaveToGarage(): void {
     if (this.leaving) {
       return;
@@ -126,6 +165,16 @@ export class SplashScene extends Phaser.Scene {
         linesByTrack: this.linesByTrack,
       });
     });
+  }
+
+  private watchHintStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '16px',
+      color: '#ffd85c',
+      stroke: '#1a0e05',
+      strokeThickness: 4,
+    };
   }
 
   private promptStyle(): Phaser.Types.GameObjects.Text.TextStyle {

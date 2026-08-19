@@ -8,9 +8,11 @@
 
 import { isNewFleetCarId } from '../../data/cars/CarManifest.ts';
 import { MEDIUM_PROFILES, type DriverProfile } from '../ai/DriverProfile.ts';
-import { PLANETS, planetTrackId } from '../../data/tracks/planets.ts';
+import { PLANETS, TRACKS_PER_PLANET, planetTrackId } from '../../data/tracks/planets.ts';
 
 export const WATCH_RACER_COUNT = 10;
+/** Splash `P`: 15 AI cars, same grid size as debug-IA. */
+export const WATCH_ATTRACT_RACER_COUNT = 15;
 
 export function driverSkill(profile: DriverProfile): number {
   return profile.vehiclePhysics + profile.localSteering + profile.opponentPrediction;
@@ -26,6 +28,19 @@ export function watchPilots(): readonly string[] {
 /** Track II of every planet, campaign order. */
 export function watchPlanetTwoTracks(): readonly string[] {
   return PLANETS.map(planet => planetTrackId(planet, 2));
+}
+
+/** First planet, all three circuits — splash Watch (`P`). */
+export function watchAttractTracks(): readonly string[] {
+  const planet = PLANETS[0];
+  if (planet === undefined) {
+    return [];
+  }
+  const tracks: string[] = [];
+  for (let n = 1; n <= TRACKS_PER_PLANET; n += 1) {
+    tracks.push(planetTrackId(planet, n));
+  }
+  return tracks;
 }
 
 /**
@@ -64,8 +79,12 @@ export function splitWatchRoster(
     : { field: packB.length > 0 ? packB : packA, reserve: packB.length > 0 ? packA : [] };
 }
 
-export function nextWatchTrack(currentId: string, step: number): string {
-  const tracks = watchPlanetTwoTracks();
+export function nextWatchTrack(
+  currentId: string,
+  step: number,
+  pool: readonly string[] = watchPlanetTwoTracks(),
+): string {
+  const tracks = pool.length > 0 ? pool : watchPlanetTwoTracks();
   const index = tracks.indexOf(currentId);
   const from = index >= 0 ? index : 0;
   const next = (from + step + tracks.length * 8) % tracks.length;

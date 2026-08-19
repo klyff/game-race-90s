@@ -3,14 +3,15 @@ import { FixedStepLoop } from '../app/FixedStepLoop.ts';
 import { RaceAudio } from '../adapters/audio/RaceAudio.ts';
 import { shouldParkEngine } from '../adapters/audio/EngineIdleShutoff.ts';
 import { KeyboardDriver } from '../adapters/input/KeyboardDriver.ts';
-import { CameraZoomPolicy } from '../adapters/render/CameraZoomPolicy.ts';
 import { ChaseCamera } from '../adapters/render/ChaseCamera.ts';
 import { AccidentWatch } from '../domain/camera/AccidentWatch.ts';
 import { analyzeTrackCameras, zoomToFitFraction } from '../domain/camera/analyzeTrackCameras.ts';
 import {
   CAMERA_MAX_ZOOM_IN,
+  CAMERA_PLAYER_MAP_FRACTION,
   CAMERA_QUIT_MASTER_SCALE,
-  CAMERA_ZOOM_STEP,
+  CAMERA_SPECTATOR_ZOOM,
+  spectatorCameraPreset,
   type CameraPreset,
 } from '../domain/camera/CameraPreset.ts';
 import { CameraDirector } from '../domain/camera/CameraDirector.ts';
@@ -112,25 +113,6 @@ import {
 const MILLISECONDS_PER_SECOND = 1000;
 
 /**
- * How far ahead the camera reads the track to decide its zoom.
- *
- * Expressed in seconds of travel rather than units, so the camera starts opening
- * up for a corner at the same *time* before it regardless of speed — which is what
- * a driver needs. Floored so a stationary car still sees the corner it is facing.
- */
-const ZOOM_LOOK_AHEAD_SECONDS = 1.1;
-const ZOOM_LOOK_AHEAD_MINIMUM_UNITS = 25;
-
-/**
- * Arc length the curvature is averaged over for the camera, world units.
- *
- * Wider than `curvatureAt`'s default local-segment span on purpose (decision 10):
- * the camera should respond to "there is a corner here", not to every wobble of the
- * spline, and a twitching zoom is worse than no zoom at all.
- */
-const ZOOM_CURVATURE_SPAN_UNITS = 45;
-
-/**
  * How many cars line up, the player included.
  *
  * Career uses `CareerGrid`; watch and debug-IA keep their own denser fields.
@@ -164,13 +146,15 @@ interface RaceSceneData {
   readonly carId?: string;
   /** Which circuit to race. Defaults to the anchor track when omitted. */
   readonly trackId?: string;
-  /** AI-only ten-car watch. Camera follows the pack; keyboard does not drive. */
+  /** AI-only ten-car watch. Camera follows the leader zoomed out; arrows pick a car. */
   readonly watch?: boolean;
-  /** 15-NPC debug-IA session. Camera locked at 45% of the map on the leader. */
+  /** 15-NPC debug-IA session. Camera fits the whole circuit; `[` `]` `0` still work. */
   readonly debugIa?: boolean;
   readonly debugIaSeed?: number;
   readonly debugIaMix?: SkillMix;
   readonly debugIaNpcCount?: number;
+  /** `,` / `.` cycle this pool in watch. Splash `P` uses Thunder Basin I–III. */
+  readonly watchTrackPool?: readonly string[];
 }
 
 /** One explosion waiting to be presented, queued inside a simulation step. */
@@ -217,6 +201,7 @@ export class RaceScene extends Phaser.Scene {
   private debugIaNpcCount = DEBUG_IA_RACER_COUNT;
   private debugIaLogElapsed = 0;
   private debugIaSeats: readonly DebugIaSeat[] = [];
+  private watchTrackPool: readonly string[] | undefined;
   private watchPinned = false;
   /** Car id whose telemetry currently feeds `RaceAudio`; hop resets the idle shut-off. */
   private audioFocusCarId: string | null = null;
@@ -229,7 +214,6 @@ export class RaceScene extends Phaser.Scene {
   private scraps!: MetalScrapEffect;
   private wood!: WoodDebrisEffect;
   private chaseCamera!: ChaseCamera;
-  private zoomPolicy!: CameraZoomPolicy;
   private cameraDirector = new CameraDirector();
   private cameraImpulse = new CameraImpulse();
   private accidentWatch = new AccidentWatch();
@@ -297,6 +281,7 @@ export class RaceScene extends Phaser.Scene {
     this.debugIaLogElapsed = 0;
     this.debugIaSeats = [];
     this.watch = data.watch === true || this.debugIa;
+    this.watchTrackPool = data.watchTrackPool;
     this.watchPinned = false;
     this.audioFocusCarId = null;
     this.quitedTheRace = false;
@@ -335,7 +320,6 @@ export class RaceScene extends Phaser.Scene {
         BURN_MARK_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED),
     });
     this.chaseCamera = new ChaseCamera(this.cameras.main, this.projection);
-    this.zoomPolicy = new CameraZoomPolicy({ zoomStep: CAMERA_ZOOM_STEP });
     this.cameraPreset = this.loadCameraPreset();
     this.driver = new KeyboardDriver(this.requireKeyboard());
     this.loop = new FixedStepLoop(SIMULATION_STEP_SECONDS);
@@ -1092,29 +1076,28 @@ export class RaceScene extends Phaser.Scene {
     return findCarSheet(this.manifest, this.carId).stats;
   }
 
-  /** Live policy, then director (manual 10s > trigger 3s > live). */
+  /** Live map fit, then director (manual 10s > live). Hairpins do not yank zoom. */
   private targetZoom(deltaSeconds: number = SIMULATION_STEP_SECONDS): number {
-    if (this.debugIa) {
-      return this.mapFractionZoom(DEBUG_IA_CAMERA_MAP_FRACTION);
-    }
-    const player = this.followedRacer();
-    const speed = player.telemetry?.speed ?? 0;
-    const lookAhead = Math.max(
-      ZOOM_LOOK_AHEAD_MINIMUM_UNITS,
-      speed * ZOOM_LOOK_AHEAD_SECONDS,
-    );
-    const curvature = this.spline.curvatureAt(
-      player.distance + lookAhead,
-      ZOOM_CURVATURE_SPAN_UNITS,
-    );
-    const live = this.zoomPolicy.targetZoom(speed, player.stats.maxSpeed, curvature);
+    const focus = this.followedRacer();
+    const spectator = this.watch || this.quitedTheRace;
+    const live = spectator
+      ? this.spectatorLiveZoom()
+      : this.mapFractionZoom(CAMERA_PLAYER_MAP_FRACTION);
     return this.cameraDirector.sample(
       deltaSeconds,
       live,
-      player.distance,
-      this.cameraPreset,
+      focus.distance,
+      spectatorCameraPreset(this.cameraPreset),
       this.spline.totalLength,
     ).zoom;
+  }
+
+  /** Watch / quit: pulled back on the leader. Debug-IA fits the whole circuit. */
+  private spectatorLiveZoom(): number {
+    if (this.debugIa) {
+      return this.mapFractionZoom(DEBUG_IA_CAMERA_MAP_FRACTION);
+    }
+    return CAMERA_SPECTATOR_ZOOM;
   }
 
   private loadCameraPreset(): CameraPreset {
@@ -1200,16 +1183,16 @@ export class RaceScene extends Phaser.Scene {
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ZERO).on('down', unlessPaused(() => {
       this.cameraDirector.resetToDefault();
     }));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT).on('down', unlessPaused(() => {
-      if (this.watch || this.quitedTheRace) {
-        this.cycleSpectator(-1);
-      }
-    }));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT).on('down', unlessPaused(() => {
-      if (this.watch || this.quitedTheRace) {
-        this.cycleSpectator(1);
-      }
-    }));
+    const cycleWatch = (step: number): (() => void) =>
+      unlessPaused(() => {
+        if (this.watch || this.quitedTheRace) {
+          this.cycleSpectator(step);
+        }
+      });
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT).on('down', cycleWatch(-1));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT).on('down', cycleWatch(1));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP).on('down', cycleWatch(-1));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN).on('down', cycleWatch(1));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', unlessPaused(() => {
       if (this.watch || this.quitedTheRace) {
         this.jumpSpectatorCluster();
@@ -1237,7 +1220,7 @@ export class RaceScene extends Phaser.Scene {
     if (!this.watch) {
       return;
     }
-    const trackId = nextWatchTrack(this.trackId, step);
+    const trackId = nextWatchTrack(this.trackId, step, this.watchTrackPool);
     if (trackId === this.trackId) {
       return;
     }
@@ -1250,6 +1233,7 @@ export class RaceScene extends Phaser.Scene {
       debugIaSeed: this.debugIaSeed,
       debugIaMix: this.debugIaMix,
       debugIaNpcCount: this.debugIaNpcCount,
+      watchTrackPool: this.watchTrackPool,
     } satisfies RaceSceneData);
   }
 
@@ -1503,7 +1487,7 @@ export class RaceScene extends Phaser.Scene {
       ? `  mix ${this.debugIaMix.experts}:${this.debugIaMix.mediums}:${this.debugIaMix.bobos}`
       : '';
     return [
-      `DEBUG-IA  ${this.track.displayName}  ${this.field.racers.length} NPC  cam 45% map  seed ${this.debugIaSeed}${mix}`,
+      `DEBUG-IA  ${this.track.displayName}  ${this.field.racers.length} NPC  cam ${Math.round(DEBUG_IA_CAMERA_MAP_FRACTION * 100)}% map  seed ${this.debugIaSeed}${mix}`,
       terrainLine,
       `LEADER  ${leaderName}  zoom ${this.cameras.main.zoom.toFixed(2)}  t ${this.field.race.elapsedSeconds.toFixed(1)}s`,
       '',

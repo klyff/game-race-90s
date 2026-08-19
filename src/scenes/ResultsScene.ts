@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { cartPortraitKey } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import { driverCardKey } from '../data/cards/DriverCards.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
@@ -49,10 +48,8 @@ export interface ResultsSceneData {
 }
 
 export const ADVANCE_POSITION = 3;
-const WINNER_CARD = 140;
-const OTHER_CARD = 104;
-const WINNER_CAR = 128;
-const OTHER_CAR = 104;
+const WINNER_CARD = 280;
+const OTHER_CARD = 200;
 const PLAQUE_EDGE = 0xf4e6c4;
 const PLAQUE_GOLD = 0xffd85c;
 const GOLD = '#ffd85c';
@@ -65,8 +62,6 @@ interface PodiumStack {
   readonly entry: ResultsEntry;
   readonly card: Phaser.GameObjects.Image;
   readonly cardLetter: Phaser.GameObjects.Text;
-  readonly car: Phaser.GameObjects.Image;
-  readonly carFallback: Phaser.GameObjects.Sprite;
   readonly name: Phaser.GameObjects.Text;
 }
 
@@ -215,7 +210,6 @@ export class ResultsScene extends Phaser.Scene {
 
   private makePodium(entry: ResultsEntry): PodiumStack {
     const cardKey = driverCardKey(entry.name);
-    const portraitKey = cartPortraitKey(entry.carId);
     const gold = entry.position === 1;
     const card = this.add
       .image(0, 0, cardKey)
@@ -233,17 +227,6 @@ export class ResultsScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setVisible(!card.visible)
       .setDepth(5);
-    const car = this.add
-      .image(0, 0, portraitKey)
-      .setOrigin(0.5, 0)
-      .setVisible(this.textures.exists(portraitKey))
-      .setDepth(4);
-    const carFallback = this.add
-      .sprite(0, 0, entry.carId, 0)
-      .setOrigin(0.5, 0)
-      .setScale(2.2)
-      .setVisible(!car.visible && this.textures.exists(entry.carId))
-      .setDepth(4);
     const name = this.add
       .text(0, 0, `${entry.position}. ${entry.name.toUpperCase()}`, {
         fontFamily: 'monospace',
@@ -254,7 +237,7 @@ export class ResultsScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0)
       .setDepth(4);
-    return { entry, card, cardLetter, car, carFallback, name };
+    return { entry, card, cardLetter, name };
   }
 
   private winnerName(): string {
@@ -420,7 +403,7 @@ export class ResultsScene extends Phaser.Scene {
       this.art.setPosition(rect.x, rect.y).setDisplaySize(rect.width, rect.height);
     }
     this.dim.setSize(width, height);
-    this.floorDim.setPosition(0, height).setSize(width, height * 0.48);
+    this.floorDim.setPosition(0, height).setSize(width, height * 0.28);
 
     const titleY = height * 0.08;
     this.paintPlate(this.titleBox, width / 2, titleY, Math.min(520, width * 0.56), 78, PLAQUE_GOLD);
@@ -432,8 +415,8 @@ export class ResultsScene extends Phaser.Scene {
     const boxW = Math.min(420, Math.max(360, (width - 56 - gap) / 2));
     const rankNeed = (1 + this.rankSplit()) * RANK_LINE + 28;
     const payNeed = (this.payoutText.text.split('\n').length + 1) * 22 + 20;
-    const boardH = Math.min(height * 0.38, Math.max(rankNeed, payNeed));
-    const boardTop = Math.min(height * 0.9 - boardH, Math.max(height * 0.52, podiumBottom + 12));
+    const boardH = Math.max(rankNeed, payNeed);
+    const boardTop = Math.min(height * 0.9 - boardH, Math.max(height * 0.68, podiumBottom + 12));
     const boardCy = boardTop + boardH / 2;
     const total = boxW * 2 + gap;
     const left = width / 2 - total / 2 + boxW / 2;
@@ -490,52 +473,37 @@ export class ResultsScene extends Phaser.Scene {
 
   private placePodium(width: number, height: number): number {
     const headerBottom = height * 0.08 + 42;
-    const boardTop = height * 0.56;
+    const boardTop = height * 0.7;
     const avail = Math.max(180, boardTop - headerBottom - 10);
-    const natural = WINNER_CARD + 8 + WINNER_CAR + 8 + 20 + 12;
+    const natural = WINNER_CARD + 8 + 20 + 12;
     const scale = Phaser.Math.Clamp(Math.min(height / 820, avail / natural), 0.62, 1.05);
     const first = this.podium.find(stack => stack.entry.position === 1);
     const second = this.podium.find(stack => stack.entry.position === 2);
     const third = this.podium.find(stack => stack.entry.position === 3);
     let bottom = height * 0.2;
     if (first !== undefined) {
-      bottom = Math.max(
-        bottom,
-        this.placeStack(first, width * 0.5, headerBottom + 6, WINNER_CARD * scale, WINNER_CAR * scale),
-      );
+      bottom = Math.max(bottom, this.placeStack(first, width * 0.5, headerBottom + 6, WINNER_CARD * scale));
     }
     if (second !== undefined) {
-      bottom = Math.max(
-        bottom,
-        this.placeStack(second, width * 0.28, headerBottom + 36, OTHER_CARD * scale, OTHER_CAR * scale),
-      );
+      bottom = Math.max(bottom, this.placeStack(second, width * 0.28, headerBottom + 36, OTHER_CARD * scale));
     }
     if (third !== undefined) {
-      bottom = Math.max(
-        bottom,
-        this.placeStack(third, width * 0.72, headerBottom + 36, OTHER_CARD * scale, OTHER_CAR * scale),
-      );
+      bottom = Math.max(bottom, this.placeStack(third, width * 0.72, headerBottom + 36, OTHER_CARD * scale));
     }
     return bottom;
   }
 
-  private placeStack(stack: PodiumStack, x: number, top: number, cardMax: number, carMax: number): number {
+  private placeStack(stack: PodiumStack, x: number, top: number, cardMax: number): number {
     const nameH = 20;
     const gap = 8;
     const pad = 12;
     const card = stack.card.visible
       ? this.fitPhoto(stack.card, cardMax, cardMax)
       : { width: cardMax, height: cardMax };
-    const car = stack.car.visible
-      ? this.fitPhoto(stack.car, carMax, carMax)
-      : this.fitPhoto(stack.carFallback, carMax, carMax);
     stack.card.setPosition(x, top + pad);
     stack.cardLetter.setPosition(x, top + pad + card.height / 2);
-    const carY = top + pad + card.height + gap;
-    stack.car.setPosition(x, carY);
-    stack.carFallback.setPosition(x, carY);
-    stack.name.setPosition(x, carY + car.height + gap);
-    return top + pad + card.height + gap + car.height + gap + nameH;
+    stack.name.setPosition(x, top + pad + card.height + gap);
+    return top + pad + card.height + gap + nameH;
   }
 
   private fitPhoto(

@@ -14,7 +14,7 @@ import { driverSkill } from './WatchField.ts';
 
 export const DEBUG_IA_RACER_COUNT = 15;
 export const DEBUG_IA_SIGNATURE_COUNT = 4;
-export const DEBUG_IA_CAMERA_MAP_FRACTION = 0.9;
+export const DEBUG_IA_CAMERA_MAP_FRACTION = 1;
 
 export const SKILL_BAND = {
   EXPERT: 'expert',

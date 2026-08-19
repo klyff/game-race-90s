@@ -4,6 +4,7 @@ import { MEDIUM_PROFILES } from '../../src/domain/ai/DriverProfile.ts';
 import {
   nextWatchTrack,
   splitWatchRoster,
+  watchAttractTracks,
   watchCarIds,
   watchFieldPacks,
   watchPilots,
@@ -55,5 +56,20 @@ describe('WatchField', () => {
     expect(nextWatchTrack('thunder-basin-2', 1)).toBe('chrome-verge-2');
     expect(nextWatchTrack('verdant-fault-2', 1)).toBe('thunder-basin-2');
     expect(nextWatchTrack('thunder-basin-2', -1)).toBe('verdant-fault-2');
+  });
+
+  it('lists Thunder Basin I–III for splash Watch', () => {
+    const tracks = watchAttractTracks();
+    expect(tracks).toHaveLength(3);
+    expect(tracks[0]).toBe('thunder-basin');
+    expect(tracks[1]).toBe('thunder-basin-2');
+    expect(tracks[2]).toBe('thunder-basin-3');
+  });
+
+  it('walks the splash Watch pool in a circle', () => {
+    const pool = watchAttractTracks();
+    expect(nextWatchTrack('thunder-basin', 1, pool)).toBe('thunder-basin-2');
+    expect(nextWatchTrack('thunder-basin-3', 1, pool)).toBe('thunder-basin');
+    expect(nextWatchTrack('thunder-basin', -1, pool)).toBe('thunder-basin-3');
   });
 });

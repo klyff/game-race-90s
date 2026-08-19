@@ -4,8 +4,10 @@ import {
   CAMERA_HOME_ZOOM,
   CAMERA_MANUAL_HOLD_SECONDS,
   CAMERA_MAX_ZOOM_IN,
+  CAMERA_SPECTATOR_ZOOM,
   CAMERA_TRIGGER_HOLD_SECONDS,
   CAMERA_TRIGGER_KIND,
+  spectatorCameraPreset,
   type CameraPreset,
 } from '../../src/domain/camera/CameraPreset.ts';
 
@@ -74,5 +76,28 @@ describe('CameraDirector', () => {
     const sample = director.sample(0.1, 1.75, 10, PRESET, 1000);
     expect(sample.override).toBe(CAMERA_OVERRIDE.NONE);
     expect(sample.zoom).toBe(1.75);
+  });
+
+  it('spectator preset ignores hairpins so live zoom-out holds', () => {
+    const director = new CameraDirector();
+    const preset = spectatorCameraPreset(PRESET);
+    expect(preset.triggers).toEqual([]);
+    director.sample(0.1, CAMERA_SPECTATOR_ZOOM, 50, preset, 1000);
+    const throughCurve = director.sample(0.1, CAMERA_SPECTATOR_ZOOM, 120, preset, 1000);
+    expect(throughCurve.override).toBe(CAMERA_OVERRIDE.NONE);
+    expect(throughCurve.zoom).toBe(CAMERA_SPECTATOR_ZOOM);
+  });
+
+  it('spectator still honours manual zoom then returns to live', () => {
+    const director = new CameraDirector();
+    const preset = spectatorCameraPreset(PRESET);
+    director.zoomIn(CAMERA_MAX_ZOOM_IN);
+    const held = director.sample(1, CAMERA_SPECTATOR_ZOOM, 120, preset, 1000);
+    expect(held.override).toBe(CAMERA_OVERRIDE.MANUAL);
+    expect(held.zoom).toBe(CAMERA_MAX_ZOOM_IN);
+    director.resetToDefault();
+    const live = director.sample(0.1, CAMERA_SPECTATOR_ZOOM, 120, preset, 1000);
+    expect(live.override).toBe(CAMERA_OVERRIDE.NONE);
+    expect(live.zoom).toBe(CAMERA_SPECTATOR_ZOOM);
   });
 });

@@ -170,7 +170,7 @@ function referenceZoomOut50(spline: TrackSpline): number {
 
 /**
  * Phaser zoom that fits `fraction` of the screen-space AABB into the viewport.
- * 0.45 = 45% of the map fills the view (debug-IA pack shot). 0.5 is the `]` key.
+ * 1 = the whole circuit (debug-IA). >1 adds margin (player). 0.5 is the `]` key.
  */
 export function zoomToFitFraction(
   boundsWidth: number,
@@ -183,7 +183,7 @@ export function zoomToFitFraction(
   const height = Math.max(1, boundsHeight);
   const viewW = Math.max(1, viewWidth);
   const viewH = Math.max(1, viewHeight);
-  const frac = Number.isFinite(fraction) ? Math.min(1, Math.max(0.05, fraction)) : 0.5;
+  const frac = Number.isFinite(fraction) ? Math.min(2, Math.max(0.05, fraction)) : 0.5;
   return Math.min(viewW / (width * frac), viewH / (height * frac));
 }
 

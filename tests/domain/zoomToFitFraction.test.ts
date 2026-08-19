@@ -13,4 +13,10 @@ describe('zoomToFitFraction', () => {
     const fifty = zoomToFitFraction(2000, 1000, 1440, 900, 0.5);
     expect(fortyFive).toBeGreaterThan(fifty);
   });
+
+  it('pulls farther than the whole circuit when fraction is above 1', () => {
+    const whole = zoomToFitFraction(2000, 1000, 1440, 900, 1);
+    const farther = zoomToFitFraction(2000, 1000, 1440, 900, 1.15);
+    expect(farther).toBeLessThan(whole);
+  });
 });

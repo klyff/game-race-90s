@@ -25,6 +25,12 @@ export const CAMERA_CLOSE_ZOOM = 2.2;
 /** Fast-straight auto zoom: −15% from today's wide (1.5). */
 export const CAMERA_WIDE_ZOOM = 1.275;
 
+/** Watch / quit live zoom: pulled back on the leader. `[` `]` `0` still override. */
+export const CAMERA_SPECTATOR_ZOOM = CAMERA_WIDE_ZOOM;
+
+/** Player live zoom: same whole-circuit fit as debug-IA, then a little farther. */
+export const CAMERA_PLAYER_MAP_FRACTION = 1.15;
+
 /** Ramp auto zoom: −10% from today's wide (1.5). */
 export const CAMERA_RAMP_ZOOM = 1.35;
 
@@ -71,6 +77,11 @@ export interface CameraPreset {
   /** Phaser zoom that fits ~50% of the track AABB in a 1440×900 reference view. */
   readonly zoomOut50: number;
   readonly triggers: readonly CameraTrigger[];
+}
+
+/** Spectator follow: no hairpin yank, so `[` `]` `0` are the only zoom changes. */
+export function spectatorCameraPreset(preset: CameraPreset): CameraPreset {
+  return { ...preset, triggers: [] };
 }
 
 export function wrapLapDistance(distance: number, lapLength: number): number {

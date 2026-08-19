@@ -30,6 +30,13 @@ export const RACE_SYSTEM_CONTROLS: readonly ControlRow[] = [
   { keys: 'H', action: 'CONTROLS' },
 ];
 
+export const WATCH_CONTROLS: readonly ControlRow[] = [
+  { keys: 'ARROWS', action: 'CYCLE THE CAR YOU WATCH' },
+  { keys: '[ / ] / 0', action: 'ZOOM IN  ·  ZOOM OUT  ·  RESET' },
+  { keys: 'SPACE', action: 'JUMP TO A CRASH CLUSTER' },
+  { keys: 'L', action: 'BACK TO THE LEADER' },
+];
+
 export const MENU_CONTROLS: readonly ControlRow[] = [
   { keys: 'UP / DOWN', action: 'MOVE CURSOR' },
   { keys: 'LEFT / RIGHT', action: 'CHANGE VALUE  ·  CYCLE CARS' },
@@ -38,6 +45,7 @@ export const MENU_CONTROLS: readonly ControlRow[] = [
   { keys: 'TAB', action: 'NEXT GARAGE BUTTON' },
   { keys: 'H', action: 'CONTROLS' },
   { keys: 'M', action: 'MUTE / UNMUTE' },
+  { keys: 'P', action: 'WATCH  ·  15 BOTS (SPLASH)' },
 ];
 
 function controlBlock(title: string, rows: readonly ControlRow[]): string {
@@ -51,6 +59,7 @@ export function formatHelpBody(): string {
     controlBlock('DRIVE', RACE_DRIVE_CONTROLS),
     controlBlock('WEAPONS', RACE_WEAPON_CONTROLS),
     controlBlock('RACE', RACE_SYSTEM_CONTROLS),
+    controlBlock('WATCH', WATCH_CONTROLS),
     controlBlock('MENUS', MENU_CONTROLS),
   ].join('\n\n');
 }
