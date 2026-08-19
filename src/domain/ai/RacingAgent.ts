@@ -4,6 +4,7 @@
  */
 
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
+import { rampApproach } from '../track/RampZone.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import type { RacingLine } from '../race/RacingLine.ts';
 import type { CarPerkProfile } from '../vehicle/CarPerk.ts';
@@ -24,7 +25,7 @@ import {
   type TacticalIntention,
   type UtilityResult,
 } from './UtilityEvaluator.ts';
-import { type NearbyRival, type RaceSituation } from './SituationEvaluator.ts';
+import { isFinalLap, type NearbyRival, type RaceSituation } from './SituationEvaluator.ts';
 import {
   planningCapabilities,
   planningStats,
@@ -171,6 +172,7 @@ export class RacingAgent {
         speed: length(input.state.velocity),
         progressVelocity: 0,
         airborne: isAirborne(input.state),
+        onRamp: rampApproach(input.distance, input.track, input.trackLength) !== null,
       },
       input.distance,
       input.trackLength,
@@ -314,6 +316,7 @@ export class RacingAgent {
       switchPenalty,
       aheadGap: ahead?.gapAhead ?? null,
       behindGap: behind?.gapBehind ?? null,
+      lastLap: !input.finished && isFinalLap(input.lapsCompleted, input.lapsTotal),
     });
     const threshold = HYSTERESIS + traits.commitment * 0.18;
     const keep =

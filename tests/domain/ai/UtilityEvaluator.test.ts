@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { profileFor } from '../../../src/domain/ai/DriverRoster.ts';
 import { combineUtility, evaluateUtilities, TACTICAL_INTENTION } from '../../../src/domain/ai/UtilityEvaluator.ts';
+import { isFinalLap } from '../../../src/domain/ai/SituationEvaluator.ts';
 import { buildStatNormalizer, capabilitiesFromStats } from '../../../src/domain/ai/VehicleCapabilityModel.ts';
 import type { VehicleCapabilities } from '../../../src/domain/ai/VehicleCapabilityModel.ts';
 import type { RaceSituation } from '../../../src/domain/ai/SituationEvaluator.ts';
@@ -133,7 +134,7 @@ describe('utility evaluator', () => {
     expect(berserker.selected).not.toBe(TACTICAL_INTENTION.RECOVER);
   });
 
-  it('final stretch values the win over a low-value fight', () => {
+  it('last lap heats the fight instead of protecting the lead', () => {
     const roster = [stats(), stats({ mass: 1400 })];
     const capabilities = capsFor(roster, stats());
     const early = evaluateUtilities(profileFor('ALINE'), capabilities, situation(), null);
@@ -143,10 +144,18 @@ describe('utility evaluator', () => {
       situation({ position: 1, lapsCompleted: 2, lapsTotal: 3, progressToFinish: 0.95 }),
       recordRamReceived(emptyMemory('car-2'), 1),
     );
+    const earlyRam = early.scores.find(score => score.intention === TACTICAL_INTENTION.RAM);
     const earlyRace = early.scores.find(score => score.intention === TACTICAL_INTENTION.RACE);
     const lateRam = late.scores.find(score => score.intention === TACTICAL_INTENTION.RAM);
     const lateRace = late.scores.find(score => score.intention === TACTICAL_INTENTION.RACE);
-    expect(lateRace?.terms.tacticalValue).toBeGreaterThan(lateRam?.terms.tacticalValue ?? 0);
-    expect(earlyRace).toBeDefined();
+    expect(lateRam?.terms.tacticalValue).toBeGreaterThan(earlyRam?.terms.tacticalValue ?? 0);
+    expect(lateRace?.terms.tacticalValue).toBeGreaterThan(earlyRace?.terms.tacticalValue ?? 0);
+  });
+
+  it('treats lapsCompleted == lapsTotal - 1 as the last racing lap', () => {
+    expect(isFinalLap(2, 3)).toBe(true);
+    expect(isFinalLap(0, 1)).toBe(true);
+    expect(isFinalLap(1, 3)).toBe(false);
+    expect(isFinalLap(3, 3)).toBe(false);
   });
 });

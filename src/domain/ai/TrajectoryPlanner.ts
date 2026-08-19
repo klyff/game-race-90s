@@ -5,6 +5,7 @@
 
 import { offsetAt, type RacingLine } from '../race/RacingLine.ts';
 import { trackFullHalfWidth, type TrackDefinition } from '../track/TrackDefinition.ts';
+import { rampApproach } from '../track/RampZone.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import { TACTICAL_INTENTION, type TacticalIntention } from './UtilityEvaluator.ts';
 import { clamp, clamp01 } from './math.ts';
@@ -207,6 +208,7 @@ export interface FuturePlanInput {
   readonly switchPenalty: number;
   readonly aheadGap: number | null;
   readonly behindGap: number | null;
+  readonly lastLap?: boolean;
 }
 
 export function planFutures(input: FuturePlanInput): {
@@ -216,7 +218,14 @@ export function planFutures(input: FuturePlanInput): {
 } {
   const maxOffset = maxSafeOffset(input.track, input.collisionRadius);
   const generated = 11 + (input.gapLateral === null ? 0 : 1);
-  const unique = generatePathCandidates(input.currentOffset, input.lineOffset, maxOffset, input.gapLateral);
+  const ramp = rampApproach(input.distance, input.track, input.trackLength);
+  const unique = generatePathCandidates(
+    input.currentOffset,
+    input.lineOffset,
+    maxOffset,
+    input.gapLateral,
+    ramp !== null || input.lastLap === true ? 1 : 0.55,
+  );
   const scored: TrajectoryCandidate[] = [];
   let bestIntention: TacticalIntention = TACTICAL_INTENTION.RACE;
   let bestScore = Number.NEGATIVE_INFINITY;
@@ -238,6 +247,7 @@ export function planFutures(input: FuturePlanInput): {
       trackLength: input.trackLength,
       opponentPrediction: input.profile.opponentPrediction,
       vehiclePhysics: input.profile.vehiclePhysics,
+      lastLap: input.lastLap === true,
     });
     const future = scoreFuture(candidate, rollout, {
       profile: input.profile,

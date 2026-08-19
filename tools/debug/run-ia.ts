@@ -152,8 +152,8 @@ function logEntries(elapsed: number): void {
   const terrain = planet?.terrain;
   const onTarmac = (offset: number) => Math.abs(offset) <= track.halfWidth;
   for (const racer of field.racers) {
-    const standing = field.standingOf(racer.carId);
-    const snapshot = field.aiDebug(racer.carId);
+    const standing = field.standingOf(racer.carId, racer.gridIndex);
+    const snapshot = field.aiDebug(racer.carId, racer.gridIndex);
     const name = grid.seats.find(seat => seat.carId === racer.carId)?.name ?? racer.carId;
     const file = debugIaLogFileName(name, racer.carId);
     const line = [

@@ -107,7 +107,7 @@ export function evaluateUtilities(
   const mem = memory === null ? 0 : memoryEffect(memory, profile.opponentMemory);
   const fightTactical = raceTacticalValue(situation, true);
   const raceTactical = raceTacticalValue(situation, false);
-  const stretchCut = opportunities.finalStretch > 0.5 ? 0.55 : 1;
+  const stretchPush = opportunities.finalStretch > 0 ? 1.2 : 1;
   const noise = (id: string): number =>
     noiseSeed.length === 0 ? 0 : (hashUnit(`${noiseSeed}:${id}`, 0x51ed) - 0.5) * 0.03;
 
@@ -127,7 +127,7 @@ export function evaluateUtilities(
       profile.overtake,
       opportunities.overtake,
       capabilities.overtakingCapability,
-      fightTactical,
+      fightTactical * stretchPush,
       mem * 0.15,
       0.08,
       noise('OVERTAKE'),
@@ -147,7 +147,7 @@ export function evaluateUtilities(
       profile.ram,
       opportunities.ram,
       capabilities.rammingCapability,
-      fightTactical * stretchCut,
+      fightTactical * stretchPush,
       mem * 0.55,
       riskForRam(capabilities, situation),
       noise('RAM'),
@@ -157,7 +157,7 @@ export function evaluateUtilities(
       profile.weapon,
       opportunities.weapon,
       capabilities.weaponCapability,
-      fightTactical * stretchCut,
+      fightTactical * stretchPush,
       mem * 0.45,
       situation.missiles <= 0 ? 0.4 : 0.06,
       noise('USE_WEAPON'),

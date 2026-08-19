@@ -1,4 +1,7 @@
 import type { InputCommand } from '../input/InputCommand.ts';
+import type { TrackDefinition } from '../track/TrackDefinition.ts';
+import { rampApproach } from '../track/RampZone.ts';
+import { minClimbFraction } from '../track/RampLaunch.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import type { TrackProjection } from '../track/TrackSpline.ts';
 import { offsetAt } from '../race/RacingLine.ts';
@@ -78,9 +81,12 @@ export class AIDriver {
     rivals: readonly RivalView[],
     laneBias = 0,
     lateralOverride?: number,
+    track?: TrackDefinition,
+    lastLap = false,
   ): InputCommand {
     const speed = Math.hypot(state.velocity.x, state.velocity.y);
     const speedRatio = stats.maxSpeed > 0 ? speed / stats.maxSpeed : 0;
+    const ramp = track === undefined ? null : rampApproach(projection.distance, track, spline.totalLength);
     const traits = this.traits;
     const committed =
       traits !== undefined && commitCornerPlan(traits, speedRatio, isStraight(spline, projection.distance));
@@ -106,16 +112,37 @@ export class AIDriver {
             ...this.driveOptions,
             cornerLookAheadMinimum: commitLook * (0.35 + (1 - traits.daring / 10) * 0.5),
           };
+    const pushedOpts = lastLap
+      ? {
+          ...cornerOpts,
+          cornerSafetyFactor: Math.min(1, cornerOpts.cornerSafetyFactor * 1.18),
+        }
+      : cornerOpts;
+    let target = cornerTargetSpeed(projection, stats, spline, speed, pushedOpts);
+    if (ramp !== null) {
+      target = Math.max(
+        target,
+        minClimbFraction(ramp.inclineDegrees) * stats.maxSpeed * 1.12,
+        stats.maxSpeed * 0.88,
+      );
+    } else if (lastLap) {
+      target = Math.min(stats.maxSpeed, target * 1.14);
+    }
     let { throttle, brake } = speedCommand(
-      cornerTargetSpeed(projection, stats, spline, speed, cornerOpts),
+      target,
       speed,
       this.options.speedControlGain,
       this.options.speedDeadband,
     );
 
-    // Dive on whoever is ahead — the field, not the human. Daring hits at this instant.
     const ahead = closestRivalAhead(projection.distance, rivals, spline.totalLength);
-    if (ahead !== null && ahead.gap < 18 && ahead.gap > 0) {
+    if (ramp !== null || lastLap) {
+      throttle = 1;
+      brake = lastLap && ramp === null && speed > target + 8 ? brake : 0;
+      if (brake > 0) {
+        throttle = 0;
+      }
+    } else if (ahead !== null && ahead.gap < 18 && ahead.gap > 0 && speedRatio >= 0.42) {
       const dive = traits === undefined ? this.closingThrottle : 0.55 + goForPass(traits, ahead.gap) * 0.4;
       throttle *= dive;
     }
@@ -129,7 +156,7 @@ export class AIDriver {
       dropOil: false,
       dropMine: false,
       jump: false,
-      boost: false,
+      boost: (ramp !== null && speedRatio < 0.85) || (lastLap && speedRatio < 0.92),
     };
   }
 }

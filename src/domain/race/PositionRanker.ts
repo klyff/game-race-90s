@@ -106,3 +106,21 @@ export function rankRacers(racers: readonly RacerProgress[]): readonly RacerStan
     finished: racer.progress.finished,
   }));
 }
+
+/**
+ * Seat first, carId second. Finished cars sort ahead, so a `find` by carId
+ * alone hands a twin the chequered flag and it coasts on the last lap.
+ */
+export function standingForSeat(
+  standings: readonly RacerStanding[],
+  carId: string,
+  racerIndex?: number,
+): RacerStanding | undefined {
+  if (racerIndex !== undefined) {
+    const seated = standings.find(standing => standing.racerIndex === racerIndex);
+    if (seated !== undefined) {
+      return seated;
+    }
+  }
+  return standings.find(standing => standing.carId === carId);
+}

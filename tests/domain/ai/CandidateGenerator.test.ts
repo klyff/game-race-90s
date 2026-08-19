@@ -20,4 +20,9 @@ describe('candidate generator', () => {
     );
     expect(unique).toHaveLength(2);
   });
+
+  it('drops SLOW futures when a ramp or last lap needs race speed', () => {
+    const unique = generatePathCandidates(0, 0, 9, null, 1);
+    expect(unique.every(candidate => candidate.speedScale >= 1)).toBe(true);
+  });
 });

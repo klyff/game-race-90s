@@ -53,6 +53,7 @@ export interface ControlFacts {
   readonly speed: number;
   readonly progressVelocity: number;
   readonly airborne: boolean;
+  readonly onRamp: boolean;
 }
 
 export interface ControlUpdate {
@@ -138,7 +139,9 @@ export class RecoverController {
 
     this.maxSpeedSeen = Math.max(this.maxSpeedSeen, live.speed);
 
-    if (
+    if (live.onRamp) {
+      this.stuckSeconds = 0;
+    } else if (
       this.maxSpeedSeen > 16 &&
       !live.airborne &&
       live.speed < STUCK_SPEED &&
@@ -152,6 +155,18 @@ export class RecoverController {
     }
 
     const enterReason = enterReasonOf(live, this.stuckSeconds);
+    if (live.onRamp && this.mode === CONTROL_MODE.RECOVERING && !rampMustRecover(this.reason)) {
+      this.mode = live.integrity < INTEGRITY_DEGRADED ? CONTROL_MODE.DEGRADED : CONTROL_MODE.NORMAL;
+      this.reason = null;
+      this.stableSeconds = 0;
+      return {
+        mode: this.mode,
+        reason: null,
+        reverse: 0,
+        enter: false,
+        exit: true,
+      };
+    }
     if (this.mode !== CONTROL_MODE.RECOVERING && enterReason !== null) {
       this.mode = CONTROL_MODE.RECOVERING;
       this.reason = enterReason;
@@ -218,6 +233,9 @@ function enterReasonOf(facts: ControlFacts, stuckSeconds: number): RecoverReason
   if (facts.integrity < INTEGRITY_ENTER) {
     return RECOVER_REASON.LOW_INTEGRITY;
   }
+  if (facts.onRamp) {
+    return null;
+  }
   if (Math.abs(facts.headingError) > HEADING_ENTER) {
     return RECOVER_REASON.HEADING_ERROR;
   }
@@ -225,6 +243,14 @@ function enterReasonOf(facts: ControlFacts, stuckSeconds: number): RecoverReason
     return Math.abs(facts.headingError) > 0.9 ? RECOVER_REASON.WEDGED : RECOVER_REASON.NO_FORWARD_PROGRESS;
   }
   return null;
+}
+
+function rampMustRecover(reason: RecoverReason | null): boolean {
+  return (
+    reason === RECOVER_REASON.YAW_SPIN ||
+    reason === RECOVER_REASON.OFF_CORRIDOR ||
+    reason === RECOVER_REASON.LOW_INTEGRITY
+  );
 }
 
 function exitReady(facts: ControlFacts, stuckSeconds: number): boolean {
@@ -240,6 +266,9 @@ function exitReady(facts: ControlFacts, stuckSeconds: number): boolean {
 }
 
 function reverseFor(facts: ControlFacts): number {
+  if (facts.onRamp) {
+    return 0;
+  }
   if (Math.abs(facts.headingError) > 1.15 && facts.speed < 22) {
     return clamp(0.45 + (Math.abs(facts.headingError) - 1.15) * 0.5, 0, 1);
   }

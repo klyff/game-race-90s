@@ -25,14 +25,14 @@ export interface RampZone {
  * Flatten the jump parabola: same airtime / horizontal range, lower apex.
  * Applied to gravity and every vertical launch (hop + ramp).
  *
- * Arcade, not Earth: the authored lip angle is a trick (T-050). Takeoff is
- * one-third of the way up the slab, then a low ballistic so the remaining
- * two-thirds of the rock is scenery the car flies past.
+ * Arcade, not Earth: the authored lip angle is a trick (T-050). The car
+ * rides the slab, then pops at the lip with a low ballistic — the angle
+ * does not have to match tan(θ) of the flight.
  */
 export const JUMP_HEIGHT_SCALE = 0.35;
 
-/** Fraction of `triggerLength` the car rides before the pop. */
-export const RAMP_LAUNCH_PROGRESS = 1 / 3;
+/** Last few arc-length units of the zone — enough that a fast car cannot skip the lip. */
+export const RAMP_LIP_LENGTH = 3;
 
 /** Shared gravity for every ramp — one feel knob, not per-ramp data, so
  * "how floaty a jump feels" stays a single tuning constant. */
@@ -58,9 +58,11 @@ export function rampProgress(distance: number, zone: RampZone): number {
   return (distance - zone.triggerDistance) / zone.triggerLength;
 }
 
-/** True once the car has ridden the first third and may launch or reject. */
+/** True at the lip — after the car has ridden the slab, not at the toe. */
 export function isRampLaunchWindow(distance: number, zone: RampZone): boolean {
-  return rampProgress(distance, zone) >= RAMP_LAUNCH_PROGRESS;
+  const lipStart = zone.triggerDistance + Math.max(0, zone.triggerLength - RAMP_LIP_LENGTH);
+  const end = zone.triggerDistance + zone.triggerLength;
+  return distance >= lipStart && distance < end;
 }
 
 /**
@@ -81,4 +83,36 @@ export function rampZoneAt(distance: number, track: TrackDefinition): RampZone |
     if (distance >= zone.triggerDistance && distance < end) return zone;
   }
   return null;
+}
+
+/**
+ * The next lip in this look-ahead, including a car already on the slab.
+ * Used so NPCs floor it instead of braking into a 45° reject.
+ */
+export function rampApproach(
+  distance: number,
+  track: TrackDefinition,
+  trackLength: number,
+  lookAhead: number = 72,
+): RampZone | null {
+  const zones = track.rampZones;
+  if (zones === undefined || zones.length === 0 || !(trackLength > 0)) {
+    return null;
+  }
+  let best: { zone: RampZone; gap: number } | null = null;
+  for (const zone of zones) {
+    let gap = zone.triggerDistance - distance;
+    if (gap > trackLength * 0.5) {
+      gap -= trackLength;
+    } else if (gap < -trackLength * 0.5) {
+      gap += trackLength;
+    }
+    if (gap < -zone.triggerLength || gap > lookAhead) {
+      continue;
+    }
+    if (best === null || gap < best.gap) {
+      best = { zone, gap };
+    }
+  }
+  return best?.zone ?? null;
 }

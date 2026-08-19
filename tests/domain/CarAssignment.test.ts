@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { assignNpcCars } from '../../src/domain/race/CarAssignment.ts';
+import { assignNpcCars, seatCarId } from '../../src/domain/race/CarAssignment.ts';
 
 const ROSTER = ['marauder', 'dirt-devil', 'havac', 'air-blade', 'battle-trak'];
 
@@ -65,7 +65,11 @@ describe('assignNpcCars', () => {
     expect(assignNpcCars(ROSTER, 'marauder', Number.NaN)).toEqual([]);
   });
 
-  it('ignores a player pick that is not in the roster and simply fills from it', () => {
-    expect(assignNpcCars(ROSTER, 'not-a-car', 3)).toEqual(['marauder', 'dirt-devil', 'havac']);
+  it('tags reused models with a seat so finish state cannot leak across twins', () => {
+    const npcs = assignNpcCars(['a', 'b', 'c'], 'a', 5);
+    const seats = npcs.map((id, index) => seatCarId(id, index));
+    expect(seats).toEqual(['b#0', 'c#1', 'b#2', 'c#3', 'b#4']);
+    expect(new Set(seats).size).toBe(5);
+    expect(seatCarId('car_21#0', 4)).toBe('car_21#0');
   });
 });

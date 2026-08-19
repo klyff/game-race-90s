@@ -51,8 +51,11 @@ export function evaluateOpportunities(situation: RaceSituation): SituationOpport
   const alignedAhead = ahead !== null && Math.abs(ahead.lateralDelta) < 4;
   const alignedBehind = behind !== null && Math.abs(behind.lateralDelta) < 4;
   const closing = ahead !== null && ahead.closingSpeed > 2;
-  const remaining = Math.max(0, situation.lapsTotal - situation.lapsCompleted);
-  const finalStretch = remaining <= 1 && situation.position <= 2 ? 1 : remaining <= 1 ? 0.55 : 0;
+  const finalStretch = isFinalLap(situation.lapsCompleted, situation.lapsTotal)
+    ? situation.position <= 2
+      ? 1
+      : 0.7
+    : 0;
   const packPressure = (closeAhead ? 0.45 : 0) + (closeBehind ? 0.45 : 0);
 
   return {
@@ -69,11 +72,16 @@ export function evaluateOpportunities(situation: RaceSituation): SituationOpport
   };
 }
 
+export function isFinalLap(lapsCompleted: number, lapsTotal: number): boolean {
+  return lapsTotal > 0 && lapsCompleted >= lapsTotal - 1 && lapsCompleted < lapsTotal;
+}
+
 export function raceTacticalValue(situation: RaceSituation, fight: boolean): number {
-  const remaining = Math.max(0, situation.lapsTotal - situation.lapsCompleted);
   const leading = situation.position === 1 ? 1 : situation.position === 2 ? 0.7 : 0.4;
-  if (remaining <= 1 && situation.position <= 2) {
-    return fight ? 0.28 * leading : clamp01(0.75 + leading * 0.2);
+  if (isFinalLap(situation.lapsCompleted, situation.lapsTotal)) {
+    return fight
+      ? clamp01(0.8 + (situation.position > 1 ? 0.18 : 0.1))
+      : clamp01(0.88 + leading * 0.1);
   }
   return fight ? clamp01(0.55 + (situation.position > 3 ? 0.2 : 0)) : clamp01(0.6 + leading * 0.15);
 }

@@ -7,6 +7,7 @@ import { resolveWallContact } from '../track/TrackCollision.ts';
 import type { TrackDefinition } from '../track/TrackDefinition.ts';
 import { trackFullHalfWidth } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
+import { rampApproach } from '../track/RampZone.ts';
 import {
   applyAirTurboKick,
   rampRespawnDistance,
@@ -123,7 +124,7 @@ import { slipstreamFactor } from './Slipstream.ts';
 import type { DraftCandidate } from './Slipstream.ts';
 import { advanceRace, createRaceState } from './RaceSimulation.ts';
 import type { RaceState, RacerStep } from './RaceSimulation.ts';
-import type { RacerStanding } from './PositionRanker.ts';
+import { standingForSeat, type RacerStanding } from './PositionRanker.ts';
 import { buildStartingGrid, lookAheadHeading } from './StartingGrid.ts';
 import { stepVehicleOnTrack } from './OnTrackStep.ts';
 import { coastInput, isNearlyStopped } from './Coast.ts';
@@ -529,9 +530,9 @@ export class RaceField {
     );
   }
 
-  /** Laps completed by one car, for the HUD. */
-  standingOf(carId: string): RacerStanding | undefined {
-    return this.raceState.standings.find(standing => standing.carId === carId);
+  /** Laps / flag for one seat. Index first — two racers can share a car model. */
+  standingOf(carId: string, racerIndex?: number): RacerStanding | undefined {
+    return standingForSeat(this.raceState.standings, carId, racerIndex);
   }
 
   /** Puts every car back on its grid slot at rest and restarts the countdown. */
@@ -583,20 +584,24 @@ export class RaceField {
    * five stages are in this order.
    */
   /** Inspectable AI state for the debug overlay. */
-  aiDebug(carId: string): AgentDebugSnapshot | undefined {
-    const racer = this.racers.find(entry => entry.carId === carId);
+  aiDebug(carId: string, racerIndex?: number): AgentDebugSnapshot | undefined {
+    const racer =
+      racerIndex !== undefined
+        ? this.racers[racerIndex]
+        : this.racers.find(entry => entry.carId === carId);
     if (racer === undefined) {
       return undefined;
     }
     return this.brains[racer.gridIndex]?.racing.debugSnapshot();
   }
 
-  npcNames(): readonly { carId: string; name: string }[] {
+  npcNames(): readonly { carId: string; name: string; gridIndex: number }[] {
     return this.racers
       .filter(racer => !racer.isPlayer)
       .map(racer => ({
         carId: racer.carId,
         name: this.brains[racer.gridIndex]?.name ?? racer.carId,
+        gridIndex: racer.gridIndex,
       }));
   }
 
@@ -604,7 +609,9 @@ export class RaceField {
     this.stepIndex += 1;
     const frozen = this.raceState.phase === RACE_PHASE.COUNTDOWN;
     const previousDistances = this.racers.map(racer => racer.distance);
-    const previousLaps = this.racers.map(racer => this.standingOf(racer.carId)?.lapsCompleted ?? 0);
+    const previousLaps = this.racers.map(
+      (racer, index) => this.standingOf(racer.carId, index)?.lapsCompleted ?? 0,
+    );
     const impacts = this.racers.map(() => 0);
     /**
      * Who is to blame for each car's HARDEST contact this step.
@@ -664,12 +671,12 @@ export class RaceField {
       }
 
       const speedBefore = length(racer.state.velocity);
-      const finished = this.standingOf(racer.carId)?.finished === true;
+      const finished = this.standingOf(racer.carId, index)?.finished === true;
       let command = frozen
         ? IDLE_INPUT
         : finished
           ? coastInput(speedBefore)
-          : this.commandFor(racer, playerCommand, stepSeconds);
+          : this.commandFor(racer, playerCommand, stepSeconds, index);
 
       if (!frozen && racer.landingStunRemaining > 0) {
         command = IDLE_INPUT;
@@ -974,7 +981,7 @@ export class RaceField {
     // Finish-line refill: missiles up to (Arsenal-boosted) ammoCapacity; oil/mines to start.
     this.racers.forEach((racer, index) => {
       const before = previousLaps[index] ?? 0;
-      const after = this.standingOf(racer.carId)?.lapsCompleted ?? 0;
+      const after = this.standingOf(racer.carId, index)?.lapsCompleted ?? 0;
       if (after > before) {
         racer.inventory = refillWeaponInventory(racer.inventory, racer.stats, racer.perk);
         racer.jumps = refillJumpCharges(racer.jumps);
@@ -1454,6 +1461,7 @@ export class RaceField {
     racer: RacerRuntime,
     playerCommand: InputCommand,
     _stepSeconds: number,
+    racerIndex: number,
   ): InputCommand {
     if (racer.isPlayer) {
       return playerCommand;
@@ -1482,8 +1490,8 @@ export class RaceField {
     );
 
     const brain = this.brains[racer.gridIndex];
-    const standing = this.standingOf(racer.carId);
-    const raceRow = this.raceState.racers.find(entry => entry.carId === racer.carId);
+    const standing = this.standingOf(racer.carId, racerIndex);
+    const raceRow = this.raceState.racers.find(entry => entry.racerIndex === racerIndex);
     const finishDistance = Math.max(1, this.track.laps * this.spline.totalLength);
     const effective = planningStats(
       racer.stats,
@@ -1537,6 +1545,9 @@ export class RaceField {
       this.pace.options,
     );
 
+    const lastLap =
+      standing?.finished !== true &&
+      (standing?.lapsCompleted ?? 0) >= Math.max(0, this.track.laps - 1);
     const steered = brain === undefined
       ? this.pace.command(racer.state, projection, effective, this.spline)
       : brain.driver.command(
@@ -1548,9 +1559,12 @@ export class RaceField {
           rivals,
           brain.agent.laneRegister,
           decision?.lateralOffset,
+          this.track,
+          lastLap,
         );
+    const climbing = rampApproach(racer.distance, this.track, this.spline.totalLength) !== null;
     const drive =
-      decision !== undefined && decision.reverse > 0
+      decision !== undefined && decision.reverse > 0 && !climbing
         ? { ...steered, reverse: decision.reverse, throttle: 0 }
         : steered;
 

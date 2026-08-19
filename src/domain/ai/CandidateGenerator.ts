@@ -34,6 +34,7 @@ export function generatePathCandidates(
   lineLateral: number,
   maxOffset: number,
   gapLateral: number | null,
+  minSpeedScale = 0.55,
 ): readonly PathCandidate[] {
   const cap = Math.max(0.5, maxOffset);
   const raw: PathCandidate[] = [
@@ -60,7 +61,7 @@ export function generatePathCandidates(
   const clamped = raw.map(candidate => ({
     ...candidate,
     targetLateral: clamp(candidate.targetLateral, -cap, cap),
-    speedScale: clamp(candidate.speedScale, 0.55, 1.08),
+    speedScale: clamp(candidate.speedScale, Math.max(0.55, minSpeedScale), 1.08),
   }));
   return dedupCandidates(clamped);
 }

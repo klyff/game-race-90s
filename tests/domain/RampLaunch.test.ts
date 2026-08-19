@@ -22,9 +22,10 @@ import {
 import {
   JUMP_HEIGHT_SCALE,
   RAMP_GRAVITY_REF,
-  RAMP_LAUNCH_PROGRESS,
+  RAMP_LIP_LENGTH,
   isRampLaunchWindow,
   rampAirtimeSeconds,
+  rampApproach,
   rampPeakHeight,
   rampProgress,
   rampVisualPeak,
@@ -210,16 +211,16 @@ describe('jump flatten', () => {
   });
 });
 
-describe('arcade takeoff at one-third', () => {
-  it('rides the toe and pops at 1/3 of the authored slab', () => {
-    expect(RAMP_LAUNCH_PROGRESS).toBeCloseTo(1 / 3, 10);
+describe('arcade takeoff at the lip', () => {
+  it('rides the slab and pops at the lip, not partway up', () => {
+    expect(RAMP_LIP_LENGTH).toBe(3);
     expect(isRampLaunchWindow(ZONE_45.triggerDistance, ZONE_45)).toBe(false);
-    expect(isRampLaunchWindow(ZONE_45.triggerDistance + ZONE_45.triggerLength * 0.3, ZONE_45)).toBe(
+    expect(isRampLaunchWindow(ZONE_45.triggerDistance + ZONE_45.triggerLength / 3, ZONE_45)).toBe(
       false,
     );
-    expect(isRampLaunchWindow(ZONE_45.triggerDistance + ZONE_45.triggerLength / 3, ZONE_45)).toBe(
-      true,
-    );
+    expect(
+      isRampLaunchWindow(ZONE_45.triggerDistance + ZONE_45.triggerLength - RAMP_LIP_LENGTH, ZONE_45),
+    ).toBe(true);
     expect(rampProgress(ZONE_45.triggerDistance + 4, ZONE_45)).toBeCloseTo(4 / 12, 5);
   });
 
@@ -260,5 +261,13 @@ describe('applyAirTurboKick', () => {
     );
     const twice = applyAirTurboKick(kicked);
     expect(twice.verticalVelocity).toBeGreaterThan(kicked.verticalVelocity);
+  });
+
+  it('sees a 45° lip from the approach and while on the slab', () => {
+    const zone = thunderBasinTwo.rampZones![0]!;
+    const length = 2400;
+    expect(rampApproach(zone.triggerDistance - 40, thunderBasinTwo, length)?.inclineDegrees).toBe(45);
+    expect(rampApproach(zone.triggerDistance + 4, thunderBasinTwo, length)?.inclineDegrees).toBe(45);
+    expect(rampApproach(zone.triggerDistance - 200, thunderBasinTwo, length)).toBeNull();
   });
 });

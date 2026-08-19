@@ -3,7 +3,7 @@
  *
  * The rule the project owner asked for: an NPC never drives the car the player
  * chose, and no two NPCs drive the same car. The 20-car roster is larger than
- * the seven-car grid, so this is a walk down the list rather than "everyone
+ * the five-car career grid, so this is a walk down the list rather than "everyone
  * else" — a race should be reproducible, and a shuffle here would make every
  * bug report unrepeatable.
  */
@@ -46,4 +46,12 @@ export function assignNpcCars(
     }
   }
   return assigned;
+}
+
+/** Grid-unique id so two seats on the same model do not share finish/HUD state. */
+export function seatCarId(carId: string, seat: number): string {
+  if (carId.includes('#')) {
+    return carId;
+  }
+  return `${carId}#${seat}`;
 }

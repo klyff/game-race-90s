@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rankRacers } from '../../src/domain/race/PositionRanker.ts';
+import { rankRacers, standingForSeat } from '../../src/domain/race/PositionRanker.ts';
 import type { RacerProgress } from '../../src/domain/race/PositionRanker.ts';
 
 // Helper factory: create a minimal LapProgress object for testing ranking logic.
@@ -334,6 +334,29 @@ describe('PositionRanker', () => {
       // 310 < 320, so car-2 finished first
       expect(result[0].carId).toBe('car-2');
       expect(result[1].carId).toBe('car-1');
+    });
+  });
+
+  describe('standingForSeat', () => {
+    it('does not hand a twin the flag just because they share a car model', () => {
+      const standings = rankRacers([
+        {
+          carId: 'car-2',
+          racerIndex: 0,
+          progress: progress(3, 0, 400, true),
+          finishedAtProgress: 400,
+        },
+        {
+          carId: 'car-2',
+          racerIndex: 1,
+          progress: progress(2, 2, 280, false),
+        },
+      ]);
+
+      expect(standingForSeat(standings, 'car-2')?.finished).toBe(true);
+      expect(standingForSeat(standings, 'car-2', 0)?.finished).toBe(true);
+      expect(standingForSeat(standings, 'car-2', 1)?.finished).toBe(false);
+      expect(standingForSeat(standings, 'car-2', 1)?.lapsCompleted).toBe(2);
     });
   });
 });

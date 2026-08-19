@@ -66,6 +66,7 @@ export interface RolloutRequest {
   readonly trackLength: number;
   readonly opponentPrediction: number;
   readonly vehiclePhysics: number;
+  readonly lastLap?: boolean;
 }
 
 export function rolloutCandidate(request: RolloutRequest): RolloutResult {
@@ -73,6 +74,8 @@ export function rolloutCandidate(request: RolloutRequest): RolloutResult {
   const dt = ROLLOUT_DT;
   const steps = Math.max(1, Math.round(horizon / dt));
   const skill = clamp01(request.vehiclePhysics);
+  const speedFloor = request.lastLap === true ? 0.94 : 0.82;
+  const speedSpan = request.lastLap === true ? 0.06 : 0.16;
   const margin = 0.85 + (1 - skill) * 0.55;
   const half = request.track.halfWidth;
   const full = trackFullHalfWidth(request.track);
@@ -103,7 +106,7 @@ export function rolloutCandidate(request: RolloutRequest): RolloutResult {
       request.candidate.targetLateral,
     );
     const steer = pursuitSteer(state, aim, request.fullLockBearing);
-    const targetSpeed = request.stats.maxSpeed * request.candidate.speedScale * (0.82 + skill * 0.16);
+    const targetSpeed = request.stats.maxSpeed * request.candidate.speedScale * (speedFloor + skill * speedSpan);
     let throttle = 0;
     let brake = 0;
     if (speed < targetSpeed - 2) {

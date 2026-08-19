@@ -26,6 +26,7 @@ function facts(over: Partial<Parameters<RecoverController['step']>[0]> = {}) {
     speed: 40,
     progressVelocity: 20,
     airborne: false,
+    onRamp: false,
     ...over,
   };
 }
@@ -68,5 +69,21 @@ describe('RecoverController', () => {
 
   it('wraps progress across the start line', () => {
     expect(wrappedProgress(oval.totalLength - 1, 2, oval.totalLength)).toBeGreaterThan(0);
+  });
+
+  it('does not treat a ramp reject bounce as parked', () => {
+    const controller = new RecoverController();
+    controller.step(facts({ speed: 50 }), 0, oval.totalLength, 1 / 60);
+    let update = controller.step(facts({ speed: 50 }), 10, oval.totalLength, 1 / 60);
+    for (let i = 0; i < 90; i += 1) {
+      update = controller.step(
+        facts({ speed: 2, headingError: 1.5, onRamp: true }),
+        12,
+        oval.totalLength,
+        1 / 60,
+      );
+    }
+    expect(update.mode).not.toBe(CONTROL_MODE.RECOVERING);
+    expect(update.reverse).toBe(0);
   });
 });
