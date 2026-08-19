@@ -36,6 +36,11 @@ import { themeForTrackId } from '../data/tracks/planetThemes.ts';
 import { musicForTrackId } from '../data/tracks/planetMusic.ts';
 import { findTrack } from '../data/tracks/registry.ts';
 import { CEREMONY_HOLD_SECONDS } from '../domain/race/Coast.ts';
+import {
+  fullTrackSeconds,
+  podiumIsLocked,
+  podiumTimeoutDuration,
+} from '../domain/race/PodiumTimeout.ts';
 import { loadActiveCareer, loadActiveName, loadPoints, loadWallet, rememberLastTrack } from '../adapters/progress/ProgressStore.ts';
 import { npcRosterForPlanet } from '../domain/progress/GarageCatalog.ts';
 import { rivalsForPlanet } from '../data/pilots/PilotRoster.ts';
@@ -254,6 +259,10 @@ export class RaceScene extends Phaser.Scene {
   private resultsShown = false;
   /** Seconds the field has been coasting since the player took the flag. */
   private finishHoldSeconds = 0;
+  /** Seconds left on the podium grace clock; null until 1st–3rd have finished. */
+  private podiumTimeoutRemaining: number | null = null;
+  /** Armed length of that clock, so the HUD can drop TIME OUT at half. */
+  private podiumTimeoutDuration = 0;
   /** Purse at race start; live HUD adds hit bounties on top. */
   private startingCash = 0;
   /** 1-based campaign planet, for hit-bounty scaling. */
@@ -291,6 +300,10 @@ export class RaceScene extends Phaser.Scene {
     this.watchPinned = false;
     this.audioFocusCarId = null;
     this.quitedTheRace = false;
+    this.resultsShown = false;
+    this.finishHoldSeconds = 0;
+    this.podiumTimeoutRemaining = null;
+    this.podiumTimeoutDuration = 0;
     this.cameraDirector = new CameraDirector();
     this.cameraImpulse = new CameraImpulse();
     this.accidentWatch = new AccidentWatch();
@@ -409,25 +422,69 @@ export class RaceScene extends Phaser.Scene {
   }
 
   /**
-   * After the player takes the flag the field coasts to a stop (finished cars
-   * lift and brake). The ceremony waits until everyone is nearly stopped, or
-   * a short hold expires so a stuck NPC cannot freeze the results.
+   * End the race when the whole field has taken the flag, or when the podium
+   * grace clock (a quarter of a full-track par, armed as 3rd crosses) hits zero.
+   * The locutor already fires its finish line as cars cross; ResultsScene then
+   * presents the board.
    */
   private maybeFinishRace(deltaSeconds: number): void {
     if (this.resultsShown || this.watch || this.quitedTheRace) {
       return;
     }
     const race = this.field.race;
-    const playerRaceState = race.racers.find(racer => racer.carId === this.carId);
-    if (playerRaceState === undefined || !playerRaceState.progress.finished) {
+    const finishedCount = race.racers.filter(racer => racer.progress.finished).length;
+    const allFinished = race.racers.length > 0 && finishedCount === race.racers.length;
+
+    if (allFinished) {
+      this.podiumTimeoutRemaining = null;
+      this.finishHoldSeconds += deltaSeconds;
+      if (!this.field.allNearlyStopped && this.finishHoldSeconds < CEREMONY_HOLD_SECONDS) {
+        return;
+      }
+      this.handOffResults(race.elapsedSeconds);
       return;
     }
-    this.finishHoldSeconds += deltaSeconds;
-    if (!this.field.allNearlyStopped && this.finishHoldSeconds < CEREMONY_HOLD_SECONDS) {
+
+    if (!podiumIsLocked(finishedCount, race.racers.length)) {
       return;
     }
+    if (this.podiumTimeoutRemaining === null) {
+      this.armPodiumTimeout(race.elapsedSeconds);
+    }
+    if (this.podiumTimeoutRemaining === null) {
+      return;
+    }
+    this.podiumTimeoutRemaining = Math.max(0, this.podiumTimeoutRemaining - deltaSeconds);
+    if (this.podiumTimeoutRemaining > 0) {
+      return;
+    }
+    this.handOffResults(race.elapsedSeconds);
+  }
+
+  private armPodiumTimeout(elapsedSeconds: number): void {
+    const firstFinish = this.field.race.racers.reduce(
+      (earliest, racer) => Math.min(earliest, racer.finishedAtSeconds ?? Infinity),
+      Infinity,
+    );
+    const fallback = Number.isFinite(firstFinish) ? firstFinish : elapsedSeconds;
+    const fullTrack = fullTrackSeconds(this.trackLines?.parTime, this.track.laps, fallback);
+    const duration = podiumTimeoutDuration(fullTrack);
+    if (duration <= 0) {
+      this.podiumTimeoutRemaining = 0;
+      this.podiumTimeoutDuration = 0;
+      return;
+    }
+    this.podiumTimeoutDuration = duration;
+    this.podiumTimeoutRemaining = duration;
+  }
+
+  private handOffResults(elapsedSeconds: number): void {
     this.resultsShown = true;
-    this.showResults(playerRaceState.finishedAtSeconds ?? race.elapsedSeconds);
+    const last = this.field.race.racers.reduce(
+      (latest, racer) => Math.max(latest, racer.finishedAtSeconds ?? 0),
+      0,
+    );
+    this.showResults(last || elapsedSeconds);
   }
 
   private showResults(finishSeconds: number): void {
@@ -509,6 +566,8 @@ export class RaceScene extends Phaser.Scene {
       maxSpeed: player.stats.maxSpeed,
       cash: this.startingCash + weaponHitEarnings(this.field.playerWeaponHits, this.planetIndex),
       points: loadPoints() + weaponHitPoints(this.field.playerWeaponHits, this.planetIndex),
+      podiumTimeoutRemaining: this.podiumTimeoutRemaining ?? undefined,
+      podiumTimeoutDuration: this.podiumTimeoutRemaining === null ? undefined : this.podiumTimeoutDuration,
     };
   }
 

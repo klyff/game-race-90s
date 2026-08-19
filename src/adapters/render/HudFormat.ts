@@ -12,6 +12,7 @@
 
 import type { RacePhase } from '../../domain/constants.ts';
 import { RACE_PHASE } from '../../domain/constants.ts';
+import { formatPodiumTimeoutHud } from '../../domain/race/PodiumTimeout.ts';
 
 /**
  * One snapshot of race state for HUD display.
@@ -52,6 +53,13 @@ export interface HudReadout {
   readonly cash?: number;
   /** Live season points plus this race's hit bonuses. */
   readonly points?: number;
+  /**
+   * Seconds left on the podium grace clock. Absent until 1st–3rd have
+   * finished. The HUD hides the overlay when this is missing or <= 0.
+   */
+  readonly podiumTimeoutRemaining?: number;
+  /** Total length of that grace clock, so the HUD can drop "TIME OUT" at half. */
+  readonly podiumTimeoutDuration?: number;
 }
 
 /**
@@ -67,6 +75,10 @@ export interface HudText {
   readonly time: string; // e.g. "1:23.45"
   readonly ammo: string; // e.g. "AMMO 3/5"
   readonly countdown: string | null; // "3", "2", "1", "GO!", or null
+  /** Whole seconds on the podium grace clock, or null when it is not running. */
+  readonly podiumClock: string | null;
+  /** "TIME OUT" from the halfway mark; null before that or when the clock is off. */
+  readonly podiumTimeoutLabel: string | null;
   readonly integrityPercent: number; // 0..100, rounded, for a bar width
   readonly speed: string; // e.g. "195 MPH"
   readonly speedFraction: number; // 0..1, for a bar width
@@ -325,6 +337,7 @@ export function formatHud(readout: HudReadout): HudText {
 
   // Countdown: "3", "2", "1", "GO!", or null
   const countdown = formatCountdown(readout.phase, readout.countdownRemaining);
+  const podium = formatPodiumTimeoutHud(readout.podiumTimeoutRemaining, readout.podiumTimeoutDuration);
 
   // Integrity as 0..100 percent
   const integrityPercent = formatIntegrityPercent(readout.integrity);
@@ -340,6 +353,8 @@ export function formatHud(readout: HudReadout): HudText {
     time,
     ammo,
     countdown,
+    podiumClock: podium.clock,
+    podiumTimeoutLabel: podium.label,
     integrityPercent,
     speed,
     speedFraction,

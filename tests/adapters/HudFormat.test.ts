@@ -472,6 +472,36 @@ describe('formatHud (integration)', () => {
     });
   });
 
+  describe('podium timeout clock', () => {
+    it('is hidden while the podium is still open', () => {
+      const hud = formatHud(readout());
+      expect(hud.podiumClock).toBeNull();
+      expect(hud.podiumTimeoutLabel).toBeNull();
+    });
+
+    it('shows remaining seconds once the grace clock is armed', () => {
+      const hud = formatHud(
+        readout({
+          podiumTimeoutRemaining: 22.2,
+          podiumTimeoutDuration: 30,
+        }),
+      );
+      expect(hud.podiumClock).toBe('23');
+      expect(hud.podiumTimeoutLabel).toBeNull();
+    });
+
+    it('drops TIME OUT in at the halfway mark', () => {
+      const hud = formatHud(
+        readout({
+          podiumTimeoutRemaining: 15,
+          podiumTimeoutDuration: 30,
+        }),
+      );
+      expect(hud.podiumClock).toBe('15');
+      expect(hud.podiumTimeoutLabel).toBe('TIME OUT');
+    });
+  });
+
   describe('integrity formatting', () => {
     it('formats integrity 1.0 as 100%', () => {
       const hud = formatHud(readout({ integrity: 1.0 }));
@@ -545,6 +575,8 @@ describe('formatHud (integration)', () => {
         hud.speed,
         hud.speedDigits,
         hud.countdown ?? '',
+        hud.podiumClock ?? '',
+        hud.podiumTimeoutLabel ?? '',
       ].join('|');
       expect(allStrings).not.toContain('NaN');
       expect(allStrings).not.toContain('Infinity');
@@ -565,6 +597,12 @@ describe('formatHud (integration)', () => {
       expect(hud.speedDigits).not.toMatch(/\s$/);
       if (hud.countdown !== null) {
         expect(hud.countdown).not.toMatch(/\s$/);
+      }
+      if (hud.podiumClock !== null) {
+        expect(hud.podiumClock).not.toMatch(/\s$/);
+      }
+      if (hud.podiumTimeoutLabel !== null) {
+        expect(hud.podiumTimeoutLabel).not.toMatch(/\s$/);
       }
     });
 
@@ -591,6 +629,12 @@ describe('formatHud (integration)', () => {
       if (hud.countdown !== null) {
         expect(hud.countdown).not.toMatch(/\s$/);
       }
+      if (hud.podiumClock !== null) {
+        expect(hud.podiumClock).not.toMatch(/\s$/);
+      }
+      if (hud.podiumTimeoutLabel !== null) {
+        expect(hud.podiumTimeoutLabel).not.toMatch(/\s$/);
+      }
     });
 
     it('no string field has trailing whitespace (countdown race)', () => {
@@ -608,6 +652,12 @@ describe('formatHud (integration)', () => {
       expect(hud.speedDigits).not.toMatch(/\s$/);
       if (hud.countdown !== null) {
         expect(hud.countdown).not.toMatch(/\s$/);
+      }
+      if (hud.podiumClock !== null) {
+        expect(hud.podiumClock).not.toMatch(/\s$/);
+      }
+      if (hud.podiumTimeoutLabel !== null) {
+        expect(hud.podiumTimeoutLabel).not.toMatch(/\s$/);
       }
     });
 

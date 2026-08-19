@@ -63,6 +63,12 @@ const PULSE_MILLISECONDS = 320;
 /** How long "GO!" lingers after the lights go green, milliseconds. */
 const GO_LINGER_MILLISECONDS = 620;
 
+/** Yellow / red flash on each podium-clock digit, milliseconds. */
+const PODIUM_FLASH_MILLISECONDS = 180;
+
+const PODIUM_YELLOW = '#ffe066';
+const PODIUM_RED = '#ff3a3a';
+
 /** Depth of the standings block relative to the rest of the HUD. */
 const HUD_DEPTH = 10;
 
@@ -103,6 +109,9 @@ export class HudScene extends Phaser.Scene {
   private loadoutCounts: Phaser.GameObjects.Text[] = [];
   private railPlate!: Phaser.GameObjects.Rectangle;
   private countdownText!: Phaser.GameObjects.Text;
+  private podiumPlate!: Phaser.GameObjects.Rectangle;
+  private podiumClockText!: Phaser.GameObjects.Text;
+  private podiumTimeoutLabel!: Phaser.GameObjects.Text;
   private standingsText!: Phaser.GameObjects.Text;
   private barBackground!: Phaser.GameObjects.Rectangle;
   private barFill!: Phaser.GameObjects.Rectangle;
@@ -115,6 +124,9 @@ export class HudScene extends Phaser.Scene {
   private lastCashAmount = 0;
   private lastPoints = '';
   private lastCountdown: string | null = null;
+  private lastPodiumClock: string | null = null;
+  private podiumFlashElapsed = 0;
+  private podiumLabelSeen = false;
 
   constructor() {
     super({ key: SCENE_KEY.HUD, active: false });
@@ -161,6 +173,22 @@ export class HudScene extends Phaser.Scene {
       .setDepth(HUD_DEPTH + 2)
       .setVisible(false);
 
+    this.podiumPlate = this.add
+      .rectangle(0, 0, 240, 140, 0x000000, 0.5)
+      .setOrigin(0.5, 0.5)
+      .setDepth(HUD_DEPTH + 1)
+      .setVisible(false);
+    this.podiumClockText = this.add
+      .text(0, 0, '', this.podiumClockStyle())
+      .setOrigin(0.5, 0.5)
+      .setDepth(HUD_DEPTH + 2)
+      .setVisible(false);
+    this.podiumTimeoutLabel = this.add
+      .text(0, 0, '', this.podiumLabelStyle())
+      .setOrigin(0.5, 0)
+      .setDepth(HUD_DEPTH + 2)
+      .setVisible(false);
+
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
 
@@ -171,7 +199,7 @@ export class HudScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.gauge.destroy());
   }
 
-  update(): void {
+  update(_time: number, deltaMilliseconds: number): void {
     const source = this.raceSource();
     if (source === null) {
       return;
@@ -189,6 +217,7 @@ export class HudScene extends Phaser.Scene {
     this.applyIntegrity(text);
     this.applySpeed(text);
     this.applyCountdown(text);
+    this.applyPodiumTimeout(text, deltaMilliseconds);
     this.applyStandings(source, readout);
   }
 
@@ -295,6 +324,68 @@ export class HudScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * After the podium is locked, a centre-top clock counts the remaining pack
+   * down. Each new digit flashes yellow then red; "TIME OUT" drops in at half.
+   * The overlay sits in the title-safe band above the chased car, not on it.
+   */
+  private applyPodiumTimeout(text: HudText, deltaMilliseconds: number): void {
+    if (text.podiumClock === null) {
+      this.lastPodiumClock = null;
+      this.podiumLabelSeen = false;
+      this.podiumPlate.setVisible(false);
+      this.podiumClockText.setVisible(false);
+      this.podiumTimeoutLabel.setVisible(false);
+      this.tweens.killTweensOf(this.podiumTimeoutLabel);
+      return;
+    }
+
+    if (text.podiumClock !== this.lastPodiumClock) {
+      this.lastPodiumClock = text.podiumClock;
+      this.podiumFlashElapsed = 0;
+      this.podiumClockText.setText(text.podiumClock);
+      this.podiumClockText.setScale(1.18);
+      this.tweens.killTweensOf(this.podiumClockText);
+      this.tweens.add({
+        targets: this.podiumClockText,
+        scale: 1,
+        duration: 220,
+        ease: Phaser.Math.Easing.Cubic.Out,
+      });
+    }
+
+    this.podiumFlashElapsed += Number.isFinite(deltaMilliseconds) ? deltaMilliseconds : 0;
+    this.podiumClockText.setColor(this.podiumFlashColor());
+    this.podiumClockText.setVisible(true);
+    this.podiumPlate.setVisible(true);
+
+    const showLabel = text.podiumTimeoutLabel !== null;
+    this.podiumTimeoutLabel.setText(text.podiumTimeoutLabel ?? '');
+    this.podiumTimeoutLabel.setVisible(showLabel);
+    this.podiumTimeoutLabel.setColor(this.podiumFlashColor());
+    if (showLabel && !this.podiumLabelSeen) {
+      this.podiumLabelSeen = true;
+      this.podiumTimeoutLabel.setScale(1.2);
+      this.tweens.killTweensOf(this.podiumTimeoutLabel);
+      this.tweens.add({
+        targets: this.podiumTimeoutLabel,
+        scale: 1,
+        duration: 220,
+        ease: Phaser.Math.Easing.Cubic.Out,
+      });
+    }
+  }
+
+  /** Yellow then red each digit. Reduced motion: one colour per second, no blink. */
+  private podiumFlashColor(): string {
+    if (prefersReducedMotion()) {
+      const digit = Number.parseInt(this.lastPodiumClock ?? '0', 10);
+      return Number.isFinite(digit) && digit % 2 === 0 ? PODIUM_YELLOW : PODIUM_RED;
+    }
+    const tick = Math.floor(this.podiumFlashElapsed / PODIUM_FLASH_MILLISECONDS);
+    return tick % 2 === 0 ? PODIUM_YELLOW : PODIUM_RED;
+  }
+
   private applyStandings(
     source: HudSource,
     readout: HudReadout,
@@ -395,6 +486,12 @@ export class HudScene extends Phaser.Scene {
     // middle of the screen, so a countdown at the centre sits squarely on top of the
     // car the player is about to launch.
     this.countdownText.setPosition(width / 2, height * 0.26);
+
+    // Title-safe centre-top: 10% down from the top edge, never the screen corner.
+    const podiumY = Math.max(MARGIN + 48, height * 0.12);
+    this.podiumPlate.setPosition(width / 2, podiumY);
+    this.podiumClockText.setPosition(width / 2, podiumY);
+    this.podiumTimeoutLabel.setPosition(width / 2, podiumY + 44);
   }
 
   /**
@@ -484,6 +581,30 @@ export class HudScene extends Phaser.Scene {
       strokeThickness: 12,
     };
   }
+
+  private podiumClockStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '72px',
+      color: PODIUM_YELLOW,
+      stroke: '#101014',
+      strokeThickness: 10,
+    };
+  }
+
+  private podiumLabelStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '28px',
+      color: PODIUM_YELLOW,
+      stroke: '#101014',
+      strokeThickness: 6,
+    };
+  }
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 /** Green while healthy, amber while damaged, red when the next hit could be the last. */
