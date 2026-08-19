@@ -1,29 +1,35 @@
 /**
  * Lab pass for the arcade narrator. Writes MP3s to
- * `public/assets/audio/narrator/lab/` and copies keepers to `stash/`.
+ * `public/assets/audio/narrator/<locale>/{lab,stash}/`.
  *
  * Needs OPENAI_API_KEY. Uses gpt-4o-mini-tts so `instructions` actually land.
  * Skip a file that already exists unless `--force` is passed.
+ *
+ * When Klyff is back:
+ *   npm run gen:voice-lab:pt
+ *   npm run gen:voice-lab:en-new
  */
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   NARRATOR_CATEGORY,
-  NARRATOR_LINES,
   NARRATOR_VOICES,
+  isNarratorLocale,
   narratorClipFile,
+  narratorLines,
   type NarratorCategory,
   type NarratorLine,
+  type NarratorLocale,
 } from '../../src/data/audio/NarratorBank.ts';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const LAB_DIRECTORY = join(REPO_ROOT, 'public', 'assets', 'audio', 'narrator', 'lab');
-const STASH_DIRECTORY = join(REPO_ROOT, 'public', 'assets', 'audio', 'narrator', 'stash');
-
 const MODEL = 'gpt-4o-mini-tts';
 const SPEED = 2;
 const FORCE = process.argv.includes('--force');
+const HTML_ONLY = process.argv.includes('--html-only');
+const LOCALE = parseLocale(process.argv);
+const ID_FILTER = parseIds(process.argv);
 
 const BASE_INSTRUCTIONS = [
   'Keep the energy EXTREMELY high — almost out of control.',
@@ -37,6 +43,12 @@ const BASE_INSTRUCTIONS = [
   'Never calm down.',
   'Never use a polished announcer voice. Never sound corporate. Never sound like a documentary. Never sound like a movie trailer.',
   'Read the spelling and punctuation as performance marks: apostrophes swallow syllables, em-dashes slam into the climax, extra letters stretch the last vowel.',
+].join(' ');
+
+const PT_INSTRUCTIONS = [
+  'Speak Brazilian Portuguese, São Paulo / Rio race-commentator slang.',
+  'Swear when the script has it. Keep it oral: tem de ta, caraio, vei, mano, porra.',
+  'Never switch to Castilian Spanish. Never neutralize the accent into European Portuguese.',
 ].join(' ');
 
 const CATEGORY_INSTRUCTIONS: Record<NarratorCategory, string> = {
@@ -62,12 +74,51 @@ const CATEGORY_INSTRUCTIONS: Record<NarratorCategory, string> = {
     'Mock the result in a fun arcade way. Dead last, still a show.',
 };
 
-async function synthesize(voice: (typeof NARRATOR_VOICES)[number], line: NarratorLine): Promise<Buffer> {
+function parseLocale(argv: readonly string[]): NarratorLocale {
+  const flag = argv.findIndex(arg => arg === '--locale');
+  const value = flag >= 0 ? argv[flag + 1] : undefined;
+  if (value !== undefined && isNarratorLocale(value)) {
+    return value;
+  }
+  return 'en';
+}
+
+function parseIds(argv: readonly string[]): ReadonlySet<string> | undefined {
+  const flag = argv.findIndex(arg => arg === '--ids');
+  const value = flag >= 0 ? argv[flag + 1] : undefined;
+  if (value === undefined || value.length === 0) {
+    return undefined;
+  }
+  return new Set(value.split(',').map(id => id.trim()).filter(id => id.length > 0));
+}
+
+function localeRoot(): string {
+  return join(REPO_ROOT, 'public', 'assets', 'audio', 'narrator', LOCALE);
+}
+
+function labDirectory(): string {
+  return join(localeRoot(), 'lab');
+}
+
+function stashDirectory(): string {
+  return join(localeRoot(), 'stash');
+}
+
+function selectedLines(): readonly NarratorLine[] {
+  const all = narratorLines(LOCALE);
+  if (ID_FILTER === undefined) {
+    return all;
+  }
+  return all.filter(entry => ID_FILTER.has(entry.id));
+}
+
+async function synthesize(voice: (typeof NARRATOR_VOICES)[number], entry: NarratorLine): Promise<Buffer> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY is missing');
   }
 
+  const language = LOCALE === 'pt-BR' ? PT_INSTRUCTIONS : '';
   const response = await fetch('https://api.openai.com/v1/audio/speech', {
     method: 'POST',
     headers: {
@@ -77,8 +128,8 @@ async function synthesize(voice: (typeof NARRATOR_VOICES)[number], line: Narrato
     body: JSON.stringify({
       model: MODEL,
       voice,
-      input: line.speak,
-      instructions: `${BASE_INSTRUCTIONS} ${CATEGORY_INSTRUCTIONS[line.category]}`,
+      input: entry.speak,
+      instructions: `${BASE_INSTRUCTIONS} ${language} ${CATEGORY_INSTRUCTIONS[entry.category]}`.trim(),
       speed: SPEED,
       response_format: 'mp3',
     }),
@@ -86,30 +137,31 @@ async function synthesize(voice: (typeof NARRATOR_VOICES)[number], line: Narrato
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(`${voice} ${line.id}: ${response.status} ${detail.slice(0, 400)}`);
+    throw new Error(`${voice} ${entry.id}: ${response.status} ${detail.slice(0, 400)}`);
   }
 
   return Buffer.from(await response.arrayBuffer());
 }
 
-function writeListenPage(): void {
-  const rows = NARRATOR_LINES.map(line => {
+function writeListenPage(lines: readonly NarratorLine[]): void {
+  const lab = labDirectory();
+  const rows = lines.map(entry => {
     const players = NARRATOR_VOICES.map(voice => {
-      const fileName = narratorClipFile(voice, line.id);
-      const ready = existsSync(join(LAB_DIRECTORY, fileName));
+      const fileName = narratorClipFile(voice, entry.id);
+      const ready = existsSync(join(lab, fileName));
       if (!ready) {
         return `<label>${voice}</label><p class="missing">ainda não gravado</p>`;
       }
       return `<label>${voice}</label><audio controls src="${fileName}"></audio>`;
     }).join('\n');
-    return `<section><h2>${line.category} — ${line.text}</h2>\n${players}\n</section>`;
+    return `<section><h2>${entry.category} — ${entry.text}</h2>\n${players}\n</section>`;
   }).join('\n');
 
   const html = `<!doctype html>
-<html lang="en">
+<html lang="${LOCALE === 'pt-BR' ? 'pt-BR' : 'en'}">
   <head>
     <meta charset="utf-8" />
-    <title>Narrator lab</title>
+    <title>Narrator lab ${LOCALE}</title>
     <style>
       :root { color-scheme: dark; font-family: "Courier New", monospace; background: #12080c; color: #f4d7a8; }
       body { max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
@@ -123,42 +175,50 @@ function writeListenPage(): void {
     </style>
   </head>
   <body>
-    <h1>NARRATOR LAB</h1>
-    <p>Echo + Verse. Speed 2. Category instructions ride on top of the rock-shout base.</p>
+    <h1>NARRATOR LAB — ${LOCALE}</h1>
+    <p>Echo + Verse. Speed 2. ${LOCALE === 'pt-BR' ? 'PT-BR gíria de pista.' : 'English rock-shout.'}</p>
     ${rows}
   </body>
 </html>
 `;
-  writeFileSync(join(LAB_DIRECTORY, 'listen.html'), html);
+  writeFileSync(join(lab, 'listen.html'), html);
 }
 
 async function main(): Promise<void> {
-  mkdirSync(LAB_DIRECTORY, { recursive: true });
-  mkdirSync(STASH_DIRECTORY, { recursive: true });
-  writeListenPage();
+  const lines = selectedLines();
+  if (lines.length === 0) {
+    throw new Error(`No narrator lines for locale ${LOCALE}`);
+  }
+  mkdirSync(labDirectory(), { recursive: true });
+  mkdirSync(stashDirectory(), { recursive: true });
+  writeListenPage(narratorLines(LOCALE));
+  if (HTML_ONLY) {
+    process.stdout.write(`Wrote listen.html for ${LOCALE}: ${join(labDirectory(), 'listen.html')}\n`);
+    return;
+  }
 
   let wrote = 0;
   let skipped = 0;
   for (const voice of NARRATOR_VOICES) {
-    for (const line of NARRATOR_LINES) {
-      const fileName = narratorClipFile(voice, line.id);
-      const labPath = join(LAB_DIRECTORY, fileName);
-      const stashPath = join(STASH_DIRECTORY, fileName);
+    for (const entry of lines) {
+      const fileName = narratorClipFile(voice, entry.id);
+      const labPath = join(labDirectory(), fileName);
+      const stashPath = join(stashDirectory(), fileName);
       if (!FORCE && existsSync(labPath) && existsSync(stashPath)) {
         skipped += 1;
         continue;
       }
-      process.stdout.write(`Generating ${fileName}...\n`);
-      const audio = await synthesize(voice, line);
+      process.stdout.write(`Generating ${LOCALE}/${fileName}...\n`);
+      const audio = await synthesize(voice, entry);
       writeFileSync(labPath, audio);
       copyFileSync(labPath, stashPath);
       wrote += 1;
     }
   }
 
-  writeListenPage();
+  writeListenPage(narratorLines(LOCALE));
   process.stdout.write(
-    `Wrote ${wrote} clips, skipped ${skipped} existing. Lab: ${LAB_DIRECTORY}\n`,
+    `Wrote ${wrote} clips, skipped ${skipped} existing. Locale ${LOCALE}. Lab: ${labDirectory()}\n`,
   );
 }
 

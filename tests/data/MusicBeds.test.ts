@@ -8,10 +8,10 @@ import {
 } from '../../src/data/audio/MusicBeds.ts';
 import {
   NARRATOR_CATEGORY,
-  NARRATOR_LINES,
   NARRATOR_VOICES,
   narratorClipFile,
   pickNarratorVoice,
+  narratorLines,
 } from '../../src/data/audio/NarratorBank.ts';
 import { setAudioMuted, isAudioMuted } from '../../src/adapters/audio/AudioPrefs.ts';
 import {
@@ -68,10 +68,11 @@ describe('NarratorBank', () => {
   });
 
   it('covers start, damage, boost, banter, behind, weapons, final lap and finish', () => {
-    const categories = new Set(NARRATOR_LINES.map(line => line.category));
+    const lines = narratorLines('en');
+    const categories = new Set(lines.map(line => line.category));
     expect([...categories].sort()).toEqual(Object.values(NARRATOR_CATEGORY).slice().sort());
-    expect(NARRATOR_LINES.filter(line => line.category === NARRATOR_CATEGORY.RACE_START)).toHaveLength(6);
-    expect(NARRATOR_LINES.some(line => line.id === 'lok-thant-enzo' && line.weight === 3)).toBe(true);
+    expect(lines.filter(line => line.category === NARRATOR_CATEGORY.RACE_START)).toHaveLength(6);
+    expect(lines.some(line => line.id === 'lok-thant-enzo' && line.weight === 3)).toBe(true);
   });
 });
 

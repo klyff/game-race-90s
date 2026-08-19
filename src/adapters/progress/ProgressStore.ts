@@ -18,7 +18,7 @@ import {
   isNameTaken,
   normalisePlayerName,
   parseSave,
-  PLAYER_NAME_LENGTH,
+  PLAYER_NAME_MIN_LENGTH,
   recordRaceResult,
   serializeSave,
   writeSlot,
@@ -126,7 +126,7 @@ export function occupiedNames(): string[] {
 
 export function beginSlot(index: number, name: string, nowMillis: number): { ok: true } | { ok: false; reason: string } {
   const trimmed = normalisePlayerName(name);
-  if (trimmed.length !== PLAYER_NAME_LENGTH) {
+  if (trimmed.length < PLAYER_NAME_MIN_LENGTH) {
     return { ok: false, reason: 'NAME' };
   }
   const save = loadSave();

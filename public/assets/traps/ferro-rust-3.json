@@ -4,205 +4,205 @@
   "crates": [
     {
       "distance": 540,
-      "lateral": -28.05
+      "lateral": -16.32
     },
     {
       "distance": 552,
-      "lateral": 28.05
+      "lateral": 18.5
     },
     {
       "distance": 564,
-      "lateral": -28.05
+      "lateral": -18.5
     },
     {
       "distance": 576,
-      "lateral": 28.05
+      "lateral": 18.5
     },
     {
       "distance": 588,
-      "lateral": -28.05
+      "lateral": -18.5
     },
     {
       "distance": 600,
-      "lateral": 28.05
+      "lateral": 16.32
     },
     {
       "distance": 612,
-      "lateral": -28.05
+      "lateral": -16.32
     },
     {
       "distance": 816,
-      "lateral": 28.05
+      "lateral": 16.32
     },
     {
       "distance": 828,
-      "lateral": -28.05
+      "lateral": -16.32
     },
     {
       "distance": 840,
-      "lateral": 28.05
+      "lateral": 18.5
     },
     {
       "distance": 852,
-      "lateral": -28.05
+      "lateral": -18.5
     },
     {
       "distance": 864,
-      "lateral": 28.05
+      "lateral": 16.32
     },
     {
       "distance": 876,
-      "lateral": -28.05
+      "lateral": -16.32
     },
     {
       "distance": 960,
-      "lateral": 28.05
+      "lateral": 16.32
     },
     {
       "distance": 972,
-      "lateral": -28.05
+      "lateral": -16.32
     },
     {
       "distance": 1032,
-      "lateral": 28.05
+      "lateral": 16.32
     },
     {
       "distance": 1044,
-      "lateral": -28.05
+      "lateral": -16.32
     },
     {
       "distance": 1164,
-      "lateral": 28.05
+      "lateral": 16.32
     },
     {
       "distance": 1176,
-      "lateral": -28.05
+      "lateral": -16.32
     },
     {
       "distance": 1188,
-      "lateral": 28.05
+      "lateral": 18.5
     },
     {
       "distance": 1200,
-      "lateral": -28.05
+      "lateral": -18.5
     },
     {
       "distance": 1212,
-      "lateral": 28.05
+      "lateral": 18.5
     },
     {
       "distance": 1224,
-      "lateral": -28.05
+      "lateral": -18.5
     },
     {
       "distance": 1236,
-      "lateral": 28.05
+      "lateral": 18.5
     },
     {
       "distance": 1248,
-      "lateral": -28.05
+      "lateral": -18.5
     },
     {
       "distance": 1260,
-      "lateral": 28.05
+      "lateral": 18.5
     },
     {
       "distance": 1272,
-      "lateral": -28.05
+      "lateral": -18.5
     },
     {
       "distance": 1284,
-      "lateral": 28.05
+      "lateral": 18.5
     },
     {
       "distance": 1296,
-      "lateral": -28.05
+      "lateral": -18.5
     }
   ],
   "drums": [
     {
       "distance": 48,
-      "lateral": 28.05
+      "lateral": 15.7
     },
     {
       "distance": 60,
-      "lateral": -28.05
+      "lateral": -15.7
     },
     {
       "distance": 72,
-      "lateral": 28.05
+      "lateral": 15.7
     },
     {
       "distance": 84,
-      "lateral": -28.05
+      "lateral": -15.7
     },
     {
       "distance": 96,
-      "lateral": 28.05
+      "lateral": 13.52
     },
     {
       "distance": 108,
-      "lateral": -28.05
+      "lateral": -13.52
     },
     {
       "distance": 216,
-      "lateral": 28.05
+      "lateral": 13.52
     },
     {
       "distance": 228,
-      "lateral": -28.05
+      "lateral": -13.52
     },
     {
       "distance": 240,
-      "lateral": 28.05
+      "lateral": 15.7
     },
     {
       "distance": 252,
-      "lateral": -28.05
+      "lateral": -15.7
     },
     {
       "distance": 264,
-      "lateral": 28.05
+      "lateral": 15.7
     },
     {
       "distance": 276,
-      "lateral": -28.05
+      "lateral": -15.7
     },
     {
       "distance": 288,
-      "lateral": 28.05
+      "lateral": 15.7
     },
     {
       "distance": 300,
-      "lateral": -28.05
+      "lateral": -15.7
     },
     {
       "distance": 312,
-      "lateral": 28.05
+      "lateral": 15.7
     },
     {
       "distance": 324,
-      "lateral": -28.05
+      "lateral": -15.7
     },
     {
       "distance": 336,
-      "lateral": 28.05
+      "lateral": 15.7
     },
     {
       "distance": 348,
-      "lateral": -28.05
+      "lateral": -13.52
     },
     {
       "distance": 360,
-      "lateral": 28.05
+      "lateral": 13.52
     },
     {
       "distance": 432,
-      "lateral": -28.05
+      "lateral": -13.52
     },
     {
       "distance": 528,
-      "lateral": 28.05
+      "lateral": 13.52
     }
   ]
 }

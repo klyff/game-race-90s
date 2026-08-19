@@ -130,6 +130,7 @@ export const ANCHOR_TRACK_ID = 'thunder-basin';
 export const AUTHORED_TRACK_IDS: readonly string[] = [
   ANCHOR_TRACK_ID,
   'thunder-basin-2',
+  'bogmire-deep-1',
 ] as const;
 
 export function isAuthoredTrackId(trackId: string): boolean {

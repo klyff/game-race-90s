@@ -39,6 +39,11 @@ export interface VehicleViewExtras {
   readonly turboActive?: boolean;
 }
 
+export interface VehicleViewOptions {
+  /** Far observation camera: hide lights and exhaust. */
+  readonly farLod?: boolean;
+}
+
 export class VehicleView {
   readonly sprite: Phaser.GameObjects.Sprite;
   private readonly shadow: Phaser.GameObjects.Ellipse;
@@ -48,6 +53,7 @@ export class VehicleView {
   private readonly projection: IsoProjection;
   private readonly noseReach: number;
   private readonly frameCount: number;
+  private readonly farLod: boolean;
   private exhaustPulse = 0;
 
   constructor(
@@ -55,9 +61,11 @@ export class VehicleView {
     manifest: CarSetManifest,
     sheet: CarSheetManifest,
     projection: IsoProjection,
+    options: VehicleViewOptions = {},
   ) {
     this.projection = projection;
     this.noseReach = Math.max(0.8, sheet.stats.collisionRadius);
+    this.farLod = options.farLod === true;
 
     this.frameCount = sheetFrameCount(sheet, manifest);
     const cell = sheetCellSize(sheet, manifest);
@@ -90,6 +98,14 @@ export class VehicleView {
     this.exhaust = [0, 1, 2].map(() =>
       scene.add.ellipse(0, 0, 7, 4, 0xff9a2a).setVisible(false).setAlpha(0.7),
     );
+    if (this.farLod) {
+      for (const light of this.headlights) {
+        light.setVisible(false);
+      }
+      for (const light of this.taillights) {
+        light.setVisible(false);
+      }
+    }
   }
 
   /** Moves sprite and shadow to match `state`. Called once per rendered frame. */
@@ -113,18 +129,20 @@ export class VehicleView {
       this.sprite.clearTint();
     }
 
-    this.placeLights(state, depth);
-    this.placeExhaust(state, depth, turbo);
+    if (!this.farLod) {
+      this.placeLights(state, depth);
+      this.placeExhaust(state, depth, turbo);
+    }
   }
 
   setVisible(visible: boolean): void {
     this.sprite.setVisible(visible);
     this.shadow.setVisible(visible);
     for (const light of this.headlights) {
-      light.setVisible(visible);
+      light.setVisible(visible && !this.farLod);
     }
     for (const light of this.taillights) {
-      light.setVisible(visible);
+      light.setVisible(visible && !this.farLod);
     }
     if (!visible) {
       for (const flame of this.exhaust) {

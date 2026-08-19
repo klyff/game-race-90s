@@ -26,8 +26,8 @@ Uso: ./compact_images.sh [opções] [PATH]
 
 PNG8 (256 cores) só entra se ficar menor e com RMSE <= teto.
 Caso contrário tenta compressão lossless. Sem ganho, o arquivo fica como está.
-Heroes (*_hero.png) não são tocados. Originais vão para ./_originais/
-Rollback: ./restore_images.sh
+Vitrine e frames de rotação não entram. O que compacta nos carros é
+`{N}_hero/car_N_strip_64.png` (ex.: 1_hero/car_1_strip_64.png).
 EOF
 }
 
@@ -119,10 +119,16 @@ echo "Alvo: $TARGET   max RMSE: $MAX_RMSE   dry-run: $DRY_RUN"
 
 while IFS= read -r -d '' f; do
   rel="${f#./}"
+  base="$(basename "$rel")"
 
-  case "$(basename "$rel")" in
-    *_hero.png)
-      echo "SKIP hero: $rel"
+  case "$base" in
+    *_hero.png|*_300px.png|GABARITO*.png)
+      echo "SKIP hero/vitrine: $rel"
+      skip=$((skip + 1))
+      continue
+      ;;
+    car_*_a[0-9][0-9][0-9].png)
+      echo "SKIP frame: $rel"
       skip=$((skip + 1))
       continue
       ;;
@@ -232,15 +238,20 @@ while IFS= read -r -d '' f; do
     err=$((err + 1))
     bytes_after=$((bytes_after + orig_size))
   fi
-done < <(find "$TARGET" -type f -iname '*.png' \
-  -not -path "*/$BACKUP/*" \
-  -not -path '*/node_modules/*' \
-  -not -path '*/dist/*' \
-  -not -path '*/.git/*' \
-  -not -path '*/.preview/*' \
-  -not -path '*/.tmp/*' \
-  -not -path '*/graphify-out/*' \
-  -print0)
+done < <(
+  find "$TARGET" -type f -iname '*.png' \
+    -not -path "*/$BACKUP/*" \
+    -not -path '*/node_modules/*' \
+    -not -path '*/dist/*' \
+    -not -path '*/.git/*' \
+    -not -path '*/.preview/*' \
+    -not -path '*/.tmp/*' \
+    -not -path '*/graphify-out/*' \
+    -print0
+  if [[ "$TARGET" == "public/assets" && -d public/matrix_car ]]; then
+    find public/matrix_car -type f -iname '*_strip_64.png' -print0
+  fi
+)
 
 echo
 echo "Concluído."

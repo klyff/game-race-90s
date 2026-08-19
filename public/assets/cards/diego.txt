@@ -1,8 +1,12 @@
-DIEGO
+DIEGO — Regular
+
+CARD
+diego.png
+ON CARD: nameplate DIEGO. Vest patch SANTA MUERTE. Blue bandana, aviators on the forehead, gold chain, drop earring, throat tattoo. Warm garage amber. No chopper row painted in focus.
 
 BIO
 Biker chaplain of the Eastside. Blesses the bikes. Curses the cops.
 
 PHYSICAL / WARDROBE / SET
-Mexican, thick mustache, bandana, wraparound shades pushed up, chain wallet, denim kutte, Santa Muerte tattoo on the throat. Soft smile, hard eyes. Night garage, choppers, beer neon. Always facing camera.
+Mexican, thick mustache, patterned blue bandana, wraparound shades pushed up, gold chain, denim kutte over black, Santa Muerte patch and throat ink. Soft smile, hard eyes. Night garage. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

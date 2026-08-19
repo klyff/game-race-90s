@@ -1,17 +1,20 @@
 /**
  * Podium grace clock: once 1st–3rd have taken the flag, remaining cars get a
- * quarter of a full-race par to reach the line. When it hits zero the race
- * ends even if the pack is still out. Pure so the HUD and the scene share one
- * formula.
+ * sixth of a full-race par to reach the line. When the player is already on
+ * the podium the clock is three seconds, then the pub. Pure so the HUD and
+ * the scene share one formula.
  */
 
 /** How many finishers lock the podium and arm the timeout. */
 export const PODIUM_SIZE = 3;
 
 /** Remaining cars get this fraction of a full-track par. */
-export const PODIUM_TIMEOUT_FRACTION = 0.25;
+export const PODIUM_TIMEOUT_FRACTION = 1 / 6;
 
-/** "TIME OUT" drops in when this fraction of the clock is left. */
+/** If the player already took a podium seat, hold this long then go to the pub. */
+export const PODIUM_PLAYER_HOLD_SECONDS = 3;
+
+/** "TIME OUT" drops in when this fraction of the pack clock is left. */
 export const PODIUM_TIMEOUT_LABEL_FRACTION = 0.5;
 
 export const PODIUM_TIMEOUT_LABEL = 'TIME OUT';
@@ -42,12 +45,28 @@ export function fullTrackSeconds(
   return 0;
 }
 
-/** Quarter of a full-track run. Zero when the input is nonsense. */
+/** Sixth of a full-track run. Zero when the input is nonsense. */
 export function podiumTimeoutDuration(fullTrack: number): number {
   if (!Number.isFinite(fullTrack) || fullTrack <= 0) {
     return 0;
   }
   return fullTrack * PODIUM_TIMEOUT_FRACTION;
+}
+
+/** True when the player has finished inside the podium (1st–3rd). */
+export function isPlayerOnPodium(finished: boolean, position: number): boolean {
+  return finished === true && Number.isFinite(position) && position >= 1 && position <= PODIUM_SIZE;
+}
+
+/**
+ * How long the race holds after the podium moment. Player already on the
+ * board: three seconds to the pub. Otherwise a sixth of a full-track par.
+ */
+export function podiumGraceDuration(fullTrack: number, playerOnPodium: boolean): number {
+  if (playerOnPodium) {
+    return PODIUM_PLAYER_HOLD_SECONDS;
+  }
+  return podiumTimeoutDuration(fullTrack);
 }
 
 /**
@@ -84,7 +103,9 @@ export function formatPodiumTimeoutHud(
   }
 
   const seconds = Math.max(1, Math.ceil(remainingSeconds));
-  const showLabel = remainingSeconds <= durationSeconds * PODIUM_TIMEOUT_LABEL_FRACTION;
+  const packClock = durationSeconds > PODIUM_PLAYER_HOLD_SECONDS;
+  const showLabel =
+    packClock && remainingSeconds <= durationSeconds * PODIUM_TIMEOUT_LABEL_FRACTION;
   return {
     clock: String(seconds),
     label: showLabel ? PODIUM_TIMEOUT_LABEL : null,

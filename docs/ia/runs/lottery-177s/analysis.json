@@ -1,0 +1,490 @@
+{
+  "global_intent": {
+    "RACE": 42,
+    "RECOVER": 728,
+    "USE_WEAPON": 62,
+    "RAM": 2,
+    "BLOCK": 6,
+    "DEFEND": 12,
+    "EVADE": 1,
+    "OVERTAKE": 1
+  },
+  "global_exec": {
+    "NORMAL": 584,
+    "RECOVERING": 230,
+    "SPINNING": 40
+  },
+  "global_surf": {
+    "TARMAC": 757,
+    "DIRT": 97
+  },
+  "global_cond": {
+    "healthy": 310,
+    "critical": 259,
+    "destroyed": 32,
+    "damaged": 253
+  },
+  "drivers": {
+    "ALINE": {
+      "file": "ALINE__car_27-run-1.log",
+      "car": "car_27",
+      "samples": 61,
+      "last_pos": "11/14",
+      "last_lap": "1/3",
+      "last_intent": "RECOVER",
+      "last_exec": "NORMAL",
+      "last_cond": "damaged",
+      "last_integ": 0.52,
+      "min_integ": 0.0,
+      "mean_spd": 16.829508196721306,
+      "max_spd": 75.2,
+      "mean_abs_lat": 5.739508196721311,
+      "dirt_frac": 0.03278688524590164,
+      "recover_frac": 0.9672131147540983,
+      "intents": {
+        "RACE": 2,
+        "RECOVER": 59
+      },
+      "execs": {
+        "NORMAL": 40,
+        "RECOVERING": 14,
+        "SPINNING": 7
+      },
+      "first_recover_t": "2.98",
+      "last_t": "176.98"
+    },
+    "BERSERKER": {
+      "file": "BERSERKER__car_26-run-1.log",
+      "car": "car_26",
+      "samples": 61,
+      "last_pos": "13/14",
+      "last_lap": "0/3",
+      "last_intent": "RECOVER",
+      "last_exec": "NORMAL",
+      "last_cond": "critical",
+      "last_integ": 0.24,
+      "min_integ": 0.0,
+      "mean_spd": 7.773770491803278,
+      "max_spd": 59.9,
+      "mean_abs_lat": 6.830983606557377,
+      "dirt_frac": 0.03278688524590164,
+      "recover_frac": 0.6229508196721312,
+      "intents": {
+        "RACE": 2,
+        "RECOVER": 38,
+        "USE_WEAPON": 19,
+        "RAM": 2
+      },
+      "execs": {
+        "NORMAL": 54,
+        "RECOVERING": 5,
+        "SPINNING": 2
+      },
+      "first_recover_t": "2.98",
+      "last_t": "176.98"
+    },
+    "BLAZE": {
+      "file": "BLAZE__car_39-run-1.log",
+      "car": "car_39",
+      "samples": 61,
+      "last_pos": "14/14",
+      "last_lap": "0/3",
+      "last_intent": "RECOVER",
+      "last_exec": "SPINNING",
+      "last_cond": "damaged",
+      "last_integ": 0.47,
+      "min_integ": 0.0,
+      "mean_spd": 5.757377049180327,
+      "max_spd": 31.1,
+      "mean_abs_lat": 18.02688524590164,
+      "dirt_frac": 0.45901639344262296,
+      "recover_frac": 0.9344262295081968,
+      "intents": {
+        "RACE": 2,
+        "USE_WEAPON": 2,
+        "RECOVER": 57
+      },
+      "execs": {
+        "NORMAL": 19,
+        "RECOVERING": 33,
+        "SPINNING": 9
+      },
+      "first_recover_t": "5.98",
+      "last_t": "176.98"
+    },
+    "ENFORCER": {
+      "file": "ENFORCER__delorean-run-1.log",
+      "car": "delorean",
+      "samples": 61,
+      "last_pos": "6/14",
+      "last_lap": "1/3",
+      "last_intent": "RECOVER",
+      "last_exec": "NORMAL",
+      "last_cond": "healthy",
+      "last_integ": 0.79,
+      "min_integ": 0.0,
+      "mean_spd": 18.086885245901648,
+      "max_spd": 89.5,
+      "mean_abs_lat": 10.381967213114754,
+      "dirt_frac": 0.0,
+      "recover_frac": 0.8852459016393442,
+      "intents": {
+        "RACE": 2,
+        "BLOCK": 5,
+        "RECOVER": 54
+      },
+      "execs": {
+        "NORMAL": 48,
+        "SPINNING": 1,
+        "RECOVERING": 12
+      },
+      "first_recover_t": "17.98",
+      "last_t": "176.98"
+    },
+    "GUNSLINGER": {
+      "file": "GUNSLINGER__car_37-run-1.log",
+      "car": "car_37",
+      "samples": 61,
+      "last_pos": "3/14",
+      "last_lap": "2/3",
+      "last_intent": "RECOVER",
+      "last_exec": "NORMAL",
+      "last_cond": "healthy",
+      "last_integ": 0.95,
+      "min_integ": 0.0,
+      "mean_spd": 25.09344262295083,
+      "max_spd": 75.3,
+      "mean_abs_lat": 2.9234426229508195,
+      "dirt_frac": 0.0,
+      "recover_frac": 0.9344262295081968,
+      "intents": {
+        "RACE": 2,
+        "USE_WEAPON": 2,
+        "RECOVER": 57
+      },
+      "execs": {
+        "NORMAL": 51,
+        "RECOVERING": 10
+      },
+      "first_recover_t": "8.98",
+      "last_t": "176.98"
+    },
+    "JETT": {
+      "file": "JETT__car_5-run-1.log",
+      "car": "car_5",
+      "samples": 61,
+      "last_pos": "1/14",
+      "last_lap": "2/3",
+      "last_intent": "RECOVER",
+      "last_exec": "SPINNING",
+      "last_cond": "damaged",
+      "last_integ": 0.56,
+      "min_integ": 0.0,
+      "mean_spd": 25.58032786885246,
+      "max_spd": 75.3,
+      "mean_abs_lat": 4.0280327868852455,
+      "dirt_frac": 0.03278688524590164,
+      "recover_frac": 0.9508196721311475,
+      "intents": {
+        "RACE": 2,
+        "USE_WEAPON": 1,
+        "RECOVER": 58
+      },
+      "execs": {
+        "NORMAL": 40,
+        "RECOVERING": 17,
+        "SPINNING": 4
+      },
+      "first_recover_t": "5.98",
+      "last_t": "176.98"
+    },
+    "KLYFF": {
+      "file": "KLYFF__car-9-turbo-run-1.log",
+      "car": "car-9-turbo",
+      "samples": 61,
+      "last_pos": "8/14",
+      "last_lap": "1/3",
+      "last_intent": "RECOVER",
+      "last_exec": "RECOVERING",
+      "last_cond": "healthy",
+      "last_integ": 0.9,
+      "min_integ": 0.9,
+      "mean_spd": 16.378688524590167,
+      "max_spd": 89.9,
+      "mean_abs_lat": 16.712459016393442,
+      "dirt_frac": 0.7377049180327869,
+      "recover_frac": 0.7377049180327869,
+      "intents": {
+        "RACE": 16,
+        "RECOVER": 45
+      },
+      "execs": {
+        "NORMAL": 16,
+        "RECOVERING": 45
+      },
+      "first_recover_t": "44.98",
+      "last_t": "176.98"
+    },
+    "LUCA": {
+      "file": "LUCA__car_23-run-1.log",
+      "car": "car_23",
+      "samples": 61,
+      "last_pos": "10/14",
+      "last_lap": "1/3",
+      "last_intent": "RECOVER",
+      "last_exec": "RECOVERING",
+      "last_cond": "critical",
+      "last_integ": 0.17,
+      "min_integ": 0.0,
+      "mean_spd": 17.290163934426225,
+      "max_spd": 84.8,
+      "mean_abs_lat": 5.256229508196721,
+      "dirt_frac": 0.03278688524590164,
+      "recover_frac": 0.7704918032786885,
+      "intents": {
+        "RACE": 2,
+        "DEFEND": 12,
+        "RECOVER": 47
+      },
+      "execs": {
+        "NORMAL": 44,
+        "RECOVERING": 15,
+        "SPINNING": 2
+      },
+      "first_recover_t": "38.98",
+      "last_t": "176.98"
+    },
+    "LUNA": {
+      "file": "LUNA__car-11-run-1.log",
+      "car": "car-11",
+      "samples": 61,
+      "last_pos": "9/14",
+      "last_lap": "1/3",
+      "last_intent": "RECOVER",
+      "last_exec": "NORMAL",
+      "last_cond": "damaged",
+      "last_integ": 0.6,
+      "min_integ": 0.0,
+      "mean_spd": 15.28360655737705,
+      "max_spd": 77.3,
+      "mean_abs_lat": 5.621147540983605,
+      "dirt_frac": 0.01639344262295082,
+      "recover_frac": 0.9180327868852459,
+      "intents": {
+        "RACE": 2,
+        "USE_WEAPON": 3,
+        "RECOVER": 56
+      },
+      "execs": {
+        "NORMAL": 42,
+        "SPINNING": 5,
+        "RECOVERING": 14
+      },
+      "first_recover_t": "11.98",
+      "last_t": "176.98"
+    },
+    "NOVA": {
+      "file": "NOVA__car_2-run-1.log",
+      "car": "car_2",
+      "samples": 61,
+      "last_pos": "7/14",
+      "last_lap": "1/3",
+      "last_intent": "RECOVER",
+      "last_exec": "NORMAL",
+      "last_cond": "critical",
+      "last_integ": 0.24,
+      "min_integ": 0.0,
+      "mean_spd": 16.05081967213115,
+      "max_spd": 89.4,
+      "mean_abs_lat": 6.926393442622952,
+      "dirt_frac": 0.01639344262295082,
+      "recover_frac": 0.6229508196721312,
+      "intents": {
+        "RACE": 2,
+        "RECOVER": 38,
+        "USE_WEAPON": 21
+      },
+      "execs": {
+        "NORMAL": 55,
+        "RECOVERING": 2,
+        "SPINNING": 4
+      },
+      "first_recover_t": "2.98",
+      "last_t": "176.98"
+    },
+    "PREDATOR": {
+      "file": "PREDATOR__car_16-run-1.log",
+      "car": "car_16",
+      "samples": 61,
+      "last_pos": "4/14",
+      "last_lap": "1/3",
+      "last_intent": "USE_WEAPON",
+      "last_exec": "NORMAL",
+      "last_cond": "healthy",
+      "last_integ": 0.79,
+      "min_integ": 0.0,
+      "mean_spd": 16.647540983606554,
+      "max_spd": 73.8,
+      "mean_abs_lat": 10.78754098360656,
+      "dirt_frac": 0.18032786885245902,
+      "recover_frac": 0.8032786885245902,
+      "intents": {
+        "RACE": 2,
+        "RECOVER": 49,
+        "USE_WEAPON": 10
+      },
+      "execs": {
+        "NORMAL": 45,
+        "RECOVERING": 13,
+        "SPINNING": 3
+      },
+      "first_recover_t": "2.98",
+      "last_t": "176.98"
+    },
+    "SLIPSTREAMER": {
+      "file": "SLIPSTREAMER__car_33-run-1.log",
+      "car": "car_33",
+      "samples": 61,
+      "last_pos": "5/14",
+      "last_lap": "1/3",
+      "last_intent": "RECOVER",
+      "last_exec": "RECOVERING",
+      "last_cond": "critical",
+      "last_integ": 0.1,
+      "min_integ": 0.1,
+      "mean_spd": 18.16557377049181,
+      "max_spd": 75.5,
+      "mean_abs_lat": 8.932622950819674,
+      "dirt_frac": 0.01639344262295082,
+      "recover_frac": 0.9344262295081968,
+      "intents": {
+        "RACE": 2,
+        "RECOVER": 57,
+        "EVADE": 1,
+        "OVERTAKE": 1
+      },
+      "execs": {
+        "NORMAL": 31,
+        "RECOVERING": 30
+      },
+      "first_recover_t": "2.98",
+      "last_t": "176.98"
+    },
+    "TECHNICIAN": {
+      "file": "TECHNICIAN__car_15-run-1.log",
+      "car": "car_15",
+      "samples": 61,
+      "last_pos": "2/14",
+      "last_lap": "2/3",
+      "last_intent": "RECOVER",
+      "last_exec": "RECOVERING",
+      "last_cond": "critical",
+      "last_integ": 0.15,
+      "min_integ": 0.0,
+      "mean_spd": 27.2688524590164,
+      "max_spd": 101.6,
+      "mean_abs_lat": 5.758524590163934,
+      "dirt_frac": 0.01639344262295082,
+      "recover_frac": 0.9016393442622951,
+      "intents": {
+        "RACE": 2,
+        "USE_WEAPON": 4,
+        "RECOVER": 55
+      },
+      "execs": {
+        "NORMAL": 43,
+        "RECOVERING": 16,
+        "SPINNING": 2
+      },
+      "first_recover_t": "14.98",
+      "last_t": "176.98"
+    },
+    "ZOR9": {
+      "file": "ZOR9__car-16-run-1.log",
+      "car": "car-16",
+      "samples": 61,
+      "last_pos": "12/14",
+      "last_lap": "1/3",
+      "last_intent": "RECOVER",
+      "last_exec": "NORMAL",
+      "last_cond": "damaged",
+      "last_integ": 0.44,
+      "min_integ": 0.0,
+      "mean_spd": 16.36393442622951,
+      "max_spd": 62.3,
+      "mean_abs_lat": 5.938688524590167,
+      "dirt_frac": 0.01639344262295082,
+      "recover_frac": 0.9508196721311475,
+      "intents": {
+        "RACE": 2,
+        "BLOCK": 1,
+        "RECOVER": 58
+      },
+      "execs": {
+        "NORMAL": 56,
+        "SPINNING": 1,
+        "RECOVERING": 4
+      },
+      "first_recover_t": "5.98",
+      "last_t": "176.98"
+    }
+  },
+  "intent_by_15s": {
+    "0": {
+      "RACE": 33,
+      "BLOCK": 6,
+      "RECOVER": 43,
+      "DEFEND": 5,
+      "USE_WEAPON": 11
+    },
+    "15": {
+      "RECOVER": 60,
+      "DEFEND": 5,
+      "RACE": 5
+    },
+    "30": {
+      "RECOVER": 64,
+      "DEFEND": 2,
+      "RACE": 4
+    },
+    "45": {
+      "RECOVER": 65,
+      "USE_WEAPON": 3,
+      "EVADE": 1,
+      "OVERTAKE": 1
+    },
+    "60": {
+      "RECOVER": 64,
+      "USE_WEAPON": 6
+    },
+    "75": {
+      "RECOVER": 63,
+      "USE_WEAPON": 7
+    },
+    "90": {
+      "RECOVER": 61,
+      "USE_WEAPON": 9
+    },
+    "105": {
+      "RECOVER": 64,
+      "USE_WEAPON": 6
+    },
+    "120": {
+      "RECOVER": 65,
+      "USE_WEAPON": 5
+    },
+    "135": {
+      "RECOVER": 65,
+      "USE_WEAPON": 5
+    },
+    "150": {
+      "RECOVER": 63,
+      "USE_WEAPON": 5,
+      "RAM": 2
+    },
+    "165": {
+      "RECOVER": 51,
+      "USE_WEAPON": 5
+    }
+  }
+}

@@ -110,8 +110,8 @@ export const OIL_SIZE_OF_CAR = 0.9;
  */
 export const MINE_SIZE_OF_CAR = 0.406;
 
-/** Gasoline barrel diameter as a fraction of a typical car length. Uncoupled from the mine. */
-export const GASOLINE_SIZE_OF_CAR = 0.28;
+/** Gasoline barrel diameter as a fraction of a typical car length. Uncoupled from the mine. +20%. */
+export const GASOLINE_SIZE_OF_CAR = 0.336;
 
 /** Missile sprite width as a fraction of the firer's car length. */
 export const MISSILE_SIZE_OF_CAR = 0.7;

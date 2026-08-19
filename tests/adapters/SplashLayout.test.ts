@@ -192,6 +192,8 @@ describe('SplashLayout', () => {
         expect(isPointInRect(select, region)).toBe(true);
         expect(isPointInRect(prompt, region)).toBe(true);
         expect(prompt.y).toBeGreaterThan(select.y);
+        const art = coverRect(viewport, IMAGE);
+        expect(prompt.x).toBeCloseTo(art.x + art.width * 0.5, 8);
       }
     });
   });

@@ -2,8 +2,7 @@
  * Face cards for championship pilots. Filenames match disk exactly —
  * `Aline.png` is capitalised; a mismatch is a silent missing texture.
  *
- * Character select is not in yet. The player still types a 5-letter name.
- * When a racer's name matches a card here, Results shows that face.
+ * Character select uses these faces. Jokers stay world-10 only.
  */
 
 export const DRIVER_CARD_DIRECTORY = 'assets/cards';

@@ -1,4 +1,8 @@
-ZOR9  — JOKER (planet 10)
+ZOR9 — JOKER (planet 10)
+
+CARD
+zor9.png
+ON CARD: nameplate ZOR9. Suit patches AREA 51, ROSSWELL, I WANT TO BELIEVE, UFO OIL, checkered shoulder, all-seeing-eye collar. Gold chain with alien-head pendant. Neon ROCK 'N' ROLL Racing + guitar. HOLLYWOOD sign, Walk of Fame stars, saucer parked like a lowrider, Earth in the sky.
 
 BIO
 Slienigena. An ET that crash-landed on the Walk of Fame and decided the grid was a better religion than Earth.

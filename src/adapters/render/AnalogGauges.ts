@@ -29,8 +29,9 @@ export {
   rpmDialFraction,
 } from './AnalogDial.ts';
 
-const RADIUS = 52;
-const GAP = 10;
+/** Face radius at 1080p. 52 * 1.65 so the cluster reads from the couch. */
+const RADIUS = 86;
+const GAP = 17;
 const NEEDLE_SETTLE_SECONDS = 0.1;
 
 const FACE = 0x0c0c10;
@@ -119,11 +120,11 @@ export class AnalogGauges {
   private makeNeedle(scene: Phaser.Scene, cx: number, cy: number): Phaser.GameObjects.Container {
     const holder = scene.add.container(Math.round(cx), Math.round(cy));
     const needle = scene.add.graphics();
-    const length = this.radius - 14;
+    const length = this.radius - 23;
     needle.fillStyle(NEEDLE, 1);
-    needle.fillTriangle(4, -2, length, 0, 4, 2);
+    needle.fillTriangle(7, -3, length, 0, 7, 3);
     needle.fillStyle(HUB, 1);
-    needle.fillCircle(0, 0, 4);
+    needle.fillCircle(0, 0, 7);
     holder.add(needle);
     this.container.add(holder);
     return holder;
@@ -135,16 +136,16 @@ export class AnalogGauges {
     gfx.fillStyle(BEZEL, 1);
     gfx.fillCircle(cx, cy, r);
     gfx.fillStyle(BEZEL_LIT, 1);
-    gfx.fillCircle(cx - 1, cy - 1, r - 2);
+    gfx.fillCircle(cx - 2, cy - 2, r - 3);
     gfx.fillStyle(FACE, 1);
-    gfx.fillCircle(cx, cy, r - 5);
+    gfx.fillCircle(cx, cy, r - 8);
 
     if (kind === 'tach') {
       const redFrom = dialAngle(RPM_REDLINE / RPM_DIAL_MAX);
       const redTo = dialAngle(1);
-      gfx.lineStyle(4, REDLINE, 1);
+      gfx.lineStyle(7, REDLINE, 1);
       gfx.beginPath();
-      gfx.arc(cx, cy, r - 9, redFrom, redTo, false);
+      gfx.arc(cx, cy, r - 15, redFrom, redTo, false);
       gfx.strokePath();
     }
 
@@ -152,9 +153,9 @@ export class AnalogGauges {
     for (let i = 0; i < major; i += 1) {
       const t = i / (major - 1);
       const angle = dialAngle(t);
-      const inner = r - 16;
-      const outer = r - 7;
-      gfx.lineStyle(2, i === major - 1 && kind === 'tach' ? REDLINE : TICK, 1);
+      const inner = r - 26;
+      const outer = r - 12;
+      gfx.lineStyle(3, i === major - 1 && kind === 'tach' ? REDLINE : TICK, 1);
       gfx.beginPath();
       gfx.moveTo(cx + Math.cos(angle) * inner, cy + Math.sin(angle) * inner);
       gfx.lineTo(cx + Math.cos(angle) * outer, cy + Math.sin(angle) * outer);
@@ -179,12 +180,12 @@ export class AnalogGauges {
           ];
     for (const label of labels) {
       const angle = dialAngle(label.t);
-      const lx = Math.round(cx + Math.cos(angle) * (r - 22));
-      const ly = Math.round(cy + Math.sin(angle) * (r - 22));
+      const lx = Math.round(cx + Math.cos(angle) * (r - 36));
+      const ly = Math.round(cy + Math.sin(angle) * (r - 36));
       const text = scene.add
         .text(lx, ly, label.text, {
           fontFamily: 'monospace',
-          fontSize: '14px',
+          fontSize: '24px',
           color: LABEL,
         })
         .setOrigin(0.5, 0.5);
@@ -192,11 +193,11 @@ export class AnalogGauges {
     }
 
     const centre = kind === 'tach' ? 'RPM' : 'MPH';
-    const centreY = kind === 'tach' ? cy : cy + 18;
+    const centreY = kind === 'tach' ? cy : cy + 30;
     const hubLabel = scene.add
       .text(Math.round(cx), Math.round(centreY), centre, {
         fontFamily: 'monospace',
-        fontSize: '14px',
+        fontSize: '24px',
         color: LABEL,
       })
       .setOrigin(0.5, 0.5);

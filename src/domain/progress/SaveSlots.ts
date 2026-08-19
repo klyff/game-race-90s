@@ -34,6 +34,8 @@ export function createEmptySave(): SaveData {
 }
 
 export const PLAYER_NAME_LENGTH = 5;
+/** Character-select pilots may be 3–5 letters (`ENZO`, `HEX`). */
+export const PLAYER_NAME_MIN_LENGTH = 3;
 
 /**
  * Normalise and truncate a player name: uppercase, keep only A-Z, max 5 characters.

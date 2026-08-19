@@ -1,8 +1,12 @@
-NOVA
+NOVA — Regular
+
+CARD
+nova.png
+ON CARD: nameplate NOVA. Holo visor on the forehead, metallic blue lips, glitter around the eyes, holographic jacket, studded choker, heart pendant, gold hoops. Helicopter in a purple sky.
 
 BIO
 Androgynous club kid. Races after last call and still looks like a hologram.
 
 PHYSICAL / WARDROBE / SET
-South Asian, glitter freckles, chrome visor pushed up, holographic jacket, soft smile, one gold canine. LA rooftop, helicopters, purple sky. Always facing camera.
+South Asian, short spiky hair, glitter freckles, chrome visor pushed up, holographic jacket, soft smirk, one gold canine. LA rooftop, helicopters, purple sky. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

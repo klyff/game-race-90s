@@ -1,0 +1,48 @@
+{
+  "pack": "docs/ia",
+  "date": "2026-08-18",
+  "purpose": "LLM-readable dump of NPC profiles, AI test logs, track line, drawings",
+  "readFirst": ["V2.md", "README.md", "FINDINGS.md"],
+  "liveBrain": "V2.md",
+  "files": [
+    {"path": "V2.md", "role": "live-npc-ai-v2", "format": "md", "note": "Current architecture. FINDINGS is pre-V2 baseline."},
+    {"path": "README.md", "role": "index", "format": "md"},
+    {"path": "FINDINGS.md", "role": "pre-v2-baseline", "format": "md"},
+    {"path": "MANIFEST.json", "role": "machine-index", "format": "json"},
+    {"path": "profiles/catalog.md", "role": "npc-profiles-table", "format": "md"},
+    {"path": "profiles/catalog.json", "role": "npc-profiles-data", "format": "json", "rows": 30},
+    {"path": "lines/thunder-basin-2.md", "role": "track-geometry", "format": "md"},
+    {"path": "lines/thunder-basin-2.svg", "role": "track-line-drawing", "format": "svg"},
+    {"path": "lines/thunder-basin-2-mix-traces.png", "role": "mix-traces-raster", "format": "png"},
+    {"path": "lines/thunder-basin-2-mix-traces.md", "role": "mix-traces-caption", "format": "md"},
+    {"path": "runs/lottery-177s/README.md", "role": "lottery-run-index", "format": "md"},
+    {"path": "runs/lottery-177s/summary.json", "role": "lottery-summary", "format": "json"},
+    {"path": "runs/lottery-177s/analysis.json", "role": "lottery-per-driver-stats", "format": "json"},
+    {"path": "runs/lottery-177s/standings.md", "role": "lottery-standings", "format": "md"},
+    {"path": "runs/lottery-177s/drivers/", "role": "lottery-driver-logs", "format": "txt", "count": 14},
+    {"path": "runs/mix-222-300s/README.md", "role": "mix-run-index", "format": "md"},
+    {"path": "runs/mix-222-300s/summary.json", "role": "mix-summary", "format": "json"},
+    {"path": "runs/mix-222-300s/series.json", "role": "mix-time-series", "format": "json"},
+    {"path": "runs/mix-222-300s/position-series.tsv", "role": "mix-position-every-15s", "format": "tsv"},
+    {"path": "runs/mix-222-300s/speed-series.tsv", "role": "mix-speed-every-15s", "format": "tsv"},
+    {"path": "runs/mix-222-300s/standings.md", "role": "mix-standings", "format": "md"},
+    {"path": "runs/mix-222-300s/drivers/", "role": "mix-driver-logs", "format": "txt", "count": 6},
+    {"path": "runs/qa-live-300s/README.md", "role": "qa-run-index", "format": "md"},
+    {"path": "runs/qa-live-300s/standings.md", "role": "qa-three-track-standings", "format": "md"},
+    {"path": "runs/qa-live-300s/sim-1-summary.json", "role": "qa-basin-1", "format": "json"},
+    {"path": "runs/qa-live-300s/sim-2-summary.json", "role": "qa-basin-2", "format": "json"},
+    {"path": "runs/qa-live-300s/sim-3-summary.json", "role": "qa-bogmire", "format": "json"},
+    {"path": "runs/qa-live-300s/screenshots.tsv", "role": "qa-png-index-absolute-paths", "format": "tsv"}
+  ],
+  "externalBinaries": {
+    "qaScreenshots": "/Users/klyff/tmp/run-18-08-2026__15-54/sim-{1,2,3}/screenshots/*.png",
+    "qaPreviews": "/Users/klyff/tmp/run-18-08-2026__15-54/qa/*.png",
+    "note": "Not copied into git. Listed in screenshots.tsv."
+  },
+  "sourceCode": {
+    "profiles": "src/domain/ai/DriverProfile.ts",
+    "roster": "src/domain/ai/DriverRoster.ts",
+    "track": "src/data/tracks/thunder-basin-2.track.ts",
+    "headlessRunner": "tools/debug/run-ia.ts"
+  }
+}

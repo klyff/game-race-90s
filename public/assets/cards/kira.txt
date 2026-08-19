@@ -1,8 +1,12 @@
-KIRA
+KIRA — Regular
+
+CARD
+kira.png
+ON CARD: nameplate KIRA. Pink/black split pigtails, white-hot eyes, cheek studs, spiked choker, gold chain, tartan + leather + gold buckles, snarl. Blue car silhouette. No wet alley hatch painted in focus.
 
 BIO
 Tokyo-to-LA punk. Nine piercings. Zero patience.
 
 PHYSICAL / WARDROBE / SET
-Japanese woman, pink-and-black split hair, nine facial piercings, tartan binder, spiked collar, loving snarl. Little Tokyo alley, wet asphalt, tiny turbo hatch. Always facing camera.
+Japanese woman, pink-and-black split pigtails, pale glowing eyes, heavy liner, facial piercings, spiked collar, tartan binder, gold buckles, loving snarl. Little Tokyo night. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

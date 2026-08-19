@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.ts';
+import { CharacterSelectScene } from './scenes/CharacterSelectScene.ts';
 import { GarageScene } from './scenes/GarageScene.ts';
 import { HudScene } from './scenes/HudScene.ts';
 import { HelpScene } from './scenes/HelpScene.ts';
+import { OriginComicScene } from './scenes/OriginComicScene.ts';
 import { PauseScene } from './scenes/PauseScene.ts';
 import { PlanetSelectScene } from './scenes/PlanetSelectScene.ts';
 import { RaceScene } from './scenes/RaceScene.ts';
@@ -36,6 +38,8 @@ const game = new Phaser.Game({
   scene: [
     BootScene,
     SplashScene,
+    OriginComicScene,
+    CharacterSelectScene,
     GarageScene,
     PlanetSelectScene,
     TrackSelectScene,
@@ -62,5 +66,21 @@ const game = new Phaser.Game({
  */
 if (import.meta.env.MODE !== 'production') {
   (window as unknown as { game?: Phaser.Game }).game = game;
+}
+
+game.events.on(Phaser.Core.Events.HIDDEN, () => {
+  game.loop.wake();
+});
+
+const canvas = game.canvas;
+if (canvas !== undefined) {
+  canvas.addEventListener('webglcontextlost', event => {
+    event.preventDefault();
+    const note = document.createElement('div');
+    note.textContent = 'Graphics context lost. Reload the page.';
+    note.style.cssText =
+      'position:fixed;inset:8%;color:#ff8080;font:18px monospace;z-index:9;background:#0a0a12;padding:24px';
+    document.body.appendChild(note);
+  });
 }
 

@@ -7,14 +7,14 @@ import { thunderBasinTwo } from '../../src/data/tracks/thunder-basin-2.track.ts'
 describe('analyzeTrackCameras', () => {
   const preset = analyzeTrackCameras(thunderBasin);
 
-  it('tags Thunder Basin with a long speed/straight, a hairpin, and two ramps', () => {
+  it('tags Thunder Basin with a long speed/straight, a hairpin, and three ramps', () => {
     expect(preset.trackId).toBe('thunder-basin');
     expect(
       countTriggers(preset, CAMERA_TRIGGER_KIND.SPEED) +
         countTriggers(preset, CAMERA_TRIGGER_KIND.STRAIGHT),
     ).toBeGreaterThanOrEqual(1);
     expect(countTriggers(preset, CAMERA_TRIGGER_KIND.CURVE)).toBeGreaterThanOrEqual(1);
-    expect(countTriggers(preset, CAMERA_TRIGGER_KIND.RAMP)).toBe(2);
+    expect(countTriggers(preset, CAMERA_TRIGGER_KIND.RAMP)).toBe(3);
   });
 
   it('keeps the long bottom straight as a speed run', () => {

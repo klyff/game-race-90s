@@ -9,8 +9,9 @@ description: >-
 
 # Game map traps
 
-Traps sit on the shoulder. They are diegetic: no HUD counter. Feedback is speed,
-energy, asphalt burn, sound, camera impulse.
+Traps sit on the tarmac. Straights hug the kerb (`halfWidth - 5.5`); corners and
+hairpins pull inward so the puck stays inside the ribbon. They are diegetic: no HUD
+counter. Feedback is speed, energy, asphalt burn, sound, camera impulse.
 
 ## Non-negotiable
 
@@ -24,7 +25,7 @@ energy, asphalt burn, sound, camera impulse.
 
 1. Run `npm run gen:traps` (or `npm run gen:traps -- <trackId>`).
 2. Read `public/assets/traps/<trackId>.json`.
-3. Check: slots on the shoulder, not on the grid, not on ramps, spaced ≥ 2 car lengths.
+3. Check: slots on the tarmac (corners inset), not in the dirt, not on the grid, not on ramps, spaced ≥ 2 car lengths.
 4. World 1 = 16 crate slots / 8 drum slots (pool ×1.6). Later worlds grow — see [reference.md](reference.md).
 
 Analyzer: `src/domain/traps/analyzeTrackTraps.ts`. Pick: `src/domain/traps/pickRaceTraps.ts`. Rules: `src/domain/traps/TrapRules.ts`. CLI: `tools/trapgen/analyze.ts`.
@@ -43,7 +44,7 @@ JSON (or live analyze) is the **pool**. `pickRaceTraps` chooses the subset for t
 
 ## Stacks
 
-A slot may spawn `stackHeight` 1–3. Each piece is its own hazard. One break/boom chains the pile.
+Crates may spawn `stackHeight` 1–3. Drums are always 1 — a stacked barrel reads as a tower. Each piece is its own hazard. One break/boom chains the pile.
 
 ## New trap kinds
 

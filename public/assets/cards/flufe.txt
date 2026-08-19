@@ -1,8 +1,12 @@
-FLUFE  (also Emma, also Chimbeler)
+FLUFE — Regular (also Emma, also Chimbeler)
+
+CARD
+flufe.png
+ON CARD: nameplate FLUFE. Human face. Ferris wheel / carnival lights. Gold hoops, pink choker with G charm, crescent-moon pendant, fluffy white coat.
 
 BIO
-Secret Keeper of every side in RunnersCity. Looks harmless. She is a Pomeranian who drives like a lunatic on wheels. If you need to know something, find her.
+Secret Keeper of every side in RunnersCity. Looks harmless. She is a Pomeranian who drives like a lunatic on wheels. If you need to know something, find her. This file is the human card. The dog card lives in emma.png / emma.txt.
 
 PHYSICAL / WARDROBE / SET
-Small East-Asian woman, huge curly blonde-tinted hair, tiny frame, innocent doll eyes, pink choker, too many rings, fluffy coat, giggling. Santa Monica pier carousel lights. Always facing camera.
+Small East-Asian woman, huge curly blonde-tinted hair, tiny frame, doll eyes, pink choker, too many rings, fluffy coat, giggling, peace-sign hand. Santa Monica pier / carnival Ferris wheel at night. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

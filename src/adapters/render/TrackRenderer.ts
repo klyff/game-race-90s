@@ -8,6 +8,7 @@ import { rampVisualPeak } from '../../domain/track/RampZone.ts';
 import type { RampZone } from '../../domain/track/RampZone.ts';
 import { IsoProjection } from './IsoProjection.ts';
 import type { ScreenPoint } from './IsoProjection.ts';
+import { traceLayer } from './LayerTrace.ts';
 
 /**
  * Draws the whole circuit once, as flat static geometry, into a single
@@ -96,11 +97,16 @@ export const ROAD_DEPTH = -1000;
 
 /** TileSprite larger than this (px) is what froze Chrome Verge. Never allocate more. */
 const MAX_GROUND_TILE_PX = 2048;
+const MAX_BAKE_PX = 4096;
 
 export interface TrackRendererOptions {
   readonly sampleSpacing?: number;
   /** Per-planet palette and optional ground tile. Defaults to Thunder Basin. */
   readonly theme?: PlanetTheme;
+  /** Skip grain, grooves, and props — far-camera NPC observation. */
+  readonly lowDetail?: boolean;
+  /** Solid fill only. A huge TileSprite is what froze Chrome Verge. */
+  readonly disableGroundTile?: boolean;
 }
 
 /** Screen-space bounding box, e.g. for camera bounds. */
@@ -191,10 +197,12 @@ function computeBounds(
 export class TrackRenderer {
   readonly bounds: ScreenBounds;
   private readonly graphics: Phaser.GameObjects.Graphics;
+  private baked: Phaser.GameObjects.Image | null = null;
   private readonly groundFill: Phaser.GameObjects.Rectangle;
   private readonly groundTile: Phaser.GameObjects.TileSprite | null;
   private readonly projection: IsoProjection;
   private readonly theme: PlanetTheme;
+  private readonly lowDetail: boolean;
 
   constructor(
     scene: Phaser.Scene,
@@ -205,6 +213,7 @@ export class TrackRenderer {
   ) {
     this.projection = projection;
     this.theme = options.theme ?? DEFAULT_THEME;
+    this.lowDetail = options.lowDetail === true;
     const spacing = options.sampleSpacing ?? DEFAULT_SAMPLE_SPACING_UNITS;
     const frames = sampleCenterline(spline, spacing);
 
@@ -226,18 +235,37 @@ export class TrackRenderer {
         this.theme.ground,
       )
       .setOrigin(0, 0)
-      .setDepth(ROAD_DEPTH - 2);
-    this.groundTile = scene.textures.exists(this.theme.groundKey)
-      ? scene.add
+      .setDepth(ROAD_DEPTH - 2)
+      .setName('groundFill');
+    traceLayer(
+      '01 groundFill',
+      ROAD_DEPTH - 2,
+      `${Math.round(this.bounds.width)}x${Math.round(this.bounds.height)} color=0x${this.theme.ground.toString(16).padStart(6, '0')}`,
+    );
+    this.groundTile =
+      options.disableGroundTile === true || !scene.textures.exists(this.theme.groundKey)
+        ? null
+        : scene.add
           .tileSprite(0, 0, 64, 64, this.theme.groundKey)
           .setOrigin(0, 0)
           .setDepth(ROAD_DEPTH - 1)
           .setAlpha(0.92)
-      : null;
+          .setName('groundTile');
+    traceLayer(
+      '02 groundTile',
+      ROAD_DEPTH - 1,
+      this.groundTile === null
+        ? options.disableGroundTile === true
+          ? 'SKIP disableGroundTile'
+          : `SKIP missing ${this.theme.groundKey}`
+        : this.theme.groundKey,
+    );
 
     this.graphics = scene.add.graphics();
     this.graphics.setDepth(ROAD_DEPTH);
+    this.graphics.setName('roadGraphics');
 
+    const paintedAt = performance.now();
     // Back to front: cliff, scree, racing surface, lip, start, ramps, boulders.
     this.fillJaggedBand(frames, wallOuter, shoulderOuter, this.theme.wall, 11);
     this.fillJaggedBand(frames, -shoulderOuter, -wallOuter, this.theme.wall, 12);
@@ -257,8 +285,30 @@ export class TrackRenderer {
 
     this.drawStoneThreshold(track, spline);
     this.drawRockRamps(track, spline);
-    this.drawBorderProps(spline, wallOuter);
-    this.drawShoulderBoulders(spline, track.halfWidth, track.shoulderWidth);
+    if (!this.lowDetail) {
+      this.drawBorderProps(spline, wallOuter);
+      this.drawShoulderBoulders(spline, track.halfWidth, track.shoulderWidth);
+    }
+    traceLayer(
+      '03–08 road bands',
+      ROAD_DEPTH,
+      `${(performance.now() - paintedAt).toFixed(0)}ms  props=${this.lowDetail ? 'SKIP lowDetail' : 'on'}`,
+    );
+    this.bakeIfSmall(scene, track.id);
+  }
+
+  /** Hide one terrain Phaser object so a black frame can be attributed by depth. */
+  setTerrainVisible(layer: 'fill' | 'tile' | 'road', visible: boolean): void {
+    if (layer === 'fill') {
+      this.groundFill.setVisible(visible);
+      return;
+    }
+    if (layer === 'tile') {
+      this.groundTile?.setVisible(visible);
+      return;
+    }
+    this.baked?.setVisible(visible);
+    this.graphics.setVisible(visible && this.baked === null);
   }
 
   /**
@@ -280,8 +330,46 @@ export class TrackRenderer {
 
   destroy(): void {
     this.graphics.destroy();
+    this.baked?.destroy();
     this.groundFill.destroy();
     this.groundTile?.destroy();
+  }
+
+  /**
+   * Flatten the command list into one texture when the circuit fits. Far-camera
+   * observation redraws thousands of fillPoints every frame if we skip this.
+   */
+  private bakeIfSmall(scene: Phaser.Scene, trackId: string): void {
+    const width = Math.ceil(this.bounds.width);
+    const height = Math.ceil(this.bounds.height);
+    if (width > MAX_BAKE_PX || height > MAX_BAKE_PX || width < 2 || height < 2) {
+      traceLayer(
+        '09 bake',
+        ROAD_DEPTH,
+        `SKIP ${width}x${height} > ${MAX_BAKE_PX} — Graphics stays live every frame`,
+      );
+      return;
+    }
+    try {
+      const key = `track-bake:${trackId}`;
+      if (!scene.textures.exists(key)) {
+        const rt = scene.make.renderTexture({ width, height }, false);
+        rt.draw(this.graphics, -this.bounds.x, -this.bounds.y);
+        rt.saveTexture(key);
+        rt.destroy();
+      }
+      this.graphics.setVisible(false);
+      this.baked = scene.add
+        .image(this.bounds.x, this.bounds.y, key)
+        .setOrigin(0, 0)
+        .setDepth(ROAD_DEPTH)
+        .setName('roadBake');
+      traceLayer('09 bake', ROAD_DEPTH, `texture ${key} ${width}x${height}`);
+    } catch {
+      this.graphics.setVisible(true);
+      this.baked = null;
+      traceLayer('09 bake', ROAD_DEPTH, 'FAILED — Graphics restored visible');
+    }
   }
 
   /** Projects a point offset laterally from a frame's centreline position. */
@@ -364,13 +452,13 @@ export class TrackRenderer {
    * the authored `rampZones`, drawn later with height.
    */
   private fillAsphaltBed(frames: readonly TrackFrame[], halfWidth: number, color: number): void {
-    const count = frames.length;
     this.fillBand(frames, halfWidth, -halfWidth, color);
-
-    // Wide, low-contrast edge shade. A dark 0.38 grout strip is what made
-    // the old bed look like a channel you could drive down.
     this.fillBand(frames, halfWidth, halfWidth * 0.78, shade(color, 0.9));
     this.fillBand(frames, -halfWidth * 0.78, -halfWidth, shade(color, 0.9));
+    if (this.lowDetail) {
+      return;
+    }
+    const count = frames.length;
 
     // Occasional wide stains — painted shadows, never a recessed channel.
     const stainEvery = 9;
@@ -518,7 +606,7 @@ export class TrackRenderer {
   /**
    * Raised rock wedges on authored ramp zones. The slab uses the invented
    * lip angle across the full trigger — ballistic peak is a separate, lower
-   * trick that pops at one-third of the way up.
+   * trick that pops at the lip.
    */
   private drawRockRamps(track: TrackDefinition, spline: TrackSpline): void {
     const zones = track.rampZones;

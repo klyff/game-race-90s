@@ -90,3 +90,13 @@ export function garageHeroLayout(viewport: Size, image: Size, hero: Size): Garag
     originY: HERO_WINDSHIELD.y,
   };
 }
+
+/** Painted body inside the scaled hero — used to park the carousel arrows. */
+export function garageBodyBounds(hero: GarageHeroLayout): Rect {
+  return {
+    x: hero.x - (hero.originX - HERO_OPAQUE.left) * hero.width,
+    y: hero.y - (hero.originY - HERO_OPAQUE.top) * hero.height,
+    width: (HERO_OPAQUE.right - HERO_OPAQUE.left) * hero.width,
+    height: (HERO_OPAQUE.bottom - HERO_OPAQUE.top) * hero.height,
+  };
+}

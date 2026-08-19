@@ -11,7 +11,7 @@ const track = findTrack('thunder-basin');
 const spline = new TrackSpline(track.controlPoints);
 
 // Verify the track matches the test fixture spec.
-expect(Math.round(spline.totalLength * 10) / 10).toBe(1505.4);
+expect(Math.round(spline.totalLength * 10) / 10).toBe(1578);
 expect(track.checkpointCount).toBe(8);
 expect(track.startLineDistance).toBe(0);
 expect(track.laps).toBe(3);

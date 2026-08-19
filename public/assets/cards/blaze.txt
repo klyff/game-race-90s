@@ -1,8 +1,12 @@
-BLAZE
+BLAZE — Regular
+
+CARD
+blaze.png
+ON CARD: nameplate BLAZE. Gold aviators, brown mullet, mustache, open blue Hawaiian with yellow suns, gold chain, beer-gut laugh. Orange sports car, pier, sunset over water.
 
 BIO
 Rock-and-roll burnout with a flaming guitar on his chest and a Camaro that smells like bourbon.
 
 PHYSICAL / WARDROBE / SET
-White man, perfect mullet, open Hawaiian shirt, gold chain, aviators, beer-gut laugh. Sunset pier, flame-job Camaro. Always facing camera.
+White man, voluminous brown mullet, thick mustache, gold-rim aviators, open Hawaiian shirt, gold chain, big laugh. Sunset pier, orange sports car. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

@@ -1,8 +1,12 @@
-ALINE
+ALINE — Regular
+
+CARD
+Aline.png
+ON CARD: neon name ALINE. Salon sign RUNNERSCITY Beauty Empire SALON (pink lips). Street SANTA MONICA BLVD. Shield Beauty SPEED STYLE. RC crown logo on jacket and shopping bags. Interests: SHOPPING / WEIGHT TRAINING / RACING. Catchphrase: I DRIVE LIKE I'M LATE FOR A PHOTOSHOOT. Purple sports car.
 
 BIO
 Owner of the RunnersCity beauty empire. Her sport is shopping, weight training, and racing. She smiles like a billboard and drives like she is late for a photoshoot.
 
 PHYSICAL / WARDROBE / SET
-Glamorous Italian + Latina woman, sharp bob, gold hoops, pink tracksuit unzipped over a sports bra, bright smile. Santa Monica Blvd salon neon, palm trees, shopping bags on a chrome bench. Always facing camera.
+Glamorous Latina woman, light-brown bob, brown eyes, gold hoops, thick gold chain, bright smile. Pink zip track jacket (white sleeve stripes, gold RC crown + RUNNERSCITY BEAUTY EMPIRE) over a black sports bra. Santa Monica Blvd salon neon, palms, purple sports car, RC shopping bags on a bench. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

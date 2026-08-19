@@ -1,8 +1,12 @@
-DAVE BOWN
+DAVE BOWN — Regular
+
+CARD
+dave.png
+ON CARD: nameplate DAVE BOWN. Lightning-bolt makeup across one eye. Split copper / platinum mullet. Sequined jacket, gold hoops, glowing yellow eyes. Sunset Strip night, billboard silhouette, starbursts.
 
 BIO
 A lightning-bolt tribute who never stopped being a star. Sings to the engine. Changes hair color the way other people change gears.
 
 PHYSICAL / WARDROBE / SET
-David Bowie energy: heterochromia, sharp cheekbones, copper-and-platinum mullet, one gold earring, thin smile. Glam-rock jacket open on a bare chest, lightning makeup. Sunset Strip billboard, silver roadster. Always facing camera.
+David Bowie energy: pale skin, red-blue lightning over the right eye, pink shadow on the left, heterochromia / cat-yellow stare, copper-and-platinum spiked mullet, gold hoops, thin smile. Dark sequined glam jacket. Sunset Strip billboard, silver night sky. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

@@ -485,16 +485,16 @@ describe('gasoline barrels', () => {
     expect(aged[0]?.kind).toBe(HAZARD_KIND.GASOLINE);
   });
 
-  it('Thunder Basin starts with two armed gasoline seats, not the old three', () => {
+  it('Thunder Basin starts with three armed gasoline seats', () => {
     const field = twoCarField();
     const barrels = field.activeHazards.filter(
       hazard => hazard.kind === HAZARD_KIND.GASOLINE && hazard.stackIndex === 0,
     );
-    expect(barrels).toHaveLength(2);
+    expect(barrels).toHaveLength(3);
     expect(barrels.every(barrel => barrel.ownerArmed)).toBe(true);
     expect(
       field.activeHazards.filter(hazard => hazard.kind === HAZARD_KIND.CRATE && hazard.stackIndex === 0),
-    ).toHaveLength(4);
+    ).toHaveLength(6);
   });
 
   it('a gasoline hit wrecks the contact car and queues a 1.8× burn burst', () => {
@@ -535,7 +535,7 @@ describe('gasoline barrels', () => {
       field.activeHazards.filter(
         hazard => hazard.kind === HAZARD_KIND.GASOLINE && hazard.stackIndex === 0,
       ),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
   });
 });
 

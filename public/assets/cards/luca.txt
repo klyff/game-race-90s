@@ -1,8 +1,12 @@
-LUCA  — JOKER (planet 10)
+LUCA — JOKER (planet 10)
+
+CARD
+luca.png
+ON CARD: nameplate LUCA. Neon ITALY. Cigar in the mouth, grey temples, thick mustache, pinstripe jacket, blue-green tie, red rose boutonniere, white pocket square. Black town car.
 
 BIO
 Don Luca. Old-world gangster gone West Coast. Calm butcher's eyes. The town car always has a full tank.
 
 PHYSICAL / WARDROBE / SET
-Silver temples, pinstripe vest, cigar, pinky ring, rose in the lapel, calm stare. Little Italy storefront on Vine Street, black town car. Always facing camera.
+Silver temples, pinstripe vest, cigar, pinky-ring energy, rose in the lapel, calm stare. Little Italy storefront on Vine Street, black town car. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

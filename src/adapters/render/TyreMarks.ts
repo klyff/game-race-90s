@@ -155,6 +155,7 @@ export class TyreMarks {
 
     this.graphics = scene.add.graphics();
     this.graphics.setDepth(ROAD_DEPTH + 1);
+    this.graphics.setName('tyreMarks');
   }
 
   /**
@@ -209,6 +210,10 @@ export class TyreMarks {
 
   destroy(): void {
     this.graphics.destroy();
+  }
+
+  setVisible(visible: boolean): void {
+    this.graphics.setVisible(visible);
   }
 
   /** World-space positions of the left and right rear wheels this frame. */

@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
+  PODIUM_PLAYER_HOLD_SECONDS,
   PODIUM_TIMEOUT_FRACTION,
   PODIUM_TIMEOUT_LABEL,
   fullTrackSeconds,
+  isPlayerOnPodium,
+  podiumGraceDuration,
   podiumIsLocked,
   podiumTimeoutDuration,
   formatPodiumTimeoutHud,
@@ -30,8 +33,9 @@ describe('fullTrackSeconds', () => {
 });
 
 describe('podiumTimeoutDuration', () => {
-  it('is one quarter of a full-track run', () => {
+  it('is one sixth of a full-track run', () => {
     expect(podiumTimeoutDuration(120)).toBe(120 * PODIUM_TIMEOUT_FRACTION);
+    expect(podiumTimeoutDuration(120)).toBe(20);
   });
 
   it('returns 0 for nonsense', () => {
@@ -82,5 +86,33 @@ describe('formatPodiumTimeoutHud', () => {
     expect(formatPodiumTimeoutHud(10.1, duration).label).toBeNull();
     expect(formatPodiumTimeoutHud(10, duration).label).toBe(PODIUM_TIMEOUT_LABEL);
     expect(formatPodiumTimeoutHud(1, duration).label).toBe(PODIUM_TIMEOUT_LABEL);
+  });
+
+  it('does not flash TIME OUT on the short player-podium hold', () => {
+    expect(formatPodiumTimeoutHud(1.5, PODIUM_PLAYER_HOLD_SECONDS).label).toBeNull();
+    expect(formatPodiumTimeoutHud(3, PODIUM_PLAYER_HOLD_SECONDS).clock).toBe('3');
+  });
+});
+
+describe('isPlayerOnPodium', () => {
+  it('is true for a finished 1st–3rd', () => {
+    expect(isPlayerOnPodium(true, 1)).toBe(true);
+    expect(isPlayerOnPodium(true, 3)).toBe(true);
+  });
+
+  it('is false while still racing or off the podium', () => {
+    expect(isPlayerOnPodium(false, 1)).toBe(false);
+    expect(isPlayerOnPodium(true, 4)).toBe(false);
+    expect(isPlayerOnPodium(true, 0)).toBe(false);
+  });
+});
+
+describe('podiumGraceDuration', () => {
+  it('is three seconds when the player already has a podium seat', () => {
+    expect(podiumGraceDuration(120, true)).toBe(PODIUM_PLAYER_HOLD_SECONDS);
+  });
+
+  it('is one sixth of the full track when the player is still out', () => {
+    expect(podiumGraceDuration(120, false)).toBe(20);
   });
 });

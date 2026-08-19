@@ -24,11 +24,18 @@ import { WoodDebrisEffect } from '../adapters/render/WoodDebrisEffect.ts';
 import type { HudReadout } from '../adapters/render/HudFormat.ts';
 import { IsoProjection } from '../adapters/render/IsoProjection.ts';
 import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
+import {
+  dumpDisplayList,
+  logFps,
+  PAINT_LAYER_KEYS,
+  traceLayer,
+  type PaintLayerId,
+} from '../adapters/render/LayerTrace.ts';
 import { TuningOverlay } from '../adapters/render/TuningOverlay.ts';
 import { formatAiOverlay } from '../adapters/render/AiOverlayFormat.ts';
 import { TyreMarks } from '../adapters/render/TyreMarks.ts';
 import { VehicleView } from '../adapters/render/VehicleView.ts';
-import { findCarSheet, frameIndexForHeading } from '../data/cars/CarManifest.ts';
+import { findCarSheet, frameIndexForHeading, playableCarIds } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
@@ -39,8 +46,9 @@ import { findTrack } from '../data/tracks/registry.ts';
 import { CEREMONY_HOLD_SECONDS } from '../domain/race/Coast.ts';
 import {
   fullTrackSeconds,
+  isPlayerOnPodium,
+  podiumGraceDuration,
   podiumIsLocked,
-  podiumTimeoutDuration,
 } from '../domain/race/PodiumTimeout.ts';
 import { loadActiveCareer, loadActiveName, loadPoints, loadWallet, rememberLastTrack } from '../adapters/progress/ProgressStore.ts';
 import { npcRosterForPlanet } from '../domain/progress/GarageCatalog.ts';
@@ -55,7 +63,7 @@ import type { InputCommand } from '../domain/input/InputCommand.ts';
 import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
 import { angleOf, dot, fromAngle, length } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
-import { assignNpcCars } from '../domain/race/CarAssignment.ts';
+import { assignNpcCars, seatCarId } from '../domain/race/CarAssignment.ts';
 import { CAREER_NPC_COUNT, npcPilotNames } from '../domain/race/CareerGrid.ts';
 import {
   nextWatchTrack,
@@ -90,6 +98,7 @@ import {
   BURN_MARK_LIFETIME_LAPS,
   CAR_LENGTH_PER_COLLISION_RADIUS,
   HAZARD_BURST_INTENSITY,
+  MISSILE_SIZE_OF_CAR,
   OIL_LAP_REFERENCE_SPEED,
 } from '../domain/weapons/WeaponConstants.ts';
 import type { ResultsEntry, ResultsSceneData } from './ResultsScene.ts';
@@ -107,16 +116,11 @@ import {
   PLAYER_CAR_ID,
   SCENE_KEY,
   WEAPON_SHEET,
+  GROUND_ASSET_DIRECTORY,
 } from './sceneKeys.ts';
 
 /** Milliseconds → seconds, for Phaser's `update` delta. */
 const MILLISECONDS_PER_SECOND = 1000;
-
-/**
- * How many cars line up, the player included.
- *
- * Career uses `CareerGrid`; watch and debug-IA keep their own denser fields.
- */
 
 /**
  * World distance at which another car's explosion is inaudible.
@@ -202,6 +206,8 @@ export class RaceScene extends Phaser.Scene {
   private debugIaLogElapsed = 0;
   private debugIaSeats: readonly DebugIaSeat[] = [];
   private watchTrackPool: readonly string[] | undefined;
+  private readonly paintHidden = new Set<PaintLayerId>();
+  private fpsLogElapsed = 0;
   private watchPinned = false;
   /** Car id whose telemetry currently feeds `RaceAudio`; hop resets the idle shut-off. */
   private audioFocusCarId: string | null = null;
@@ -300,7 +306,34 @@ export class RaceScene extends Phaser.Scene {
   }
 
   create(): void {
+    try {
+      this.bootRace();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.add
+        .text(16, 16, `Race failed\n\n${message}`, {
+          fontFamily: 'monospace',
+          fontSize: '16px',
+          color: '#ff8080',
+          wordWrap: { width: this.scale.width - 32 },
+        })
+        .setScrollFactor(0)
+        .setDepth(4000);
+    }
+  }
+
+  preload(): void {
+    const theme = themeForTrackId(this.trackId);
+    if (!this.textures.exists(theme.groundKey)) {
+      this.load.image(theme.groundKey, `${GROUND_ASSET_DIRECTORY}/${theme.groundFile}`);
+    }
+  }
+
+  private bootRace(): void {
     this.track = findTrack(this.trackId);
+    if (this.debugIa) {
+      this.track = { ...this.track, laps: 99 };
+    }
     this.spline = new TrackSpline(this.track.controlPoints);
 
     // One number ties sprites and road together (locked decision 3): the scale the
@@ -310,6 +343,8 @@ export class RaceScene extends Phaser.Scene {
 
     this.trackRenderer = new TrackRenderer(this, this.track, this.spline, this.projection, {
       theme: themeForTrackId(this.track.id),
+      lowDetail: this.debugIa,
+      disableGroundTile: this.debugIa,
     });
     this.tyreMarks = new TyreMarks(this, this.projection);
     this.hitRewards = new HitRewardEffect(this, this.projection);
@@ -334,32 +369,39 @@ export class RaceScene extends Phaser.Scene {
       trapSeed: trapSeed(planet?.seed ?? 1, this.trackId),
     });
     this.views = this.field.racers.map(racer =>
-      new VehicleView(this, this.manifest, findCarSheet(this.manifest, racer.carId), this.projection),
+      new VehicleView(this, this.manifest, findCarSheet(this.manifest, racer.carId), this.projection, {
+        farLod: this.debugIa,
+      }),
     );
-    this.weaponLayer = this.add.graphics().setDepth(40);
+    this.publishDebugIaWindow();
+    this.weaponLayer = this.add.graphics().setDepth(40).setName('weaponLayer');
 
     const bounds = this.trackRenderer.bounds;
     this.cameras.main.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
     this.trackRenderer.syncToCamera(this.cameras.main);
 
     this.overlay = new TuningOverlay(this, this.cameras.main);
-    if (this.debugIa) {
-      this.overlay.show();
-    }
 
     this.bindSceneKeys();
     this.respawn();
 
-    // The HUD is its own scene deliberately (decision 25): launched over this one, it
-    // gets a camera at zoom 1 so screen pixels stay screen pixels. `launch` rather than
-    // `start`, because this scene must keep running underneath it.
-    this.scene.launch(SCENE_KEY.HUD);
+    if (!this.debugIa) {
+      this.scene.launch(SCENE_KEY.HUD);
+    }
+
+    traceLayer('10 cars', 0, `${this.views.length} VehicleView  depthOf(x+y)`);
+    traceLayer('11 crates/weapons', 40, 'weaponLayer + hazard/missile sprites');
+    traceLayer('12 overlay', Number.MAX_SAFE_INTEGER, this.debugIa ? 'shown (debug-IA)' : 'hidden until T');
+    dumpDisplayList(this);
+    console.info(
+      '[layers] hide paint with keys 1–7 (fill tile road tyres cars crates fx). Black leftover = Phaser clear #0a0a12.',
+    );
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.releaseResources());
   }
 
   update(_time: number, deltaMilliseconds: number): void {
-    if (this.resultsShown) {
+    if (this.resultsShown || this.field === undefined) {
       return;
     }
     const deltaSeconds = deltaMilliseconds / MILLISECONDS_PER_SECOND;
@@ -382,7 +424,9 @@ export class RaceScene extends Phaser.Scene {
     this.drawWeapons();
     // Once per frame, whatever the number of cars: ageing marks is a property of time
     // passing. Calling it per car aged them five times too fast.
-    this.tyreMarks.update(deltaSeconds);
+    if (!this.debugIa) {
+      this.tyreMarks.update(deltaSeconds);
+    }
     this.presentExplosions();
     this.presentScraps();
     this.presentWood();
@@ -400,17 +444,18 @@ export class RaceScene extends Phaser.Scene {
     //   impulse.zoomScale,
     // );
     this.trackRenderer.syncToCamera(this.cameras.main);
+    this.applyPaintVisibility();
     this.refreshOverlay();
     this.tickDebugIaLog(deltaSeconds);
+    this.tickFpsLog(deltaSeconds);
 
     this.maybeFinishRace(deltaSeconds);
   }
 
   /**
-   * End the race when the whole field has taken the flag, or when the podium
-   * grace clock (a quarter of a full-track par, armed as 3rd crosses) hits zero.
-   * The locutor already fires its finish line as cars cross; ResultsScene then
-   * presents the board.
+   * End the race when the player is already on the podium (three-second hold
+   * to the pub), when the whole field has taken the flag, or when the pack
+   * grace clock (a sixth of a full-track par, armed as 3rd crosses) hits zero.
    */
   private maybeFinishRace(deltaSeconds: number): void {
     if (this.resultsShown || this.watch || this.quitedTheRace) {
@@ -419,6 +464,19 @@ export class RaceScene extends Phaser.Scene {
     const race = this.field.race;
     const finishedCount = race.racers.filter(racer => racer.progress.finished).length;
     const allFinished = race.racers.length > 0 && finishedCount === race.racers.length;
+    const playerRace =
+      race.racers.find(racer => racer.racerIndex === this.player.gridIndex) ??
+      race.racers.find(racer => racer.carId === this.carId);
+    const playerStanding = this.field.standingOf(this.player.carId, this.player.gridIndex);
+    const playerOnPodium = isPlayerOnPodium(
+      playerRace?.progress.finished === true,
+      playerStanding?.position ?? Number.POSITIVE_INFINITY,
+    );
+
+    if (playerOnPodium) {
+      this.tickPodiumClock(deltaSeconds, race.elapsedSeconds, true);
+      return;
+    }
 
     if (allFinished) {
       this.podiumTimeoutRemaining = null;
@@ -433,8 +491,12 @@ export class RaceScene extends Phaser.Scene {
     if (!podiumIsLocked(finishedCount, race.racers.length)) {
       return;
     }
+    this.tickPodiumClock(deltaSeconds, race.elapsedSeconds, false);
+  }
+
+  private tickPodiumClock(deltaSeconds: number, elapsedSeconds: number, playerOnPodium: boolean): void {
     if (this.podiumTimeoutRemaining === null) {
-      this.armPodiumTimeout(race.elapsedSeconds);
+      this.armPodiumTimeout(elapsedSeconds, playerOnPodium);
     }
     if (this.podiumTimeoutRemaining === null) {
       return;
@@ -443,17 +505,17 @@ export class RaceScene extends Phaser.Scene {
     if (this.podiumTimeoutRemaining > 0) {
       return;
     }
-    this.handOffResults(race.elapsedSeconds);
+    this.handOffResults(elapsedSeconds);
   }
 
-  private armPodiumTimeout(elapsedSeconds: number): void {
+  private armPodiumTimeout(elapsedSeconds: number, playerOnPodium: boolean): void {
     const firstFinish = this.field.race.racers.reduce(
       (earliest, racer) => Math.min(earliest, racer.finishedAtSeconds ?? Infinity),
       Infinity,
     );
     const fallback = Number.isFinite(firstFinish) ? firstFinish : elapsedSeconds;
     const fullTrack = fullTrackSeconds(this.trackLines?.parTime, this.track.laps, fallback);
-    const duration = podiumTimeoutDuration(fullTrack);
+    const duration = podiumGraceDuration(fullTrack, playerOnPodium);
     if (duration <= 0) {
       this.podiumTimeoutRemaining = 0;
       this.podiumTimeoutDuration = 0;
@@ -476,8 +538,8 @@ export class RaceScene extends Phaser.Scene {
     const standings: ResultsEntry[] = this.field.race.standings.map(entry => ({
       position: entry.position,
       carId: entry.carId,
-      name: this.pilotNames[entry.carId] ?? findCarSheet(this.manifest, entry.carId).displayName,
-      isPlayer: entry.carId === this.carId,
+      name: this.pilotNameOf(entry.carId, entry.racerIndex),
+      isPlayer: this.field.racers[entry.racerIndex]?.isPlayer === true,
     }));
     const playerPosition =
       this.field.standingOf(this.carId)?.position ?? this.field.racers.length;
@@ -520,7 +582,7 @@ export class RaceScene extends Phaser.Scene {
    */
   hudReadout(): HudReadout {
     const player = this.followedRacer();
-    const standing = this.field.standingOf(player.carId);
+    const standing = this.field.standingOf(player.carId, player.gridIndex);
     const race = this.field.race;
 
     return {
@@ -560,9 +622,19 @@ export class RaceScene extends Phaser.Scene {
   /** The standings with display names rather than ids, for the HUD's list. */
   standingsWithNames(): readonly { readonly name: string; readonly position: number }[] {
     return this.field.race.standings.map(entry => ({
-      name: this.pilotNames[entry.carId] ?? findCarSheet(this.manifest, entry.carId).displayName,
+      name: this.pilotNameOf(entry.carId, entry.racerIndex),
       position: entry.position,
     }));
+  }
+
+  private pilotNameOf(carId: string, racerIndex?: number): string {
+    if (racerIndex !== undefined) {
+      const seated = this.field.racers[racerIndex]?.name;
+      if (seated !== undefined && seated.length > 0) {
+        return seated;
+      }
+    }
+    return this.pilotNames[carId] ?? findCarSheet(this.manifest, carId).displayName;
   }
 
   /**
@@ -704,7 +776,7 @@ export class RaceScene extends Phaser.Scene {
           .setFrame(frameIndexForHeading(heading, WEAPON_SHEET.frameCount))
           .setDepth(this.projection.depthOf(missile.position) + 0.5);
         const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * missile.radius;
-        this.scaleWeaponSprite(sprite, carLength * 0.7 * px);
+        this.scaleWeaponSprite(sprite, carLength * MISSILE_SIZE_OF_CAR * px);
       } else {
         const radius = Math.max(4, missile.radius * px * 0.45);
         this.weaponLayer.fillStyle(0xffe066, 1);
@@ -736,16 +808,17 @@ export class RaceScene extends Phaser.Scene {
         const screen = this.projection.toScreen(hazard.position, height);
         sprite
           .setVisible(true)
+          .setOrigin(0.5, isCrate || isGasoline ? 0.82 : 0.5)
           .setPosition(screen.x, screen.y)
           .setFrame(0)
           .setDepth(this.projection.depthOf(hazard.position) - 0.2 + height);
-        const display = hazard.radius * 2;
+        const display = hazard.radius * 2 * (isCrate ? 1.85 : isGasoline ? 2.6 : 1);
         this.scaleWeaponSprite(sprite, display * px);
         if (isOil) {
           sprite.setFrame(Math.floor(this.time.now / 90) % WEAPON_SHEET.frameCount);
         }
       } else {
-        const radius = Math.max(10, hazard.radius * px * 0.85);
+        const radius = Math.max(10, hazard.radius * px * (isCrate || isGasoline ? 1.8 : 0.85));
         const height = (hazard.stackIndex ?? 0) * 8;
         if (isOil) {
           this.weaponLayer.fillStyle(0x1a1208, 0.85);
@@ -863,7 +936,7 @@ export class RaceScene extends Phaser.Scene {
     if (
       shouldParkEngine({
         destroyed: focus.integrity.condition === CAR_CONDITION.DESTROYED,
-        finished: this.field.standingOf(focus.carId)?.finished === true,
+        finished: this.field.standingOf(focus.carId, focus.gridIndex)?.finished === true,
         hasTelemetry: focus.telemetry !== null,
         speed,
       })
@@ -976,8 +1049,14 @@ export class RaceScene extends Phaser.Scene {
     if (this.watch) {
       return this.buildWatchEntries();
     }
-    const rosterIds = npcRosterForPlanet(this.planetIndex);
-    const npcIds = assignNpcCars(rosterIds, this.carId, CAREER_NPC_COUNT);
+    const playable = playableCarIds(this.manifest);
+    if (!playable.includes(this.carId) && playable[0] !== undefined) {
+      this.carId = playable[0];
+    }
+    const planetIds = npcRosterForPlanet(this.planetIndex).filter(id => playable.includes(id));
+    const extra = playable.filter(id => !planetIds.includes(id));
+    const npcSource = planetIds.length > 0 ? [...planetIds, ...extra] : playable;
+    const npcIds = assignNpcCars(npcSource, this.carId, CAREER_NPC_COUNT);
     this.playerPilotName = loadActiveName() || 'YOU';
     const career = loadActiveCareer();
     const rivals = rivalsForPlanet(
@@ -988,7 +1067,7 @@ export class RaceScene extends Phaser.Scene {
     const npcPilots = npcPilotNames(rivals, CAREER_NPC_COUNT);
     this.pilotNames = { [this.carId]: this.playerPilotName };
     npcIds.forEach((id, index) => {
-      this.pilotNames[id] = npcPilots[index] ?? `RIV${index + 1}`;
+      this.pilotNames[seatCarId(id, index)] = npcPilots[index] ?? `RIV${index + 1}`;
     });
     this.sittingRivals = rivals.filter(name => !npcPilots.includes(name));
 
@@ -997,7 +1076,7 @@ export class RaceScene extends Phaser.Scene {
     const npcs = npcIds.map((carId, index) => {
       const sheet = findCarSheet(this.manifest, carId);
       return {
-        carId,
+        carId: seatCarId(carId, index),
         name: npcPilots[index] ?? `RIV${index + 1}`,
         stats: sheet.stats,
         perk: sheet.perk,
@@ -1012,6 +1091,7 @@ export class RaceScene extends Phaser.Scene {
       ...npcs,
       {
         carId: this.carId,
+        name: this.playerPilotName,
         stats: player.stats,
         perk: player.perk,
         homePlanetId: player.homePlanetId,
@@ -1022,7 +1102,7 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private buildWatchEntries(): readonly RacerEntry[] {
-    const allIds = watchCarIds(this.manifest.cars.map(car => car.id));
+    const allIds = watchCarIds(playableCarIds(this.manifest));
     const planetTwoIndex = Math.max(0, this.planetIndex - 1);
     const { field, reserve } = splitWatchRoster(allIds, planetTwoIndex);
     const pilots = watchPilots();
@@ -1047,7 +1127,7 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private buildDebugIaEntries(): readonly RacerEntry[] {
-    const allIds = this.manifest.cars.map(car => car.id);
+    const allIds = playableCarIds(this.manifest);
     const grid = this.debugIaMix
       ? drawSkillMixGrid(allIds, this.debugIaSeed, this.debugIaMix)
       : drawDebugIaGrid(allIds, this.debugIaSeed, this.debugIaNpcCount);
@@ -1056,7 +1136,6 @@ export class RaceScene extends Phaser.Scene {
     this.sittingRivals = [];
     this.pilotNames = {};
     this.carId = grid.seats[0]?.carId ?? this.carId;
-    this.publishDebugIaWindow();
     return grid.seats.map(seat => {
       const sheet = findCarSheet(this.manifest, seat.carId);
       this.pilotNames[seat.carId] = seat.name;
@@ -1167,6 +1246,22 @@ export class RaceScene extends Phaser.Scene {
 
     // T hides the overlay, for looking at the game rather than at the numbers.
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T).on('down', unlessPaused(() => this.overlay.toggle()));
+    const paintKeyCodes = [
+      Phaser.Input.Keyboard.KeyCodes.ONE,
+      Phaser.Input.Keyboard.KeyCodes.TWO,
+      Phaser.Input.Keyboard.KeyCodes.THREE,
+      Phaser.Input.Keyboard.KeyCodes.FOUR,
+      Phaser.Input.Keyboard.KeyCodes.FIVE,
+      Phaser.Input.Keyboard.KeyCodes.SIX,
+      Phaser.Input.Keyboard.KeyCodes.SEVEN,
+    ] as const;
+    PAINT_LAYER_KEYS.forEach((layer, index) => {
+      const code = paintKeyCodes[index];
+      if (code === undefined) {
+        return;
+      }
+      keyboard.addKey(code).on('down', unlessPaused(() => this.togglePaintLayer(layer.id)));
+    });
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N).on('down', unlessPaused(() => {
       this.aiFocusIndex += 1;
       this.watchPinned = true;
@@ -1373,9 +1468,10 @@ export class RaceScene extends Phaser.Scene {
     const spectator = this.watch || this.quitedTheRace;
     const focus = spectator ? this.followedRacer() : this.player;
     const race = this.field.race;
-    const standing = this.field.standingOf(focus.carId);
+    const standing = this.field.standingOf(focus.carId, focus.gridIndex);
     const position = standing?.position ?? this.field.racers.length;
-    const humanRace = race.racers.find(racer => racer.carId === this.carId);
+    const humanRace = race.racers.find(racer => racer.racerIndex === this.player.gridIndex)
+      ?? race.racers.find(racer => racer.carId === this.carId);
     const humanFinished = this.player.isPlayer && humanRace?.progress.finished === true;
     const turboCount = this.field.racers.filter(racer => racer.turboRemaining > 0).length;
     const leaderId = race.standings[0]?.carId;
@@ -1465,7 +1561,7 @@ export class RaceScene extends Phaser.Scene {
     if (focus === undefined) {
       return header;
     }
-    const snapshot = this.field.aiDebug(focus.carId);
+    const snapshot = this.field.aiDebug(focus.carId, focus.gridIndex);
     if (snapshot === undefined) {
       return [...header, `NPC ${focus.name} — no AI snapshot`];
     }
@@ -1489,7 +1585,8 @@ export class RaceScene extends Phaser.Scene {
     return [
       `DEBUG-IA  ${this.track.displayName}  ${this.field.racers.length} NPC  cam ${Math.round(DEBUG_IA_CAMERA_MAP_FRACTION * 100)}% map  seed ${this.debugIaSeed}${mix}`,
       terrainLine,
-      `LEADER  ${leaderName}  zoom ${this.cameras.main.zoom.toFixed(2)}  t ${this.field.race.elapsedSeconds.toFixed(1)}s`,
+      `LEADER  ${leaderName}  zoom ${this.cameras.main.zoom.toFixed(2)}  t ${this.field.race.elapsedSeconds.toFixed(1)}s  fps ${this.game.loop.actualFps.toFixed(0)}`,
+      `LAYERS  1–7 hide  hidden [${[...this.paintHidden].join(' ') || 'none'}]`,
       '',
     ];
   }
@@ -1507,6 +1604,53 @@ export class RaceScene extends Phaser.Scene {
     void postDebugIaLogs(this.debugIaLogEntries());
   }
 
+  private togglePaintLayer(id: PaintLayerId): void {
+    if (this.paintHidden.has(id)) {
+      this.paintHidden.delete(id);
+    } else {
+      this.paintHidden.add(id);
+    }
+    traceLayer(`hide ${id}`, 0, this.paintHidden.has(id) ? 'OFF' : 'ON');
+    this.applyPaintVisibility();
+    dumpDisplayList(this);
+  }
+
+  private applyPaintVisibility(): void {
+    const fillOn = !this.paintHidden.has('fill');
+    const tileOn = !this.paintHidden.has('tile');
+    const roadOn = !this.paintHidden.has('road');
+    this.trackRenderer.setTerrainVisible('fill', fillOn);
+    this.trackRenderer.setTerrainVisible('tile', tileOn);
+    this.trackRenderer.setTerrainVisible('road', roadOn);
+    this.tyreMarks.setVisible(!this.paintHidden.has('tyres'));
+    const carsOn = !this.paintHidden.has('cars');
+    for (const view of this.views) {
+      if (!carsOn) {
+        view.setVisible(false);
+      }
+    }
+    const cratesOn = !this.paintHidden.has('crates');
+    this.weaponLayer.setVisible(cratesOn);
+    if (!cratesOn) {
+      for (const sprite of this.missileSprites) {
+        sprite.setVisible(false);
+      }
+      for (const sprite of this.hazardSprites) {
+        sprite.setVisible(false);
+      }
+    }
+    this.explosions.setVisible(!this.paintHidden.has('fx'));
+  }
+
+  private tickFpsLog(deltaSeconds: number): void {
+    this.fpsLogElapsed += deltaSeconds;
+    if (this.fpsLogElapsed < 2) {
+      return;
+    }
+    this.fpsLogElapsed = 0;
+    logFps(this, `hidden=[${[...this.paintHidden].join(',') || 'none'}]`);
+  }
+
   private debugIaLogEntries(): { file: string; line: string }[] {
     const elapsed = this.field.race.elapsedSeconds;
     const planet = planetForTrackId(this.trackId);
@@ -1514,8 +1658,8 @@ export class RaceScene extends Phaser.Scene {
     const leaderId = this.field.race.standings[0]?.carId ?? '-';
     const onTarmac = (offset: number) => Math.abs(offset) <= this.track.halfWidth;
     return this.field.racers.map(racer => {
-      const standing = this.field.standingOf(racer.carId);
-      const snapshot = this.field.aiDebug(racer.carId);
+      const standing = this.field.standingOf(racer.carId, racer.gridIndex);
+      const snapshot = this.field.aiDebug(racer.carId, racer.gridIndex);
       const name = this.pilotNames[racer.carId] ?? racer.carId;
       const file = debugIaLogFileName(name, racer.carId);
       const line = [
@@ -1545,7 +1689,7 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private publishDebugIaWindow(): void {
-    if (typeof window === 'undefined' || !this.debugIa) {
+    if (typeof window === 'undefined' || !this.debugIa || this.field === undefined) {
       return;
     }
     const payload = {

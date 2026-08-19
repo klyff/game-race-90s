@@ -9,13 +9,40 @@
 | Plan file | `~/.claude/plans/fa-a-um-plano-para-compressed-beaver.md` |
 | Product | Isometric arcade racer, Rock N Roll Racing (web) |
 | Created | 2026-08-15 16:24 PDT |
-| Last updated | 2026-08-18 (NPC AI V2 live) |
+| Last updated | 2026-08-18 (NPC AI V2 live; product V2 waves 0–3 local) |
 | Graph | `graphify-out/` code-only; wiki `graphify-out/wiki/index.md`. Agent lose graph history OK — re-query, do not stop. |
 | Git | commit + push end of every iteration |
 
+## V2 board (2026-08-18)
+
+Orquestrador: board + worklog de todos. 2 abordagens falhas no mesmo arquivo **ou** 15 min sem teste verde → troca o agente. Fan-out ok. Dev implementa; QA verifica por **imagem** (`tools/verify/`, `file://`, never `npm run dev`).
+
+Stuck-swap: worklog 4 linhas (`feito` · `decisão` · `bloqueio` · `próximo`). Nunca apagar tarefa.
+
+| ID | Papel | Entrega | Gate QA | Status |
+|---|---|---|---|---|
+| W0-BOOT | Dev-A + Arquiteto | Boot sobe Splash sem 61 404s; barra de load | screenshot Splash, não preto | done |
+| W0-PERF | Dev-Perf | Track bake / LOD debug-IA; lazy load | race não congela no zoom longe | done |
+| W1-SIM | Dev-Debug | 3×300s + prints + `~/tmp/run-…` | 3 pastas, 11 PNGs, logs por piloto | done |
+| W2-UI | Dev-UI | Comic, personagem, garagem HERO, pódio | teclado Splash→…→Garagem | done |
+| W2-GRID | Dev-Race | 5 carros; espera **todos** no finish | grid ímpar; Results após pelotão | done |
+| W3-MAP | Dev-Track | Rampas W1 extra + W3; 1 rampa void | preview PNG + corrida W1 e W3 | done |
+| NPC-AI-V2 | Domain | Futures-first brain; recover orthogonal | mix 2:2:2 0/6 RECOVER | done — `292c0ab`. Do not replace with utility-first RECOVER. |
+
+### Cell worklogs
+
+- **Orquestrador** — feito: board + waves 0–3. decisão: unique `carId#seat` no debug-IA; retrato só matrix 1/2/18–21. bloqueio: Playwright npm registry. próximo: QA file://.
+- **Dev-A** — feito: Boot playable strips, barra, fatal visível, vercel sem catch-all, 300px heroes. decisão: remap matrix, não 61 404s. bloqueio: — próximo: —.
+- **Dev-Perf** — feito: TrackRenderer bake/lowDetail, câmera 0.90, tile/HUD off no debug-IA. decisão: overlay off no debug-IA. bloqueio: — próximo: —.
+- **Dev-Debug** — feito: 3×300s logs + 11 PNGs em `~/tmp/run-18-08-2026__15-54`. decisão: 60 Hz jsonl; laps 99 no live. bloqueio: `publishDebugIaWindow` antes do field (corrigido). próximo: canvas.
+- **Dev-UI** — feito: OriginComic + CharacterSelect; Splash→comic; garagem HERO 300 + NOW/NEXT. decisão: teclado primeiro. bloqueio: — próximo: —.
+- **Dev-Race** — feito: career 5; espera todos; jingle + foto 1º. decisão: ímpar na carreira. bloqueio: — próximo: —.
+- **Dev-Track** — feito: Basin I rampa extra; Basin II void 45°; Bogmire authored 15°+45°. decisão: gen:traps depois de rampZones. bloqueio: Bogmire 0 voltas em 5 min. próximo: tuning W3.
+- **QA-Load** — feito: debug-IA far cam visível. decisão: `file://` + Playwright 1234. bloqueio: EPERM em `npm run dev`. próximo: Splash/UI shots.
+
 ## Current state in one line
 
-NPC AI V2 is live on `main` (`292c0ab`, `docs/ia/V2.md`). Do not restore utility-first `RECOVER`. Trust `npm test` / `npm run typecheck` over numbers here. Screenshot via `tools/verify/` — read README first. Verify by image, not object state.
+NPC AI V2 is live on `main` (`292c0ab`, `docs/ia/V2.md`). Product “V2 waves” 0–3 are a different track (comic/garage/maps) and must not rewrite `src/domain/ai/`. Boot loads playable matrix strips only. Debug-IA far cam + 3×300s NPC run in `~/tmp/run-18-08-2026__15-54`. Trust `npm test` / `npm run typecheck`. Screenshot via `tools/verify/` — read README first. Verify by image, not object state.
 
 ## How to resume this work (orchestrator instructions)
 

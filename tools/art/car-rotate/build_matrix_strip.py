@@ -14,6 +14,7 @@ Algorithm (as specified):
   6. ONE invisible collision_rect: w,h = (min+max)/2 of content bboxes.
   7. Production strip only: magick -resize (64/1700*100)% → car_N_strip_64.png
      (art PNG discarded; arrays/JSON keep 1700-space numbers)
+  8. compact_images.sh subprocess on that strip_64 only (hero stays out)
 
 Usage:
   python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/1_hero
@@ -43,6 +44,26 @@ PROD_DST_W = 64
 # Arrays/JS: SCALE = 64/1700. Magick % = SCALE*100. Scaled strip W = SCALE * strip.width
 PROD_SCALE = PROD_DST_W / PROD_SRC_W  # 0.0376470588
 MAGICK_PCT = PROD_SCALE * 100  # 3.764705882352941 → -resize 3.764705882352941%
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def compact_strip_64(strip_64: Path) -> None:
+    """PNG compact as a subprocess. Never the hero — strip_64 only."""
+    script = REPO_ROOT / "compact_images.sh"
+    if not script.is_file():
+        print(f"WARN compact skip: missing {script}")
+        return
+    try:
+        rel = strip_64.resolve().relative_to(REPO_ROOT)
+    except ValueError:
+        rel = strip_64
+    backup = REPO_ROOT / "_originais" / rel
+    backup.unlink(missing_ok=True)
+    subprocess.run(
+        ["bash", str(script), str(rel)],
+        cwd=REPO_ROOT,
+        check=True,
+    )
 
 
 def px(v: float) -> int:
@@ -280,6 +301,8 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
         finally:
             tmp_path.unlink(missing_ok=True)
             out_png_art.unlink(missing_ok=True)
+
+        compact_strip_64(out_png_64)
 
         sources_name = f"car_{car_n}_sources.tar.gz"
         payload = {

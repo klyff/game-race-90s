@@ -1,8 +1,12 @@
-NEGAO  — JOKER (planet 10)
+NEGAO — JOKER (planet 10)
+
+CARD
+negao.png
+ON CARD: nameplate NEGAO. Brazil-flag pendant on a gold chain. Yellow open racing shirt, green chest patch, huge afro, mustache + goatee, warm laugh. Red guitar neon, yellow sports car.
 
 BIO
 João "Negão" Barbosa. Negão Brasil. Carnival in a man's body. Hollywood never saw a yellow muscle car coming.
 
 PHYSICAL / WARDROBE / SET
-Huge Afro-Brazilian, very dark skin, gold chain with a Brazil flag pendant, yellow-and-green racing shirt open, thick arms, warm dangerous smile. Hollywood Blvd palms, chrome yellow muscle car, carnival lights. Always facing camera.
+Huge Afro-Brazilian, very dark skin, gold chain with a Brazil flag pendant, yellow-and-green racing shirt open, thick arms, warm dangerous smile. Hollywood Blvd palms, chrome yellow muscle car, carnival / guitar neon. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

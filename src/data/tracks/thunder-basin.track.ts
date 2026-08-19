@@ -59,6 +59,7 @@ export const thunderBasin: TrackDefinition = {
   // 15° mid bottom straight; 30° on the hairpin approach.
   rampZones: [
     { triggerDistance: 200, triggerLength: 12, launchSpeed: 11, inclineDegrees: 15 },
+    { triggerDistance: 720, triggerLength: 10, launchSpeed: 11, inclineDegrees: 15 },
     { triggerDistance: 1240, triggerLength: 10, launchSpeed: 13, inclineDegrees: 30 },
   ],
 };

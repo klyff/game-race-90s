@@ -3,6 +3,9 @@
  * (+ stacks), wood chips. Hard edges, limited palette, light top-left, transparent
  * ground. Pin sits low-centre so the sprite reads next to a car.
  *
+ * Trap stills use isometric 2:1 as **X=+2, Y=+1** per stair (wide-flat lid,
+ * slim tall body). The √2 world-circle inflate made a chubby puck — don't.
+ *
  * Run: npm run gen:traps-art
  *   or: node --experimental-strip-types tools/art/generate-traps.ts
  */
@@ -10,8 +13,23 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
-
 const SIZE = 64;
+/**
+ * Isometric 2:1: each stair is X=+2, Y=+1.
+ * A lid that walks `k` stairs is `4k` wide and `2k` tall.
+ */
+const STEP_X = 2;
+const STEP_Y = 1;
+/** Stairs north→east. k=7 → lid 28×14, stairs read as 2:1 at 1×. */
+const CRATE_K = 7;
+/** Vertical drop of the crate walls. */
+const CRATE_WALL = 14;
+/** Slim drum: lid ellipse width:height = 2:1. No √2 fattening. */
+const DRUM_RX = 8;
+const DRUM_RY = DRUM_RX * (STEP_Y / STEP_X);
+const DRUM_BODY = 28;
+const PIN_X = 32;
+const PIN_Y = 50;
 const CHIP = 16;
 
 type Rgba = readonly [number, number, number, number];
@@ -91,9 +109,82 @@ function inEllipse(x: number, y: number, cx: number, cy: number, rx: number, ry:
   return dx * dx + dy * dy <= 1;
 }
 
+/** Horizontal circle under X=+2, Y=+1 → ellipse twice as wide as tall. */
+function inIsoCircle(x: number, y: number, cx: number, cy: number, rx: number): boolean {
+  return rx > 0 && inEllipse(x, y, cx, cy, rx, rx * (STEP_Y / STEP_X));
+}
+
+function crateCorners(): {
+  readonly topN: { x: number; y: number };
+  readonly topE: { x: number; y: number };
+  readonly topS: { x: number; y: number };
+  readonly topW: { x: number; y: number };
+  readonly botE: { x: number; y: number };
+  readonly botS: { x: number; y: number };
+  readonly botW: { x: number; y: number };
+} {
+  const topN = { x: PIN_X, y: PIN_Y - 2 * CRATE_K * STEP_Y - CRATE_WALL };
+  const topE = { x: PIN_X + CRATE_K * STEP_X, y: topN.y + CRATE_K * STEP_Y };
+  const topS = { x: PIN_X, y: topN.y + 2 * CRATE_K * STEP_Y };
+  const topW = { x: PIN_X - CRATE_K * STEP_X, y: topN.y + CRATE_K * STEP_Y };
+  return {
+    topN,
+    topE,
+    topS,
+    topW,
+    botE: { x: topE.x, y: topE.y + CRATE_WALL },
+    botS: { x: topS.x, y: topS.y + CRATE_WALL },
+    botW: { x: topW.x, y: topW.y + CRATE_WALL },
+  };
+}
+
 /**
- * Iso crate — classic 2:1 box (diamond lid + two parallelogram faces).
- * Ground pin ≈ (32, 52). Must read as a BOX at 1×, not a cone.
+ * Integer 2:1 diamond (X=+2, Y=+1). Row `i` from the north tip spans
+ * `PIN_X ± 2*i` until the waist, then tapers. No float edges — those read as 45°.
+ */
+function forIsoDiamond(
+  n: { readonly x: number; readonly y: number },
+  k: number,
+  visit: (x: number, y: number, row: number) => void,
+): void {
+  const height = 2 * k;
+  for (let row = 0; row <= height; row += 1) {
+    const half = row <= k ? 2 * row : 2 * (height - row);
+    const y = n.y + row;
+    for (let x = n.x - half; x <= n.x + half; x += 1) {
+      visit(x, y, row);
+    }
+  }
+}
+
+/**
+ * Parallelogram side: 2:1 lid edge, then `wall` straight down.
+ * `toward` is +1 for the left face (W→S, x grows), −1 for the right (E→S).
+ */
+function forIsoWall(
+  peak: { readonly x: number; readonly y: number },
+  k: number,
+  wall: number,
+  toward: 1 | -1,
+  visit: (x: number, y: number, drop: number) => void,
+): void {
+  for (let stair = 0; stair <= k; stair += 1) {
+    const xEdge = peak.x + toward * 2 * stair;
+    const yEdge = peak.y + stair;
+    const xInner = peak.x;
+    const x0 = Math.min(xInner, xEdge);
+    const x1 = Math.max(xInner, xEdge);
+    for (let drop = 0; drop < wall; drop += 1) {
+      for (let x = x0; x <= x1; x += 1) {
+        visit(x, yEdge + drop, drop);
+      }
+    }
+  }
+}
+
+/**
+ * Iso crate — lid stairs X=+2, Y=+1. Wide-flat diamond, tall slim walls.
+ * Ground pin ≈ (32, 50). Must read as a BOX at 1×, not a cone.
  */
 function drawCrate(smash: number = 0): Uint8Array {
   const frame = empty();
@@ -102,107 +193,46 @@ function drawCrate(smash: number = 0): Uint8Array {
   const burst = smash >= 3;
   const onlyChips = smash >= 4;
 
-  // Box geometry (iso 2:1). Top diamond corners.
-  const topN = { x: 32, y: 16 };
-  const topE = { x: 48, y: 24 };
-  const topS = { x: 32, y: 32 };
-  const topW = { x: 16, y: 24 };
-  const height = 20; // vertical drop of side faces
-
-  const fillPoly = (
-    points: readonly { readonly x: number; readonly y: number }[],
-    colourAt: (x: number, y: number) => Rgba | null,
-  ): void => {
-    let minY = SIZE;
-    let maxY = 0;
-    for (const p of points) {
-      minY = Math.min(minY, p.y);
-      maxY = Math.max(maxY, p.y);
-    }
-    for (let y = minY; y <= maxY; y += 1) {
-      const xs: number[] = [];
-      for (let i = 0; i < points.length; i += 1) {
-        const a = points[i]!;
-        const b = points[(i + 1) % points.length]!;
-        if ((a.y <= y && b.y > y) || (b.y <= y && a.y > y)) {
-          const t = (y - a.y) / (b.y - a.y);
-          xs.push(a.x + t * (b.x - a.x));
-        }
-      }
-      xs.sort((u, v) => u - v);
-      for (let i = 0; i + 1 < xs.length; i += 2) {
-        const x0 = Math.ceil(xs[i]!);
-        const x1 = Math.floor(xs[i + 1]!);
-        for (let x = x0; x <= x1; x += 1) {
-          const colour = colourAt(x, y);
-          if (colour !== null) {
-            set(frame, SIZE, x, y, colour);
-          }
-        }
-      }
-    }
-  };
+  const { topN, topE, topS, topW, botE, botS, botW } = crateCorners();
 
   if (!onlyChips) {
-    // Right face first (behind), then left, then top — painters order for iso.
-    fillPoly(
-      [
-        topE,
-        topS,
-        { x: topS.x, y: topS.y + height },
-        { x: topE.x, y: topE.y + height },
-      ],
-      (x, y) => {
-        if (burst && y > topS.y + 12 && x < topE.x - 4) {
-          return null;
-        }
-        if ((y - topE.y) % 5 === 0) {
-          return WOOD_DEEP;
-        }
-        return x >= topE.x - 3 ? WOOD_DEEP : WOOD_SHADE;
-      },
-    );
-
-    fillPoly(
-      [
-        topW,
-        topS,
-        { x: topS.x, y: topS.y + height },
-        { x: topW.x, y: topW.y + height },
-      ],
-      (x, y) => {
-        if (burst && y > topS.y + 12 && x > topW.x + 4) {
-          return null;
-        }
-        if ((y - topW.y) % 5 === 0) {
-          return GRAIN;
-        }
-        return x <= topW.x + 3 ? WOOD_LIT : WOOD;
-      },
-    );
-
-    fillPoly([topN, topE, topS, topW], (x, y) => {
-      if (open && Math.abs(x - 32) < 2 + smash && y >= 20 && y <= 30) {
-        return null;
+    // Right face first (behind), then left, then lid — painters order.
+    forIsoWall(topE, CRATE_K, CRATE_WALL, -1, (x, y, drop) => {
+      if (burst && drop > 8 && x < topE.x - 4) {
+        return;
       }
-      if (smash === 1 && Math.abs(x - 32) <= 1 && y >= 20 && y <= 30) {
-        return WOOD_DEEP;
-      }
-      // Plank seams across the lid.
-      const seam = (x + y * 2) % 7 === 0;
-      if (seam) {
-        return GRAIN;
-      }
-      if (x < 28) {
-        return WOOD_LIT;
-      }
-      if (x > 36) {
-        return WOOD_MID;
-      }
-      return WOOD;
+      const colour =
+        drop % 5 === 0 ? WOOD_DEEP : x >= topE.x - 3 ? WOOD_DEEP : WOOD_SHADE;
+      set(frame, SIZE, x, y, colour);
     });
 
-    // Iron corner brackets — readable metal squares on the silhouette corners.
+    forIsoWall(topW, CRATE_K, CRATE_WALL, 1, (x, y, drop) => {
+      if (burst && drop > 8 && x > topW.x + 4) {
+        return;
+      }
+      const colour = drop % 5 === 0 ? GRAIN : x <= topW.x + 3 ? WOOD_LIT : WOOD;
+      set(frame, SIZE, x, y, colour);
+    });
+
+    forIsoDiamond(topN, CRATE_K, (x, y) => {
+      if (open && Math.abs(x - PIN_X) < 2 + smash && y >= topN.y + 4 && y <= topS.y - 2) {
+        return;
+      }
+      if (smash === 1 && Math.abs(x - PIN_X) <= 1 && y >= topN.y + 4 && y <= topS.y - 2) {
+        set(frame, SIZE, x, y, WOOD_DEEP);
+        return;
+      }
+      let colour: Rgba = WOOD;
+      if ((x - 2 * y) % 6 === 0 || (x + 2 * y) % 6 === 0) {
+        colour = GRAIN;
+      } else if (x < PIN_X - 4) {
+        colour = WOOD_LIT;
+      } else if (x > PIN_X + 4) {
+        colour = WOOD_MID;
+      }
+      set(frame, SIZE, x, y, colour);
+    });
+
     const brackets: Array<readonly [number, number, Rgba]> = [
       [topN.x - 1, topN.y + 1, IRON_LIT],
       [topN.x, topN.y + 1, IRON],
@@ -211,12 +241,12 @@ function drawCrate(smash: number = 0): Uint8Array {
       [topW.x + 1, topW.y + 1, IRON],
       [topE.x - 1, topE.y, IRON],
       [topE.x - 1, topE.y + 1, IRON_DARK],
-      [topW.x + 2, topW.y + height - 1, IRON],
-      [topW.x + 3, topW.y + height - 1, IRON_DARK],
-      [topE.x - 2, topE.y + height - 1, IRON_DARK],
-      [topE.x - 3, topE.y + height - 1, IRON_DARK],
-      [topS.x - 1, topS.y + height - 1, IRON_DARK],
-      [topS.x, topS.y + height - 1, IRON],
+      [botW.x + 2, botW.y - 1, IRON],
+      [botW.x + 3, botW.y - 1, IRON_DARK],
+      [botE.x - 2, botE.y - 1, IRON_DARK],
+      [botE.x - 3, botE.y - 1, IRON_DARK],
+      [botS.x - 1, botS.y - 1, IRON_DARK],
+      [botS.x, botS.y - 1, IRON],
     ];
     for (const [x, y, colour] of brackets) {
       if (getA(frame, SIZE, x, y) !== 0) {
@@ -258,7 +288,7 @@ function drawCrateStack(height: 2 | 3): Uint8Array {
   const layers = height;
   for (let layer = 0; layer < layers; layer += 1) {
     const single = drawCrate(0);
-    const dy = (layers - 1 - layer) * -14;
+    const dy = (layers - 1 - layer) * -11;
     for (let y = 0; y < SIZE; y += 1) {
       for (let x = 0; x < SIZE; x += 1) {
         if (getA(single, SIZE, x, y) === 0) {
@@ -283,82 +313,122 @@ function drawCrateStack(height: 2 | 3): Uint8Array {
   return frame;
 }
 
-/** Dirty red iso drum — 3/4 lean, yellow rim, rust blotches. Not the HUD front-on barrel. */
+/**
+ * Dirty red iso drum — slim standing cylinder.
+ * Lid / hoops use the same X=+2, Y=+1 ellipse (2 wide, 1 tall). Not a puck.
+ */
 function drawGasoline(): Uint8Array {
   const frame = empty();
-  const cx = 32;
+  const cx = PIN_X;
+  const rx = DRUM_RX;
+  const ry = DRUM_RY;
+  const topCy = 18;
+  const botCy = topCy + DRUM_BODY;
 
-  // Body cylinder, iso lean: wider mid, shadowed right.
-  for (let y = 18; y <= 52; y += 1) {
-    const t = (y - 18) / 34;
-    const half = Math.floor(11 + Math.sin(t * Math.PI) * 2);
-    const hoop = y === 24 || y === 25 || y === 34 || y === 35 || y === 44 || y === 45;
-    for (let x = cx - half; x <= cx + half; x += 1) {
-      let colour: Rgba = x <= cx - 4 ? RED_LIT : x >= cx + 4 ? RED_DARK : RED;
-      if (hoop) {
-        colour = x <= cx - 3 ? RED_MID : RED_DARK;
+  const bodyColour = (x: number, y: number, hoop: boolean): Rgba => {
+    if (hoop) {
+      return x <= cx - 2 ? RED_MID : RED_DARK;
+    }
+    if (y >= botCy + ry - 2) {
+      return RED_DARK;
+    }
+    if (x <= cx - 3) {
+      return RED_LIT;
+    }
+    if (x >= cx + 3) {
+      return RED_DARK;
+    }
+    return RED;
+  };
+
+  const hoopAt = (cy: number, x: number, y: number): boolean => {
+    if (!inIsoCircle(x, y, cx, cy, rx)) {
+      return false;
+    }
+    const onRim =
+      !inIsoCircle(x, y, cx, cy, rx - 1.15) || x <= cx - rx + 1 || x >= cx + rx - 1;
+    return onRim && y >= cy - 1;
+  };
+
+  for (let y = botCy - ry; y <= botCy + ry; y += 1) {
+    for (let x = cx - rx; x <= cx + rx; x += 1) {
+      if (inIsoCircle(x, y, cx, botCy, rx) && y >= botCy) {
+        set(frame, SIZE, x, y, x >= cx ? RED_DARK : RED_MID);
       }
-      if (y >= 50) {
-        colour = RED_DARK;
-      }
-      set(frame, SIZE, x, y, colour);
     }
   }
 
-  // Yellow lid ellipse.
-  for (let y = 12; y <= 22; y += 1) {
-    for (let x = 18; x <= 46; x += 1) {
-      if (!inEllipse(x, y, cx, 17, 13, 5)) {
+  for (let y = topCy; y <= botCy; y += 1) {
+    for (let x = cx - rx; x <= cx + rx; x += 1) {
+      set(frame, SIZE, x, y, bodyColour(x, y, false));
+    }
+  }
+
+  for (const cy of [topCy + 7, topCy + 14]) {
+    for (let y = cy - ry; y <= cy + ry; y += 1) {
+      for (let x = cx - rx; x <= cx + rx; x += 1) {
+        if (getA(frame, SIZE, x, y) === 0) {
+          continue;
+        }
+        if (hoopAt(cy, x, y)) {
+          set(frame, SIZE, x, y, bodyColour(x, y, true));
+        }
+      }
+    }
+  }
+
+  // Full 2:1 lid disk. Small and flat — the body is the height.
+  for (let y = topCy - ry; y <= topCy + ry; y += 1) {
+    for (let x = cx - rx; x <= cx + rx; x += 1) {
+      if (!inIsoCircle(x, y, cx, topCy, rx)) {
         continue;
       }
       let colour: Rgba = YELLOW;
-      if (y <= 15 && x <= 34) {
+      if (y <= topCy - 3 && x <= cx + 1) {
         colour = YELLOW_LIT;
       }
-      if (y >= 19 || x >= 40) {
+      if (x >= cx + 2) {
         colour = YELLOW_DARK;
       }
       set(frame, SIZE, x, y, colour);
     }
   }
-  // Bung.
-  set(frame, SIZE, 36, 16, YELLOW_DARK);
-  set(frame, SIZE, 37, 16, OUTLINE);
-  set(frame, SIZE, 36, 17, OUTLINE);
 
-  // Hazard diamond on body.
-  for (let y = 30; y <= 38; y += 1) {
-    for (let x = 28; x <= 36; x += 1) {
-      const dx = Math.abs(x - 32);
-      const dy = Math.abs(y - 34);
-      if (dx + dy <= 4) {
+  set(frame, SIZE, cx + 2, topCy - 4, YELLOW_DARK);
+  set(frame, SIZE, cx + 3, topCy - 4, OUTLINE);
+  set(frame, SIZE, cx + 2, topCy - 3, OUTLINE);
+
+  const markY = topCy + 10;
+  for (let y = markY - 3; y <= markY + 3; y += 1) {
+    for (let x = cx - 3; x <= cx + 3; x += 1) {
+      const dx = Math.abs(x - cx);
+      const dy = Math.abs(y - markY);
+      if (dx + dy <= 3 && getA(frame, SIZE, x, y) !== 0) {
         set(frame, SIZE, x, y, YELLOW);
       }
-      if (dx + dy <= 2) {
+      if (dx + dy <= 1 && getA(frame, SIZE, x, y) !== 0) {
         set(frame, SIZE, x, y, OUTLINE);
       }
     }
   }
 
   const rust: Array<readonly [number, number]> = [
-    [22, 28],
-    [23, 29],
-    [24, 40],
-    [21, 42],
-    [40, 27],
-    [42, 32],
-    [41, 46],
-    [38, 48],
-    [26, 48],
-    [30, 50],
+    [cx - 5, topCy + 6],
+    [cx - 4, topCy + 7],
+    [cx - 5, botCy - 3],
+    [cx + 4, topCy + 5],
+    [cx + 5, topCy + 11],
+    [cx + 4, botCy - 1],
+    [cx + 3, botCy + 2],
+    [cx - 3, botCy + 2],
   ];
   for (const [x, y] of rust) {
     if (getA(frame, SIZE, x, y) !== 0) {
       set(frame, SIZE, x, y, RUST);
     }
   }
-  set(frame, SIZE, 25, 36, RED_DIRT);
-  set(frame, SIZE, 39, 38, RED_DIRT);
+  set(frame, SIZE, cx - 4, topCy + 12, RED_DIRT);
+  set(frame, SIZE, cx + 4, topCy + 14, RED_DIRT);
 
   strokeOutline(frame);
   return frame;
@@ -368,7 +438,7 @@ function drawGasolineStack(height: 2 | 3): Uint8Array {
   const frame = empty();
   const single = drawGasoline();
   for (let layer = 0; layer < height; layer += 1) {
-    const dy = (height - 1 - layer) * -12;
+    const dy = (height - 1 - layer) * -Math.round(DRUM_BODY * 0.55);
     const dx = layer % 2 === 0 ? 0 : 1;
     for (let y = 0; y < SIZE; y += 1) {
       for (let x = 0; x < SIZE; x += 1) {

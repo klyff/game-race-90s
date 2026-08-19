@@ -1,8 +1,12 @@
-HEX
+HEX — Regular
+
+CARD
+hex.png
+ON CARD: nameplate HEX. White pupil-less eyes, black pageboy, black lipstick, studded choker, silver coffin pendant with a white cross, leather jacket. Dark sedan, purple night. No Griffith dome painted in focus.
 
 BIO
 Goth racer. Treats the last lap like a séance.
 
 PHYSICAL / WARDROBE / SET
-Pale, black pageboy, white contacts, coffin pendant, velvet choker, deadpan almost-smile. Griffith Observatory night, purple fog, hearse-nosed coupe. Always facing camera.
+Pale, black pageboy, white contacts, coffin pendant, velvet / studded choker, deadpan almost-smile. Observatory night, purple fog, hearse-nosed coupe. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

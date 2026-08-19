@@ -1,8 +1,12 @@
-RUBY
+RUBY — Regular
+
+CARD
+ruby.png
+ON CARD: nameplate RUBY. Victory roll, red rose in the hair, red lipstick, gold hoops, brow piercing, studded red racing jacket, wink. Red car silhouette, diner-night blur. No Route 66 sign painted.
 
 BIO
 Indigenous American rockabilly. Cherry tattoos, diner heart, racing blood.
 
 PHYSICAL / WARDROBE / SET
-Copper skin, victory rolls, cherry tattoos, red diner dress under a racing jacket, wink and a smirk. Route 66 diner, chrome bumper, Hollywood hills far back. Always facing camera.
+Copper skin, victory rolls, red rose, cherry-red jacket, wink and a smirk. Route 66 diner night, chrome bumper, Hollywood hills far back. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

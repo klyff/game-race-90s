@@ -1,8 +1,12 @@
-FLUFE  (also Emma, also Chimbeler)
+EMMA / CHIMBLER — dog card of FLUFE (not in DRIVER_CARDS)
+
+CARD
+emma.png
+ON CARD: no nameplate. Cafe neon Chimbler CAFE + paw. COFFEE • GAS • GOSSIP. INFORMATION IS POWER / DISCRETION IS PROFIT. RIDE FAST / TALK LESS. NO NAMES / ONLY NUMBERS. MEMBERS ONLY. Crates FILES / LEADS / LIES. Chalkboard ESPRESSO / ENGINE OIL / & ESPIONAGE. Jacket patches SECRETS FOR SALE, FIND ANYONE ANYWHERE. Muscle car plate CHMBLR.
 
 BIO
-Secret Keeper of every side in RunnersCity. Looks harmless. She is a Pomeranian who drives like a lunatic on wheels. If you need to know something, find her.
+Secret Keeper of every side in RunnersCity. Looks harmless. She is a Pomeranian who drives like a lunatic on wheels. If you need to know something, find her. This is the dog card. The human card lives in flufe.png / flufe.txt.
 
 PHYSICAL / WARDROBE / SET
-Small Pomeranian, huge curly white hair - like aways, tiny frame, innocent doll eyes, pink choker, too many rings, fluffy coat, giggling. Santa Monica pier carousel lights. Always facing camera.
+Fluffy white Pomeranian, huge dark eyes, open-mouth smile, pink tongue. Black studded leather jacket, skull-shield chain. Chimbler Cafe at night: purple Camaro, bikes, skull helmet, gossip neon. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

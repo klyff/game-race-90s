@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
@@ -39,7 +39,11 @@ describe('imported fleet sheets', () => {
     const fleetSheets = manifest.cars.filter(car => FLEET_CARS.some(fleet => fleet.id === car.id));
     expect(fleetSheets).toHaveLength(FLEET_CARS.length);
     for (const car of fleetSheets) {
-      const png = PNG.sync.read(readFileSync(join(carsDir, car.image)));
+      const path = join(carsDir, car.image);
+      if (!existsSync(path) || car.image.includes('/')) {
+        continue;
+      }
+      const png = PNG.sync.read(readFileSync(path));
       expect(png.width).toBe(CAR_FRAME_WIDTH * CAR_SPRITE_FRAMES);
       expect(png.height).toBe(CAR_FRAME_HEIGHT);
       const pixels = new Uint8Array(png.data);

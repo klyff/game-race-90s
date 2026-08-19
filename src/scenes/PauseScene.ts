@@ -4,6 +4,15 @@ import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
 import { MENU_KIND, MENU_PROMPT_OPTIONS, MenuController } from '../adapters/input/MenuController.ts';
 import type { MenuResult } from '../adapters/input/MenuController.ts';
+import {
+  getNarratorLocale,
+  setNarratorLocale,
+} from '../adapters/audio/AudioPrefs.ts';
+import {
+  NARRATOR_LOCALE_VALUES,
+  localeFromMenuValue,
+  menuValueFromLocale,
+} from '../data/audio/NarratorBank.ts';
 import { saveNow } from '../adapters/progress/ProgressStore.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
@@ -55,6 +64,13 @@ export class PauseScene extends Phaser.Scene {
           values: AUDIO_VALUES,
           valueIndex: data.muted ? 1 : 0,
         },
+        {
+          id: 'narration',
+          kind: MENU_KIND.OPTION,
+          label: 'NARRATION',
+          values: NARRATOR_LOCALE_VALUES,
+          valueIndex: NARRATOR_LOCALE_VALUES.indexOf(menuValueFromLocale(getNarratorLocale())),
+        },
         { id: 'help', kind: MENU_KIND.ACTION, label: 'HELP' },
         { id: 'garage', kind: MENU_KIND.ACTION, label: 'GARAGE' },
         ...(data.onQuitRace === undefined
@@ -66,6 +82,9 @@ export class PauseScene extends Phaser.Scene {
         onPreview: (id, _index, value) => {
           if (id === 'audio') {
             this.payload.setMuted(value === 'OFF');
+          }
+          if (id === 'narration') {
+            setNarratorLocale(localeFromMenuValue(value));
           }
         },
       },
@@ -211,10 +230,11 @@ export class PauseScene extends Phaser.Scene {
     this.backdrop.setSize(width, height);
     this.titleText.setPosition(centreX, height * 0.18);
     this.optionTexts.forEach((text, index) => {
-      text.setPosition(centreX, height * (0.3 + index * 0.07));
+      const step = this.optionTexts.length > 7 ? 0.055 : 0.07;
+      text.setPosition(centreX, height * (0.26 + index * step));
     });
-    this.statusText.setPosition(centreX, height * 0.76);
-    this.promptText.setPosition(centreX, height * 0.88);
+    this.statusText.setPosition(centreX, height * 0.8);
+    this.promptText.setPosition(centreX, height * 0.9);
   }
 
   private titleStyle(): Phaser.Types.GameObjects.Text.TextStyle {

@@ -9,6 +9,8 @@
 export const SCENE_KEY = {
   BOOT: 'boot',
   SPLASH: 'splash',
+  ORIGIN_COMIC: 'origin-comic',
+  CHARACTER_SELECT: 'character-select',
   GARAGE: 'garage',
   PLANET_SELECT: 'planet-select',
   TRACK_SELECT: 'track-select',
@@ -89,6 +91,14 @@ export const TRAP_CRATE_KEY = 'trap-crate';
 export const TRAP_CRATE_FILE = 'crate.png';
 export const TRAP_GASOLINE_KEY = 'trap-gasoline';
 export const TRAP_GASOLINE_FILE = 'gasoline.png';
+export const TRAP_PROP_SPRITES = [
+  { key: TRAP_CRATE_KEY, file: TRAP_CRATE_FILE },
+  { key: 'trap-crate-stack-2', file: 'crate-stack-2.png' },
+  { key: 'trap-crate-stack-3', file: 'crate-stack-3.png' },
+  { key: TRAP_GASOLINE_KEY, file: TRAP_GASOLINE_FILE },
+  { key: 'trap-gasoline-stack-2', file: 'gasoline-stack-2.png' },
+  { key: 'trap-gasoline-stack-3', file: 'gasoline-stack-3.png' },
+] as const;
 
 export const WOOD_CHIP_SPRITES = [1, 2, 3, 4, 5, 6].map(n => ({
   key: `trap-wood-chip-${String(n).padStart(2, '0')}`,

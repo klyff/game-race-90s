@@ -1,9 +1,12 @@
-ENZO
+ENZO — Regular
+
+CARD
+enzo.png
+ON CARD: neon name ENZO + five gold stars. Badges: PRODIGY (laptop) / RACING (flag) / PATRIOT (US flag) / NO BRAKES (flame). Green sign HACK SHIFT WIN + skull. Jacket patches USA + flag, RACE + checkered flag. Purple SS muscle car, plate STOLEN. Hollywood sign, radio tower, FAST CODE WIN.
 
 BIO
-The prodigy. At 7 he was already driving and stealing his father's car. Now a teenager, nobody can hold him - Some says hes behing the last invasion of computaer dataencers on Asia.
-He a trylly America Patriot, even born in Brazil, he adopted USA as home and defend it no matter the costs;
- 
+The prodigy. At 7 he was already driving and stealing his father's car. Now a teenager, nobody can hold him. Some say he is behind the last invasion of computer data centers in Asia. Born in Brazil, he adopted the USA as home and defends it no matter the cost.
+
 PHYSICAL / WARDROBE / SET
-Skinny Italian-Brazilian kid, messy black hair, braces, huge wild grin, tongue almost out, oversized racing jacket, scuffed sneakers. Hollywood Hills night, a stolen muscle car with the door open. Always facing camera.
+Skinny Italian-Brazilian kid, messy wavy brown hair, freckles, braces, tongue out, arms crossed. Navy-red-white racing jacket, silver wrench pendant. Hollywood Hills night, stolen purple SS with the door light on. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

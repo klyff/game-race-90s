@@ -38,6 +38,8 @@
     "gen:carts": "node --experimental-strip-types tools/art/generate-cart-portraits.ts",
     "gen:car-strip": "bash tools/art/car-rotate/pipeline.sh",
     "gen:voice-lab": "node --experimental-strip-types tools/voicegen/generate-lab.ts",
+    "gen:voice-lab:pt": "node --experimental-strip-types tools/voicegen/generate-lab.ts --locale pt-BR",
+    "gen:voice-lab:en-new": "node --experimental-strip-types tools/voicegen/generate-lab.ts --locale en --force --ids lok-thant-enzo,holy-chimbeler,chimbeeler,porra-bruno-pronto,thanner-roadmap,caraio-thanner-vasco,oxente-doido,puta-merda-passou,cu-travou,eita-porrada",
     "debug:ia": "node --experimental-strip-types tools/debug/run-ia.ts",
     "debug:ia-capture": "node tools/debug/capture-ia.mjs",
     "gen:hero-300": "bash tools/art/gen-hero-300.sh"

@@ -1,8 +1,12 @@
-VIKTOR  — JOKER (planet 10)
+VIKTOR — JOKER (planet 10)
+
+CARD
+viktor.png
+ON CARD: nameplate VIKTOR. Shaved head with crown tattoo, ice-blue eyes, thick beard, fur collar, fists up, knuckle / hand ink, red neon star, snow. No armored sedan painted in focus.
 
 BIO
 The Pakhan. Russian mafia. He does not race for points. He races so you remember who owns the night.
 
 PHYSICAL / WARDROBE / SET
-Pale, ice-blue eyes, shaved sides, gold rings on every finger, black fur-collared coat over a tracksuit, Orthodox knuckle tattoos. He is not smiling. Snow-dusted LA warehouse, armored sedan, red star neon. Always facing camera.
+Pale, ice-blue eyes, shaved sides, gold-ring energy, black fur-collared coat over a tracksuit, Orthodox / sun knuckle tattoos. He is not smiling. Snow-dusted LA warehouse, red star neon. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

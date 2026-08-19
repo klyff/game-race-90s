@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { thunderBasin } from '../../src/data/tracks/thunder-basin.track.ts';
 import { planetForTrackId } from '../../src/data/tracks/planets.ts';
-import { analyzeTrackTraps } from '../../src/domain/traps/analyzeTrackTraps.ts';
+import { analyzeTrackTraps, trapSeat } from '../../src/domain/traps/analyzeTrackTraps.ts';
 import { pickRaceTraps, trapSeed } from '../../src/domain/traps/pickRaceTraps.ts';
 import {
   crateSlotCount,
@@ -82,10 +82,12 @@ describe('analyzeTrackTraps', () => {
     expect(catalog.drums).toHaveLength(8);
   });
 
-  it('sits on the shoulder and stays off the grid and ramps', () => {
-    const shoulder = thunderBasin.halfWidth + 0.45 * thunderBasin.shoulderWidth;
+  it('stays on the tarmac, off the grid and ramps', () => {
+    const half = thunderBasin.halfWidth;
+    const puck = 2.6;
     for (const slot of [...catalog.crates, ...catalog.drums]) {
-      expect(Math.abs(slot.lateral)).toBeCloseTo(shoulder, 5);
+      expect(Math.abs(slot.lateral)).toBeLessThan(half - puck + 1e-6);
+      expect(Math.abs(slot.lateral)).toBeGreaterThanOrEqual(5);
       const fromLine = Math.abs(spline.signedDelta(thunderBasin.startLineDistance, slot.distance));
       expect(fromLine).toBeGreaterThanOrEqual(40);
       for (const zone of thunderBasin.rampZones ?? []) {
@@ -94,6 +96,18 @@ describe('analyzeTrackTraps', () => {
         expect(fromStart < 0 || fromStart > window).toBe(true);
       }
     }
+  });
+
+  it('pulls corners inside the ribbon more than straights', () => {
+    expect(trapSeat(20, 'straight')).toBeCloseTo(14.5, 5);
+    expect(trapSeat(20, 'corner')).toBeLessThan(trapSeat(20, 'straight'));
+    expect(trapSeat(20, 'tight')).toBeLessThan(trapSeat(20, 'corner'));
+  });
+
+  it('sits drums inside the crate line', () => {
+    const crateReach = Math.max(...catalog.crates.map(slot => Math.abs(slot.lateral)));
+    const drumReach = Math.max(...catalog.drums.map(slot => Math.abs(slot.lateral)));
+    expect(drumReach).toBeLessThan(crateReach);
   });
 });
 
@@ -106,7 +120,12 @@ describe('pickRaceTraps', () => {
     const picked = pickRaceTraps(catalog, 1, seed);
     expect(picked.filter(trap => trap.kind === 'gasoline')).toHaveLength(3);
     expect(picked.filter(trap => trap.kind === 'crate')).toHaveLength(6);
-    expect(picked.every(trap => trap.stackHeight >= 1 && trap.stackHeight <= 3)).toBe(true);
+    expect(picked.filter(trap => trap.kind === 'gasoline').every(trap => trap.stackHeight === 1)).toBe(
+      true,
+    );
+    expect(picked.filter(trap => trap.kind === 'crate').every(trap => trap.stackHeight >= 1 && trap.stackHeight <= 3)).toBe(
+      true,
+    );
   });
 
   it('grows world 2 to 8 crates and 5 drums', () => {

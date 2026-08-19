@@ -1,8 +1,12 @@
-RAZOR
+RAZOR — Regular
+
+CARD
+razor.png
+ON CARD: nameplate RAZOR. Green liberty mohawk, septum + nostril rings, gold hoops, two chunky gold chains, neck tattoos, studded leather jacket, mouth wide in a yell. Dark purple neon haze. No graffiti wall or Harley painted.
 
 BIO
 South Central punk who turned a switchblade into a steering wheel. Laughs with all his teeth and never lifts.
 
 PHYSICAL / WARDROBE / SET
-Towering Black man, tall green liberty-spike mohawk, septum ring, scar through the eyebrow, leather vest, no shirt, tattoos up the neck, big laugh. Graffiti wall, chopped Harley. Always facing camera.
+Towering Black man, tall green liberty-spike mohawk, shaved sides, goatee, septum ring, gold hoops, scar energy in the brow, leather vest with silver studs, tattoos up the neck, roaring laugh. Gritty purple night. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

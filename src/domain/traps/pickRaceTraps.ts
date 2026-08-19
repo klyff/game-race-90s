@@ -38,7 +38,7 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
   return next;
 }
 
-function stackHeight(random: () => number): number {
+function crateStackHeight(random: () => number): number {
   const roll = random();
   if (roll < 0.08 * TRAP_COUNT_SCALE) {
     return 3;
@@ -60,7 +60,8 @@ function take(
     kind,
     distance: slot.distance,
     lateral: slot.lateral,
-    stackHeight: stackHeight(random),
+    // Drums do not stack — a triple is a tower once the barrel grew.
+    stackHeight: kind === TRAP_KIND.GASOLINE ? 1 : crateStackHeight(random),
   }));
 }
 

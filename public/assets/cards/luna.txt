@@ -1,8 +1,12 @@
-LUNA
+LUNA — Regular
+
+CARD
+luna.png
+ON CARD: nameplate LUNA. Neon fragment TA. Platinum buzz, black lipstick, nose ring, gold hoops, gold cross, full throat ink, red-gold sleeve. Dark car behind her.
 
 BIO
 Korean-American tattooer who inks half the grid. If your car has a name, she spelled it.
 
 PHYSICAL / WARDROBE / SET
-Silver buzzcut, full-sleeve florals, nose ring, black lipstick, crop hoodie, one-eyebrow smirk. Melrose tattoo parlor, lowrider. Always facing camera.
+Silver buzzcut, tan skin, heavy liner, black lipstick, nose ring, gold hoops, gold cross, charcoal hoodie, one-eyebrow smirk. Floral / gold throat and sleeve tattoos. Melrose night, parlor neon, lowrider. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

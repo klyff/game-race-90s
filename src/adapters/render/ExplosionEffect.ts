@@ -265,9 +265,11 @@ export class ExplosionEffect {
 
     this.burnGraphics = scene.add.graphics();
     this.burnGraphics.setDepth(BURN_MARK_DEPTH);
+    this.burnGraphics.setName('burnMarks');
 
     this.burstGraphics = scene.add.graphics();
     this.burstGraphics.setDepth(EXPLOSION_DEPTH);
+    this.burstGraphics.setName('explosions');
   }
 
   /**
@@ -330,6 +332,11 @@ export class ExplosionEffect {
   destroy(): void {
     this.burstGraphics.destroy();
     this.burnGraphics.destroy();
+  }
+
+  setVisible(visible: boolean): void {
+    this.burstGraphics.setVisible(visible);
+    this.burnGraphics.setVisible(visible);
   }
 
   private spawnSparks(position: Vec2, intensity: number, burstIdSeed: number, visualScale: number): Spark[] {

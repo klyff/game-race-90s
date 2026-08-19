@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
+import { playSplashKick } from '../adapters/audio/SplashKick.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
-import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
 import { BlinkClock } from '../adapters/render/BlinkClock.ts';
 import { coverRect, promptAnchor, voidRect } from '../adapters/render/SplashLayout.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
@@ -26,7 +26,7 @@ interface SplashSceneData {
 
 /**
  * Attract screen. After 7s the void plays the four family cards, then
- * they settle in the corners. Space plays the guitar solo and opens the garage.
+ * they settle in the corners. Space: explosion + narrator BOOOOM, then the comic.
  */
 export class SplashScene extends Phaser.Scene {
   private manifest!: CarSetManifest;
@@ -92,7 +92,7 @@ export class SplashScene extends Phaser.Scene {
       this.considerTourCode(event.key);
     });
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.audio.start());
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => this.leaveToGarage());
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => this.leaveToOrigin());
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P).on('down', () => this.leaveToWatch());
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.audio.toggleMute());
   }
@@ -150,31 +150,20 @@ export class SplashScene extends Phaser.Scene {
     });
   }
 
-  private leaveToGarage(): void {
+  private leaveToOrigin(): void {
     if (this.leaving) {
       return;
     }
     this.leaving = true;
     this.attract.destroy();
     this.audio.destroy();
-    const wait = playGuitarSolo();
-    const delay = Math.max(0, wait) * 1000;
-    this.time.delayedCall(delay, () => {
-      this.scene.start(SCENE_KEY.GARAGE, {
+    const wait = playSplashKick();
+    this.time.delayedCall(Math.max(0, wait) * 1000, () => {
+      this.scene.start(SCENE_KEY.ORIGIN_COMIC, {
         manifest: this.manifest,
         linesByTrack: this.linesByTrack,
       });
     });
-  }
-
-  private watchHintStyle(): Phaser.Types.GameObjects.Text.TextStyle {
-    return {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#ffd85c',
-      stroke: '#1a0e05',
-      strokeThickness: 4,
-    };
   }
 
   private promptStyle(): Phaser.Types.GameObjects.Text.TextStyle {
@@ -184,6 +173,16 @@ export class SplashScene extends Phaser.Scene {
       color: '#ffffff',
       stroke: '#1a0e05',
       strokeThickness: 7,
+    };
+  }
+
+  private watchHintStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '16px',
+      color: '#ffd85c',
+      stroke: '#1a0e05',
+      strokeThickness: 4,
     };
   }
 

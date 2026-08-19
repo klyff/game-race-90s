@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { garageBayRect, garageHeroLayout } from '../adapters/render/GarageLayout.ts';
+import { garageBodyBounds, garageHeroLayout } from '../adapters/render/GarageLayout.ts';
+import { DRIVER_CARDS, driverCardKey, driverCardUrl } from '../data/cards/DriverCards.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
 import { cartPortraitKey, findCarSheet, matrixHeroNumber, sheetCellSize } from '../data/cars/CarManifest.ts';
@@ -26,6 +27,15 @@ import { MINE_START_COUNT, OIL_START_COUNT } from '../domain/weapons/WeaponConst
 import { TURBO_START_COUNT } from '../domain/vehicle/TurboCharges.ts';
 import { isTourModeOn } from '../adapters/progress/TourMode.ts';
 import {
+  getNarratorLocale,
+  setNarratorLocale,
+} from '../adapters/audio/AudioPrefs.ts';
+import {
+  NARRATOR_LOCALE_VALUES,
+  localeFromMenuValue,
+  menuValueFromLocale,
+} from '../data/audio/NarratorBank.ts';
+import {
   activateSlot,
   beginSlot,
   buyCar,
@@ -41,26 +51,31 @@ import {
   sellCar,
 } from '../adapters/progress/ProgressStore.ts';
 import { MENU_KIND, MenuController } from '../adapters/input/MenuController.ts';
-import type { MenuResult } from '../adapters/input/MenuController.ts';
+import type { MenuItemSpec, MenuResult } from '../adapters/input/MenuController.ts';
 import { formatHelpBody } from '../data/input/ControlList.ts';
 import {
   GARAGE_ART_KEY,
-  MINE_SPRITE_KEY,
-  MISSILE_SPRITE_KEY,
-  OIL_SPRITE_KEY,
+  HUD_MINE_KEY,
+  HUD_MISSILE_KEY,
+  HUD_OIL_KEY,
+  HUD_TURBO_KEY,
   SCENE_KEY,
-  TURBO_SPRITE_KEY,
 } from './sceneKeys.ts';
 
 export interface GarageSceneData {
   readonly manifest: CarSetManifest;
   readonly linesByTrack: Record<string, TrackLinesManifest>;
+  readonly selectedPilot?: string;
 }
 
 const PREVIEW_SCALE = 4.2;
 const PREVIEW_FRAME = 20;
 const HUB_FOCUS = ['buy', 'race', 'sell', 'save'] as const;
+const ARSENAL_KEYS = [HUD_MISSILE_KEY, HUD_MINE_KEY, HUD_OIL_KEY, HUD_TURBO_KEY] as const;
 const ARSENAL_LABELS = ['MSL', 'MINE', 'OIL', 'TURBO'] as const;
+/** Same native 32 → 2× as the race HUD. Old weapon sheets were 28px and unreadable. */
+const ARSENAL_ICON_NATIVE = 32;
+const ARSENAL_ICON_SIZE = ARSENAL_ICON_NATIVE * 2;
 const PLAQUE = PLAQUE_INK;
 const PLAQUE_EDGE = 0xf4e6c4;
 const PLAQUE_HOT = 0x2c2410;
@@ -88,7 +103,7 @@ export class GarageScene extends Phaser.Scene {
   private titleBox!: Phaser.GameObjects.Rectangle;
   private titleText!: Phaser.GameObjects.Text;
   private arsenalBox!: Phaser.GameObjects.Rectangle;
-  private arsenalIcons: Phaser.GameObjects.Sprite[] = [];
+  private arsenalIcons: Phaser.GameObjects.Image[] = [];
   private arsenalCounts: Phaser.GameObjects.Text[] = [];
   private arsenalLabels: Phaser.GameObjects.Text[] = [];
   private moneyBox!: Phaser.GameObjects.Rectangle;
@@ -101,6 +116,7 @@ export class GarageScene extends Phaser.Scene {
   private worldCaption!: Phaser.GameObjects.Text;
   private worldText!: Phaser.GameObjects.Text;
   private profileBox!: Phaser.GameObjects.Rectangle;
+  private profileFace!: Phaser.GameObjects.Image;
   private profileText!: Phaser.GameObjects.Text;
   private rankingBox!: Phaser.GameObjects.Rectangle;
   private rankingText!: Phaser.GameObjects.Text;
@@ -124,6 +140,9 @@ export class GarageScene extends Phaser.Scene {
   private btnBuy!: Phaser.GameObjects.Text;
   private btnRaceBox!: Phaser.GameObjects.Rectangle;
   private btnRace!: Phaser.GameObjects.Text;
+  private narrationBox!: Phaser.GameObjects.Rectangle;
+  private narrationCaption!: Phaser.GameObjects.Text;
+  private narrationText!: Phaser.GameObjects.Text;
   private helpText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
@@ -144,19 +163,27 @@ export class GarageScene extends Phaser.Scene {
     this.buildSlotMenu();
   }
 
+  preload(): void {
+    for (const card of DRIVER_CARDS) {
+      if (!this.textures.exists(card.key)) {
+        this.load.image(card.key, driverCardUrl(card));
+      }
+    }
+  }
+
   create(): void {
     this.art = this.add.image(0, 0, GARAGE_ART_KEY).setOrigin(0, 0);
     this.menuPlate = this.add.graphics();
     this.namePlate = this.add.graphics();
     this.titleBox = this.plaque(280, 48);
     this.titleText = this.add.text(0, 0, '', this.titleStyle()).setOrigin(0.5, 0.5);
-    this.arsenalBox = this.plaque(520, 72);
-    this.arsenalIcons = [MISSILE_SPRITE_KEY, MINE_SPRITE_KEY, OIL_SPRITE_KEY, TURBO_SPRITE_KEY].map(key => {
-      const sprite = this.add.sprite(0, 0, key, 0).setVisible(this.textures.exists(key));
-      sprite.setDisplaySize(28, 28);
-      return sprite;
+    this.arsenalBox = this.plaque(720, 112);
+    this.arsenalIcons = ARSENAL_KEYS.map(key => {
+      const icon = this.add.image(0, 0, key).setVisible(this.textures.exists(key));
+      icon.setDisplaySize(ARSENAL_ICON_SIZE, ARSENAL_ICON_SIZE);
+      return icon;
     });
-    this.arsenalCounts = [0, 1, 2, 3].map(() => this.add.text(0, 0, '', this.arsenalCountStyle()).setOrigin(0, 0.5));
+    this.arsenalCounts = ARSENAL_KEYS.map(() => this.add.text(0, 0, '', this.arsenalCountStyle()).setOrigin(0, 0.5));
     this.arsenalLabels = ARSENAL_LABELS.map(label =>
       this.add.text(0, 0, label, this.captionStyle()).setOrigin(0.5, 0.5),
     );
@@ -170,6 +197,7 @@ export class GarageScene extends Phaser.Scene {
     this.worldCaption = this.add.text(0, 0, 'WORLD', this.captionStyle()).setOrigin(0.5, 0.5);
     this.worldText = this.add.text(0, 0, '', this.worldStyle()).setOrigin(0.5, 0.5);
     this.profileBox = this.plaque(88, 88);
+    this.profileFace = this.add.image(0, 0, '').setOrigin(0.5, 0.5).setVisible(false);
     this.profileText = this.add.text(0, 0, '', this.profileStyle()).setOrigin(0.5, 0.5);
     this.rankingBox = this.plaque(220, 220);
     this.rankingText = this.add.text(0, 0, '', this.rankStyle()).setOrigin(0.5, 0);
@@ -193,6 +221,9 @@ export class GarageScene extends Phaser.Scene {
     this.btnBuy = this.add.text(0, 0, 'BUY', this.buttonStyle()).setOrigin(0.5, 0.5);
     this.btnRaceBox = this.plaque(190, 52);
     this.btnRace = this.add.text(0, 0, 'GO RACE', this.raceButtonStyle()).setOrigin(0.5, 0.5);
+    this.narrationBox = this.plaque(180, 56);
+    this.narrationCaption = this.add.text(0, 0, 'NARRATION', this.captionStyle()).setOrigin(0.5, 0.5);
+    this.narrationText = this.add.text(0, 0, 'EN', this.statStyle(GOLD)).setOrigin(0.5, 0.5);
     this.helpText = this.add.text(0, 0, formatHelpBody(), this.helpStyle()).setOrigin(0.5, 0).setVisible(false);
     this.statusText = this.add.text(0, 0, '', this.statusStyle()).setOrigin(0.5, 0.5);
     this.nameField = this.add.text(0, 0, '', this.nameFieldStyle()).setOrigin(0.5, 0.5);
@@ -209,6 +240,9 @@ export class GarageScene extends Phaser.Scene {
     this.wireClick(this.btnSave, () => this.handleHub('save'));
     this.wireClick(this.btnRaceBox, () => this.handleHub('race'));
     this.wireClick(this.btnRace, () => this.handleHub('race'));
+    this.wireClick(this.narrationBox, () => this.handleHub('narration'));
+    this.wireClick(this.narrationCaption, () => this.handleHub('narration'));
+    this.wireClick(this.narrationText, () => this.handleHub('narration'));
     this.wireClick(this.pointsBox, () => this.handleHub('cash'));
     this.wireClick(this.pointsText, () => this.handleHub('cash'));
     this.wireClick(this.preview, () => this.handleHub('equip'));
@@ -294,6 +328,11 @@ export class GarageScene extends Phaser.Scene {
       return;
     }
     if (this.mode === 'hub') {
+      if (this.menu.selectedId === 'narration') {
+        this.menu.cycle(delta);
+        this.refresh();
+        return;
+      }
       this.nudgeShop(delta);
       return;
     }
@@ -363,6 +402,10 @@ export class GarageScene extends Phaser.Scene {
       this.confirmName();
       return;
     }
+    if (this.mode === 'hub' && result.type === 'commit' && result.id === 'narration') {
+      this.refresh();
+      return;
+    }
     this.handleHub(result.id);
   }
 
@@ -371,8 +414,17 @@ export class GarageScene extends Phaser.Scene {
     const save = loadSave().slots[index];
     const career = loadCareer().slots[index];
     if (save === null || career === null) {
+      const picked = this.payload.selectedPilot;
+      if (picked !== undefined && picked.length >= 3) {
+        const started = beginSlot(index, picked, Date.now());
+        if (started.ok) {
+          this.enterHub();
+          return;
+        }
+        this.status = started.reason === 'TAKEN' ? 'NAME TAKEN' : 'TYPE A NAME';
+      }
       this.mode = 'name';
-      this.nameDraft = '';
+      this.nameDraft = picked ?? '';
       this.buildNameMenu();
       this.rebuildOverlay();
       this.refresh();
@@ -466,6 +518,13 @@ export class GarageScene extends Phaser.Scene {
     }
     if (id === 'race') {
       this.goRace();
+      return;
+    }
+    if (id === 'narration') {
+      const next = getNarratorLocale() === 'en' ? 'pt-BR' : 'en';
+      setNarratorLocale(next);
+      this.menu.setOption('narration', next === 'pt-BR' ? 1 : 0, true);
+      this.refresh();
     }
   }
 
@@ -584,14 +643,28 @@ export class GarageScene extends Phaser.Scene {
   private buildHubMenu(): void {
     const career = loadActiveCareer();
     const preferred = career?.equippedCarId ? 'race' : 'buy';
-    this.menu = new MenuController(
-      HUB_FOCUS.map(id => ({
+    const items: MenuItemSpec[] = [
+      {
+        id: 'narration',
+        kind: MENU_KIND.OPTION,
+        label: 'NARRATION',
+        values: NARRATOR_LOCALE_VALUES,
+        valueIndex: Math.max(0, NARRATOR_LOCALE_VALUES.indexOf(menuValueFromLocale(getNarratorLocale()))),
+      },
+      ...HUB_FOCUS.map(id => ({
         id,
         kind: MENU_KIND.ACTION,
         label: id.toUpperCase(),
       })),
-      { selectedIndex: Math.max(0, HUB_FOCUS.indexOf(preferred)) },
-    );
+    ];
+    this.menu = new MenuController(items, {
+      selectedIndex: 1 + Math.max(0, HUB_FOCUS.indexOf(preferred)),
+      onPreview: (id, _index, value) => {
+        if (id === 'narration') {
+          setNarratorLocale(localeFromMenuValue(value));
+        }
+      },
+    });
   }
 
   private shopCars(): string[] {
@@ -683,6 +756,7 @@ export class GarageScene extends Phaser.Scene {
       );
       this.worldText.setText(this.worldLine(career?.lastPlanetId));
       this.profileText.setText((name || '?').slice(0, 1));
+      this.paintFace(name);
       this.rankingText.setText(this.rankingBlock(name));
       const shop = this.shopCars();
       if (shop.length > 0 && this.shopIndex >= shop.length) {
@@ -719,6 +793,7 @@ export class GarageScene extends Phaser.Scene {
       );
       this.btnSell.setText(owned ? `SELL  ${formatCash(sellPrice(carId))}` : 'SELL');
       this.btnRace.setText(career?.equippedCarId ? 'GO RACE' : 'BUY A CAR FIRST');
+      this.narrationText.setText(menuValueFromLocale(getNarratorLocale()));
       this.paintArsenal(carId);
       this.paintSpecs(carId);
       this.paintPortrait(carId, owned || unlocked || tour);
@@ -738,9 +813,6 @@ export class GarageScene extends Phaser.Scene {
       text.setColor(view.selected ? GOLD : IVORY);
       text.setText(view.text);
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7512/ingest/167bd834-e3e4-48a0-a1f7-0d5c92aafb32',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dbc378'},body:JSON.stringify({sessionId:'dbc378',runId:'pre-fix',hypothesisId:'B',location:'GarageScene.ts:refresh',message:'overlay text widths after setText',data:{mode:this.mode,hint:this.hintText.text,rows:this.overlayTexts.map(t=>({text:t.text,width:t.width}))},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     this.paintMenuPlates(this.scale.width, this.scale.height);
     this.layoutHint(this.scale.width, this.scale.height);
   }
@@ -758,6 +830,7 @@ export class GarageScene extends Phaser.Scene {
       this.worldCaption,
       this.worldText,
       this.profileBox,
+      this.profileFace,
       this.profileText,
       this.rankingBox,
       this.rankingText,
@@ -781,6 +854,9 @@ export class GarageScene extends Phaser.Scene {
       this.btnBuy,
       this.btnRaceBox,
       this.btnRace,
+      this.narrationBox,
+      this.narrationCaption,
+      this.narrationText,
       this.namePlate,
       ...this.arsenalIcons,
       ...this.arsenalCounts,
@@ -802,6 +878,8 @@ export class GarageScene extends Phaser.Scene {
     this.paintAction(this.btnSellBox, this.btnSell, focus === 'sell', owned);
     this.paintAction(this.btnBuyBox, this.btnBuy, focus === 'buy', owned || unlocked);
     this.paintAction(this.btnRaceBox, this.btnRace, focus === 'race', canRace, canRace);
+    this.paintAction(this.narrationBox, this.narrationText, focus === 'narration', true);
+    this.narrationCaption.setColor(focus === 'narration' ? GOLD : MUTED);
     this.arrowLeft.setColor(IVORY);
     this.arrowRight.setColor(IVORY);
   }
@@ -832,6 +910,17 @@ export class GarageScene extends Phaser.Scene {
     const width = Math.max(220, this.titleText.width + 48);
     const height = Math.max(44, this.titleText.height + 20);
     this.titleBox.setSize(width, height);
+  }
+
+  private paintFace(name: string): void {
+    const key = driverCardKey(name);
+    if (key !== '' && this.textures.exists(key)) {
+      this.profileFace.setTexture(key).setVisible(true);
+      this.profileText.setVisible(false);
+      return;
+    }
+    this.profileFace.setVisible(false);
+    this.profileText.setVisible(true);
   }
 
   private paintPortrait(carId: string, lit: boolean): void {
@@ -907,11 +996,18 @@ export class GarageScene extends Phaser.Scene {
   }
 
   private worldLine(planetId: string | undefined): string {
+    const won = loadWonTracks();
     const planet = PLANETS.find(entry => entry.id === planetId) ?? PLANETS[0];
     if (planet === undefined) {
       return 'WORLD  1';
     }
-    return `W${planet.index}  ${planet.displayName.toUpperCase()}`;
+    const next = PLANETS.find(entry => entry.index === planet.index + 1);
+    const current = `NOW  W${planet.index} ${planet.displayName.toUpperCase()}`;
+    if (next === undefined) {
+      return `${current}\nNEXT  FINAL WORLD`;
+    }
+    const unlocked = next.index <= highestUnlockedPlanetIndex(won, isTourModeOn());
+    return `${current}\nNEXT W${next.index} ${next.displayName.toUpperCase()}${unlocked ? '' : '  LOCKED'}`;
   }
 
   private rankingBlock(playerName: string): string {
@@ -948,40 +1044,54 @@ export class GarageScene extends Phaser.Scene {
     this.titleText.setPosition(width / 2, height * 0.075);
     this.fitTitleBox();
     this.titleBox.setPosition(width / 2, height * 0.075);
+    this.placeStat(this.narrationBox, this.narrationCaption, this.narrationText, right, height * 0.075);
 
-    const arsenalY = height * 0.165;
-    this.arsenalBox.setPosition(width / 2, arsenalY).setSize(Math.min(560, width * 0.56), 76);
+    const arsenalY = height * 0.18;
+    const arsenalW = Math.min(760, width * 0.72);
+    const arsenalH = 112;
+    this.arsenalBox.setPosition(width / 2, arsenalY).setSize(arsenalW, arsenalH);
+    const slotW = Math.min(180, arsenalW / ARSENAL_KEYS.length);
+    const slot0 = width / 2 - (slotW * (ARSENAL_KEYS.length - 1)) / 2;
     this.arsenalIcons.forEach((icon, index) => {
-      const x = width / 2 - 210 + index * 140;
-      icon.setPosition(x - 28, arsenalY - 6);
-      this.arsenalCounts[index]?.setPosition(x - 8, arsenalY - 6);
-      this.arsenalLabels[index]?.setPosition(x, arsenalY + 22);
+      const x = slot0 + index * slotW;
+      icon.setPosition(x - 22, arsenalY - 8).setDisplaySize(ARSENAL_ICON_SIZE, ARSENAL_ICON_SIZE);
+      this.arsenalCounts[index]?.setPosition(x + 20, arsenalY - 8);
+      this.arsenalLabels[index]?.setPosition(x, arsenalY + 38);
     });
 
-    this.placeStat(this.moneyBox, this.moneyCaption, this.moneyText, left, height * 0.28);
-    this.placeStat(this.pointsBox, this.pointsCaption, this.pointsText, left, height * 0.4);
-    this.placeStat(this.worldBox, this.worldCaption, this.worldText, left, height * 0.52);
+    this.placeStat(this.moneyBox, this.moneyCaption, this.moneyText, left, height * 0.31);
+    this.placeStat(this.pointsBox, this.pointsCaption, this.pointsText, left, height * 0.405);
+    this.placeStat(this.worldBox, this.worldCaption, this.worldText, left, height * 0.50);
     this.worldText.setWordWrapWidth(210);
 
-    this.profileBox.setPosition(right, height * 0.2);
-    this.profileText.setPosition(right, height * 0.2);
-
     const specW = Math.min(280, width * 0.26);
-    const specH = height * 0.42;
     const specX = right;
-    const specY = height * 0.48;
+    const faceSize = 88;
+    const colTop = height * 0.215;
+    this.profileBox.setPosition(specX, colTop + faceSize / 2).setSize(faceSize, faceSize);
+    this.profileText.setPosition(specX, colTop + faceSize / 2);
+    this.profileFace.setPosition(specX, colTop + faceSize / 2).setDisplaySize(faceSize - 10, faceSize - 10);
+
+    const specPad = 14;
+    const barStep = 22;
+    const barsTop = specPad + 8;
+    const barsH = STAT_BAR_FIELDS.length * barStep;
+    this.specPerkText.setWordWrapWidth(specW - 24);
+    const perkH = Math.max(20, Math.ceil(this.specPerkText.height));
+    const specH = specPad + barsH + 8 + perkH + specPad;
+    const specTop = colTop + faceSize + 10;
+    const specY = specTop + specH / 2;
     this.specBox.setPosition(specX, specY).setSize(specW, specH);
     const specLeft = specX - specW / 2 + 16;
-    const specTop = specY - specH / 2 + 18;
     const barW = specW - 110;
     STAT_BAR_FIELDS.forEach((_, index) => {
-      const y = specTop + 14 + index * 26;
+      const y = specTop + barsTop + index * barStep;
       this.specLabels[index]?.setPosition(specLeft, y);
       this.specTracks[index]?.setPosition(specLeft + 58, y).setSize(barW, 10);
       this.specFills[index]?.setPosition(specLeft + 58, y);
       this.specValues[index]?.setPosition(specLeft + 62 + barW, y);
     });
-    this.specPerkText.setPosition(specX, specY + specH / 2 - 36).setWordWrapWidth(specW - 20);
+    this.specPerkText.setPosition(specX, specTop + barsTop + barsH + 4);
 
     const artSize = this.art.visible
       ? { width: this.art.width, height: this.art.height }
@@ -991,7 +1101,6 @@ export class GarageScene extends Phaser.Scene {
       artSize,
       { width: this.portrait.frame.width, height: this.portrait.frame.height },
     );
-    const bay = garageBayRect({ width, height }, artSize);
     this.portrait
       .setOrigin(hero.originX, hero.originY)
       .setPosition(hero.x, hero.y)
@@ -1000,10 +1109,10 @@ export class GarageScene extends Phaser.Scene {
       .setOrigin(hero.originX, hero.originY)
       .setPosition(hero.x, hero.y)
       .setDisplaySize(hero.width, hero.height);
-    this.arrowLeft.setPosition(bay.x + 24, hero.y);
-    this.arrowRight.setPosition(bay.x + bay.width - 24, hero.y);
-    this.carNameText.setPosition(hero.x, bay.y + bay.height + 16);
-    this.valueText.setPosition(hero.x, bay.y + bay.height + 44);
+    const body = garageBodyBounds(hero);
+    const arrowPad = 28;
+    this.arrowLeft.setPosition(body.x - arrowPad, body.y + body.height * 0.45);
+    this.arrowRight.setPosition(body.x + body.width + arrowPad, body.y + body.height * 0.45);
 
     const gap = Math.min(18, width * 0.014);
     const saveW = 180;
@@ -1023,26 +1132,15 @@ export class GarageScene extends Phaser.Scene {
     x += buyW + gap;
     this.placeAction(this.btnRaceBox, this.btnRace, x + raceW / 2, barY, raceW, raceH);
 
-    const specBottom = specY + specH / 2;
-    const rankBottom = barY - raceH / 2 - 14;
-    const rankTop = specBottom + 10;
-    const rankH = Math.max(72, rankBottom - rankTop);
-    const rankY = rankTop + rankH / 2;
-    this.rankingBox.setPosition(right, rankY).setSize(specW, rankH);
-    this.rankingText.setPosition(right, rankTop + 8);
-    // #region agent log
-    {
-      const raceLeft = this.btnRaceBox.x - raceW / 2;
-      const raceRight = this.btnRaceBox.x + raceW / 2;
-      const raceTop = barY - raceH / 2;
-      const raceBottom = barY + raceH / 2;
-      const rankLeft = right - specW / 2;
-      const rankRight = right + specW / 2;
-      const overlap =
-        raceRight > rankLeft && raceLeft < rankRight && raceBottom > rankTop && raceTop < rankBottom;
-      fetch('http://127.0.0.1:7512/ingest/167bd834-e3e4-48a0-a1f7-0d5c92aafb32',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dbc378'},body:JSON.stringify({sessionId:'dbc378',runId:'post-fix',hypothesisId:'H',location:'GarageScene.ts:layout',message:'race button vs ranking',data:{mode:this.mode,overlap,race:{left:raceLeft,right:raceRight,top:raceTop,bottom:raceBottom},rank:{left:rankLeft,right:rankRight,top:rankTop,bottom:rankBottom}},timestamp:Date.now()})}).catch(()=>{});
-    }
-    // #endregion
+    const rankPad = 12;
+    const rankW = 240;
+    const rankH = Math.max(72, Math.ceil(this.rankingText.height) + rankPad * 2);
+    const rankTop = height * 0.50 + 40;
+    this.rankingBox.setPosition(left, rankTop + rankH / 2).setSize(rankW, rankH);
+    this.rankingText.setPosition(left, rankTop + rankPad);
+    const nameY = Math.min(height * 0.69, barY - raceH / 2 - 48);
+    this.carNameText.setPosition(hero.x, nameY);
+    this.valueText.setPosition(hero.x, nameY + 26);
     this.statusText.setPosition(width / 2, height * 0.775);
     this.nameField.setPosition(width / 2, height * 0.44);
     this.helpText.setPosition(width / 2, height * 0.2);
@@ -1065,8 +1163,8 @@ export class GarageScene extends Phaser.Scene {
     x: number,
     y: number,
   ): void {
-    box.setPosition(x, y).setSize(240, 76);
-    caption.setPosition(x, y - 16);
+    box.setPosition(x, y).setSize(240, 64);
+    caption.setPosition(x, y - 14);
     value.setPosition(x, y + 10);
   }
 
@@ -1085,11 +1183,17 @@ export class GarageScene extends Phaser.Scene {
   private paintMenuPlates(width: number, height: number): void {
     if (this.mode === 'hub') {
       this.menuPlate.clear();
+      const top = this.carNameText.y - this.carNameText.height / 2;
+      const bottom = this.valueText.y + this.valueText.height / 2;
+      const plateW = Math.min(
+        560,
+        Math.max(this.carNameText.width, this.valueText.width) + 48,
+      );
       paintRoundedPlaque(this.namePlate, {
         x: width / 2,
-        y: height * 0.702,
-        width: Math.min(560, width * 0.46),
-        height: 78,
+        y: (top + bottom) / 2,
+        width: Math.max(280, plateW),
+        height: Math.max(56, bottom - top + 22),
         radius: 14,
         alpha: 0.72,
       });
@@ -1132,9 +1236,6 @@ export class GarageScene extends Phaser.Scene {
     const plateW = Math.min(width * 0.92, Math.max(maxTextW + 80, 520));
     const plateH = Math.max(count * height * 0.09 + 48, rowsBottom - rowsTop + 48);
     const plateY = (rowsTop + rowsBottom) / 2;
-    // #region agent log
-    fetch('http://127.0.0.1:7512/ingest/167bd834-e3e4-48a0-a1f7-0d5c92aafb32',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dbc378'},body:JSON.stringify({sessionId:'dbc378',runId:'pre-fix',hypothesisId:'A',location:'GarageScene.ts:paintMenuPlates',message:'slot plate vs longest label',data:{mode:this.mode,viewW:width,plateW,maxTextW,overflow:maxTextW>plateW-48,hint:this.hintText.text},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     paintRoundedPlaque(this.menuPlate, {
       x: width / 2,
       y: plateY,
@@ -1151,15 +1252,13 @@ export class GarageScene extends Phaser.Scene {
     const boxH = Math.max(48, Math.ceil(this.hintText.height) + 18);
     if (this.mode === 'hub') {
       this.hintPlate.setVisible(false);
-      this.hintText.setPosition(width / 2, height * 0.805);
+      this.hintText.setVisible(false);
       return;
     }
+    this.hintText.setVisible(true);
     const y = height - 14 - boxH / 2;
     this.hintPlate.setVisible(true).setPosition(width / 2, y).setSize(boxW, boxH);
     this.hintText.setPosition(width / 2, y);
-    // #region agent log
-    fetch('http://127.0.0.1:7512/ingest/167bd834-e3e4-48a0-a1f7-0d5c92aafb32',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dbc378'},body:JSON.stringify({sessionId:'dbc378',runId:'post-fix',hypothesisId:'F',location:'GarageScene.ts:layoutHint',message:'hint vs canvas bottom',data:{mode:this.mode,viewH:height,hintH:this.hintText.height,hintW:this.hintText.width,boxW,boxH,hintBottom:y+boxH/2,leaks:y+boxH/2>height-4},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
   }
 
   private titleStyle(): Phaser.Types.GameObjects.Text.TextStyle {

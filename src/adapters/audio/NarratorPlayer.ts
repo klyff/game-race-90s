@@ -1,8 +1,8 @@
 import {
-  NARRATOR_LAB_DIRECTORY,
-  NARRATOR_STASH_DIRECTORY,
   narratorClipKey,
   narratorClipUrl,
+  narratorLabDirectory,
+  narratorStashDirectory,
   resolveNarratorClip,
   type NarratorClip,
   type PlannedClip,
@@ -101,8 +101,8 @@ export class NarratorPlayer {
       this.pump();
     };
     const onError = (): void => {
-      if (!element.src.includes(NARRATOR_LAB_DIRECTORY)) {
-        element.src = narratorClipUrl(clip, NARRATOR_LAB_DIRECTORY);
+      if (!element.src.includes(narratorLabDirectory())) {
+        element.src = narratorClipUrl(clip, narratorLabDirectory());
         void element.play().catch(() => {
           onDone();
         });
@@ -131,6 +131,6 @@ function createElement(clip: NarratorClip): HTMLAudioElement {
   const element = new Audio();
   element.preload = 'auto';
   element.volume = NARRATOR_VOLUME;
-  element.src = narratorClipUrl(clip, NARRATOR_STASH_DIRECTORY);
+  element.src = narratorClipUrl(clip, narratorStashDirectory());
   return element;
 }

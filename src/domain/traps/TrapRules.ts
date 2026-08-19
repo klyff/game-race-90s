@@ -6,7 +6,7 @@
 import { CAR_LENGTH_PER_COLLISION_RADIUS } from '../weapons/WeaponConstants.ts';
 
 /** Wooden crate diameter as a fraction of car length. Smaller than a car, bigger than a mine. */
-export const CRATE_SIZE_OF_CAR = 0.45;
+export const CRATE_SIZE_OF_CAR = 0.56;
 
 /** Speed kept after hitting a crate (lose 30%). */
 export const CRATE_SPEED_KEEP = 0.7;

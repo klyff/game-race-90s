@@ -1,8 +1,12 @@
-JETT
+JETT — Regular
+
+CARD
+jett.png
+ON CARD: nameplate JETT. Both hands throwing horns, black nails, tongue out, leopard neck ink, studded wristband, leather + safety-pin shirt. Dark alley night. No dumpster bike painted in focus.
 
 BIO
 The skinny one. Lives on gas-station coffee and guitar strings.
 
 PHYSICAL / WARDROBE / SET
-Very skinny, pale, black bowl cut, tongue way out, both hands throwing horns, ripped jeans, safety-pin shirt. Exaggerated 90s face. Hollywood dumpster alley, matte-black bike. Always facing camera.
+Very skinny, pale-tan, black bowl cut, tongue way out, both hands throwing horns, ripped energy, safety-pin shirt, silver chain. Exaggerated 90s face. Hollywood dumpster alley. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

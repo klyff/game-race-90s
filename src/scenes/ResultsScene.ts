@@ -1,12 +1,14 @@
 import Phaser from 'phaser';
+import { cartPortraitKey } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
-import { driverCardKey } from '../data/cards/DriverCards.ts';
+import { DRIVER_CARDS, driverCardKey, driverCardUrl } from '../data/cards/DriverCards.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { creditWallet, loadActiveCareer, loadPoints, recordProgress } from '../adapters/progress/ProgressStore.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
-import { pickPubBackground, PUB_BACKGROUNDS, pubBackgroundKey } from '../data/ui/PubBackgrounds.ts';
+import { pickPubBackground, PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/PubBackgrounds.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
+import { playRadioJingle, RADIO_JINGLE_DURATION_SECONDS } from '../adapters/audio/RadioJingle.ts';
 import { formatRaceTime, positionOrdinal } from '../adapters/render/HudFormat.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
 import { containSize } from '../adapters/render/FitBox.ts';
@@ -116,6 +118,20 @@ export class ResultsScene extends Phaser.Scene {
       weaponHitPoints(data.weaponHits ?? EMPTY_WEAPON_HITS, planetIndex);
   }
 
+  preload(): void {
+    for (const pub of PUB_BACKGROUNDS) {
+      const key = pubBackgroundKey(pub);
+      if (!this.textures.exists(key)) {
+        this.load.image(key, pubBackgroundUrl(pub));
+      }
+    }
+    for (const card of DRIVER_CARDS) {
+      if (!this.textures.exists(card.key)) {
+        this.load.image(card.key, driverCardUrl(card));
+      }
+    }
+  }
+
   create(): void {
     const slot = campaignSlotForTrackId(this.payload.trackId);
     const planetIndex = slot?.planetIndex ?? 1;
@@ -183,6 +199,8 @@ export class ResultsScene extends Phaser.Scene {
     this.audio.start();
     this.layout();
     this.slamTitle();
+    playRadioJingle();
+    this.playWinnerPhoto();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.audio.destroy());
@@ -392,6 +410,58 @@ export class ResultsScene extends Phaser.Scene {
       scale: { from: 1.18, to: 1 },
       duration: 260,
       ease: 'Back.easeOut',
+    });
+  }
+
+  private playWinnerPhoto(): void {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const winner = this.payload.standings.find(entry => entry.position === 1);
+    const cover = this.add.rectangle(0, 0, width, height, 0x05060a, 1).setOrigin(0, 0).setDepth(30);
+    const label = this.add
+      .text(width / 2, height * 0.1, '1ST PLACE', {
+        fontFamily: 'monospace',
+        fontSize: '28px',
+        color: GOLD,
+        stroke: '#101014',
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(31);
+    const name = this.add
+      .text(width / 2, height * 0.16, winner?.name ?? this.winnerName(), {
+        fontFamily: 'monospace',
+        fontSize: '36px',
+        color: IVORY,
+        stroke: '#101014',
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(31);
+    const cardKey = winner !== undefined ? driverCardKey(winner.name) : '';
+    const portraitKey = winner !== undefined ? cartPortraitKey(winner.carId) : '';
+    const face = Math.min(width, height) * 0.52;
+    const thumb = face * 0.22;
+    const extras: Phaser.GameObjects.GameObject[] = [];
+    if (cardKey !== '' && this.textures.exists(cardKey)) {
+      extras.push(this.add.image(width / 2, height * 0.5, cardKey).setDisplaySize(face, face).setDepth(31));
+    }
+    if (portraitKey !== '' && this.textures.exists(portraitKey)) {
+      extras.push(
+        this.add.image(width / 2, height * 0.86, portraitKey).setDisplaySize(thumb, thumb).setDepth(31),
+      );
+    }
+    const shot = [cover, label, name, ...extras];
+    this.tweens.add({
+      targets: shot,
+      alpha: 0,
+      delay: RADIO_JINGLE_DURATION_SECONDS * 1000,
+      duration: 280,
+      onComplete: () => {
+        for (const node of shot) {
+          node.destroy();
+        }
+      },
     });
   }
 

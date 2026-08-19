@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   GARAGE_ART_SIZE,
   garageBayRect,
+  garageBodyBounds,
   garageHeroLayout,
   garageViewPoint,
   HERO_WINDSHIELD,
@@ -38,6 +39,16 @@ describe('garageHeroLayout', () => {
     expect(placed.height).toBeLessThan(view.height);
     expect(placed.y).toBeGreaterThan(bay.y);
     expect(placed.y).toBeLessThan(bay.y + bay.height);
+  });
+
+  it('keeps the painted body inside the bay so arrows can hug the car', () => {
+    const view = { width: 1280, height: 720 };
+    const bay = garageBayRect(view, GARAGE_ART_SIZE);
+    const hero = garageHeroLayout(view, GARAGE_ART_SIZE, HERO);
+    const body = garageBodyBounds(hero);
+    expect(body.x).toBeGreaterThan(bay.x);
+    expect(body.x + body.width).toBeLessThan(bay.x + bay.width);
+    expect(body.width).toBeLessThan(bay.width * 0.95);
   });
 
   it('stays finite on a one-frame zero resize', () => {

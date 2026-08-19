@@ -1,8 +1,12 @@
-SNAKE
+SNAKE — Regular
+
+CARD
+snake.png
+ON CARD: nameplate SNAKE. Gold teeth, slicked hair, thin mustache + soul patch, gold hoops, chunky gold chain, purple-black spotted silk. Yellow and grey car silhouettes, downtown night windows.
 
 BIO
 West Coast gangster. Gold tooth, python ink, never in a hurry except on the last lap.
 
 PHYSICAL / WARDROBE / SET
-Filipino-Mexican, slicked hair, gold tooth, silk shirt unbuttoned, python tattoo on the forearm, half-lidded stare. Downtown LA night, lowrider, palms. Always facing camera.
+Filipino-Mexican, slicked hair, gold teeth, silk shirt unbuttoned, python / leopard shoulder ink, half-lidded grin. Downtown LA night, lowriders, palms. Always facing camera.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png

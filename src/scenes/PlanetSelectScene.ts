@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { findCarSheet } from '../data/cars/CarManifest.ts';
 import { PLANETS } from '../data/tracks/planets.ts';
-import { themeForPlanetId } from '../data/tracks/planetThemes.ts';
+import { themeForPlanetId, PLANET_THEMES } from '../data/tracks/planetThemes.ts';
 import { isPlanetUnlocked } from '../data/tracks/campaign.ts';
 import { isTourModeOn } from '../adapters/progress/TourMode.ts';
 import { loadActiveCareer, loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
@@ -11,7 +11,7 @@ import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
 import { MENU_KIND, MENU_PROMPT_LIST, MenuController } from '../adapters/input/MenuController.ts';
 import type { MenuResult } from '../adapters/input/MenuController.ts';
 import type { PlanetSelectData } from './selectData.ts';
-import { SCENE_KEY } from './sceneKeys.ts';
+import { PLANET_ART_DIRECTORY, SCENE_KEY } from './sceneKeys.ts';
 
 /**
  * Pick a planet. Ten worlds, each with a FEATURED car and three tracks. A planet
@@ -58,6 +58,14 @@ export class PlanetSelectScene extends Phaser.Scene {
       })),
       { selectedIndex: remembered >= 0 ? remembered : lastUnlocked },
     );
+  }
+
+  preload(): void {
+    for (const theme of PLANET_THEMES) {
+      if (!this.textures.exists(theme.artKey)) {
+        this.load.image(theme.artKey, `${PLANET_ART_DIRECTORY}/${theme.artFile}`);
+      }
+    }
   }
 
   create(): void {

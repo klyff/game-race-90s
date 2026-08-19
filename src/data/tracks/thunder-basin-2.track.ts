@@ -60,7 +60,7 @@ export const thunderBasinTwo: TrackDefinition = {
 
   // 45° mid start straight (needs speed); 30° on the west approach.
   rampZones: [
-    { triggerDistance: 280, triggerLength: 12, launchSpeed: 12, inclineDegrees: 45 },
+    { triggerDistance: 280, triggerLength: 12, launchSpeed: 20, inclineDegrees: 45 },
     { triggerDistance: 1520, triggerLength: 10, launchSpeed: 13, inclineDegrees: 30 },
   ],
 };

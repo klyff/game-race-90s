@@ -551,7 +551,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
     }
 
     function launchDistance(zone: { triggerDistance: number; triggerLength: number }): number {
-      return zone.triggerDistance + zone.triggerLength / 3 + 0.5;
+      return zone.triggerDistance + zone.triggerLength - 1;
     }
 
     it('launches a fast car off the 15° bottom-straight ramp', () => {
@@ -623,7 +623,7 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
       expect(result.touchedWall).toBe(false);
     });
 
-    it('rides the first third of the slab without launching', () => {
+    it('rides the slab without launching until the lip', () => {
       const { track, spline } = getTrackAndSpline();
       const stats = getCarStats();
       const zone = track.rampZones![0]!;

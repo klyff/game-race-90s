@@ -134,7 +134,15 @@ export function selectAnchor(viewport: Size, image: Size): Point {
   return pointIn(voidRect(viewport, image), ANCHOR_FRACTION_X, SELECT_ANCHOR_FRACTION_Y);
 }
 
-/** Where the blinking "PRESS SPACE TO ROCK'N THE 90s" prompt is centred: lower part of the void. */
+/**
+ * Blinking start prompt: same horizontal centre as the painted title,
+ * still sitting in the void so it stays readable.
+ */
 export function promptAnchor(viewport: Size, image: Size): Point {
-  return pointIn(voidRect(viewport, image), ANCHOR_FRACTION_X, PROMPT_ANCHOR_FRACTION_Y);
+  const art = coverRect(viewport, image);
+  const region = voidRect(viewport, image);
+  return {
+    x: art.x + art.width * ANCHOR_FRACTION_X,
+    y: region.y + region.height * PROMPT_ANCHOR_FRACTION_Y,
+  };
 }
