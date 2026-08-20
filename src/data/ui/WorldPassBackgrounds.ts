@@ -6,7 +6,7 @@
 import { campaignSlotForTrackId } from '../tracks/campaign.ts';
 import { PLANETS, TRACKS_PER_PLANET } from '../tracks/planets.ts';
 
-export const WORLD_PASS_DIRECTORY = 'assets/ui/aftertrack';
+export const WORLD_PASS_DIRECTORY = 'assets/ui/ticketpass';
 
 export type WorldPassKind = 'next-world' | 'championship';
 

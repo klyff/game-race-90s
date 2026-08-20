@@ -19,7 +19,7 @@ describe('WorldPassBackgrounds', () => {
 
   it('builds a public url and a cache key', () => {
     const pass = WORLD_PASS_BACKGROUNDS[0]!;
-    expect(worldPassUrl(pass)).toBe('assets/ui/aftertrack/pass-chrome-verge.png');
+    expect(worldPassUrl(pass)).toBe('assets/ui/ticketpass/pass-chrome-verge.png');
     expect(worldPassKey(pass)).toBe('world-pass:chrome-verge');
   });
 

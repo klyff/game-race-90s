@@ -57,6 +57,12 @@ export const NEW_CARS_DIRECTORY = `${CAR_ASSET_DIRECTORY}/new`;
 /** Where the authored (non-generated) interface art lives, relative to the served root. */
 export const UI_ASSET_DIRECTORY = 'assets/ui';
 
+/** Campaign garage plates (`garage-01.png` … `garage-10.png`). */
+export const GARAGE_PLATE_DIRECTORY = `${UI_ASSET_DIRECTORY}/garages`;
+
+/** World-pass tickets (`pass-*.png`). */
+export const WORLD_PASS_ART_DIRECTORY = `${UI_ASSET_DIRECTORY}/ticketpass`;
+
 /** Per-planet area-select illustrations, relative to the served root. */
 export const PLANET_ART_DIRECTORY = 'assets/ui/planets';
 
@@ -168,6 +174,25 @@ export const SPLASH_ART_FILE = 'splash.jpeg';
 
 export const GARAGE_ART_KEY = 'garage-art';
 export const GARAGE_ART_FILE = 'garage.png';
+
+/** One workshop plate per campaign world (`garage-01.png` … `garage-10.png`). */
+export const GARAGE_PLATE_COUNT = 10;
+
+/** Clamp a 1-based planet index onto the garage ladder. */
+export function garagePlateIndex(planetIndex: number): number {
+  if (!Number.isFinite(planetIndex)) {
+    return 1;
+  }
+  return Math.min(GARAGE_PLATE_COUNT, Math.max(1, Math.floor(planetIndex)));
+}
+
+export function garageArtFile(planetIndex: number): string {
+  return `garage-${String(garagePlateIndex(planetIndex)).padStart(2, '0')}.png`;
+}
+
+export function garageArtKey(planetIndex: number): string {
+  return `garage-art:${garagePlateIndex(planetIndex)}`;
+}
 
 /** Pixel size of the garage hero still (`car-16_300px.png`). */
 export const CART_PORTRAIT_SIZE = 300;

@@ -47,6 +47,10 @@ import {
   SCENE_KEY,
   GARAGE_ART_FILE,
   GARAGE_ART_KEY,
+  GARAGE_PLATE_COUNT,
+  GARAGE_PLATE_DIRECTORY,
+  garageArtFile,
+  garageArtKey,
   SPLASH_ART_FILE,
   SPLASH_ART_KEY,
   UI_ASSET_DIRECTORY,
@@ -172,6 +176,9 @@ export class BootScene extends Phaser.Scene {
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);
     this.load.image(GARAGE_ART_KEY, `${UI_ASSET_DIRECTORY}/${GARAGE_ART_FILE}`);
+    for (let planet = 1; planet <= GARAGE_PLATE_COUNT; planet += 1) {
+      this.load.image(garageArtKey(planet), `${GARAGE_PLATE_DIRECTORY}/${garageArtFile(planet)}`);
+    }
     for (const card of SPLASH_CARDS) {
       this.load.image(card.key, splashCardUrl(card));
     }

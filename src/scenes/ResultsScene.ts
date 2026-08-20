@@ -96,12 +96,15 @@ export class ResultsScene extends Phaser.Scene {
   private dim!: Phaser.GameObjects.Rectangle;
   private floorDim!: Phaser.GameObjects.Rectangle;
   private titleBox!: Phaser.GameObjects.Graphics;
+  private youBox!: Phaser.GameObjects.Graphics;
   private rankingBox!: Phaser.GameObjects.Graphics;
   private payoutBox!: Phaser.GameObjects.Graphics;
   private promptBox!: Phaser.GameObjects.Graphics;
   private playerMark!: Phaser.GameObjects.Rectangle;
   private headerText!: Phaser.GameObjects.Text;
   private winnerText!: Phaser.GameObjects.Text;
+  private youTag!: Phaser.GameObjects.Text;
+  private youName!: Phaser.GameObjects.Text;
   private rankingHeader!: Phaser.GameObjects.Text;
   private rankingHeaderRight!: Phaser.GameObjects.Text;
   private rankLineTexts: Phaser.GameObjects.Text[] = [];
@@ -170,6 +173,7 @@ export class ResultsScene extends Phaser.Scene {
     this.applyPubArt();
 
     this.titleBox = this.add.graphics().setDepth(2);
+    this.youBox = this.add.graphics().setDepth(2);
     this.rankingBox = this.add.graphics().setDepth(2);
     this.payoutBox = this.add.graphics().setDepth(2);
     this.promptBox = this.add.graphics().setDepth(2);
@@ -182,6 +186,8 @@ export class ResultsScene extends Phaser.Scene {
 
     this.headerText = this.add.text(0, 0, 'WINNER IS', this.headerStyle()).setOrigin(0.5, 0.5).setDepth(4);
     this.winnerText = this.add.text(0, 0, this.winnerName(), this.winnerStyle()).setOrigin(0.5, 0.5).setDepth(4);
+    this.youTag = this.add.text(0, 0, 'YOU', this.youTagStyle()).setOrigin(0.5, 0.5).setDepth(4);
+    this.youName = this.add.text(0, 0, this.playerCallsign(), this.youNameStyle()).setOrigin(0.5, 0.5).setDepth(4);
     this.rankingHeader = this.add
       .text(0, 0, ' # NAME   RACE TOT', this.rankStyle())
       .setOrigin(0, 0)
@@ -270,6 +276,11 @@ export class ResultsScene extends Phaser.Scene {
   private winnerName(): string {
     const winner = this.payload.standings.find(entry => entry.position === 1);
     return (winner?.name ?? '???').toUpperCase();
+  }
+
+  private playerCallsign(): string {
+    const name = this.payload.playerName?.trim();
+    return name !== undefined && name.length > 0 ? name.toUpperCase() : 'YOU';
   }
 
   private buildRankRows(): RankRow[] {
@@ -416,6 +427,7 @@ export class ResultsScene extends Phaser.Scene {
           manifest: this.payload.manifest,
           linesByTrack: this.payload.linesByTrack,
           passId: pass.id,
+          playerName: this.playerCallsign(),
         });
         return;
       }
@@ -501,6 +513,12 @@ export class ResultsScene extends Phaser.Scene {
     this.paintPlate(this.titleBox, width / 2, titleY, Math.min(520, width * 0.56), 78, PLAQUE_GOLD);
     this.headerText.setPosition(width / 2, titleY - 18);
     this.winnerText.setPosition(width / 2, titleY + 16);
+
+    const youW = Math.min(200, width * 0.22);
+    const youX = width * 0.08 + youW / 2;
+    this.paintPlate(this.youBox, youX, titleY, youW, 64, PLAQUE_GOLD);
+    this.youTag.setPosition(youX, titleY - 14);
+    this.youName.setPosition(youX, titleY + 14);
 
     const podiumBottom = this.placePodium(width, height);
     const gap = 16;
@@ -610,6 +628,14 @@ export class ResultsScene extends Phaser.Scene {
 
   private headerStyle(): Phaser.Types.GameObjects.Text.TextStyle {
     return { fontFamily: 'monospace', fontSize: '18px', color: GOLD, stroke: '#1a0e05', strokeThickness: 6 };
+  }
+
+  private youTagStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '14px', color: IVORY, stroke: '#1a0e05', strokeThickness: 4 };
+  }
+
+  private youNameStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '22px', color: GOLD, stroke: '#1a0e05', strokeThickness: 6 };
   }
 
   private winnerStyle(): Phaser.Types.GameObjects.Text.TextStyle {

@@ -1,7 +1,7 @@
 /**
  * Garage hero placement. Pure: no Phaser.
  *
- * `garage.png` (1024×576) has an open floor bay in the middle. The matrix
+ * `assets/ui/garages/garage-01.png`…`garage-10.png` (1024×576) share an open floor bay. The matrix
  * vitrine parks ON that floor, behind the menus, windshield on the viewing
  * point — not the sprite centre. Transparent padding is ignored when scaling.
  */

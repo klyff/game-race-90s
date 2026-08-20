@@ -60,6 +60,7 @@ import {
   HUD_OIL_KEY,
   HUD_TURBO_KEY,
   SCENE_KEY,
+  garageArtKey,
 } from './sceneKeys.ts';
 
 export interface GarageSceneData {
@@ -172,7 +173,7 @@ export class GarageScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.art = this.add.image(0, 0, GARAGE_ART_KEY).setOrigin(0, 0);
+    this.art = this.add.image(0, 0, this.garageTextureKey()).setOrigin(0, 0);
     this.menuPlate = this.add.graphics();
     this.namePlate = this.add.graphics();
     this.titleBox = this.plaque(280, 48);
@@ -995,6 +996,14 @@ export class GarageScene extends Phaser.Scene {
     return isCarUnlocked(carId, highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn()), loadCleared().length);
   }
 
+  private garageTextureKey(): string {
+    const key = garageArtKey(highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn()));
+    if (this.textures.exists(key)) {
+      return key;
+    }
+    return GARAGE_ART_KEY;
+  }
+
   private worldLine(planetId: string | undefined): string {
     const won = loadWonTracks();
     const planet = PLANETS.find(entry => entry.id === planetId) ?? PLANETS[0];
@@ -1031,7 +1040,11 @@ export class GarageScene extends Phaser.Scene {
   private layout(): void {
     const width = this.scale.width;
     const height = this.scale.height;
-    if (this.textures.exists(GARAGE_ART_KEY)) {
+    const artKey = this.garageTextureKey();
+    if (this.textures.exists(artKey)) {
+      if (this.art.texture.key !== artKey) {
+        this.art.setTexture(artKey);
+      }
       const image = { width: this.art.width, height: this.art.height };
       const rect = coverRect({ width, height }, image);
       this.art.setVisible(true).setPosition(rect.x, rect.y).setDisplaySize(rect.width, rect.height);

@@ -18,6 +18,7 @@ export interface WorldPassSceneData {
   readonly manifest: CarSetManifest;
   readonly linesByTrack: Record<string, TrackLinesManifest>;
   readonly passId: string;
+  readonly playerName?: string;
 }
 
 const GOLD = '#ffd85c';
@@ -33,6 +34,7 @@ export class WorldPassScene extends Phaser.Scene {
   private titleBox!: Phaser.GameObjects.Graphics;
   private promptBox!: Phaser.GameObjects.Graphics;
   private headlineText!: Phaser.GameObjects.Text;
+  private issuedText!: Phaser.GameObjects.Text;
   private titleText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
 
@@ -68,8 +70,18 @@ export class WorldPassScene extends Phaser.Scene {
     this.headlineText = this.add
       .text(0, 0, this.pass.headline, {
         fontFamily: 'monospace',
-        fontSize: '22px',
+        fontSize: '18px',
         color: GOLD,
+        stroke: '#1a0e05',
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(4);
+    this.issuedText = this.add
+      .text(0, 0, this.issuedLine(), {
+        fontFamily: 'monospace',
+        fontSize: '24px',
+        color: IVORY,
         stroke: '#1a0e05',
         strokeThickness: 6,
       })
@@ -78,7 +90,7 @@ export class WorldPassScene extends Phaser.Scene {
     this.titleText = this.add
       .text(0, 0, this.pass.title, {
         fontFamily: 'monospace',
-        fontSize: '36px',
+        fontSize: '32px',
         color: GOLD,
         stroke: '#3a0d05',
         strokeThickness: 8,
@@ -100,7 +112,7 @@ export class WorldPassScene extends Phaser.Scene {
     this.audio.start();
     this.layout();
     this.tweens.add({
-      targets: [this.headlineText, this.titleText],
+      targets: [this.headlineText, this.issuedText, this.titleText],
       scale: { from: 1.18, to: 1 },
       duration: 260,
       ease: 'Back.easeOut',
@@ -119,18 +131,19 @@ export class WorldPassScene extends Phaser.Scene {
     }
     this.dim.setSize(width, height);
 
-    const titleY = height * 0.1;
+    const titleY = height * 0.12;
     paintRoundedPlaque(this.titleBox, {
       x: width / 2,
       y: titleY,
-      width: Math.min(640, width * 0.72),
-      height: 88,
+      width: Math.min(720, width * 0.8),
+      height: 118,
       fill: PLAQUE_INK,
-      alpha: 0.45,
+      alpha: 0.5,
       edge: 0xffd85c,
     });
-    this.headlineText.setPosition(width / 2, titleY - 18);
-    this.titleText.setPosition(width / 2, titleY + 18);
+    this.headlineText.setPosition(width / 2, titleY - 36);
+    this.issuedText.setPosition(width / 2, titleY);
+    this.titleText.setPosition(width / 2, titleY + 36);
 
     paintRoundedPlaque(this.promptBox, {
       x: width / 2,
@@ -151,6 +164,15 @@ export class WorldPassScene extends Phaser.Scene {
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER).on('down', leave);
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', leave);
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.audio.toggleMute());
+  }
+
+  private playerCallsign(): string {
+    const name = this.payload.playerName?.trim();
+    return name !== undefined && name.length > 0 ? name.toUpperCase() : 'YOU';
+  }
+
+  private issuedLine(): string {
+    return `ISSUED TO  ${this.playerCallsign()}`;
   }
 
   private leaveToGarage(): void {
