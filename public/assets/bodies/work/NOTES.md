@@ -31,6 +31,13 @@ The live files under `bodies/*.png` were **not** overwritten.
 - `isnet-anime` on black outfits.
 - `belt` BiRefNet until someone runs `belt login`.
 
+## Regen 2026-08-20 — black clothes, transparent
+
+Regenerated 13 runners who wear black (profile / defeat / victory + perfil):
+`klyff aline emma dave razor nikki diego luna kira jett vince hex viktor`.
+
+Gen used a **light studio** (never black). Cutout: `rembg -m u2net`, then hard alpha (0 or 255), trim, 10px pad, same Klyff scale onto **PNG32 transparent** canvases. Magenta eyeballs: `work/06-regen-light/magenta/`. Black tank / leather / denim stay.
+
 ## Next (when you say go)
 
 1. Batch the roster with `rembg p -m u2net` (or `birefnet-general-lite`) from the **git originals**, write only into `work/`.

@@ -29,6 +29,7 @@ A ramp is a `rampZones` lip with height — not a painted slab on the bed.
 | ----- | ---- |
 | Thunder Basin I | 10° @ 200, 10° @ 720, 20° @ 1240 |
 | Thunder Basin II | no lip in the first ~200u; 10° @ 420; 20° @ 1520 |
+| Chrome Verge I | no lip in the first ~200u; 10° @ 420; 20° @ 1860 |
 | Bogmire Deep I | 10° teach @ 220; void 20° @ 980 |
 
 `trackgen` ellipses do not emit lips. Do not regenerate the 27 generated layouts just to change asphalt — that is a theme flag.

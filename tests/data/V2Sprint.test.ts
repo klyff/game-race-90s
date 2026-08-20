@@ -36,4 +36,12 @@ describe('V2 origin, camera, radio, bogmire', () => {
     const track = findTrack('bogmire-deep-1');
     expect(track.rampZones?.map(zone => zone.inclineDegrees)).toEqual([10, 20]);
   });
+
+  it('authors W2 track 1 as a nitro-straight pipe with 10° then 20°', () => {
+    expect(isAuthoredTrackId('chrome-verge-1')).toBe(true);
+    const track = findTrack('chrome-verge-1');
+    expect(track.halfWidth).toBe(22);
+    expect(track.rampZones?.map(zone => zone.inclineDegrees)).toEqual([10, 20]);
+    expect(track.rampZones?.[0]?.triggerDistance).toBeGreaterThanOrEqual(200);
+  });
 });

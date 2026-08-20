@@ -10,8 +10,8 @@
     "semantic_hash": "a7c31c9c86596a49f46f1fbd40b29080"
   },
   "package.json": {
-    "mtime": 1787194974.0052898,
-    "ast_hash": "f64048c0e44883ab59c326f524633484",
+    "mtime": 1787209380.7180417,
+    "ast_hash": "6adcb0f541969e47b8489e9ed04c5d84",
     "semantic_hash": ""
   },
   "public/assets/cameras/ash-reach-1.json": {
@@ -45,9 +45,9 @@
     "semantic_hash": "028ddb2ccc6032531f2335430aa63b7e"
   },
   "public/assets/cameras/chrome-verge-1.json": {
-    "mtime": 1787031902.3740616,
-    "ast_hash": "945dfedf46d6762040a3ef3096d13ec8",
-    "semantic_hash": "945dfedf46d6762040a3ef3096d13ec8"
+    "mtime": 1787205772.6164627,
+    "ast_hash": "e52bb6cd53fdb16e2c326d2012c0e48a",
+    "semantic_hash": ""
   },
   "public/assets/cameras/chrome-verge-2.json": {
     "mtime": 1787031902.3745637,
@@ -165,8 +165,8 @@
     "semantic_hash": "707e767ef0da4ef425ed3d9a19ab0caa"
   },
   "public/assets/cars/cars.json": {
-    "mtime": 1787158213.8852763,
-    "ast_hash": "2cd36156e5a21f579178692ff54c5e9b",
+    "mtime": 1787209403.92424,
+    "ast_hash": "b200ff0a830a53eae9fb269a53dea5e8",
     "semantic_hash": ""
   },
   "public/assets/lines/ash-reach-1.json": {
@@ -200,9 +200,9 @@
     "semantic_hash": "2ebe572a04708be0f439f0436c3c4604"
   },
   "public/assets/lines/chrome-verge-1.json": {
-    "mtime": 1786891082.9904969,
-    "ast_hash": "81861b8f3c33f8d95fab52337b5b523e",
-    "semantic_hash": "81861b8f3c33f8d95fab52337b5b523e"
+    "mtime": 1787205804.3129296,
+    "ast_hash": "e1e4220f6363557a54f67fe8e9a4d503",
+    "semantic_hash": ""
   },
   "public/assets/lines/chrome-verge-2.json": {
     "mtime": 1786891082.9907966,
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "public/assets/traps/chrome-verge-1.json": {
-    "mtime": 1787129869.1510704,
-    "ast_hash": "c1a042b6aba1d5ae210a874ad7f389be",
+    "mtime": 1787205772.9232228,
+    "ast_hash": "d81c4e0dbb0d6fa71226fa0033174aa5",
     "semantic_hash": ""
   },
   "public/assets/traps/chrome-verge-2.json": {
@@ -665,8 +665,8 @@
     "semantic_hash": "e4b0d8590d8dc8eeeeb2e4a717ea0712"
   },
   "src/adapters/render/GarageLayout.ts": {
-    "mtime": 1787110330.6158154,
-    "ast_hash": "353d6ad9c81f20a4324901ab7bcb79ca",
+    "mtime": 1787211679.4249392,
+    "ast_hash": "e7c53d7351f4c7d23ca281c571550b5b",
     "semantic_hash": ""
   },
   "src/adapters/render/HitRewardEffect.ts": {
@@ -775,8 +775,8 @@
     "semantic_hash": "d0ae9b35b697285163c04f4200736cd2"
   },
   "src/data/cars/CarManifest.ts": {
-    "mtime": 1787102946.8858972,
-    "ast_hash": "2e54799017163f84e52eb9a03327c3d0",
+    "mtime": 1787209400.9682114,
+    "ast_hash": "68114535c755008b60bf70a1276430ed",
     "semantic_hash": ""
   },
   "src/data/input/ControlList.ts": {
@@ -825,13 +825,13 @@
     "semantic_hash": ""
   },
   "src/data/tracks/planets.ts": {
-    "mtime": 1787110330.617872,
-    "ast_hash": "d83ce6062fe5c43cb0e98624578c4646",
+    "mtime": 1787205713.780357,
+    "ast_hash": "3c6d5a91a039eadd515af4d76d659a45",
     "semantic_hash": ""
   },
   "src/data/tracks/registry.ts": {
-    "mtime": 1787110330.6182451,
-    "ast_hash": "eea907a91e69650e8ac2da17fdfd7459",
+    "mtime": 1787205715.5699277,
+    "ast_hash": "62094e0810116a74608c4843f4ebf459",
     "semantic_hash": ""
   },
   "src/data/tracks/thunder-basin-2.track.ts": {
@@ -845,9 +845,9 @@
     "semantic_hash": ""
   },
   "src/data/ui/PubBackgrounds.ts": {
-    "mtime": 1787024378.3937123,
-    "ast_hash": "33c560dcbf8be491f429974206546ddf",
-    "semantic_hash": "33c560dcbf8be491f429974206546ddf"
+    "mtime": 1787209164.3148186,
+    "ast_hash": "bb8e163e52029622e9fca427f805900b",
+    "semantic_hash": ""
   },
   "src/domain/ai/DriverProfile.ts": {
     "mtime": 1787105783.8022208,
@@ -1215,18 +1215,18 @@
     "semantic_hash": "17b34a1e9fa48f8c5c1a4ed91c2fe4c7"
   },
   "src/main.ts": {
-    "mtime": 1787194777.6816254,
-    "ast_hash": "2ab45ad09b99ea751bb11d42ff943aab",
+    "mtime": 1787209880.80736,
+    "ast_hash": "19829cb61ea2b81156cf34ec5d1d1b87",
     "semantic_hash": ""
   },
   "src/scenes/BootScene.ts": {
-    "mtime": 1787194956.6487007,
-    "ast_hash": "97753c34a982ca77e8f2fd29281eddb2",
+    "mtime": 1787211597.875431,
+    "ast_hash": "39fc12d7b4cd6e2c5daf29fabad1680b",
     "semantic_hash": ""
   },
   "src/scenes/GarageScene.ts": {
-    "mtime": 1787162379.1343558,
-    "ast_hash": "3b69e083f0c195b6e854520f38de7be2",
+    "mtime": 1787210643.6312866,
+    "ast_hash": "c7915e99f8fbcd8ac0f3e296db0cc4c7",
     "semantic_hash": ""
   },
   "src/scenes/HelpScene.ts": {
@@ -1255,8 +1255,8 @@
     "semantic_hash": ""
   },
   "src/scenes/ResultsScene.ts": {
-    "mtime": 1787160818.197257,
-    "ast_hash": "8961cfda477f76505cf7d7f463332b0d",
+    "mtime": 1787211616.7390652,
+    "ast_hash": "d160fd8d4defcc7a1603af8059c134b0",
     "semantic_hash": ""
   },
   "src/scenes/SplashAttractShow.ts": {
@@ -1275,8 +1275,8 @@
     "semantic_hash": "9b4861d1da6e1e8942d02a2b8f6680f1"
   },
   "src/scenes/sceneKeys.ts": {
-    "mtime": 1787194954.8330994,
-    "ast_hash": "db89a45c23898f04f00f2faa0d9515f8",
+    "mtime": 1787211596.770152,
+    "ast_hash": "d1f0d30f5a00a678c387f31eaaf85a57",
     "semantic_hash": ""
   },
   "src/scenes/selectData.ts": {
@@ -1405,8 +1405,8 @@
     "semantic_hash": ""
   },
   "tests/data/CarManifest.test.ts": {
-    "mtime": 1787104590.0392857,
-    "ast_hash": "c2986db65cbcd62da95e8a6687a6ba45",
+    "mtime": 1787209395.7420864,
+    "ast_hash": "4000f2cb11fd031d5db5ff5433861dc3",
     "semantic_hash": ""
   },
   "tests/data/ControlList.test.ts": {
@@ -1435,9 +1435,9 @@
     "semantic_hash": ""
   },
   "tests/data/PubBackgrounds.test.ts": {
-    "mtime": 1787024378.459622,
-    "ast_hash": "1d9b2f7a35540deb9ff5f65a15b1e42d",
-    "semantic_hash": "1d9b2f7a35540deb9ff5f65a15b1e42d"
+    "mtime": 1787209980.1775377,
+    "ast_hash": "408029911b44810f8c36603ad02ae4d7",
+    "semantic_hash": ""
   },
   "tests/data/SplashCards.test.ts": {
     "mtime": 1787024378.465977,
@@ -1700,8 +1700,8 @@
     "semantic_hash": ""
   },
   "tests/spritegen/golden-sprites.test.ts": {
-    "mtime": 1787110330.6276486,
-    "ast_hash": "24bd8a18a7ea46f0f4fbb30729adf9d9",
+    "mtime": 1787209390.6894913,
+    "ast_hash": "eede02c67d62d1be90b9e69de71f9505",
     "semantic_hash": ""
   },
   "tests/spritegen/pose-footprint.test.ts": {
@@ -1895,9 +1895,9 @@
     "semantic_hash": "549e789403151cd21073fe7012fd545d"
   },
   "tools/spritegen/import-fleet.ts": {
-    "mtime": 1787024379.026358,
-    "ast_hash": "000c4ad19711333a9ca9d65274782ea6",
-    "semantic_hash": "000c4ad19711333a9ca9d65274782ea6"
+    "mtime": 1787209395.1512105,
+    "ast_hash": "9aa565e1038758f1b0657dfaa7385e30",
+    "semantic_hash": ""
   },
   "tools/spritegen/new-cars.ts": {
     "mtime": 1787024379.0265257,
@@ -2200,8 +2200,8 @@
     "semantic_hash": ""
   },
   "public/assets/cards/aline.txt": {
-    "mtime": 1787110330.5906713,
-    "ast_hash": "472fae2244388675f2627e5aa0ec069f",
+    "mtime": 1787206635.8724844,
+    "ast_hash": "84b325675246c04a45039817d889516b",
     "semantic_hash": ""
   },
   "public/assets/cards/ash.txt": {
@@ -2634,51 +2634,6 @@
     "ast_hash": "eec58f138ecb98e660e5a18aa3501bb4",
     "semantic_hash": ""
   },
-  "public/assets/car-10_300px.png": {
-    "mtime": 1787024375.5914917,
-    "ast_hash": "3b5111dd90711b1bc66282c0477bc57e",
-    "semantic_hash": ""
-  },
-  "public/assets/car-2_300px.png": {
-    "mtime": 1787024375.5925472,
-    "ast_hash": "784bd7dfc9c309ecf09d64d0c56d3e77",
-    "semantic_hash": ""
-  },
-  "public/assets/car-3_300px.png": {
-    "mtime": 1787024375.594959,
-    "ast_hash": "a9212028d2fcd8e8d55def0f719e06b5",
-    "semantic_hash": ""
-  },
-  "public/assets/car-4_300px.png": {
-    "mtime": 1787024375.5979266,
-    "ast_hash": "87b7b6bb5203b4ca51ea4fa65b471af0",
-    "semantic_hash": ""
-  },
-  "public/assets/car-5_300px.png": {
-    "mtime": 1787024375.599428,
-    "ast_hash": "b582e6430a97fc7e173d41ce0fb7b7ee",
-    "semantic_hash": ""
-  },
-  "public/assets/car-6-tank_300px.png": {
-    "mtime": 1787024375.6002383,
-    "ast_hash": "512c17b96b04a72dad391aa1160ee2da",
-    "semantic_hash": ""
-  },
-  "public/assets/car-7-turbo_300px.png": {
-    "mtime": 1787024375.6006265,
-    "ast_hash": "67d09d8b7acf0a4e7ebfdb82ce423482",
-    "semantic_hash": ""
-  },
-  "public/assets/car-8-strong_300px.png": {
-    "mtime": 1787024375.601094,
-    "ast_hash": "5f1d1e8d228069d9152e5e97b7b34f8a",
-    "semantic_hash": ""
-  },
-  "public/assets/car-9-turbo_300px.png": {
-    "mtime": 1787024375.6015613,
-    "ast_hash": "833ca3a98af25fd462b6a06ce8c1bbe9",
-    "semantic_hash": ""
-  },
   "public/assets/cards/Aline.png": {
     "mtime": 1787086950.9599195,
     "ast_hash": "a7a8f904aaa0f87def49f1a986dfe01d",
@@ -2815,27 +2770,27 @@
     "semantic_hash": ""
   },
   "public/assets/cars/car_18_hero.png": {
-    "mtime": 1787079478.8095608,
+    "mtime": 1787208312.8227372,
     "ast_hash": "c7dcf2dae00139803d714756cc38c72a",
     "semantic_hash": ""
   },
   "public/assets/cars/car_18_strip.png": {
-    "mtime": 1787087002.2023172,
+    "mtime": 1787208312.8237374,
     "ast_hash": "85136394b3e33229eaa9a1dcf2bbec45",
     "semantic_hash": ""
   },
   "public/assets/cars/car_19_strip.png": {
-    "mtime": 1787087002.5522528,
+    "mtime": 1787208312.823976,
     "ast_hash": "b66a80841775173b82641cdd5b4f30e1",
     "semantic_hash": ""
   },
   "public/assets/cars/car_20_strip.png": {
-    "mtime": 1787087002.0456517,
+    "mtime": 1787208312.824169,
     "ast_hash": "c6c34063b36e1aad8d17096d76d2be15",
     "semantic_hash": ""
   },
   "public/assets/cars/car_21_strip.png": {
-    "mtime": 1787087002.3896904,
+    "mtime": 1787208312.826055,
     "ast_hash": "c61bc6d88dec1cb48e540ab8c3fe1f3c",
     "semantic_hash": ""
   },
@@ -3605,8 +3560,8 @@
     "semantic_hash": ""
   },
   "tests/data/V2Sprint.test.ts": {
-    "mtime": 1787194724.510386,
-    "ast_hash": "46eba47f6b5d819b7c4cdd84ea45318e",
+    "mtime": 1787205768.4985979,
+    "ast_hash": "593806457c1adf5d0db683ff2151a1c8",
     "semantic_hash": ""
   },
   "tests/domain/CareerGrid.test.ts": {
@@ -4050,8 +4005,8 @@
     "semantic_hash": ""
   },
   "tools/spritegen/apply-car-stats.ts": {
-    "mtime": 1787158212.3947403,
-    "ast_hash": "54b5237d3b0431175dcea09bc052737d",
+    "mtime": 1787209390.689493,
+    "ast_hash": "461167f3b98c07b689ffccb207302c07",
     "semantic_hash": ""
   },
   "src/domain/ai/CandidateGenerator.ts": {
@@ -5200,8 +5155,8 @@
     "semantic_hash": ""
   },
   ".cursor/skills/game-track-author/SKILL.md": {
-    "mtime": 1787195071.078228,
-    "ast_hash": "16a082f6e27fac7c6e3d317302bf3601",
+    "mtime": 1787205766.6553931,
+    "ast_hash": "95e864760555c66427989369151e7fa9",
     "semantic_hash": ""
   },
   "public/assets/crowd/cheer-idle.png": {
@@ -5237,6 +5192,1406 @@
   "public/assets/crowd/rock.png": {
     "mtime": 1787195034.4124923,
     "ast_hash": "77045a923d51d14b01c46b2337399ad8",
+    "semantic_hash": ""
+  },
+  "src/data/tracks/chrome-verge-1.track.ts": {
+    "mtime": 1787205766.6553795,
+    "ast_hash": "5fc9cd8e2c64fa878f69647630302ae2",
+    "semantic_hash": ""
+  },
+  "src/data/ui/WorldPassBackgrounds.ts": {
+    "mtime": 1787211598.6097217,
+    "ast_hash": "06deea56c6e45c6b6fc5d26e2a481274",
+    "semantic_hash": ""
+  },
+  "tests/spritegen/write-matrix-manifest.test.ts": {
+    "mtime": 1787209401.3087015,
+    "ast_hash": "4f0909dc351d6723a003348f41ddabb5",
+    "semantic_hash": ""
+  },
+  "tools/spritegen/write-matrix-manifest.ts": {
+    "mtime": 1787209374.4439921,
+    "ast_hash": "0c2245a0ad1336bbc337d02acd9d119c",
+    "semantic_hash": ""
+  },
+  "src/scenes/WorldPassScene.ts": {
+    "mtime": 1787211633.8377657,
+    "ast_hash": "ad9b5f65f3cf3dbb2ae8c22d8bd11f80",
+    "semantic_hash": ""
+  },
+  "tests/data/WorldPassBackgrounds.test.ts": {
+    "mtime": 1787211634.4494514,
+    "ast_hash": "0d1a427e9d7cbe26495b3868a39e7a37",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-01.png": {
+    "mtime": 1787209990.7537007,
+    "ast_hash": "a2e09c9c99355d80686f9caaf889378d",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-02.png": {
+    "mtime": 1787209991.5760083,
+    "ast_hash": "3e1b8b7784ff06713d94c934ca7fcf5e",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-03.png": {
+    "mtime": 1787209992.3323395,
+    "ast_hash": "bd7d729db7a5b73ff68a9c97932055ab",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-04.png": {
+    "mtime": 1787209993.0062046,
+    "ast_hash": "a87ed2b0cd7d312e20efda420f018301",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-05.png": {
+    "mtime": 1787209993.8316627,
+    "ast_hash": "9aa710fc4b155dc23703e352e3533904",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-06.png": {
+    "mtime": 1787209994.5978596,
+    "ast_hash": "303612d43de6c81498d77ad1cbc90fea",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-07.png": {
+    "mtime": 1787209995.4199047,
+    "ast_hash": "48cb243a0e02a2a2b9ed81a84d1b08d2",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-08.png": {
+    "mtime": 1787209996.1101863,
+    "ast_hash": "5b653db296e99aa8390920b6b76245a0",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-09.png": {
+    "mtime": 1787209996.8432498,
+    "ast_hash": "0049d4e20dd2650ca8358815445bda1e",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/aftertrack/lounge-10.png": {
+    "mtime": 1787209997.5382175,
+    "ast_hash": "043e8d7ecde68d3564d03d090eafb021",
+    "semantic_hash": ""
+  },
+  "tests/data/GaragePlates.test.ts": {
+    "mtime": 1787211639.1279612,
+    "ast_hash": "9d8190da044b695699ef14bd42db20d1",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-01.png": {
+    "mtime": 1787211597.2956867,
+    "ast_hash": "7bc7b9e44a4feb40d4bfeac097eebbd4",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-02.png": {
+    "mtime": 1787210007.5738153,
+    "ast_hash": "1041331495ea0630de932232b4f44936",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-03.png": {
+    "mtime": 1787211597.8606153,
+    "ast_hash": "7e4cc2930df2a06b360575a4fbed3ab3",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-04.png": {
+    "mtime": 1787210008.327225,
+    "ast_hash": "c82f9c6bbd58283ed1092197fcec7a49",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-05.png": {
+    "mtime": 1787210008.6708462,
+    "ast_hash": "72cb0904ccbc09161b0fa441e8791d1d",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-06.png": {
+    "mtime": 1787210009.052282,
+    "ast_hash": "608f06266580d24f93be89f52c5f8cef",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-07.png": {
+    "mtime": 1787210009.4099798,
+    "ast_hash": "518e886fed0b0ac8f7286c154df429a3",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-08.png": {
+    "mtime": 1787210009.7792296,
+    "ast_hash": "d62b22b374f79927c1c9655a757cf4ce",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-09.png": {
+    "mtime": 1787210010.1594853,
+    "ast_hash": "7bb19332afd1266b26e30f88e8968eb1",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/garages/garage-10.png": {
+    "mtime": 1787211598.2254026,
+    "ast_hash": "bcd41f9851df52671c98daa9ad529a0e",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-ash-reach.png": {
+    "mtime": 1787210004.4220433,
+    "ast_hash": "81dba87ae89a531140916923ab4e4847",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-bogmire-deep.png": {
+    "mtime": 1787209999.494062,
+    "ast_hash": "b9305cf7ced511760a0dca46ff520008",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-championship.png": {
+    "mtime": 1787210006.896361,
+    "ast_hash": "7788c19c4e8c95806bb73a049ae02958",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-chrome-verge.png": {
+    "mtime": 1787209998.3596282,
+    "ast_hash": "c325c61e0a3eb4bcec13ca2840e3f133",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-cryo-hollow.png": {
+    "mtime": 1787210000.8672235,
+    "ast_hash": "82f2af13413899f04a7d5351973fa563",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-ferro-rust.png": {
+    "mtime": 1787210001.6333401,
+    "ast_hash": "29dc45ad2a63294971ffb643da0bfd6f",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-neon-kasbah.png": {
+    "mtime": 1787210003.544458,
+    "ast_hash": "4035ed0c65ffa2e3eb255240f40ed0d8",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-verdant-fault.png": {
+    "mtime": 1787210006.1193259,
+    "ast_hash": "2eb28a4b2734d2fe2f35af108b6e9471",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-voidport.png": {
+    "mtime": 1787210005.2441163,
+    "ast_hash": "ab7ba009660670c49e1797ba7504fd5e",
+    "semantic_hash": ""
+  },
+  "public/assets/ui/ticketpass/pass-vulkanis.png": {
+    "mtime": 1787210002.5905173,
+    "ast_hash": "bedfbf2b2493f175b897f8d8afd36be4",
+    "semantic_hash": ""
+  },
+  "tools/art/matte-bodies.sh": {
+    "mtime": 1787227349.0856242,
+    "ast_hash": "f3dd29392af9c4b9355d4938a31b177c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/aline-defeat.png": {
+    "mtime": 1787236476.032729,
+    "ast_hash": "ce511b8781dd2727c626480dd81af960",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/aline-perfil.png": {
+    "mtime": 1787236475.9153192,
+    "ast_hash": "067ac49c66eacd774be49670f66fe116",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/aline-profile.png": {
+    "mtime": 1787236475.9153192,
+    "ast_hash": "067ac49c66eacd774be49670f66fe116",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/aline-victory.png": {
+    "mtime": 1787236476.160604,
+    "ast_hash": "c10a877a92042bfe4fb45f3b7c92ec2f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/ash-defeat.png": {
+    "mtime": 1787227362.7388082,
+    "ast_hash": "fdfb073560814a766d58899b4ecff0e9",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/ash-perfil.png": {
+    "mtime": 1787227395.4268546,
+    "ast_hash": "ef133cd7eeeca344678150f186356ff0",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/ash-profile.png": {
+    "mtime": 1787227363.0695238,
+    "ast_hash": "ef133cd7eeeca344678150f186356ff0",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/ash-victory.png": {
+    "mtime": 1787227363.329954,
+    "ast_hash": "c50cb6c1011fb7d98992c7dc7ea0b5b3",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/blaze-defeat.png": {
+    "mtime": 1787227363.5964196,
+    "ast_hash": "4da401a64bbe43323b037137f79dc0f3",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/blaze-perfil.png": {
+    "mtime": 1787227395.4314322,
+    "ast_hash": "cfdb1315cc3adb0714de80669394a84f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/blaze-profile.png": {
+    "mtime": 1787227363.9956279,
+    "ast_hash": "cfdb1315cc3adb0714de80669394a84f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/blaze-victory.png": {
+    "mtime": 1787227364.3818035,
+    "ast_hash": "9744996e5bd1d7b0b25afbb00a3c493e",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/cruz-defeat.png": {
+    "mtime": 1787227364.6252363,
+    "ast_hash": "408fd9b1befbde3a99f9a83d9809b82d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/cruz-perfil.png": {
+    "mtime": 1787227395.4353604,
+    "ast_hash": "d808ab458d99ba49c39def56811f5784",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/cruz-profile.png": {
+    "mtime": 1787227365.0643294,
+    "ast_hash": "d808ab458d99ba49c39def56811f5784",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/cruz-victory.png": {
+    "mtime": 1787227365.3040228,
+    "ast_hash": "73531b16f6c28849809d0797872bcb41",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/dave-defeat.png": {
+    "mtime": 1787236476.6080549,
+    "ast_hash": "ab91ad8b4ef7d92d57c56fb9b0676ff5",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/dave-perfil.png": {
+    "mtime": 1787236476.467625,
+    "ast_hash": "9b4c94757701a0e833b31e53ab1a77c6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/dave-profile.png": {
+    "mtime": 1787236476.467625,
+    "ast_hash": "9b4c94757701a0e833b31e53ab1a77c6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/dave-victory.png": {
+    "mtime": 1787236476.6678922,
+    "ast_hash": "bfb9a6429b47d258eccdbd1afe24cfec",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/diego-defeat.png": {
+    "mtime": 1787236477.481147,
+    "ast_hash": "18c97755232f91b29d8631981d93b273",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/diego-perfil.png": {
+    "mtime": 1787236477.3432374,
+    "ast_hash": "26db8adb1842898088f036588ead1068",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/diego-profile.png": {
+    "mtime": 1787236477.3432374,
+    "ast_hash": "26db8adb1842898088f036588ead1068",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/diego-victory.png": {
+    "mtime": 1787236477.561256,
+    "ast_hash": "0a297127f74f41fcfb686a240e9bbcb3",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/emma-defeat.png": {
+    "mtime": 1787236476.337744,
+    "ast_hash": "cd52ecaaeccb8bd11c2106cb2083c149",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/emma-perfil.png": {
+    "mtime": 1787236476.2833035,
+    "ast_hash": "0a284192786592a54ce374a1602b324c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/emma-profile.png": {
+    "mtime": 1787236476.2833035,
+    "ast_hash": "0a284192786592a54ce374a1602b324c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/emma-victory.png": {
+    "mtime": 1787236476.3785398,
+    "ast_hash": "1235768219fe76877fffec2ebbbeda4c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/enzo-defeat.png": {
+    "mtime": 1787227367.666149,
+    "ast_hash": "7ea037ca6565b2cd18ada4b957e3117d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/enzo-perfil.png": {
+    "mtime": 1787227395.4535499,
+    "ast_hash": "ef72df886f0c9b48d612cc9520d81fda",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/enzo-profile.png": {
+    "mtime": 1787227368.0134854,
+    "ast_hash": "ef72df886f0c9b48d612cc9520d81fda",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/enzo-victory.png": {
+    "mtime": 1787227368.2542827,
+    "ast_hash": "2558537b9a704b91e2e3bc87755067b7",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/flufe-defeat.png": {
+    "mtime": 1787227368.5952373,
+    "ast_hash": "8e6c7fc056649954105ca1666787527b",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/flufe-perfil.png": {
+    "mtime": 1787227395.457984,
+    "ast_hash": "e256726938f186100840dfb28fe8a083",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/flufe-profile.png": {
+    "mtime": 1787227369.867579,
+    "ast_hash": "e256726938f186100840dfb28fe8a083",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/flufe-victory.png": {
+    "mtime": 1787227370.1948147,
+    "ast_hash": "2addc375cb8b43286e5cbab6b6ad3793",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/hex-defeat.png": {
+    "mtime": 1787236478.8808346,
+    "ast_hash": "286ebba1a7d28ea54897b1b2ddfdfa95",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/hex-perfil.png": {
+    "mtime": 1787236478.7702494,
+    "ast_hash": "befed0dba3f6f440d1f17bdf0372b193",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/hex-profile.png": {
+    "mtime": 1787236478.7702494,
+    "ast_hash": "befed0dba3f6f440d1f17bdf0372b193",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/hex-victory.png": {
+    "mtime": 1787236478.9541528,
+    "ast_hash": "9dbf635d3db4ae249bb0948c49cb8d1a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/jett-defeat.png": {
+    "mtime": 1787236478.3077168,
+    "ast_hash": "0a86bbfc7aae1b2d7e158704817ffcc4",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/jett-perfil.png": {
+    "mtime": 1787236478.1674345,
+    "ast_hash": "fa76d4626c940123edbcec9312556a01",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/jett-profile.png": {
+    "mtime": 1787236478.1674345,
+    "ast_hash": "fa76d4626c940123edbcec9312556a01",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/jett-victory.png": {
+    "mtime": 1787236478.3834364,
+    "ast_hash": "17e36dd3cde3583b2c39eec8a51288a6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/kira-defeat.png": {
+    "mtime": 1787236478.002596,
+    "ast_hash": "4e1eda99328e2bcdb26420d9496f8aaf",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/kira-perfil.png": {
+    "mtime": 1787236477.8809316,
+    "ast_hash": "43b6c52f752c4bdefb766af8a452e28a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/kira-profile.png": {
+    "mtime": 1787236477.8809316,
+    "ast_hash": "43b6c52f752c4bdefb766af8a452e28a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/kira-victory.png": {
+    "mtime": 1787236478.0787437,
+    "ast_hash": "6661c549c6342f30e457c6b5eaa8ab2a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/klyff-defeat.png": {
+    "mtime": 1787236475.7641985,
+    "ast_hash": "69108c21047ed1fa239beb0b930028c6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/klyff-perfil.png": {
+    "mtime": 1787236475.635213,
+    "ast_hash": "f3753518ed60c59a3d72a8e7a00e7d80",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/klyff-profile.png": {
+    "mtime": 1787236475.635213,
+    "ast_hash": "f3753518ed60c59a3d72a8e7a00e7d80",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/klyff-victory.png": {
+    "mtime": 1787236475.8424654,
+    "ast_hash": "145d39fea1652292d7a4d5033ab682c0",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/luca-defeat.png": {
+    "mtime": 1787227375.0952802,
+    "ast_hash": "c51ae85b645c05dd780efe916cb9d00f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/luca-perfil.png": {
+    "mtime": 1787227395.4806225,
+    "ast_hash": "8b8511de1db06ddadafee027d284a710",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/luca-profile.png": {
+    "mtime": 1787227375.4298322,
+    "ast_hash": "8b8511de1db06ddadafee027d284a710",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/luca-victory.png": {
+    "mtime": 1787227375.7800312,
+    "ast_hash": "bc9c8a07c656d5b9ecdfed871a501507",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/luna-defeat.png": {
+    "mtime": 1787236477.7371013,
+    "ast_hash": "afccb2d3f5e9a3b1034e22146eaf3595",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/luna-perfil.png": {
+    "mtime": 1787236477.635675,
+    "ast_hash": "4a6076b42d9f76eaf9f8594a5eedc777",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/luna-profile.png": {
+    "mtime": 1787236477.635675,
+    "ast_hash": "4a6076b42d9f76eaf9f8594a5eedc777",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/luna-victory.png": {
+    "mtime": 1787236477.804342,
+    "ast_hash": "44c0f38d27293279b0c71217a56a4edd",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/negao-defeat.png": {
+    "mtime": 1787227378.4559817,
+    "ast_hash": "3877f494d3e68d307b8b30c3d6d991e1",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/negao-perfil.png": {
+    "mtime": 1787227395.488991,
+    "ast_hash": "1be1672704b57865b6a4bd65a36c2ad4",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/negao-profile.png": {
+    "mtime": 1787227380.2710638,
+    "ast_hash": "1be1672704b57865b6a4bd65a36c2ad4",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/negao-victory.png": {
+    "mtime": 1787227381.3285367,
+    "ast_hash": "7a37828a1443ea80f9dd005b9263b7cc",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/nikki-defeat.png": {
+    "mtime": 1787236477.1863413,
+    "ast_hash": "356da7b816de757a429bfc20bd15a7c2",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/nikki-perfil.png": {
+    "mtime": 1787236477.0636778,
+    "ast_hash": "669621e18a465a25534516e1981acfca",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/nikki-profile.png": {
+    "mtime": 1787236477.0636778,
+    "ast_hash": "669621e18a465a25534516e1981acfca",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/nikki-victory.png": {
+    "mtime": 1787236477.255649,
+    "ast_hash": "827b8645a5a9a24baac9e4ca61887d26",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/nova-defeat.png": {
+    "mtime": 1787227383.6332262,
+    "ast_hash": "89b7da8cbbf3ef0bf6db64a8a79b46b3",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/nova-perfil.png": {
+    "mtime": 1787227395.4975262,
+    "ast_hash": "183c522ca81963b9a8f0f9875416df92",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/nova-profile.png": {
+    "mtime": 1787227384.3991246,
+    "ast_hash": "183c522ca81963b9a8f0f9875416df92",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/nova-victory.png": {
+    "mtime": 1787227384.8748465,
+    "ast_hash": "13769646ccf71ab7b5bd9bf6ada43471",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/razor-defeat.png": {
+    "mtime": 1787236476.9105341,
+    "ast_hash": "964b6ac9e9e78fe52098abc3ac0996e9",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/razor-perfil.png": {
+    "mtime": 1787236476.7577279,
+    "ast_hash": "6af242c13f315338a1c83f239e87015d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/razor-profile.png": {
+    "mtime": 1787236476.7577279,
+    "ast_hash": "6af242c13f315338a1c83f239e87015d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/razor-victory.png": {
+    "mtime": 1787236476.993997,
+    "ast_hash": "a560b98c6d79471be2631aa19f403756",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/rio-defeat.png": {
+    "mtime": 1787227387.782224,
+    "ast_hash": "686d59afc771da51c41c87279eee20ca",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/rio-perfil.png": {
+    "mtime": 1787227395.5059323,
+    "ast_hash": "3058a20136ca8c4297c73811da9f7ce6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/rio-profile.png": {
+    "mtime": 1787227388.1500924,
+    "ast_hash": "3058a20136ca8c4297c73811da9f7ce6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/rio-victory.png": {
+    "mtime": 1787227388.439583,
+    "ast_hash": "e79684e862b4496a28a68ffd4a0c9de3",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/ruby-defeat.png": {
+    "mtime": 1787227388.7477431,
+    "ast_hash": "c8feb725830337e26dc47fdb79072246",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/ruby-perfil.png": {
+    "mtime": 1787227395.5101895,
+    "ast_hash": "fce4551a124a879db6ae96bcde47c677",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/ruby-profile.png": {
+    "mtime": 1787227389.0247772,
+    "ast_hash": "fce4551a124a879db6ae96bcde47c677",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/ruby-victory.png": {
+    "mtime": 1787227389.3051567,
+    "ast_hash": "c829d277c97f8c249dad0c5d62abd9e4",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/seamus-defeat.png": {
+    "mtime": 1787227389.6942031,
+    "ast_hash": "c0540924da386427e8558540ac678190",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/seamus-perfil.png": {
+    "mtime": 1787227395.5178883,
+    "ast_hash": "5cdfce77699e9dd97cc5287367cf8f7b",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/seamus-profile.png": {
+    "mtime": 1787227390.0141428,
+    "ast_hash": "5cdfce77699e9dd97cc5287367cf8f7b",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/seamus-victory.png": {
+    "mtime": 1787227390.3484726,
+    "ast_hash": "e320a5d086ec03bfb355edafd2459466",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/snake-defeat.png": {
+    "mtime": 1787227390.664233,
+    "ast_hash": "872ac1a2278a0e43491bf59d97631c94",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/snake-perfil.png": {
+    "mtime": 1787227395.5221784,
+    "ast_hash": "1659378861243d7198bf8fa6d7ec2497",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/snake-profile.png": {
+    "mtime": 1787227390.9630878,
+    "ast_hash": "1659378861243d7198bf8fa6d7ec2497",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/snake-victory.png": {
+    "mtime": 1787227391.2083056,
+    "ast_hash": "8d29cfdba2ec6f5b0328c75d6c7c53ac",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/viktor-defeat.png": {
+    "mtime": 1787236479.2097604,
+    "ast_hash": "448536a2e975d028cf201c962ac23420",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/viktor-perfil.png": {
+    "mtime": 1787236479.0437384,
+    "ast_hash": "482dbbcbebdff45fe626e35b4b1e742d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/viktor-profile.png": {
+    "mtime": 1787236479.0437384,
+    "ast_hash": "482dbbcbebdff45fe626e35b4b1e742d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/viktor-victory.png": {
+    "mtime": 1787236479.3048806,
+    "ast_hash": "ec67bca35c3443e37da615ae56c720a8",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/vince-defeat.png": {
+    "mtime": 1787236478.6273885,
+    "ast_hash": "50235cef0a89be2924e29a6920c4d811",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/vince-perfil.png": {
+    "mtime": 1787236478.4770012,
+    "ast_hash": "e1dbca6d83f55fc362f543053f8f15d2",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/vince-profile.png": {
+    "mtime": 1787236478.4770012,
+    "ast_hash": "e1dbca6d83f55fc362f543053f8f15d2",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/vince-victory.png": {
+    "mtime": 1787236478.69261,
+    "ast_hash": "9ff88968439058becfcab7cf05440e88",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/zara-defeat.png": {
+    "mtime": 1787227393.9839704,
+    "ast_hash": "38fa4e46204b474489b4cf635fbe69f5",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/zara-perfil.png": {
+    "mtime": 1787227395.5387454,
+    "ast_hash": "a8f72899eea9b7845e16f7b92f426215",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/zara-profile.png": {
+    "mtime": 1787227394.3551686,
+    "ast_hash": "a8f72899eea9b7845e16f7b92f426215",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/zara-victory.png": {
+    "mtime": 1787227394.6506307,
+    "ast_hash": "1d79357714ba40e17a9048e4c9b75a2a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/zor9-defeat.png": {
+    "mtime": 1787227394.8383865,
+    "ast_hash": "6365ff73558237e06c6596a54e8a730d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/zor9-perfil.png": {
+    "mtime": 1787227395.5428505,
+    "ast_hash": "98b233bf14b46bc16426c348a0c5e79c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/zor9-profile.png": {
+    "mtime": 1787227395.0976272,
+    "ast_hash": "98b233bf14b46bc16426c348a0c5e79c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/zor9-victory.png": {
+    "mtime": 1787227395.3837917,
+    "ast_hash": "60fb2efb6682b76602e1486d59ea4ffc",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/05-python-shell-mask/shell_mask.py": {
+    "mtime": 1787233256.7531924,
+    "ast_hash": "fd3988ccb06315c2da43cc74642dc11f",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/character-look-pixel/PIXEL.md": {
+    "mtime": 1787234714.4685614,
+    "ast_hash": "05e438d5645c8427d1e5f74bd0cbc7b5",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/character-look-pixel/SKILL.md": {
+    "mtime": 1787234728.4454956,
+    "ast_hash": "264ad308fe505223cf4e800f441c0565",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/game-ui-design/SKILL.md": {
+    "mtime": 1787234714.4721859,
+    "ast_hash": "72632687d3638e17c235769f8d1d00de",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/game-ui-design/references/patterns.md": {
+    "mtime": 1787234714.4766624,
+    "ast_hash": "c439ba6300909a9e540c7973de5ce7e5",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/game-ui-design/references/sharp_edges.md": {
+    "mtime": 1787234714.4772038,
+    "ast_hash": "fad8daa918953c15f9d673ce1ec7935f",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/game-ui-design/references/validations.md": {
+    "mtime": 1787234714.4777205,
+    "ast_hash": "b6e0613c85c1eadc0880db5e6abec99d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/NOTES.md": {
+    "mtime": 1787236526.5678551,
+    "ast_hash": "c580c3874f55783ed27fb8d20db48494",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2net/emma-profile.png": {
+    "mtime": 1787233490.702559,
+    "ast_hash": "1c1acba412edd060fc7d7791e7fac84d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2net/hex-profile.png": {
+    "mtime": 1787233489.4700434,
+    "ast_hash": "01fdbf6bc7b2c062061ab13aecb5f597",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2net/klyff-profile.png": {
+    "mtime": 1787233491.8729684,
+    "ast_hash": "98503ad46369bc8dccc82fdfb5b5dd6f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2net/razor-profile.png": {
+    "mtime": 1787233490.2140293,
+    "ast_hash": "eaf33b0d3567502da769ac80c9b2012a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2net/vince-profile.png": {
+    "mtime": 1787233491.30263,
+    "ast_hash": "16980ae2d8011ce7b1a6ecf9ce082c2f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2netp/emma-profile.png": {
+    "mtime": 1787233418.9486153,
+    "ast_hash": "1e3331ad973035a39e8fb10932aa7383",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2netp/hex-profile.png": {
+    "mtime": 1787233418.466994,
+    "ast_hash": "b2284ee33d513e8f9b330f27299b9ee0",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2netp/klyff-profile.png": {
+    "mtime": 1787233419.4876504,
+    "ast_hash": "73525f73f6e22b0e5a50c70c197f8d16",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2netp/razor-profile.png": {
+    "mtime": 1787233418.7580662,
+    "ast_hash": "d62732bb198c3aaa564f64024dd3979c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/02-rembg-u2netp/vince-profile.png": {
+    "mtime": 1787233419.2235842,
+    "ast_hash": "bf3c8f05612ec800179e153823196b6e",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet-anime/emma-profile.png": {
+    "mtime": 1787233650.8612552,
+    "ast_hash": "66032ef6ad86021fa621c739fb8e87bb",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet-anime/hex-profile.png": {
+    "mtime": 1787233647.1922672,
+    "ast_hash": "01cad1e3a0a3663162cdcd527683ca47",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet-anime/klyff-profile.png": {
+    "mtime": 1787233653.9793215,
+    "ast_hash": "91892d9d9a98f93c73c6303c8bcdd7c9",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet-anime/razor-profile.png": {
+    "mtime": 1787233649.21908,
+    "ast_hash": "fd8d940fb37bcafcf20c833fce2dd86a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet-anime/vince-profile.png": {
+    "mtime": 1787233652.38072,
+    "ast_hash": "a07db4f5b58c3fd3fb199b612aba5798",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet/emma-profile.png": {
+    "mtime": 1787233569.8328104,
+    "ast_hash": "cdec4afe6f4ce53a4fa71397b5335861",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet/hex-profile.png": {
+    "mtime": 1787233564.546855,
+    "ast_hash": "fc6caddab2e8116cc672b1fb409c8302",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet/klyff-profile.png": {
+    "mtime": 1787233572.5981095,
+    "ast_hash": "a0de44085ed40b6f7847b6db13adf2b0",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet/razor-profile.png": {
+    "mtime": 1787233568.5008,
+    "ast_hash": "e17e9cdf8df8b0dc12d5fce7be40cff1",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/03-rembg-isnet/vince-profile.png": {
+    "mtime": 1787233571.2388415,
+    "ast_hash": "b0d28da7595b302e9cd397c82ecf9f69",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/04-rembg-birefnet-lite/emma-profile.png": {
+    "mtime": 1787233820.812932,
+    "ast_hash": "be7a9e864289ecf2979af104ccbc9bc3",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/04-rembg-birefnet-lite/hex-profile.png": {
+    "mtime": 1787233754.1529524,
+    "ast_hash": "e5183bf876b8386bf01a8918ffed8d3e",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/04-rembg-birefnet-lite/klyff-profile.png": {
+    "mtime": 1787233919.5153465,
+    "ast_hash": "058a293c4f65f08e362ed277e4bb3312",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/04-rembg-birefnet-lite/razor-profile.png": {
+    "mtime": 1787233787.7186508,
+    "ast_hash": "2bf8c6f56147e2db5ae597a83a6c0d10",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/04-rembg-birefnet-lite/vince-profile.png": {
+    "mtime": 1787233864.358724,
+    "ast_hash": "4e56699e724d03af1ec4cf9b4eeefd5b",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/05-python-shell-mask/emma-profile.png": {
+    "mtime": 1787233451.258003,
+    "ast_hash": "d8a15bbc82113b261e3ebabe132fbbb2",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/05-python-shell-mask/hex-profile.png": {
+    "mtime": 1787233452.1467972,
+    "ast_hash": "16c4089d797ae07a3b1e527da270d289",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/05-python-shell-mask/klyff-profile.png": {
+    "mtime": 1787233452.3648028,
+    "ast_hash": "462f6c62e1794ec3e77534a9f8785628",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/05-python-shell-mask/razor-profile.png": {
+    "mtime": 1787233453.5640404,
+    "ast_hash": "f523f347dde7180d12a6c1bd694c2ec6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/05-python-shell-mask/vince-profile.png": {
+    "mtime": 1787233454.6404188,
+    "ast_hash": "0dd7be78cfac9c6cb2e02c47db8ceacd",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/aline-victory.png": {
+    "mtime": 1787236380.913768,
+    "ast_hash": "0f8d691e0e5c748a9dd85743af0a82c5",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/dave-profile.png": {
+    "mtime": 1787236380.920703,
+    "ast_hash": "72b50ade8f004f095176a98d5274c0c0",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/diego-defeat.png": {
+    "mtime": 1787236381.0139043,
+    "ast_hash": "46d59b15f0a650f06971e955305546c4",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/diego-profile.png": {
+    "mtime": 1787236381.1097238,
+    "ast_hash": "5e663f5d65ba7978b2407c4f405e8e6e",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/klyff-profile.png": {
+    "mtime": 1787236381.3017874,
+    "ast_hash": "a265da8ed2992c7013091aa8e0b644f1",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/luna-profile.png": {
+    "mtime": 1787236381.311912,
+    "ast_hash": "3a64c5e7b6c03f84fb498a3cd515ebad",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/razor-defeat.png": {
+    "mtime": 1787236381.3297887,
+    "ast_hash": "e9039cdad60d3ea0b2211bd80d66bea2",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/vince-defeat.png": {
+    "mtime": 1787236381.409345,
+    "ast_hash": "26eaa4bb45043ff6089f51ceb56a342f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in-rest/vince-profile.png": {
+    "mtime": 1787236381.5119696,
+    "ast_hash": "278ec31904dfdd23a87e0b8e46c91127",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/aline-defeat.png": {
+    "mtime": 1787236128.1028962,
+    "ast_hash": "49c52970a9a8df590fa296b5b536d4df",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/aline-profile.png": {
+    "mtime": 1787236128.0969944,
+    "ast_hash": "fced3300b3efb79536f401c592d1d71e",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/aline-victory.png": {
+    "mtime": 1787236128.1083298,
+    "ast_hash": "0f8d691e0e5c748a9dd85743af0a82c5",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/dave-defeat.png": {
+    "mtime": 1787236128.0666044,
+    "ast_hash": "ba67f30439bd496c439f212e15a3da2a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/dave-profile.png": {
+    "mtime": 1787236128.061395,
+    "ast_hash": "72b50ade8f004f095176a98d5274c0c0",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/dave-victory.png": {
+    "mtime": 1787236128.071873,
+    "ast_hash": "74b34020f5d58c553226aca38c65bfd3",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/diego-defeat.png": {
+    "mtime": 1787236127.9479196,
+    "ast_hash": "46d59b15f0a650f06971e955305546c4",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/diego-profile.png": {
+    "mtime": 1787236127.9402895,
+    "ast_hash": "5e663f5d65ba7978b2407c4f405e8e6e",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/diego-victory.png": {
+    "mtime": 1787236127.958377,
+    "ast_hash": "4f4367b0e122e3f3520f7e9cdf727037",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/emma-defeat.png": {
+    "mtime": 1787236127.8989434,
+    "ast_hash": "cc20c619ce2a2c7ef8c0f088d4e5a2a3",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/emma-profile.png": {
+    "mtime": 1787236127.8920777,
+    "ast_hash": "570acca84faf0686822b458ce3f41968",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/emma-victory.png": {
+    "mtime": 1787236127.9079075,
+    "ast_hash": "eac18056b3321b655484acf31d49e673",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/hex-defeat.png": {
+    "mtime": 1787236127.8776958,
+    "ast_hash": "261f5fcf9b969233756818ae7320f48b",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/hex-profile.png": {
+    "mtime": 1787236127.8715398,
+    "ast_hash": "4bb402e8c4a91bd678349e36a876e616",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/hex-victory.png": {
+    "mtime": 1787236127.8841786,
+    "ast_hash": "bbfd03376963862b175dec4448da4520",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/jett-defeat.png": {
+    "mtime": 1787236128.0274029,
+    "ast_hash": "1f96ae946819a98104ef4ff075ca6b5f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/jett-profile.png": {
+    "mtime": 1787236128.0215063,
+    "ast_hash": "e583cfadd19aeb5ab91fbb5ab9b6f77f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/jett-victory.png": {
+    "mtime": 1787236128.0346787,
+    "ast_hash": "736e59ef237b7a527d1fa8bb6d5d692c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/kira-defeat.png": {
+    "mtime": 1787236128.0858533,
+    "ast_hash": "b43bf43088af0f2c70c4084243a8bd3d",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/kira-profile.png": {
+    "mtime": 1787236128.0798252,
+    "ast_hash": "b41521b61f766fa0840ec75b337cc4ed",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/kira-victory.png": {
+    "mtime": 1787236128.0920064,
+    "ast_hash": "97d22f49141f886a22248c25fb4190a6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/klyff-defeat.png": {
+    "mtime": 1787236127.8584657,
+    "ast_hash": "eddfdac2e5bc19c3e6e6b0e2e80aa411",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/klyff-profile.png": {
+    "mtime": 1787236127.8514302,
+    "ast_hash": "a265da8ed2992c7013091aa8e0b644f1",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/klyff-victory.png": {
+    "mtime": 1787236127.8634372,
+    "ast_hash": "5ce5032f1d97172f910f1a75bec32b08",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/luna-defeat.png": {
+    "mtime": 1787236128.04805,
+    "ast_hash": "d650835de5828551b13a6386d7bd0955",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/luna-profile.png": {
+    "mtime": 1787236128.040743,
+    "ast_hash": "3a64c5e7b6c03f84fb498a3cd515ebad",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/luna-victory.png": {
+    "mtime": 1787236128.0554986,
+    "ast_hash": "6903a12ffe31a93b663a68a0e564eca9",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/nikki-defeat.png": {
+    "mtime": 1787236127.9214556,
+    "ast_hash": "ab448b7a33d580ea18a9544a61591ccf",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/nikki-profile.png": {
+    "mtime": 1787236127.9135394,
+    "ast_hash": "0726960ed75c36cbabf012b8f5898455",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/nikki-victory.png": {
+    "mtime": 1787236127.9299357,
+    "ast_hash": "b85539ac28e124c6dd4b510addd91537",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/razor-defeat.png": {
+    "mtime": 1787236127.9892976,
+    "ast_hash": "e9039cdad60d3ea0b2211bd80d66bea2",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/razor-profile.png": {
+    "mtime": 1787236127.9837508,
+    "ast_hash": "3b59be6e1c70ec5586860f627b59b8d7",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/razor-victory.png": {
+    "mtime": 1787236127.9954157,
+    "ast_hash": "f4be1d1ae8f5f5212a5d5ef1e0632de6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/viktor-defeat.png": {
+    "mtime": 1787236127.970793,
+    "ast_hash": "23720c406967f52af8fc621f667e28fc",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/viktor-profile.png": {
+    "mtime": 1787236127.963566,
+    "ast_hash": "f0fa49c1f722b24d3584c7bb298d640c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/viktor-victory.png": {
+    "mtime": 1787236127.9767103,
+    "ast_hash": "e3f019b30996a3f950c018f8987380b6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/vince-defeat.png": {
+    "mtime": 1787236128.0082846,
+    "ast_hash": "26eaa4bb45043ff6089f51ceb56a342f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/vince-profile.png": {
+    "mtime": 1787236128.0012116,
+    "ast_hash": "278ec31904dfdd23a87e0b8e46c91127",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/in/vince-victory.png": {
+    "mtime": 1787236128.0136044,
+    "ast_hash": "7b09bd10fcfc4e250362e3ca52a4b93c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/aline-profile.png": {
+    "mtime": 1787236475.9557056,
+    "ast_hash": "62f61066bbce691a7c7f49cf604d7884",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/dave-profile.png": {
+    "mtime": 1787236476.5166683,
+    "ast_hash": "d268db20addc1851ee3b33eb5d9b1c85",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/diego-profile.png": {
+    "mtime": 1787236477.3906739,
+    "ast_hash": "e004b10af2a2c8d540bde02c8f5cda17",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/emma-profile.png": {
+    "mtime": 1787236476.2902868,
+    "ast_hash": "5002d5480e6090a8b7dc600e353f9baa",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/hex-profile.png": {
+    "mtime": 1787236478.8094497,
+    "ast_hash": "1a9dc768f63f528d31eb5d03c18ca36f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/jett-profile.png": {
+    "mtime": 1787236478.2184026,
+    "ast_hash": "888eb244a84a243e977fe5e689ef3909",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/kira-profile.png": {
+    "mtime": 1787236477.9248672,
+    "ast_hash": "c6381e28560a812344985a8e6c6d1c14",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/klyff-profile.png": {
+    "mtime": 1787236475.681808,
+    "ast_hash": "a9e36ea092870415e9696d3c569cbc6c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/luna-profile.png": {
+    "mtime": 1787236477.6728327,
+    "ast_hash": "06a1f2f777234942945e6182128b1f6f",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/nikki-profile.png": {
+    "mtime": 1787236477.101031,
+    "ast_hash": "306f703f66f2a3c661f1fdc593a54812",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/razor-profile.png": {
+    "mtime": 1787236476.811786,
+    "ast_hash": "006e8066fc476ec880f2d5d49629cf83",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/viktor-profile.png": {
+    "mtime": 1787236479.096707,
+    "ast_hash": "81eacdb4227d0e6ccd6a83906b535b87",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/06-regen-light/magenta/vince-profile.png": {
+    "mtime": 1787236478.5292761,
+    "ast_hash": "a533cd020985491e5ed6a44cfe135e61",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2net__emma-profile.png": {
+    "mtime": 1787233543.98644,
+    "ast_hash": "9abd0788c6902d1ba8decf745d87b7ff",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2net__hex-profile.png": {
+    "mtime": 1787233544.0344982,
+    "ast_hash": "f7bf00f320ca9eb709f24a274bd15cdc",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2net__klyff-profile.png": {
+    "mtime": 1787233543.977522,
+    "ast_hash": "0285b414456b3e25d076ee778f75fd4c",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2net__razor-profile.png": {
+    "mtime": 1787233544.0931146,
+    "ast_hash": "7a26d1e6e5d16d34b8fa410aa9e7b4f1",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2net__vince-profile.png": {
+    "mtime": 1787233544.1535156,
+    "ast_hash": "730853e0864771926cd76f75deaa4b98",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2netp__emma-profile.png": {
+    "mtime": 1787233543.7224243,
+    "ast_hash": "11673ce999a82d86d3a3511704cb50ed",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2netp__hex-profile.png": {
+    "mtime": 1787233543.7768786,
+    "ast_hash": "67a4a83b5b4c10cc30f02f01b858930e",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2netp__klyff-profile.png": {
+    "mtime": 1787233543.7129383,
+    "ast_hash": "1c6db010dc1f2beb37da7d1705ade717",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2netp__razor-profile.png": {
+    "mtime": 1787233543.8414962,
+    "ast_hash": "d99c76397f56d0308e844a9a1f30a25a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/02-rembg-u2netp__vince-profile.png": {
+    "mtime": 1787233543.9127963,
+    "ast_hash": "d0ee2a1206acfac8407a8f40b2971af9",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet-anime__emma-profile.png": {
+    "mtime": 1787233933.0231187,
+    "ast_hash": "e15a5bf6efdf126288563def31010307",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet-anime__hex-profile.png": {
+    "mtime": 1787233933.0449088,
+    "ast_hash": "c09260644bd94c2e7f40a044595adf54",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet-anime__klyff-profile.png": {
+    "mtime": 1787233933.0176156,
+    "ast_hash": "e545dfca69966f14874be8cb5368ca66",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet-anime__razor-profile.png": {
+    "mtime": 1787233933.087837,
+    "ast_hash": "9b53edf833447a4eba4b1e55e8ff4d9e",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet-anime__vince-profile.png": {
+    "mtime": 1787233933.1443396,
+    "ast_hash": "b4c0b42684611b62c7663a254a7f48e9",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet__emma-profile.png": {
+    "mtime": 1787233932.8065147,
+    "ast_hash": "4b9a233e16e52146fd8fc1327890a522",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet__hex-profile.png": {
+    "mtime": 1787233932.8509054,
+    "ast_hash": "71e18f293df7c51599558fa318e5d0ee",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet__klyff-profile.png": {
+    "mtime": 1787233932.7996328,
+    "ast_hash": "d4e87cefbd1637d44f26b4b38aa0023b",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet__razor-profile.png": {
+    "mtime": 1787233932.9013429,
+    "ast_hash": "76c7731923b0ed2fa707644ac2586e10",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/03-rembg-isnet__vince-profile.png": {
+    "mtime": 1787233932.961864,
+    "ast_hash": "416c963e3e81a12d7e4d1ba891d2df78",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/04-rembg-birefnet-lite__emma-profile.png": {
+    "mtime": 1787233933.2125819,
+    "ast_hash": "07ca3a9fb3da56d8b48aeea79e5bcff9",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/04-rembg-birefnet-lite__hex-profile.png": {
+    "mtime": 1787233933.2687998,
+    "ast_hash": "866d9120877794d278d3f2052d40ee7b",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/04-rembg-birefnet-lite__klyff-profile.png": {
+    "mtime": 1787233933.2038102,
+    "ast_hash": "cf0fbce0882a79b757cad42e2044780b",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/04-rembg-birefnet-lite__razor-profile.png": {
+    "mtime": 1787233933.3395495,
+    "ast_hash": "0c7f669e46ab37d8d071ea315ef2edc6",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/04-rembg-birefnet-lite__vince-profile.png": {
+    "mtime": 1787233933.4072502,
+    "ast_hash": "b93f0f19b312c9325808bac0568c5b0a",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/05-python-shell-mask__emma-profile.png": {
+    "mtime": 1787233544.2206783,
+    "ast_hash": "b02c40a1dd898f69c43930b3548e6d68",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/05-python-shell-mask__hex-profile.png": {
+    "mtime": 1787233544.2659328,
+    "ast_hash": "d1fcd1ea75ac6de01877459b97b89811",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/05-python-shell-mask__klyff-profile.png": {
+    "mtime": 1787233544.2133732,
+    "ast_hash": "42444e1b17be07c0f1c697ed76b83247",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/05-python-shell-mask__razor-profile.png": {
+    "mtime": 1787233544.350563,
+    "ast_hash": "6cb3139af058a71e580dc495618cfa78",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_compare-magenta/05-python-shell-mask__vince-profile.png": {
+    "mtime": 1787233544.4171748,
+    "ast_hash": "ab63d918d73ef8a5f09259996d048164",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_src/emma-profile.png": {
+    "mtime": 1787233201.781931,
+    "ast_hash": "0d1f34d737290b2b65407abc210db1ed",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_src/hex-profile.png": {
+    "mtime": 1787233201.810246,
+    "ast_hash": "a003440850ba86b0a78e3df2facd2ff5",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_src/klyff-profile.png": {
+    "mtime": 1787233201.71672,
+    "ast_hash": "618e586b580bd444328fed61c5f933bb",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_src/razor-profile.png": {
+    "mtime": 1787233201.8540812,
+    "ast_hash": "85e3784b06929197fa7544b575d87afd",
+    "semantic_hash": ""
+  },
+  "public/assets/bodies/work/_src/vince-profile.png": {
+    "mtime": 1787233201.9030077,
+    "ast_hash": "addf649ae41351be2432e8324908e236",
     "semantic_hash": ""
   }
 }
