@@ -19,4 +19,10 @@ describe('zoomToFitFraction', () => {
     const farther = zoomToFitFraction(2000, 1000, 1440, 900, 1.15);
     expect(farther).toBeLessThan(whole);
   });
+
+  it('zooms in when the watch broadcast fraction is below 1', () => {
+    const whole = zoomToFitFraction(2000, 1000, 1440, 900, 1);
+    const broadcast = zoomToFitFraction(2000, 1000, 1440, 900, 0.5);
+    expect(broadcast).toBeGreaterThan(whole);
+  });
 });

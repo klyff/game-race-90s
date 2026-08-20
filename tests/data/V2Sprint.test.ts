@@ -3,7 +3,8 @@ import { ORIGIN_PANELS } from '../../src/data/cards/OriginComic.ts';
 import { isAuthoredTrackId } from '../../src/data/tracks/planets.ts';
 import { findTrack } from '../../src/data/tracks/registry.ts';
 import { DEBUG_IA_CAMERA_MAP_FRACTION } from '../../src/domain/race/DebugIaField.ts';
-import { CAMERA_PLAYER_MAP_FRACTION } from '../../src/domain/camera/CameraPreset.ts';
+import { CAMERA_HOME_ZOOM } from '../../src/domain/camera/CameraPreset.ts';
+import { CAMERA_WATCH_BROADCAST_MAP_FRACTION } from '../../src/domain/camera/WatchCamera.ts';
 import { RADIO_JINGLE_DURATION_SECONDS } from '../../src/adapters/audio/RadioJingle.ts';
 
 describe('V2 origin, camera, radio, bogmire', () => {
@@ -16,8 +17,13 @@ describe('V2 origin, camera, radio, bogmire', () => {
     expect(DEBUG_IA_CAMERA_MAP_FRACTION).toBe(1);
   });
 
-  it('sits the player camera a little farther than debug-IA', () => {
-    expect(CAMERA_PLAYER_MAP_FRACTION).toBeGreaterThan(DEBUG_IA_CAMERA_MAP_FRACTION);
+  it('keeps the player home zoom in the chase band, not a full-map fit', () => {
+    expect(CAMERA_HOME_ZOOM).toBeGreaterThan(1.5);
+    expect(CAMERA_HOME_ZOOM).toBeLessThan(2);
+  });
+
+  it('frames Watch broadcast closer than the whole circuit', () => {
+    expect(CAMERA_WATCH_BROADCAST_MAP_FRACTION).toBeLessThan(DEBUG_IA_CAMERA_MAP_FRACTION);
   });
 
   it('keeps the radio sting under 3 seconds', () => {

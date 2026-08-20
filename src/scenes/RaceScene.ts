@@ -3,17 +3,30 @@ import { FixedStepLoop } from '../app/FixedStepLoop.ts';
 import { RaceAudio } from '../adapters/audio/RaceAudio.ts';
 import { shouldParkEngine } from '../adapters/audio/EngineIdleShutoff.ts';
 import { KeyboardDriver } from '../adapters/input/KeyboardDriver.ts';
+import { CameraZoomPolicy } from '../adapters/render/CameraZoomPolicy.ts';
 import { ChaseCamera } from '../adapters/render/ChaseCamera.ts';
 import { AccidentWatch } from '../domain/camera/AccidentWatch.ts';
 import { analyzeTrackCameras, zoomToFitFraction } from '../domain/camera/analyzeTrackCameras.ts';
 import {
+  CAMERA_CLOSE_ZOOM,
+  CAMERA_CURVATURE_SPAN_UNITS,
+  CAMERA_HOME_ZOOM,
   CAMERA_MAX_ZOOM_IN,
-  CAMERA_PLAYER_MAP_FRACTION,
   CAMERA_QUIT_MASTER_SCALE,
-  CAMERA_SPECTATOR_ZOOM,
+  CAMERA_WIDE_ZOOM,
+  CAMERA_ZOOM_STEP,
   spectatorCameraPreset,
   type CameraPreset,
 } from '../domain/camera/CameraPreset.ts';
+import {
+  CAMERA_WATCH_BROADCAST_MAP_FRACTION,
+  CAMERA_WATCH_CHASE_FARTHER,
+  nextWatchCameraKind,
+  scaleCameraPresetFarther,
+  stepWatchPlace,
+  WATCH_CAMERA_KIND,
+  type WatchCameraKind,
+} from '../domain/camera/WatchCamera.ts';
 import { CameraDirector } from '../domain/camera/CameraDirector.ts';
 import { CameraImpulse } from '../domain/camera/CameraImpulse.ts';
 import { parseTrackCameraPreset } from '../data/tracks/TrackCameras.ts';
@@ -139,6 +152,13 @@ const EXPLOSION_EARSHOT_UNITS = 500;
  */
 const DEBUG_RESPAWN_SECONDS = 2;
 
+/**
+ * How far ahead the camera reads the track to decide its zoom, in seconds of travel.
+ * Floored so a stationary car still sees the corner it is facing.
+ */
+const ZOOM_LOOK_AHEAD_SECONDS = 1.1;
+const ZOOM_LOOK_AHEAD_MINIMUM_UNITS = 25;
+
 interface RaceSceneData {
   readonly manifest: CarSetManifest;
   /** Every track's offline lines, keyed by track id; the scene reads its own track's. */
@@ -150,7 +170,7 @@ interface RaceSceneData {
   readonly carId?: string;
   /** Which circuit to race. Defaults to the anchor track when omitted. */
   readonly trackId?: string;
-  /** AI-only ten-car watch. Camera follows the leader zoomed out; arrows pick a car. */
+  /** AI-only watch. Broadcast follows the leader; C / arrows switch chase. */
   readonly watch?: boolean;
   /** 15-NPC debug-IA session. Camera fits the whole circuit; `[` `]` `0` still work. */
   readonly debugIa?: boolean;
@@ -206,6 +226,9 @@ export class RaceScene extends Phaser.Scene {
   private debugIaLogElapsed = 0;
   private debugIaSeats: readonly DebugIaSeat[] = [];
   private watchTrackPool: readonly string[] | undefined;
+  private watchCameraKind: WatchCameraKind = WATCH_CAMERA_KIND.BROADCAST;
+  /** 0 = leader, 1 = 2nd, … used in chase. Does not wrap. */
+  private watchPlace = 0;
   private readonly paintHidden = new Set<PaintLayerId>();
   private fpsLogElapsed = 0;
   private watchPinned = false;
@@ -220,6 +243,8 @@ export class RaceScene extends Phaser.Scene {
   private scraps!: MetalScrapEffect;
   private wood!: WoodDebrisEffect;
   private chaseCamera!: ChaseCamera;
+  private zoomPolicy!: CameraZoomPolicy;
+  private chaseWatchZoomPolicy!: CameraZoomPolicy;
   private cameraDirector = new CameraDirector();
   private cameraImpulse = new CameraImpulse();
   private accidentWatch = new AccidentWatch();
@@ -288,6 +313,8 @@ export class RaceScene extends Phaser.Scene {
     this.debugIaSeats = [];
     this.watch = data.watch === true || this.debugIa;
     this.watchTrackPool = data.watchTrackPool;
+    this.watchCameraKind = WATCH_CAMERA_KIND.BROADCAST;
+    this.watchPlace = 0;
     this.watchPinned = false;
     this.audioFocusCarId = null;
     this.quitedTheRace = false;
@@ -355,6 +382,13 @@ export class RaceScene extends Phaser.Scene {
         BURN_MARK_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED),
     });
     this.chaseCamera = new ChaseCamera(this.cameras.main, this.projection);
+    this.zoomPolicy = new CameraZoomPolicy({ zoomStep: CAMERA_ZOOM_STEP });
+    this.chaseWatchZoomPolicy = new CameraZoomPolicy({
+      zoomStep: CAMERA_ZOOM_STEP,
+      homeZoom: CAMERA_HOME_ZOOM / CAMERA_WATCH_CHASE_FARTHER,
+      closeZoom: CAMERA_CLOSE_ZOOM / CAMERA_WATCH_CHASE_FARTHER,
+      wideZoom: CAMERA_WIDE_ZOOM / CAMERA_WATCH_CHASE_FARTHER,
+    });
     this.cameraPreset = this.loadCameraPreset();
     this.driver = new KeyboardDriver(this.requireKeyboard());
     this.loop = new FixedStepLoop(SIMULATION_STEP_SECONDS);
@@ -645,7 +679,9 @@ export class RaceScene extends Phaser.Scene {
     const impactBefore = this.field.racers.map(racer => racer.pendingImpactSpeed);
     this.field.step(this.command, stepSeconds);
     this.accidentWatch.note(
-      this.field.contactsThisStep,
+      !this.watch || this.watchCameraKind === WATCH_CAMERA_KIND.BROADCAST || this.quitedTheRace
+        ? this.field.contactsThisStep
+        : [],
       IMPACT_DAMAGE_THRESHOLD,
       stepSeconds,
     );
@@ -1000,6 +1036,20 @@ export class RaceScene extends Phaser.Scene {
     if (!this.watch && !this.quitedTheRace) {
       return this.player;
     }
+    if (this.watch && this.watchCameraKind === WATCH_CAMERA_KIND.CHASE) {
+      const accidentId = this.accidentWatch.targetCarId();
+      if (accidentId !== null) {
+        const wreck = racers.find(racer => racer.carId === accidentId);
+        if (wreck !== undefined) {
+          return wreck;
+        }
+      }
+      const chased = this.racerAtWatchPlace(racers);
+      if (chased !== undefined) {
+        this.aiFocusIndex = racers.indexOf(chased);
+        return chased;
+      }
+    }
     const accidentId = this.accidentWatch.targetCarId();
     if (accidentId !== null && !this.watchPinned) {
       const wreck = racers.find(racer => racer.carId === accidentId);
@@ -1012,10 +1062,19 @@ export class RaceScene extends Phaser.Scene {
       const leader = racers.find(racer => racer.carId === leaderId);
       if (leader !== undefined) {
         this.aiFocusIndex = racers.indexOf(leader);
+        this.watchPlace = 0;
         return leader;
       }
     }
     return racers[this.aiFocusIndex % racers.length] ?? this.player;
+  }
+
+  private racerAtWatchPlace(racers: readonly RacerRuntime[]): RacerRuntime | undefined {
+    const carId = this.field.race.standings[this.watchPlace]?.carId;
+    if (carId === undefined) {
+      return undefined;
+    }
+    return racers.find(racer => racer.carId === carId);
   }
 
   // Hit shake + wreck zoom punch. Commented: the start grid made it look messy.
@@ -1155,28 +1214,50 @@ export class RaceScene extends Phaser.Scene {
     return findCarSheet(this.manifest, this.carId).stats;
   }
 
-  /** Live map fit, then director (manual 10s > live). Hairpins do not yank zoom. */
+  /** Player: chase-iso live policy + hairpins. Watch broadcast: aerial. Watch chase: same policy, 30% farther. */
   private targetZoom(deltaSeconds: number = SIMULATION_STEP_SECONDS): number {
     const focus = this.followedRacer();
     const spectator = this.watch || this.quitedTheRace;
-    const live = spectator
-      ? this.spectatorLiveZoom()
-      : this.mapFractionZoom(CAMERA_PLAYER_MAP_FRACTION);
+    if (!spectator) {
+      return this.cameraDirector.sample(
+        deltaSeconds,
+        this.livePolicyZoom(this.zoomPolicy, focus),
+        focus.distance,
+        this.cameraPreset,
+        this.spline.totalLength,
+      ).zoom;
+    }
+    if (this.watch && this.watchCameraKind === WATCH_CAMERA_KIND.CHASE) {
+      return this.cameraDirector.sample(
+        deltaSeconds,
+        this.livePolicyZoom(this.chaseWatchZoomPolicy, focus),
+        focus.distance,
+        scaleCameraPresetFarther(this.cameraPreset, CAMERA_WATCH_CHASE_FARTHER),
+        this.spline.totalLength,
+      ).zoom;
+    }
     return this.cameraDirector.sample(
       deltaSeconds,
-      live,
+      this.spectatorLiveZoom(),
       focus.distance,
       spectatorCameraPreset(this.cameraPreset),
       this.spline.totalLength,
     ).zoom;
   }
 
-  /** Watch / quit: pulled back on the leader. Debug-IA fits the whole circuit. */
+  private livePolicyZoom(policy: CameraZoomPolicy, focus: RacerRuntime): number {
+    const speed = focus.telemetry?.speed ?? 0;
+    const lookAhead = Math.max(ZOOM_LOOK_AHEAD_MINIMUM_UNITS, speed * ZOOM_LOOK_AHEAD_SECONDS);
+    const curvature = this.spline.curvatureAt(focus.distance + lookAhead, CAMERA_CURVATURE_SPAN_UNITS);
+    return policy.targetZoom(speed, focus.stats.maxSpeed, curvature);
+  }
+
+  /** Watch broadcast / quit: half the circuit, centred on the leader. */
   private spectatorLiveZoom(): number {
-    if (this.debugIa) {
-      return this.mapFractionZoom(DEBUG_IA_CAMERA_MAP_FRACTION);
+    if (this.watch || this.quitedTheRace) {
+      return this.mapFractionZoom(CAMERA_WATCH_BROADCAST_MAP_FRACTION);
     }
-    return CAMERA_SPECTATOR_ZOOM;
+    return this.mapFractionZoom(DEBUG_IA_CAMERA_MAP_FRACTION);
   }
 
   private loadCameraPreset(): CameraPreset {
@@ -1278,16 +1359,25 @@ export class RaceScene extends Phaser.Scene {
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ZERO).on('down', unlessPaused(() => {
       this.cameraDirector.resetToDefault();
     }));
-    const cycleWatch = (step: number): (() => void) =>
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F).on('down', unlessPaused(() => {
+      if (!this.watch) {
+        return;
+      }
+      this.watchCameraKind = nextWatchCameraKind(this.watchCameraKind);
+      if (this.watchCameraKind === WATCH_CAMERA_KIND.BROADCAST) {
+        this.watchPlace = 0;
+        this.watchPinned = false;
+      }
+      this.cameraDirector.resetToDefault();
+    }));
+    const stepWatch = (step: number): (() => void) =>
       unlessPaused(() => {
-        if (this.watch || this.quitedTheRace) {
-          this.cycleSpectator(step);
+        if (this.watch) {
+          this.cycleWatchPlace(step);
         }
       });
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT).on('down', cycleWatch(-1));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT).on('down', cycleWatch(1));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP).on('down', cycleWatch(-1));
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN).on('down', cycleWatch(1));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT).on('down', stepWatch(1));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT).on('down', stepWatch(-1));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', unlessPaused(() => {
       if (this.watch || this.quitedTheRace) {
         this.jumpSpectatorCluster();
@@ -1295,6 +1385,7 @@ export class RaceScene extends Phaser.Scene {
     }));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L).on('down', unlessPaused(() => {
       this.watchPinned = false;
+      this.watchPlace = 0;
     }));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.COMMA).on('down', unlessPaused(() => this.swapWatchTrack(-1)));
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.PERIOD).on('down', unlessPaused(() => this.swapWatchTrack(1)));
@@ -1362,16 +1453,18 @@ export class RaceScene extends Phaser.Scene {
     this.cameraDirector.resetToDefault();
   }
 
-  private cycleSpectator(step: number): void {
-    if (!this.watch && !this.quitedTheRace) {
-      return;
-    }
+  private cycleWatchPlace(step: number): void {
     const count = this.field.racers.length;
     if (count === 0) {
       return;
     }
-    this.watchPinned = true;
-    this.aiFocusIndex = (this.aiFocusIndex + step + count) % count;
+    this.watchCameraKind = WATCH_CAMERA_KIND.CHASE;
+    this.watchPlace = stepWatchPlace(this.watchPlace, step, count);
+    this.watchPinned = false;
+    const chased = this.racerAtWatchPlace(this.field.racers);
+    if (chased !== undefined) {
+      this.aiFocusIndex = this.field.racers.indexOf(chased);
+    }
   }
 
   private jumpSpectatorCluster(): void {
@@ -1583,7 +1676,7 @@ export class RaceScene extends Phaser.Scene {
       ? `  mix ${this.debugIaMix.experts}:${this.debugIaMix.mediums}:${this.debugIaMix.bobos}`
       : '';
     return [
-      `DEBUG-IA  ${this.track.displayName}  ${this.field.racers.length} NPC  cam ${Math.round(DEBUG_IA_CAMERA_MAP_FRACTION * 100)}% map  seed ${this.debugIaSeed}${mix}`,
+      `DEBUG-IA  ${this.track.displayName}  ${this.field.racers.length} NPC  cam ${this.watchCameraKind} P${this.watchPlace + 1}  seed ${this.debugIaSeed}${mix}`,
       terrainLine,
       `LEADER  ${leaderName}  zoom ${this.cameras.main.zoom.toFixed(2)}  t ${this.field.race.elapsedSeconds.toFixed(1)}s  fps ${this.game.loop.actualFps.toFixed(0)}`,
       `LAYERS  1–7 hide  hidden [${[...this.paintHidden].join(' ') || 'none'}]`,

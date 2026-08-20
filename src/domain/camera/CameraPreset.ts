@@ -28,9 +28,6 @@ export const CAMERA_WIDE_ZOOM = 1.275;
 /** Watch / quit live zoom: pulled back on the leader. `[` `]` `0` still override. */
 export const CAMERA_SPECTATOR_ZOOM = CAMERA_WIDE_ZOOM;
 
-/** Player live zoom: same whole-circuit fit as debug-IA, then a little farther. */
-export const CAMERA_PLAYER_MAP_FRACTION = 1.15;
-
 /** Ramp auto zoom: −10% from today's wide (1.5). */
 export const CAMERA_RAMP_ZOOM = 1.35;
 
@@ -54,7 +51,7 @@ export const CAMERA_HIT_SHAKE_RIGHT = 0.1;
 export const CAMERA_EXPLOSION_KICK = 0.15;
 export const CAMERA_EXPLOSION_ZOOM_IN = 1.3;
 export const CAMERA_EXPLOSION_ZOOM_OUT = 0.8;
-export const CAMERA_ACCIDENT_HOLD_SECONDS = 2.5;
+export const CAMERA_ACCIDENT_HOLD_SECONDS = 5;
 export const CAMERA_CLUSTER_RADIUS_UNITS = 30;
 export const CAMERA_QUIT_MASTER_SCALE = 0.7;
 export const CAMERA_PARK_SECONDS = 1.2;
