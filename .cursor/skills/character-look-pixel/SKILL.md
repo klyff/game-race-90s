@@ -64,16 +64,23 @@ Transparent background, no studio fill, no black backdrop. No extra people. No t
 
 If you cannot identify the figure at 1x in your head, simplify the clothes and hair before generating.
 
-After GenerateImage the studio is often opaque black. Knock it out with a **neural** cutout, not a colour threshold. Black tank / leather / denim match studio black; a border floodfill will eat the clothes.
+After GenerateImage the studio is often opaque black. Do **not** floodfill black — black tank / leather / denim match studio black.
+
+**If the session cannot emit alpha**, generate on a flat chroma-key GREEN `#00FF00` / `RGB(0,255,0)` — **no** white stroke in the prompt (do not paint outline into the green). After keying the lime, paint a crisp **2px white stroke on the character** (pixels that are not `#00FF00`): the outer 2px of the figure, never into the chroma field. Keep olive / flag-green clothes: only neon lime (`G>=180`, `R<=90`, `B<=90`). Then trim + 10px.
+
+```
+# key #00FF00 (and near-limes the model paints) → PNG32
+```
+
+If alpha / light studio worked, `rembg -m u2net` is still fine:
 
 ```
 export PATH="$HOME/Library/Python/3.11/bin:$PATH"
-# install once if missing: python3 -m pip install 'rembg[cpu,cli]'
 rembg i -m u2net in.png out.png
 magick out.png -trim +repage -bordercolor none -border 10 PNG32:out.png
 ```
 
-Plan B model: `birefnet-general-lite`. Do **not** use `isnet-anime` on this art. Do **not** use ImageMagick `-fuzz` floodfill / `-transparent black` as the matte. Lab notes: `public/assets/bodies/work/NOTES.md`.
+Plan B model: `birefnet-general-lite`. Do **not** use `isnet-anime`. Do **not** use ImageMagick `-transparent black`. Lab notes: `public/assets/bodies/work/NOTES.md`.
 
 Do not call GenerateImage again just to remove the background.
 

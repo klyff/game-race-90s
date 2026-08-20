@@ -38,6 +38,13 @@ Regenerated 13 runners who wear black (profile / defeat / victory + perfil):
 
 Gen used a **light studio** (never black). Cutout: `rembg -m u2net`, then hard alpha (0 or 255), trim, 10px pad, same Klyff scale onto **PNG32 transparent** canvases. Magenta eyeballs: `work/06-regen-light/magenta/`. Black tank / leather / denim stay.
 
+## Regen 2026-08-20 — leftover 14, green chroma
+
+The 14 who never got a light-studio regen (and whose gen cannot emit alpha):
+`ash blaze cruz enzo flufe luca negao nova rio ruby seamus snake zara zor9`.
+
+Gen: flat `#00FF00` studio. Cutout: chroma-key neon lime, then **2px white stroke on the character** (non-lime pixels), never painted into the green. Olive bomber (Seamus) and flag-green shirt (Negão) stay. Then same Klyff-scale PNG32 canvases. Work files: `work/07-green-key/`.
+
 ## Next (when you say go)
 
 1. Batch the roster with `rembg p -m u2net` (or `birefnet-general-lite`) from the **git originals**, write only into `work/`.
