@@ -64,10 +64,10 @@ import {
   refillJumpCharges,
 } from '../vehicle/JumpCharges.ts';
 import {
-  consumeTurbo,
-  createTurboCharges,
-  refillTurboCharges,
-  TURBO_DURATION_SECONDS,
+  createNitroTank,
+  nitroCapacityForTier,
+  nitroFillSecondsForTier,
+  stepNitro,
 } from '../vehicle/TurboCharges.ts';
 import { collisionBoxFromStats } from '../vehicle/CollisionMap.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
@@ -185,9 +185,12 @@ export interface RacerRuntime {
   /** Hops remaining this lap. Refills at the finish line. */
   jumps: number;
   /** Turbo charges remaining this lap. */
+  /** Nitro tank fill, 0..turboCapacity. */
   turbos: number;
-  /** Seconds of turbo still burning. */
-  turboRemaining: number;
+  readonly turboCapacity: number;
+  readonly turboFillSeconds: number;
+  /** True this step while hold + tank > 0. */
+  turboBurning: boolean;
   /**
    * Hardest contact seen since the presentation layer last read it, world units/s.
    * The scene drains this to trigger the impact sound; the damage rules have
@@ -203,13 +206,13 @@ export interface RacerRuntime {
    * (keyboard is already edge-triggered). Arsenal shortens it via reloadMultiplier.
    */
   weaponCooldownRemaining: number;
-  /** Seconds of ignored input after a 45° hot ramp landing. */
+  /** Seconds of ignored input after a 20° hot ramp landing. */
   landingStunRemaining: number;
   /** Mid-air turbo kick already spent this ramp flight. */
   airTurboKicked: boolean;
   /** True from a ramp launch until the car lands. Hop does not set this. */
   pendingRampFlight: boolean;
-  /** 45° hot launch — pay stun + 4% on a clean landing. */
+  /** 20° hot launch — pay stun + 4% on a clean landing. */
   pendingHardLanding: boolean;
   /** Centreline to respawn on after a void landing. Undefined for other wrecks. */
   offTrackRespawnDistance: number | undefined;
@@ -735,7 +738,7 @@ export class RaceField {
       if (step.rampEvent?.kind === 'launch') {
         racer.pendingRampFlight = true;
         racer.pendingHardLanding =
-          step.rampEvent.hot && step.rampEvent.zone.inclineDegrees === 45;
+          step.rampEvent.hot && step.rampEvent.zone.inclineDegrees === 20;
         racer.offTrackRespawnDistance = this.spline.wrap(
           rampRespawnDistance(step.rampEvent.zone),
         );

@@ -58,7 +58,7 @@ function theme(
   return {
     planetId,
     ...rest,
-    surface: surface ?? 'rock',
+    surface: surface ?? 'asphalt',
     groundKey: `ground-${planetId}`,
     artKey: `planet-${planetId}`,
     groundFile: `${planetId}.png`,

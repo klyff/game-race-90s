@@ -8,7 +8,7 @@ import type { TrackDefinition } from './TrackDefinition.ts';
  * authored, so they can never disagree with the physics that produces them.
  */
 /** Authored lip angle. Also the minimum climb as a percent of maxSpeed. */
-export type RampIncline = 15 | 30 | 45;
+export type RampIncline = 10 | 20;
 
 export interface RampZone {
   /** Arc length where the trigger zone begins. */
@@ -87,7 +87,7 @@ export function rampZoneAt(distance: number, track: TrackDefinition): RampZone |
 
 /**
  * The next lip in this look-ahead, including a car already on the slab.
- * Used so NPCs floor it instead of braking into a 45° reject.
+ * Used so NPCs floor it instead of braking into a 20° reject.
  */
 export function rampApproach(
   distance: number,

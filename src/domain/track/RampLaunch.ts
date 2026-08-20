@@ -19,17 +19,17 @@ export const LAUNCH_HORIZ_SCALE = 0.25;
 /** Backward shove when the ramp wins, world units/s. */
 export const RAMP_REJECT_SPEED = 16;
 
-/** Raw integrity lost on a 45° hot landing, before armor. */
+/** Raw integrity lost on a 20° hot landing, before armor. */
 export const RAMP_LANDING_DAMAGE = 0.04;
 
-/** Seconds of NEUTRAL_INPUT after a 45° hot landing. */
+/** Seconds of NEUTRAL_INPUT after a 20° hot landing. */
 export const RAMP_LANDING_STUN_SECONDS = 1;
 
-/** Speed band that, with turbo, unlocks the hot table. */
+/** Speed band that, with nitro burning, unlocks the hot table. */
 export const HOT_APPROACH_FRAC = 0.85;
 
-export const HOT_45_HEIGHT_BONUS = 0.5;
-export const HOT_45_RANGE_BONUS = 0.25;
+export const HOT_STEEP_HEIGHT_BONUS = 0.5;
+export const HOT_STEEP_RANGE_BONUS = 0.25;
 export const HOT_FLAT_HEIGHT_BONUS = 0.1;
 export const HOT_FLAT_RANGE_BONUS = 0.4;
 export const AIR_TURBO_HEIGHT_BONUS = 0.05;
@@ -56,7 +56,7 @@ function rangeScale(rangeBonus: number): number {
   return 1 + rangeBonus;
 }
 
-/** Minimum forwardSpeed / maxSpeed to climb this lip. 45° → 0.45. */
+/** Minimum forwardSpeed / maxSpeed to climb this lip. 20° → 0.20. */
 export function minClimbFraction(incline: RampIncline): number {
   return incline / 100;
 }
@@ -74,8 +74,8 @@ export function rampArcadeBonus(incline: RampIncline, hot: boolean): RampArcadeB
   if (!hot) {
     return { height: 0, range: 0 };
   }
-  if (incline === 45) {
-    return { height: HOT_45_HEIGHT_BONUS, range: HOT_45_RANGE_BONUS };
+  if (incline === 20) {
+    return { height: HOT_STEEP_HEIGHT_BONUS, range: HOT_STEEP_RANGE_BONUS };
   }
   return { height: HOT_FLAT_HEIGHT_BONUS, range: HOT_FLAT_RANGE_BONUS };
 }

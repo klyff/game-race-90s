@@ -3,7 +3,7 @@ import type { TrackDefinition } from '../../domain/track/TrackDefinition.ts';
 /**
  * BOGMIRE DEEP I — World 3, track 1. Promoted from generated so ramps stick.
  *
- * One teaching lip (15°) and one void experiment (45°, hot launch) so cars
+ * One teaching lip (10°) and one void experiment (20°, hot launch) so cars
  * that overshoot the ribbon explode instead of landing on asphalt.
  */
 export const bogmireDeepOne: TrackDefinition = {
@@ -38,7 +38,7 @@ export const bogmireDeepOne: TrackDefinition = {
   gridRowSpacing: 11,
   surfaceGrip: 0.72,
   rampZones: [
-    { triggerDistance: 220, triggerLength: 12, launchSpeed: 11, inclineDegrees: 15 },
-    { triggerDistance: 980, triggerLength: 12, launchSpeed: 20, inclineDegrees: 45 },
+    { triggerDistance: 220, triggerLength: 12, launchSpeed: 11, inclineDegrees: 10 },
+    { triggerDistance: 980, triggerLength: 12, launchSpeed: 20, inclineDegrees: 20 },
   ],
 };

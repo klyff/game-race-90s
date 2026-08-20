@@ -5,21 +5,21 @@ import type { TrackDefinition } from '../../domain/track/TrackDefinition.ts';
  *
  * Driven counter-clockwise. Layout teaches the handling model:
  *
- *   1. long bottom straight (west → east) — top speed, and the 15° intro slab
+ *   1. long bottom straight (west → east) — top speed, and the 10° intro slab
  *   2. wide east sweeper — grip edge
  *   3. S-chicane along the top — steerRate
- *   4. approach straight into the west hairpin — the 30° rock lip
+ *   4. approach straight into the west hairpin — the 20° rock lip
  *   5. tight hairpin — brakeForce / enginePower on exit
  *
- * Ramp set (owner): one 15° and one 30°. No 45° here — that waits for Basin II.
- * Traps (crates/drums) come from `npm run gen:traps`, not authored barrels.
+ * Ramp set (owner): two 10° teaching lips and one 20° exam. No steeper
+ * walls. Traps (crates/drums) come from `npm run gen:traps`.
  */
 export const thunderBasin: TrackDefinition = {
   id: 'thunder-basin',
   displayName: 'Thunder Basin',
 
   controlPoints: [
-    // 1. Bottom straight, heading +X. Start line + 15° slab mid-run.
+    // 1. Bottom straight, heading +X. Start line + 10° slab mid-run.
     { x: -250, y: -160 },
     { x: -80, y: -162 },
     { x: 90, y: -160 },
@@ -36,7 +36,7 @@ export const thunderBasin: TrackDefinition = {
     { x: -40, y: 50 },
     { x: -140, y: 10 },
 
-    // 4. Approach straight to the hairpin — 30° slab lives here.
+    // 4. Approach straight to the hairpin — 20° slab lives here.
     { x: -230, y: -25 },
     { x: -300, y: -55 },
 
@@ -56,10 +56,10 @@ export const thunderBasin: TrackDefinition = {
   gridLateralOffsets: [-9, 9],
   gridRowSpacing: 11,
 
-  // 15° mid bottom straight; 30° on the hairpin approach.
+  // 10° mid bottom straight; 10° after the sweeper; 20° on the hairpin approach.
   rampZones: [
-    { triggerDistance: 200, triggerLength: 12, launchSpeed: 11, inclineDegrees: 15 },
-    { triggerDistance: 720, triggerLength: 10, launchSpeed: 11, inclineDegrees: 15 },
-    { triggerDistance: 1240, triggerLength: 10, launchSpeed: 13, inclineDegrees: 30 },
+    { triggerDistance: 200, triggerLength: 12, launchSpeed: 11, inclineDegrees: 10 },
+    { triggerDistance: 720, triggerLength: 10, launchSpeed: 11, inclineDegrees: 10 },
+    { triggerDistance: 1240, triggerLength: 10, launchSpeed: 13, inclineDegrees: 20 },
   ],
 };
