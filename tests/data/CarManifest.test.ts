@@ -94,7 +94,7 @@ describe('parseCarSetManifest', () => {
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const legacy = manifest.cars.filter(car => !/^car_\d+$/.test(car.id));
     expect(legacy.length).toBe(21);
-    expect(manifest.cars.length).toBeGreaterThanOrEqual(21);
+    expect(manifest.cars.length).toBe(34);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -103,10 +103,10 @@ describe('parseCarSetManifest', () => {
     expect(manifest.frameCount).toBe(32);
   });
 
-  it('matrix car_18 uses the 18_hero strip_64 plus JSON bounding boxes', () => {
+  it('points a ready strip folder at strip_64 + JSON and a vitrine-only folder at hero_300', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    const sheet = findCarSheet(manifest, 'car_18');
+    const sheet = findCarSheet(manifest, 'car-18');
     expect(sheet.image).toBe(matrixStripUrl(18));
     expect(sheet.framesJson).toBe(matrixStripJsonUrl(18));
     expect(carSheetImageUrl(sheet)).toBe('matrix_car/18_hero/car_18_strip_64.png');
@@ -115,10 +115,16 @@ describe('parseCarSetManifest', () => {
     expect(sheetFrameCount(sheet, manifest)).toBe(30);
     expect(sheet.perk).toBe('anvil');
     expect(sheet.homePlanetId).toBe('vulkanis');
-    const fallback = findCarSheet(manifest, 'car-1');
-    expect(isBBoxSheet(fallback)).toBe(false);
-    expect(sheetFrameCount(fallback, manifest)).toBe(32);
-    expect(carSheetImageUrl(fallback)).toBe('assets/cars/car-1.png');
+    const catalog = findCarSheet(manifest, 'car-3');
+    expect(isBBoxSheet(catalog)).toBe(false);
+    expect(sheetFrameCount(catalog, manifest)).toBe(32);
+    expect(carSheetImageUrl(catalog)).toBe('matrix_car/3_hero/car_3_hero_300.png');
+  });
+
+  it('resolves clock id car_18 onto the same sheet as shop id car-18', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    expect(findCarSheet(manifest, 'car_18').id).toBe(findCarSheet(manifest, 'car-18').id);
   });
 
   it('wires car-1 onto the matrix 1 bbox strip when that pair exists', () => {

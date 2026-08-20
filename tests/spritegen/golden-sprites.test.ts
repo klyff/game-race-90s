@@ -56,8 +56,8 @@ describe('imported fleet sheets', () => {
   it('keeps unique fleet ids matching the authored roster', () => {
     const ids = manifest.cars.map(car => car.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.filter(id => FLEET_CARS.some(fleet => fleet.id === id))).toEqual(
-      FLEET_CARS.map(car => car.id),
-    );
+    for (const fleet of FLEET_CARS) {
+      expect(ids).toContain(fleet.id);
+    }
   });
 });

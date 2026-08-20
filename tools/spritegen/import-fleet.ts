@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
@@ -7,10 +7,11 @@ import {
   CAR_FRAME_WIDTH,
   CAR_SPRITE_FRAMES,
 } from '../../src/domain/constants.ts';
-import type { CarSetManifest, CarSheetManifest } from '../../src/data/cars/CarManifest.ts';
+import type { CarSheetManifest } from '../../src/data/cars/CarManifest.ts';
 import { collisionBoxForCarId, withCollisionBox } from './collision-map.ts';
 import { FLEET_CARS } from './fleet.ts';
 import { packStrip, writePng } from './raster/png.ts';
+import { writeMatrixManifest } from './write-matrix-manifest.ts';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SOURCE_DIRECTORY = join(REPO_ROOT, 'tools', 'spritegen', 'fleet-src');
@@ -253,16 +254,9 @@ function main(): void {
     console.log(`  ${def.id.padEnd(16)} ${strip.width}x${strip.height}  shadow ${imported.shadow.width}x${imported.shadow.height}`);
   }
 
-  const manifest: CarSetManifest = {
-    frameWidth: CAR_FRAME_WIDTH,
-    frameHeight: CAR_FRAME_HEIGHT,
-    frameCount: CAR_SPRITE_FRAMES,
-    pixelsPerUnit: PIXELS_PER_UNIT,
-    origin: ORIGIN,
-    cars: sheets,
-  };
-  writeFileSync(join(OUTPUT_DIRECTORY, 'cars.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`\n${sheets.length} car(s) imported @ ${PIXELS_PER_UNIT} px/unit`);
+  const roster = writeMatrixManifest();
+  console.log(`\n${sheets.length} fleet PNG(s) imported @ ${PIXELS_PER_UNIT} px/unit`);
+  console.log(`cars.json rewritten from matrix_car ({N}_hero): ${roster.carCount} row(s)`);
 }
 
 main();

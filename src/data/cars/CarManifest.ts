@@ -13,7 +13,8 @@ import type { VehicleStats } from '../../domain/vehicle/VehicleStats.ts';
  * re-exports these types). The dependency therefore points from the tool to the
  * product and never the other way round.
  *
- * Written to `public/assets/cars/cars.json` by `npm run gen:sprites`.
+ * Written to `public/assets/cars/cars.json` by `npm run gen:cars-json`
+ * (scans `public/matrix_car/{N}_hero`).
  */
 
 /** Metadata emitted for each generated sprite sheet. */
@@ -67,7 +68,7 @@ export interface CarSetManifest {
 /** Raised when the generated manifest is missing, malformed or inconsistent. */
 export class CarManifestError extends Error {
   constructor(message: string) {
-    super(`cars.json: ${message}. Run \`npm run gen:sprites\` to regenerate it.`);
+    super(`cars.json: ${message}. Run \`npm run gen:cars-json\` to regenerate it.`);
     this.name = 'CarManifestError';
   }
 }
@@ -334,8 +335,9 @@ export function matrixHero300Url(n: number): string {
 }
 
 /**
- * Production yaw strips that actually exist on disk. Boot only queues these.
- * `car-1` / `car_1` share folder 1; hyphen and underscore ids both remap here.
+ * Known production strips. `gen:cars-json` writes these paths into cars.json
+ * when the PNG+JSON pair is on disk; this list is the boot remap fallback.
+ * `car-1` / `car_1` share folder 1.
  */
 export const MATRIX_STRIP_NUMBERS = [1, 2, 18, 19, 20, 21] as const;
 
@@ -451,12 +453,19 @@ export function sheetFrameCount(sheet: CarSheetManifest, manifest: CarSetManifes
 /** Looks up one car, failing loudly rather than returning `undefined`. */
 export function findCarSheet(manifest: CarSetManifest, id: string): CarSheetManifest {
   const sheetId = id.includes('#') ? id.slice(0, id.indexOf('#')) : id;
-  const sheet = manifest.cars.find(car => car.id === sheetId);
-  if (sheet === undefined) {
-    const known = manifest.cars.map(car => car.id).join(', ');
-    throw new CarManifestError(`unknown car "${id}". Known cars: ${known}`);
+  const exact = manifest.cars.find(car => car.id === sheetId);
+  if (exact !== undefined) {
+    return exact;
   }
-  return sheet;
+  const n = matrixHeroNumber(sheetId);
+  if (n !== undefined) {
+    const aliased = manifest.cars.find(car => matrixHeroNumber(car.id) === n);
+    if (aliased !== undefined) {
+      return aliased;
+    }
+  }
+  const known = manifest.cars.map(car => car.id).join(', ');
+  throw new CarManifestError(`unknown car "${id}". Known cars: ${known}`);
 }
 
 /**
