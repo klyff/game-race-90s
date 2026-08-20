@@ -116,6 +116,22 @@
       "zoomBias": 0.1,
       "holdSeconds": 3,
       "targetZoom": 2.2
+    },
+    {
+      "kind": "ramp",
+      "startDistance": 220,
+      "endDistance": 232,
+      "zoomBias": -0.1,
+      "holdSeconds": 3,
+      "targetZoom": 1.35
+    },
+    {
+      "kind": "ramp",
+      "startDistance": 980,
+      "endDistance": 992,
+      "zoomBias": -0.1,
+      "holdSeconds": 3,
+      "targetZoom": 1.35
     }
   ]
 }

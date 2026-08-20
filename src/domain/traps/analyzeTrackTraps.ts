@@ -9,7 +9,7 @@ import { crateSlotCount, drumSlotCount } from './TrapRules.ts';
 import type { TrackTrapCatalog, TrapSlot } from './TrapCatalog.ts';
 
 const SAMPLE_STEP_UNITS = 12;
-const GRID_CLEAR_UNITS = 40;
+const GRID_CLEAR_UNITS = 200;
 const RAMP_PAD_UNITS = 8;
 const MIN_GAP_UNITS = 8;
 /** Straight: stay this far inside the kerb so a grown crate/drum does not hang into dirt. */

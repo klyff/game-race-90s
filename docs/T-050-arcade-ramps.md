@@ -65,16 +65,16 @@ foi positivo nos dois eixos.
 
 ### 1b. Sem força positiva → a rampa ganha (ré sozinha)
 
-Uma rampa de 45° **não se sobe** abaixo de 45% do `maxSpeed` do carro.
+Uma rampa de 20° **não se sobe** abaixo de 20% do `maxSpeed` do carro.
 A regra geral (arcade, não real) é:
 
 ```
-minClimbFrac = inclineDegrees / 100    // 45° → 0.45, 30° → 0.30, 15° → 0.15
+minClimbFrac = inclineDegrees / 100    // 20° → 0.20, 10° → 0.10
 ```
 
 Falhou o climb quando **qualquer** disto é verdade no ponto zero:
 
-- `speedFrac < minClimbFrac` (a 45°, abaixo de 45% do máximo)
+- `speedFrac < minClimbFrac` (a 20°, abaixo de 20% do máximo)
 - `vertRaw <= 0` ou `horizRaw <= 0` (a soma não lança nos dois eixos)
 
 No fail o carro **não voa**. Leva um impulso para trás ao longo do
@@ -100,25 +100,24 @@ sido positivo (§1). Um fail de climb nunca é “frio” nem “quente” — �
 ```
 hotApproach =
   forwardSpeed >= 0.85 * stats.maxSpeed
-  AND turboRemaining > 0 no momento do launch
+  AND nitro a queimar (turboActive) no momento do launch
 ```
 
 O “100%” é o tecto da *banda de compromisso* (“estás a fundo”), **não** um cap
-que pune overspeed. Se o turbo já te pôs acima de `maxSpeed`, continuas hot.
-Abaixo de 85% ou sem turbo a arder, mas ainda acima do `minClimbFrac`:
+que pune overspeed. Se o nitro já te pôs acima de `maxSpeed`, continuas hot.
+Abaixo de 85% ou sem nitro a arder, mas ainda acima do `minClimbFrac`:
 launch = base + soma do carro, **sem** os multiplicadores da tabela.
 
 ### 3. Ângulo da rampa é dado, não derivado
 
-`RampZone` ganha `inclineDegrees: 15 | 30 | 45`.
+`RampZone` usa `inclineDegrees: 10 | 20`.
 `launchSpeed` é só a **base fixa** da soma (§1). O ângulo escolhe o
 `minClimbFrac`, a **tabela de bónus** (se hot) e o desenho da laje.
 
 | Ângulo | Sobe só a partir de | Se hot approach                | Aterragem                     |
 | ------ | ------------------- | ------------------------------ | ----------------------------- |
-| 45°    | 45% do `maxSpeed`   | +50% vertical, +25% horizontal | 1 s sem controlo + 4% de dano |
-| 30°    | 30% do `maxSpeed`   | +10% vertical, +40% horizontal | limpa                         |
-| 15°    | 15% do `maxSpeed`   | +10% vertical, +40% horizontal | limpa                         |
+| 20°    | 20% do `maxSpeed`   | +50% vertical, +25% horizontal | 1 s sem controlo + 4% de dano |
+| 10°    | 10% do `maxSpeed`   | +10% vertical, +40% horizontal | limpa                         |
 
 “Vertical” = pico de altura, não `verticalVelocity` em cru.
 “Horizontal” = distância percorrida no plano enquanto voa.
@@ -128,8 +127,8 @@ Como `peak = v² / (2g)`, um +50% de altura pede
 `|velocity_xy| *= 1.25` no launch (airtime terrestre mudaria os dois eixos
 ao mesmo tempo — não queremos isso).
 
-30° e 15° partilham a mesma tabela de voo: a diferença é visual e de
-compromisso (a 15° é mais fácil de apanhar a fundo; a 45° é o *big air*).
+10° é o lábio de ensino (quase flat). 20° herda a tabela antiga da 45°
+(*big air* + stun). Sem 15 / 30 / 45 no léxico.
 
 ### 4. Turbo a meio do salto — segundo kick, uma vez
 
@@ -137,16 +136,16 @@ Se o jogador **consome** uma carga de turbo **já no ar** (`isAirborne` no
 `resolveTurboCommand`):
 
 - +5% vertical e +10% horizontal, **uma vez por voo**
-- Empilha em cima do launch (multiplicativo): 45° hot + kick aéreo =
+- Empilha em cima do launch (multiplicativo): 20° hot + kick aéreo =
   V `× 1.50 × 1.05`, H `× 1.25 × 1.10`
 - Vale também num launch frio — o turbo no ar é a recuperação arcade
 - Não reaplica em cada frame enquanto o turbo está a arder
 - Hop (Space) **não** recebe este kick
 
-### 5. Aterragem dura só na 45° quente
+### 5. Aterragem dura só na 20° quente
 
-Só quando o launch foi hot **e** a zona era 45°. Aterrar de 15°/30°, ou de
-uma 45° fria, é silencioso.
+Só quando o launch foi hot **e** a zona era 20°. Aterrar de 10°, ou de
+uma 20° fria, é silencioso.
 
 - **1 s sem controlo:** novo timer `landingStunRemaining` em `RacerRuntime`.
   Enquanto `> 0`, o input do passo é `NEUTRAL_INPUT` (o carro mantém
@@ -208,19 +207,19 @@ o vazio.
 
 ## Thunder Basin — as três rampas
 
-Manter as distâncias já medidas; só autorar o ângulo e, se preciso, retocar
-`launchSpeed` para a laje 45° ler como rampa e não como lomba.
+Léxico fechado em 10° / 20°. Distâncias atuais (não regenerar o `trackgen`):
 
 | Distância | Sítio              | Ângulo | Papel                                      |
 | --------- | ------------------ | ------ | ------------------------------------------ |
-| 200 / 12  | Reta de baixo      | 45°    | O salto da T-050. A fundo + turbo = voo; abaixo de 45% = ré |
-| 680 / 10  | Saída do sweeper   | 30°    | Alcance; abaixo de 30% = ré                                 |
-| 1180 / 10 | Approach do hairpin| 15°    | Quase um hop; abaixo de 15% = ré                            |
+| 200 / 12  | Reta de baixo      | 10°    | Ensino. A fundo + nitro = hop; abaixo de 10% = ré |
+| 720 / 10  | Saída do sweeper   | 10°    | Segundo lábio flat                                   |
+| 1240 / 10 | Approach do hairpin| 20°    | O salto. A fundo + nitro = voo; abaixo de 20% = ré  |
 
-O outcome da T-050 não muda: o owner conduz a reta de baixo, vê a rampa,
-salta, aterra no asfalto. O screenshot (decisão 25) tem de mostrar o carro
-**no ar**, sombra no chão — de preferência o salto 45° quente, que é o único
-que se lê como “grande”.
+Basin II: sem rampa nos primeiros ~200u; 10° @ 420; 20° @ 1520.
+Bogmire I: 10° @ 220; void 20° @ 980.
+
+O screenshot (decisão 25) tem de mostrar o carro **no ar**, sombra no chão —
+de preferência o salto 20° quente.
 
 ---
 
@@ -228,7 +227,7 @@ que se lê como “grande”.
 
 ### A. Dados e tabela de bónus
 
-1. `RampZone.inclineDegrees: 15 | 30 | 45` (obrigatório em cada zona).
+1. `RampZone.inclineDegrees: 10 | 20` (obrigatório em cada zona).
 2. Novo módulo `src/domain/track/RampLaunch.ts` (puro):
    - `carForceAtContact(state, stats, command, turboActive)` — a soma
      `speedFrac + accelFrac + turboTerm` no ponto zero
@@ -260,12 +259,12 @@ que se lê como “grande”.
    - Fora das paredes + `pendingRampFlight` → DESTROYED no sítio,
      `offTrackRespawnDistance` já gravado no launch; `sitOutWreck` usa
      essa distância em vez de `racer.distance`.
-   - Senão, se o launch tinha sido 45° hot → dano 4% + stun 1 s.
+   - Senão, se o launch tinha sido 20° hot → dano 4% + stun 1 s.
 
 ### C. Desenho (mínimo — a física já projecta altura)
 
-9. `drawRockRamp` usa `inclineDegrees` para a cara da laje (45° mais alta /
-   mais íngreme que 15°). O pico visual continua alinhado com
+9. `drawRockRamp` usa `inclineDegrees` para a cara da laje (20° mais alta /
+   mais íngreme que 10°). O pico visual continua alinhado com
    `rampPeakHeight` **terrestre** — a laje é o trampolim, não o arco do
    voo arcade.
 10. Não tocar em `VehicleView` além do que já está certo.
@@ -278,27 +277,27 @@ que se lê como “grande”.
     - carro a fundo + turbo lança mais alto/longe do que o mesmo carro a
       60% sem turbo (a soma no ponto zero muda o impulso; a base da zona
       é igual)
-    - 45° abaixo de 45% do `maxSpeed` → `kind: 'reject'`, velocity para
+    - 20° abaixo de 20% do `maxSpeed` → `kind: 'reject'`, velocity para
       trás, `height === 0`
-    - 45° com força cuja soma dá `vertRaw` ou `horizRaw` ≤ 0 → reject
-    - 30° abaixo de 30% / 15° abaixo de 15% → reject
+    - 20° com força cuja soma dá `vertRaw` ou `horizRaw` ≤ 0 → reject
+    - 10° abaixo de 10% → reject
     - acima do mínimo, sem hot → launch = base + soma, bónus 1.0 / 1.0
-    - hot 45° → 1.50 V / 1.25 H em cima da soma
-    - hot 15° e 30° → 1.10 V / 1.40 H em cima da soma
+    - hot 20° → 1.50 V / 1.25 H em cima da soma
+    - hot 10° → 1.10 V / 1.40 H em cima da soma
     - abaixo de 85% com turbo, mas acima do mínimo → frio (soma, sem tabela)
     - ≥ 85% sem turbo → frio
     - kick aéreo uma vez; segundo turbo no mesmo voo não acumula
-    - stack 45° hot × kick aéreo
+    - stack 20° hot × kick aéreo
 13. `OnTrackStep` — entra na zona a fundo, sai com `height > 0`; entra
-    rastejando numa 45°, sai grounded a andar para trás; não relança no
+    rastejando numa 20°, sai grounded a andar para trás; não relança no
     mesmo voo; paredes skipped só no ar.
-14. `RaceField` — aterragem 45° hot: integrity cai ~4% (antes da armadura)
-    e input é neutro durante 1 s; 15°/30° e hop não pagam.
+14. `RaceField` — aterragem 20° hot: integrity cai ~4% (antes da armadura)
+    e input é neutro durante 1 s; 10° e hop não pagam.
 15. `RaceField` — aterragem de rampa com `|lateralOffset|` past the wall:
     `DESTROYED` no sítio; após o timer, posição = `frameAt(triggerDistance
     + triggerLength)`, `lateralOffset === 0`; hop e landing no shoulder
     não explodem. `sitOutWreck` de uma mina continua a respawnar onde morreu.
-16. Thunder Basin: as 3 zonas existem, ângulos 45/30/15.
+16. Thunder Basin: as 3 zonas existem, ângulos 10/10/20.
 
 ### E. Fechar a tarefa
 
@@ -314,8 +313,8 @@ que se lê como “grande”.
 1. Soma + reject + testes (A / 11–12) — o feel fica locked
 2. `resolveRampContact` em `OnTrackStep` + `turboActive` no caller (A.3)
 3. Kick aéreo + hard landing + void-landing em `RaceField` (B)
-4. Ângulos em Thunder Basin + laje mais íngreme na 45° (C / A.4)
-5. Screenshot na reta de baixo (E) — e um segundo take a rastejar na 45°
+4. Ângulos em Thunder Basin + laje mais íngreme na 20° (C / A.4)
+5. Screenshot na reta de baixo (E) — e um segundo take a rastejar na 20°
    a ver a ré, se o primeiro take for o voo quente
 6. Ledger
 

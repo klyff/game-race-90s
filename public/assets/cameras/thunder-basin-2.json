@@ -3,19 +3,19 @@
   "homeZoom": 1.75,
   "maxZoomIn": 2.6,
   "autoZoomOutMin": 0.975,
-  "zoomOut50": 0.4073482371252698,
+  "zoomOut50": 0.40700982275655906,
   "triggers": [
     {
       "kind": "speed",
-      "startDistance": 24,
-      "endDistance": 616,
+      "startDistance": 8,
+      "endDistance": 600,
       "zoomBias": -0.35,
       "holdSeconds": 3,
       "targetZoom": 0.975
     },
     {
       "kind": "straight",
-      "startDistance": 728,
+      "startDistance": 720,
       "endDistance": 880,
       "zoomBias": -0.15,
       "holdSeconds": 3,
@@ -23,8 +23,8 @@
     },
     {
       "kind": "straight",
-      "startDistance": 952,
-      "endDistance": 1032,
+      "startDistance": 960,
+      "endDistance": 1040,
       "zoomBias": -0.15,
       "holdSeconds": 3,
       "targetZoom": 1.275
@@ -40,7 +40,7 @@
     {
       "kind": "straight",
       "startDistance": 1240,
-      "endDistance": 1320,
+      "endDistance": 1328,
       "zoomBias": -0.15,
       "holdSeconds": 3,
       "targetZoom": 1.275
@@ -55,8 +55,8 @@
     },
     {
       "kind": "ramp",
-      "startDistance": 280,
-      "endDistance": 292,
+      "startDistance": 420,
+      "endDistance": 432,
       "zoomBias": -0.1,
       "holdSeconds": 3,
       "targetZoom": 1.35

@@ -53,7 +53,7 @@ Size vs car: `GASOLINE_SIZE_OF_CAR = 0.336` (+20%). Uncoupled from the mine.
 ## Placement
 
 - Lateral: `trapSeat(halfWidth, kind)` — straights `halfWidth - 5.5`; corners / tights pull inward. Drums get +2.8 extra inset. Puck stays inside `halfWidth`. Tight apex sits on the outside.
-- Skip start/grid window (first ~40 units past the line).
+- Skip start/grid window (first ~200 units past the line).
 - Skip authored `rampZones` (plus a short pad).
 - Min arc gap: 2 car lengths (~8 world units).
 - Alternate sides. Prefer straights and sweeper exits.

@@ -47,6 +47,14 @@
     },
     {
       "kind": "ramp",
+      "startDistance": 720,
+      "endDistance": 730,
+      "zoomBias": -0.1,
+      "holdSeconds": 3,
+      "targetZoom": 1.35
+    },
+    {
+      "kind": "ramp",
       "startDistance": 1240,
       "endDistance": 1250,
       "zoomBias": -0.1,

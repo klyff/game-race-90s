@@ -27,7 +27,7 @@ export interface InputCommand {
   readonly dropMine: boolean;
   /** Hop over ground hazards. Ignored while airborne or out of charges. */
   readonly jump: boolean;
-  /** Spend one turbo charge. */
+  /** Hold to burn the nitro gauge. */
   readonly boost: boolean;
 }
 

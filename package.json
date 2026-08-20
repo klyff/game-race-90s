@@ -29,6 +29,7 @@
     "gen:cameras": "node --experimental-strip-types tools/camgen/analyze.ts",
     "gen:traps": "node --experimental-strip-types tools/trapgen/analyze.ts",
     "gen:traps-art": "node --experimental-strip-types tools/art/generate-traps.ts",
+    "gen:crowd": "node --experimental-strip-types tools/art/generate-crowd.ts",
     "gen:lines": "node tools/linegen/generate.ts",
     "gen:ground": "node --experimental-strip-types tools/art/generate-ground-tiles.ts",
     "gen:planet-select": "node --experimental-strip-types tools/art/generate-planet-select.ts",

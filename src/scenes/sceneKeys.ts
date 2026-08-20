@@ -105,6 +105,27 @@ export const WOOD_CHIP_SPRITES = [1, 2, 3, 4, 5, 6].map(n => ({
   file: `wood-chip-${String(n).padStart(2, '0')}.png`,
 }));
 
+export const CROWD_ASSET_DIRECTORY = 'assets/crowd';
+export const CROWD_SPRITES = [
+  { key: 'crowd-rock', file: 'rock.png' },
+  { key: 'crowd-punk', file: 'punk.png' },
+  { key: 'crowd-piriguete', file: 'piriguete.png' },
+  { key: 'crowd-cheer-idle', file: 'cheer-idle.png' },
+  { key: 'crowd-cheer-wave', file: 'cheer-wave.png' },
+  { key: 'crowd-flasher-idle', file: 'flasher-idle.png' },
+  { key: 'crowd-flasher-flash', file: 'flasher-flash.png' },
+] as const;
+
+export function crowdTextureKey(kind: string, reacting: boolean): string {
+  if (kind === 'cheer') {
+    return reacting ? 'crowd-cheer-wave' : 'crowd-cheer-idle';
+  }
+  if (kind === 'flasher') {
+    return reacting ? 'crowd-flasher-flash' : 'crowd-flasher-idle';
+  }
+  return `crowd-${kind}`;
+}
+
 /** Where the metal-scrap pieces live (`scrap-01.png` …). */
 export const DEBRIS_ASSET_DIRECTORY = 'assets/debris';
 

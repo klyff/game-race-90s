@@ -1,3 +1,4 @@
+import { isAudioMuted } from './AudioPrefs.ts';
 import { noteFrequency } from './MusicScore.ts';
 
 /** How long the transition solo rings, seconds. Owner: ~3s guitar shred. */
@@ -49,6 +50,9 @@ function createContext(): AudioContext | null {
  * before changing scene; 0 when Web Audio is missing.
  */
 export function playGuitarSolo(): number {
+  if (isAudioMuted()) {
+    return 0;
+  }
   const context = createContext();
   if (context === null) {
     return 0;

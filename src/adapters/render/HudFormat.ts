@@ -36,9 +36,11 @@ export interface HudReadout {
   readonly mines?: number;
   /** Hops remaining. When set with oil/mines/turbos, the HUD appends the jump count. */
   readonly jumps?: number;
-  /** Turbo charges remaining. */
+  /** Nitro tank fill (0..turboCapacity). */
   readonly turbos?: number;
-  /** True while a turbo charge is burning. */
+  /** Nitro tank size. Missing = stock 10. */
+  readonly turboCapacity?: number;
+  /** True while nitro is burning this frame. */
   readonly turboActive?: boolean;
   readonly integrity: number; // 0..1 (0% to 100%)
   readonly standings: readonly { readonly carId: string; readonly position: number }[];

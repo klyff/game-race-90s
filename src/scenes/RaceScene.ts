@@ -47,6 +47,7 @@ import {
 import { TuningOverlay } from '../adapters/render/TuningOverlay.ts';
 import { formatAiOverlay } from '../adapters/render/AiOverlayFormat.ts';
 import { TyreMarks } from '../adapters/render/TyreMarks.ts';
+import { CrowdView } from '../adapters/render/CrowdView.ts';
 import { VehicleView } from '../adapters/render/VehicleView.ts';
 import { findCarSheet, frameIndexForHeading, playableCarIds } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
@@ -104,6 +105,7 @@ import type { TrackDefinition } from '../domain/track/TrackDefinition.ts';
 import { TrackSpline } from '../domain/track/TrackSpline.ts';
 import { CAR_CONDITION, IMPACT_DAMAGE_THRESHOLD } from '../domain/vehicle/CarIntegrity.ts';
 import { missileCapacity } from '../domain/weapons/WeaponInventory.ts';
+import { crowdSeed, pickStartCrowd } from '../domain/crowd/CrowdSlots.ts';
 import { trapSeed } from '../domain/traps/pickRaceTraps.ts';
 import { TRAP_KIND } from '../domain/traps/TrapCatalog.ts';
 import { HAZARD_KIND } from '../domain/weapons/Hazard.ts';
@@ -258,6 +260,7 @@ export class RaceScene extends Phaser.Scene {
   private field!: RaceField;
   /** One view per racer, index-aligned with `field.racers`. */
   private views: VehicleView[] = [];
+  private crowd: CrowdView | undefined;
   private command: InputCommand = IDLE_INPUT;
   private pendingExplosions: PendingExplosion[] = [];
   private pendingScraps: PendingScrap[] = [];
@@ -406,6 +409,13 @@ export class RaceScene extends Phaser.Scene {
       new VehicleView(this, this.manifest, findCarSheet(this.manifest, racer.carId), this.projection, {
         farLod: this.debugIa,
       }),
+    );
+    this.crowd = new CrowdView(
+      this,
+      pickStartCrowd(this.track, crowdSeed(planet?.seed ?? 1, this.trackId)),
+      this.spline,
+      this.projection,
+      this.manifest.pixelsPerUnit,
     );
     this.publishDebugIaWindow();
     this.weaponLayer = this.add.graphics().setDepth(40).setName('weaponLayer');
@@ -637,7 +647,8 @@ export class RaceScene extends Phaser.Scene {
       mines: player.inventory.mines,
       jumps: player.jumps,
       turbos: player.turbos,
-      turboActive: player.turboRemaining > 0,
+      turboCapacity: player.turboCapacity,
+      turboActive: player.turboBurning,
       integrity: player.integrity.integrity,
       standings: race.standings.map(entry => ({
         carId: entry.carId,
@@ -780,13 +791,16 @@ export class RaceScene extends Phaser.Scene {
         return;
       }
 
-      view.sync(racer.state, { turboActive: racer.turboRemaining > 0 });
+      view.sync(racer.state, { turboActive: racer.turboBurning });
       if (racer.telemetry !== null) {
         // Per-car index: `TyreMarks` keeps a wheel trail per car, and sharing one
         // would join two cars' wheels with a streak across the track.
         this.tyreMarks.record(index, racer.state, racer.telemetry);
       }
     });
+    const leader = this.field.standings[0];
+    const leadRacer = leader !== undefined ? this.field.racers[leader.racerIndex] : undefined;
+    this.crowd?.sync(leadRacer?.distance ?? 0);
   }
 
   /**
@@ -1566,7 +1580,7 @@ export class RaceScene extends Phaser.Scene {
     const humanRace = race.racers.find(racer => racer.racerIndex === this.player.gridIndex)
       ?? race.racers.find(racer => racer.carId === this.carId);
     const humanFinished = this.player.isPlayer && humanRace?.progress.finished === true;
-    const turboCount = this.field.racers.filter(racer => racer.turboRemaining > 0).length;
+    const turboCount = this.field.racers.filter(racer => racer.turboBurning).length;
     const leaderId = race.standings[0]?.carId;
     const becameLeader =
       leaderId !== undefined &&
@@ -1844,6 +1858,8 @@ export class RaceScene extends Phaser.Scene {
     this.scraps.destroy();
     this.wood.destroy();
     this.explosions.destroy();
+    this.crowd?.destroy();
+    this.crowd = undefined;
     this.trackRenderer.destroy();
     this.overlay.destroy();
   }

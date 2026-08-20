@@ -10,8 +10,8 @@
     "semantic_hash": "a7c31c9c86596a49f46f1fbd40b29080"
   },
   "package.json": {
-    "mtime": 1787124417.413329,
-    "ast_hash": "1fc94b78e31dd13a734419519287506a",
+    "mtime": 1787194974.0052898,
+    "ast_hash": "f64048c0e44883ab59c326f524633484",
     "semantic_hash": ""
   },
   "public/assets/cameras/ash-reach-1.json": {
@@ -30,9 +30,9 @@
     "semantic_hash": "948f6b662cea1d3a045e10eadf4c7efe"
   },
   "public/assets/cameras/bogmire-deep-1.json": {
-    "mtime": 1787031902.3759942,
-    "ast_hash": "250f59148f6bad7583f3318df39d8ed4",
-    "semantic_hash": "250f59148f6bad7583f3318df39d8ed4"
+    "mtime": 1787195034.760918,
+    "ast_hash": "ac5f3a6246b371028efdfbb0e975f5b1",
+    "semantic_hash": ""
   },
   "public/assets/cameras/bogmire-deep-2.json": {
     "mtime": 1787031902.3767083,
@@ -105,9 +105,9 @@
     "semantic_hash": "c9a7a865d335846b59d22206d912fa75"
   },
   "public/assets/cameras/thunder-basin-2.json": {
-    "mtime": 1787043913.5330832,
-    "ast_hash": "e8feabd5edcbfc584820b623f3d27853",
-    "semantic_hash": "e8feabd5edcbfc584820b623f3d27853"
+    "mtime": 1787195034.7598057,
+    "ast_hash": "2a772e468cdb9eb7c497c66ef2e2253d",
+    "semantic_hash": ""
   },
   "public/assets/cameras/thunder-basin-3.json": {
     "mtime": 1787031902.373588,
@@ -115,9 +115,9 @@
     "semantic_hash": "84dd23ef5a4f32c8cfd04760dbdaf655"
   },
   "public/assets/cameras/thunder-basin.json": {
-    "mtime": 1787043913.5268886,
-    "ast_hash": "1f833c349c3cc0d59f2bb327762cc48c",
-    "semantic_hash": "1f833c349c3cc0d59f2bb327762cc48c"
+    "mtime": 1787195034.754949,
+    "ast_hash": "8cfc74d18c17673acd591a2b388994c3",
+    "semantic_hash": ""
   },
   "public/assets/cameras/verdant-fault-1.json": {
     "mtime": 1787031902.3862019,
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "public/assets/traps/bogmire-deep-1.json": {
-    "mtime": 1787129869.149723,
-    "ast_hash": "93989c3a41d9cdd5a8cc0cb3c1ef9b9a",
+    "mtime": 1787195081.6466608,
+    "ast_hash": "3c4f9d05d0af189dd453490da7c57499",
     "semantic_hash": ""
   },
   "public/assets/traps/bogmire-deep-2.json": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "public/assets/traps/thunder-basin-2.json": {
-    "mtime": 1787129869.1474814,
-    "ast_hash": "95f9bbbc9a444fe65ea62605fd34eb66",
+    "mtime": 1787195081.6459467,
+    "ast_hash": "007949a4a58ed8ca1e7852c8ffc96dba",
     "semantic_hash": ""
   },
   "public/assets/traps/thunder-basin-3.json": {
@@ -420,8 +420,8 @@
     "semantic_hash": ""
   },
   "public/assets/traps/thunder-basin.json": {
-    "mtime": 1787129869.1228423,
-    "ast_hash": "2014261c432395ba9187e144700a3bed",
+    "mtime": 1787195081.64153,
+    "ast_hash": "a3723e5e68d53db387bdcf785b464625",
     "semantic_hash": ""
   },
   "public/assets/traps/verdant-fault-1.json": {
@@ -495,8 +495,8 @@
     "semantic_hash": "2c16012323c6b29a64b16fd22033dab4"
   },
   "src/adapters/audio/AudioPrefs.ts": {
-    "mtime": 1787124275.6866844,
-    "ast_hash": "b5ce94e3f8c4727cf39e6409db4558bc",
+    "mtime": 1787194749.753648,
+    "ast_hash": "6c0fead9fa2f3cec0b3bd7a1bdcdc15a",
     "semantic_hash": ""
   },
   "src/adapters/audio/BedPlayer.ts": {
@@ -535,9 +535,9 @@
     "semantic_hash": "850e7730b2fdaf554647c3ad24d445eb"
   },
   "src/adapters/audio/GuitarSolo.ts": {
-    "mtime": 1787024378.357297,
-    "ast_hash": "70167d4925f626585bc740992801553d",
-    "semantic_hash": "70167d4925f626585bc740992801553d"
+    "mtime": 1787194776.493815,
+    "ast_hash": "accc0668912db3092aa5d3fb349074ef",
+    "semantic_hash": ""
   },
   "src/adapters/audio/ImpactVoice.ts": {
     "mtime": 1787039902.152506,
@@ -565,8 +565,8 @@
     "semantic_hash": "f3a287dd27a56d1e0a5587dc9fb0bd4b"
   },
   "src/adapters/audio/RaceAudio.ts": {
-    "mtime": 1787130155.5479157,
-    "ast_hash": "721bdeb6179db1ac63e1a26a3acbc73d",
+    "mtime": 1787194783.643672,
+    "ast_hash": "9972189180442fa462e719f6cb48107e",
     "semantic_hash": ""
   },
   "src/adapters/audio/SkidVoice.ts": {
@@ -575,9 +575,9 @@
     "semantic_hash": "3117d80fad2abaffd17755627c608bf6"
   },
   "src/adapters/audio/TitleAudio.ts": {
-    "mtime": 1787024378.360693,
-    "ast_hash": "56161ff577aa79c7d8d11ee91872f11b",
-    "semantic_hash": "56161ff577aa79c7d8d11ee91872f11b"
+    "mtime": 1787194783.6436672,
+    "ast_hash": "955d406964e7e3128c572fdce4c20163",
+    "semantic_hash": ""
   },
   "src/adapters/audio/TitleMusic.ts": {
     "mtime": 1787024378.3642054,
@@ -590,9 +590,9 @@
     "semantic_hash": "c58ba9f1dbc4e8c03add70be0763d599"
   },
   "src/adapters/input/KeyboardDriver.ts": {
-    "mtime": 1787024378.3671713,
-    "ast_hash": "77e01e293bce7d892bdfe4fe97fc2034",
-    "semantic_hash": "77e01e293bce7d892bdfe4fe97fc2034"
+    "mtime": 1787194650.4722147,
+    "ast_hash": "185fa5d43a37084958257a488b1c67e1",
+    "semantic_hash": ""
   },
   "src/adapters/input/MenuController.ts": {
     "mtime": 1786891504.5270574,
@@ -675,8 +675,8 @@
     "semantic_hash": "bd30c914ae31255387bc68b9bc121995"
   },
   "src/adapters/render/HudFormat.ts": {
-    "mtime": 1787130148.6180098,
-    "ast_hash": "106c81985b0c7dde531a4a3b0c1d1aaf",
+    "mtime": 1787194651.6798146,
+    "ast_hash": "0343e8ee22612fcf5875db1ebacddc94",
     "semantic_hash": ""
   },
   "src/adapters/render/IsoProjection.ts": {
@@ -715,8 +715,8 @@
     "semantic_hash": ""
   },
   "src/adapters/render/TrackRenderer.ts": {
-    "mtime": 1787110330.6164877,
-    "ast_hash": "831622fb09fd147db508def142fbbfd7",
+    "mtime": 1787194676.8909986,
+    "ast_hash": "d5b6910d5fdffa0816372c34f0c755cf",
     "semantic_hash": ""
   },
   "src/adapters/render/TuningOverlay.ts": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "src/data/input/ControlList.ts": {
-    "mtime": 1787160195.6916225,
-    "ast_hash": "266c5a2f6855f6ee5b63c29837494185",
+    "mtime": 1787189640.7152905,
+    "ast_hash": "0e3338d59f056003977d47364ef13415",
     "semantic_hash": ""
   },
   "src/data/pilots/PilotRoster.ts": {
@@ -820,9 +820,9 @@
     "semantic_hash": "9732c79de32eb560ae57a7fab5645e0d"
   },
   "src/data/tracks/planetThemes.ts": {
-    "mtime": 1787024378.3902924,
-    "ast_hash": "05d1cc059b06be086db1e60f38b074c7",
-    "semantic_hash": "05d1cc059b06be086db1e60f38b074c7"
+    "mtime": 1787194676.661407,
+    "ast_hash": "fe5582a2760604bf1779737766b47747",
+    "semantic_hash": ""
   },
   "src/data/tracks/planets.ts": {
     "mtime": 1787110330.617872,
@@ -835,13 +835,13 @@
     "semantic_hash": ""
   },
   "src/data/tracks/thunder-basin-2.track.ts": {
-    "mtime": 1787110330.618512,
-    "ast_hash": "940566c2fff7540d7c49d82c1d2a4a1d",
+    "mtime": 1787194558.7269547,
+    "ast_hash": "b930a8d8bce4c41a6a19ae67c9f280b9",
     "semantic_hash": ""
   },
   "src/data/tracks/thunder-basin.track.ts": {
-    "mtime": 1787110330.6188,
-    "ast_hash": "aba8c5b664be6113204bccab76778605",
+    "mtime": 1787194554.9213707,
+    "ast_hash": "71547600ccb632d42df2d868776704e2",
     "semantic_hash": ""
   },
   "src/data/ui/PubBackgrounds.ts": {
@@ -940,8 +940,8 @@
     "semantic_hash": "dc8b3866882cd44a47a19247a3865781"
   },
   "src/domain/camera/CameraPreset.ts": {
-    "mtime": 1787159976.7867846,
-    "ast_hash": "7aef857d291a42977f278de8152b3ec3",
+    "mtime": 1787189483.3691292,
+    "ast_hash": "5f39b3dbe1460e363e17a858f67a91eb",
     "semantic_hash": ""
   },
   "src/domain/camera/analyzeTrackCameras.ts": {
@@ -960,9 +960,9 @@
     "semantic_hash": "29eeae1f17308c83062e8a7768c81396"
   },
   "src/domain/input/InputCommand.ts": {
-    "mtime": 1787024378.4043686,
-    "ast_hash": "589e70f213c427cdf232349b93581d11",
-    "semantic_hash": "589e70f213c427cdf232349b93581d11"
+    "mtime": 1787194650.9494402,
+    "ast_hash": "dcff5ce9b8f39a1bccb173045c29fae7",
+    "semantic_hash": ""
   },
   "src/domain/math/Spline.ts": {
     "mtime": 1786891083.0281308,
@@ -1030,8 +1030,8 @@
     "semantic_hash": ""
   },
   "src/domain/race/RaceField.ts": {
-    "mtime": 1787130877.0535362,
-    "ast_hash": "f1216fefffc9186661b5cb9ee1f4ab53",
+    "mtime": 1787194639.0531857,
+    "ast_hash": "280c36728118429b8caa81a2b44133cc",
     "semantic_hash": ""
   },
   "src/domain/race/RaceScore.ts": {
@@ -1065,13 +1065,13 @@
     "semantic_hash": ""
   },
   "src/domain/track/RampLaunch.ts": {
-    "mtime": 1787106416.7237585,
-    "ast_hash": "5ff9b862936d4559dc7a4cc1adc568e7",
+    "mtime": 1787194551.1227524,
+    "ast_hash": "882b557e4a6f12383988350592162a51",
     "semantic_hash": ""
   },
   "src/domain/track/RampZone.ts": {
-    "mtime": 1787129635.0427728,
-    "ast_hash": "889ae68a1ddabc3de43a292bfddc515d",
+    "mtime": 1787194541.981226,
+    "ast_hash": "af342e0c4d945a2592f57f397a632be7",
     "semantic_hash": ""
   },
   "src/domain/track/TrackCollision.ts": {
@@ -1100,8 +1100,8 @@
     "semantic_hash": ""
   },
   "src/domain/traps/analyzeTrackTraps.ts": {
-    "mtime": 1787129826.120566,
-    "ast_hash": "16f8f40bd5b431ace19091d37d707082",
+    "mtime": 1787195057.8016949,
+    "ast_hash": "6e26c95b825c8f5f55dcb91293977c3e",
     "semantic_hash": ""
   },
   "src/domain/traps/pickRaceTraps.ts": {
@@ -1175,9 +1175,9 @@
     "semantic_hash": "a55d051c2c82e5be2867937dcad647f5"
   },
   "src/domain/vehicle/TurboCharges.ts": {
-    "mtime": 1787024378.420507,
-    "ast_hash": "971cb47f13bd2cf5b89c9259b6b6978d",
-    "semantic_hash": "971cb47f13bd2cf5b89c9259b6b6978d"
+    "mtime": 1787195107.9447892,
+    "ast_hash": "0331d439eef333f1574f221d41fc6ff0",
+    "semantic_hash": ""
   },
   "src/domain/vehicle/Vehicle.ts": {
     "mtime": 1786891083.033947,
@@ -1215,13 +1215,13 @@
     "semantic_hash": "17b34a1e9fa48f8c5c1a4ed91c2fe4c7"
   },
   "src/main.ts": {
-    "mtime": 1787110330.6205437,
-    "ast_hash": "640835c38323f2af1a2b86a6a092d7f9",
+    "mtime": 1787194777.6816254,
+    "ast_hash": "2ab45ad09b99ea751bb11d42ff943aab",
     "semantic_hash": ""
   },
   "src/scenes/BootScene.ts": {
-    "mtime": 1787162379.1376672,
-    "ast_hash": "c9b6ee70ba4647a991bb260d8e8df66b",
+    "mtime": 1787194956.6487007,
+    "ast_hash": "97753c34a982ca77e8f2fd29281eddb2",
     "semantic_hash": ""
   },
   "src/scenes/GarageScene.ts": {
@@ -1235,8 +1235,8 @@
     "semantic_hash": "9a3e94e6c5acd9ec7d473194b4bd95dd"
   },
   "src/scenes/HudScene.ts": {
-    "mtime": 1787130180.1669035,
-    "ast_hash": "fbe2ab1ba8be5dc93d19abe10af59f92",
+    "mtime": 1787194663.4977593,
+    "ast_hash": "7d8d661d29c730a862926dfe6d3d1a5b",
     "semantic_hash": ""
   },
   "src/scenes/PauseScene.ts": {
@@ -1250,8 +1250,8 @@
     "semantic_hash": ""
   },
   "src/scenes/RaceScene.ts": {
-    "mtime": 1787160818.1930428,
-    "ast_hash": "0abb9d6262ec1c4fe4ea0ea73c46891e",
+    "mtime": 1787194973.5103524,
+    "ast_hash": "44b24f8bbefda487f4779a04330d1f35",
     "semantic_hash": ""
   },
   "src/scenes/ResultsScene.ts": {
@@ -1275,8 +1275,8 @@
     "semantic_hash": "9b4861d1da6e1e8942d02a2b8f6680f1"
   },
   "src/scenes/sceneKeys.ts": {
-    "mtime": 1787110330.6245003,
-    "ast_hash": "a0ee28071fa3e7b5d56556852057f287",
+    "mtime": 1787194954.8330994,
+    "ast_hash": "db89a45c23898f04f00f2faa0d9515f8",
     "semantic_hash": ""
   },
   "src/scenes/selectData.ts": {
@@ -1410,8 +1410,8 @@
     "semantic_hash": ""
   },
   "tests/data/ControlList.test.ts": {
-    "mtime": 1787160298.1107032,
-    "ast_hash": "2399af8c6d2192845c3442383a8aa058",
+    "mtime": 1787189642.5172942,
+    "ast_hash": "4825fbac73a8372b5b29716ae06b2346",
     "semantic_hash": ""
   },
   "tests/data/DriverCards.test.ts": {
@@ -1430,9 +1430,9 @@
     "semantic_hash": "48851ee2ce33a38ef5994aaa29f54554"
   },
   "tests/data/PlanetThemes.test.ts": {
-    "mtime": 1787024378.4579248,
-    "ast_hash": "61e56f595c2a868d5af910eff57b2687",
-    "semantic_hash": "61e56f595c2a868d5af910eff57b2687"
+    "mtime": 1787194675.2968488,
+    "ast_hash": "235914b0298c41ad46eca111d989cca6",
+    "semantic_hash": ""
   },
   "tests/data/PubBackgrounds.test.ts": {
     "mtime": 1787024378.459622,
@@ -1540,8 +1540,8 @@
     "semantic_hash": "d14de58ecc26cd5b33a652eb73c8bc54"
   },
   "tests/domain/OnTrackStep.test.ts": {
-    "mtime": 1787110330.6263094,
-    "ast_hash": "aac9df43fe88db9f709dca0a672d6715",
+    "mtime": 1787194724.5103917,
+    "ast_hash": "942159618f21083d7fc1c70547dc05aa",
     "semantic_hash": ""
   },
   "tests/domain/PaceDriver.test.ts": {
@@ -1560,8 +1560,8 @@
     "semantic_hash": ""
   },
   "tests/domain/RaceField.test.ts": {
-    "mtime": 1787162753.9977758,
-    "ast_hash": "c5e9c387e939d7466bbbd8919a1ee15a",
+    "mtime": 1787194708.1977112,
+    "ast_hash": "0505fc4d898a37cb2dca02408293d4c2",
     "semantic_hash": ""
   },
   "tests/domain/RaceScore.test.ts": {
@@ -1575,8 +1575,8 @@
     "semantic_hash": "dcf06c3c66ed9cbedbff765740febf2b"
   },
   "tests/domain/RampLaunch.test.ts": {
-    "mtime": 1787129757.5423362,
-    "ast_hash": "f86a21045ff6a73a3e2f526b998f4e9b",
+    "mtime": 1787195015.4516287,
+    "ast_hash": "c965dad4247014532e8540afb2f74bcf",
     "semantic_hash": ""
   },
   "tests/domain/RivalAgent.test.ts": {
@@ -1620,14 +1620,14 @@
     "semantic_hash": "df72bc7e42844d42b70ce69dc33c23ef"
   },
   "tests/domain/TrapRules.test.ts": {
-    "mtime": 1787129852.4866438,
-    "ast_hash": "193ed36eda366652bac451f09b095c0b",
+    "mtime": 1787195065.3774188,
+    "ast_hash": "419e20e7fcbd50f1c0a4c98dd5356dbc",
     "semantic_hash": ""
   },
   "tests/domain/TurboCharges.test.ts": {
-    "mtime": 1787024378.4828994,
-    "ast_hash": "e0cc8385b1369dc802179bd86041cf4f",
-    "semantic_hash": "e0cc8385b1369dc802179bd86041cf4f"
+    "mtime": 1787194673.3480136,
+    "ast_hash": "c8794de0ae5479980e057c7b11486475",
+    "semantic_hash": ""
   },
   "tests/domain/Wallet.test.ts": {
     "mtime": 1787024378.4831896,
@@ -1685,8 +1685,8 @@
     "semantic_hash": "8dbd823078999bee6ba33379b96c932f"
   },
   "tests/domain/analyzeTrackCameras.test.ts": {
-    "mtime": 1787110330.6274035,
-    "ast_hash": "cb4a11cef3470bb281b17e1072d13a8b",
+    "mtime": 1787195108.06936,
+    "ast_hash": "a6eb5124e325dfef9bd98e5e24066742",
     "semantic_hash": ""
   },
   "tests/domain/innerWallPark.test.ts": {
@@ -1695,8 +1695,8 @@
     "semantic_hash": "1f41d43b5e3acaab028d754546dfc37b"
   },
   "tests/domain/zoomToFitFraction.test.ts": {
-    "mtime": 1787159977.3168817,
-    "ast_hash": "f7a5944bc2c70c5d7ef51d61dc6e9c3b",
+    "mtime": 1787191622.1051722,
+    "ast_hash": "9a5c06085e2a871bac2be90662c1d27a",
     "semantic_hash": ""
   },
   "tests/spritegen/golden-sprites.test.ts": {
@@ -2030,8 +2030,8 @@
     "semantic_hash": "92b67e4807f611eabcd64ea831d2aae1"
   },
   "vercel.json": {
-    "mtime": 1787110330.6292574,
-    "ast_hash": "0710651f4999f5397e4f5284ce3a262f",
+    "mtime": 1787163090.3257525,
+    "ast_hash": "6beb24a5a6d55df960a51ba40475172b",
     "semantic_hash": ""
   },
   "vite.config.ts": {
@@ -2065,13 +2065,13 @@
     "semantic_hash": ""
   },
   ".cursor/skills/game-map-traps/SKILL.md": {
-    "mtime": 1787129825.17175,
-    "ast_hash": "65a7827c03786f91cec3b1460afbb84b",
+    "mtime": 1787195067.8121197,
+    "ast_hash": "993ea53fc50b5cd7ce2bd344b1297175",
     "semantic_hash": ""
   },
   ".cursor/skills/game-map-traps/reference.md": {
-    "mtime": 1787129833.8209367,
-    "ast_hash": "497bdedf93e59c53c18375a6582a88f9",
+    "mtime": 1787195065.7292552,
+    "ast_hash": "81d9a7c2551736af3d57e1469a93945d",
     "semantic_hash": ""
   },
   ".cursor/skills/game-sprint-sprites-2d/SKILL.md": {
@@ -2175,8 +2175,8 @@
     "semantic_hash": ""
   },
   "docs/T-050-arcade-ramps.md": {
-    "mtime": 1787031460.31057,
-    "ast_hash": "4fc1be0be6b7a0be0e512903b55c9960",
+    "mtime": 1787195007.3137543,
+    "ast_hash": "b2f8dfbe9dff308f6f41226287bc00fc",
     "semantic_hash": ""
   },
   "docs/art-briefs/planets.md": {
@@ -3575,8 +3575,8 @@
     "semantic_hash": ""
   },
   "src/adapters/audio/RadioJingle.ts": {
-    "mtime": 1787110330.6932788,
-    "ast_hash": "f598bc10ea9455e79ac3e29412e87cb2",
+    "mtime": 1787194775.311837,
+    "ast_hash": "f540411ed34be6544312978e000c02dc",
     "semantic_hash": ""
   },
   "src/data/cards/OriginComic.ts": {
@@ -3585,8 +3585,8 @@
     "semantic_hash": ""
   },
   "src/data/tracks/bogmire-deep-1.track.ts": {
-    "mtime": 1787110330.6946535,
-    "ast_hash": "3a1febb028ae13c1f761c2fd3a90e961",
+    "mtime": 1787194560.9180226,
+    "ast_hash": "59aadfbca0f6b489a326b5df5b847c42",
     "semantic_hash": ""
   },
   "src/domain/race/CareerGrid.ts": {
@@ -3605,8 +3605,8 @@
     "semantic_hash": ""
   },
   "tests/data/V2Sprint.test.ts": {
-    "mtime": 1787159950.8164082,
-    "ast_hash": "cb655d9b17154e428c74e8c8b0ba1bcb",
+    "mtime": 1787194724.510386,
+    "ast_hash": "46eba47f6b5d819b7c4cdd84ea45318e",
     "semantic_hash": ""
   },
   "tests/domain/CareerGrid.test.ts": {
@@ -5162,6 +5162,81 @@
   "public/matrix_car/INDEX.md": {
     "mtime": 1787159341.750091,
     "ast_hash": "8269c5e28467ee1c7fa2bc19cdb31d6d",
+    "semantic_hash": ""
+  },
+  "src/domain/camera/WatchCamera.ts": {
+    "mtime": 1787191619.086705,
+    "ast_hash": "a60d2ac4f2fdd82058f34ce05c95d8cd",
+    "semantic_hash": ""
+  },
+  "tests/domain/WatchCamera.test.ts": {
+    "mtime": 1787191621.5488966,
+    "ast_hash": "4aba36814e825a101bca95b22bc91768",
+    "semantic_hash": ""
+  },
+  "src/adapters/render/CrowdView.ts": {
+    "mtime": 1787195124.2240794,
+    "ast_hash": "7464e02c93810abede734889173b4f40",
+    "semantic_hash": ""
+  },
+  "src/domain/crowd/CrowdSlots.ts": {
+    "mtime": 1787195124.5398407,
+    "ast_hash": "3692ad842990bd2802db47c3060c9fbb",
+    "semantic_hash": ""
+  },
+  "tests/adapters/AudioPrefs.test.ts": {
+    "mtime": 1787194751.2200232,
+    "ast_hash": "fb66c0ebf3d3600bd7cb1f9803a4845e",
+    "semantic_hash": ""
+  },
+  "tests/domain/CrowdSlots.test.ts": {
+    "mtime": 1787194864.9091403,
+    "ast_hash": "1e7825c7abbcd47c61012d452c5f90e4",
+    "semantic_hash": ""
+  },
+  "tools/art/generate-crowd.ts": {
+    "mtime": 1787195135.2659075,
+    "ast_hash": "6f852baeda458ddcfcfdd9e40c6caa7f",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/game-track-author/SKILL.md": {
+    "mtime": 1787195071.078228,
+    "ast_hash": "16a082f6e27fac7c6e3d317302bf3601",
+    "semantic_hash": ""
+  },
+  "public/assets/crowd/cheer-idle.png": {
+    "mtime": 1787195034.4146233,
+    "ast_hash": "0db0a6881506a1eafa7aab559f630502",
+    "semantic_hash": ""
+  },
+  "public/assets/crowd/cheer-wave.png": {
+    "mtime": 1787195034.4149585,
+    "ast_hash": "1c7cf86fdd98cefc70bfad72c73deed6",
+    "semantic_hash": ""
+  },
+  "public/assets/crowd/flasher-flash.png": {
+    "mtime": 1787195034.4154272,
+    "ast_hash": "c604814d698c32c1b0d0d7dac8aa55bc",
+    "semantic_hash": ""
+  },
+  "public/assets/crowd/flasher-idle.png": {
+    "mtime": 1787195034.4151933,
+    "ast_hash": "3c9bd8486dd394d1c0591aebb7fc8f35",
+    "semantic_hash": ""
+  },
+  "public/assets/crowd/piriguete.png": {
+    "mtime": 1787195034.4135091,
+    "ast_hash": "5dce5bb8dfa21a6b6a9de62bba033ad2",
+    "semantic_hash": ""
+  },
+  "public/assets/crowd/punk.png": {
+    "mtime": 1787195034.413092,
+    "ast_hash": "0930028ee1c5724630f143cc205859ad",
+    "semantic_hash": ""
+  },
+  "public/assets/crowd/rock.png": {
+    "mtime": 1787195034.4124923,
+    "ast_hash": "77045a923d51d14b01c46b2337399ad8",
     "semantic_hash": ""
   }
 }

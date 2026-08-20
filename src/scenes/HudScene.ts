@@ -107,6 +107,8 @@ export class HudScene extends Phaser.Scene {
   private timeText!: Phaser.GameObjects.Text;
   private loadoutIcons: Phaser.GameObjects.Sprite[] = [];
   private loadoutCounts: Phaser.GameObjects.Text[] = [];
+  private nitroTrack!: Phaser.GameObjects.Rectangle;
+  private nitroFill!: Phaser.GameObjects.Rectangle;
   private railPlate!: Phaser.GameObjects.Rectangle;
   private countdownText!: Phaser.GameObjects.Text;
   private podiumPlate!: Phaser.GameObjects.Rectangle;
@@ -148,6 +150,15 @@ export class HudScene extends Phaser.Scene {
     this.loadoutCounts = Array.from({ length: LOADOUT_SLOT_COUNT }, () =>
       this.add.text(0, 0, '0', this.loadoutCountStyle()).setOrigin(0, 0.5).setDepth(HUD_DEPTH),
     );
+    this.nitroTrack = this.add
+      .rectangle(0, 0, COUNT_WIDTH, 10, 0x101014, 0.9)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(2, 0xf2f2f2, 0.85)
+      .setDepth(HUD_DEPTH);
+    this.nitroFill = this.add
+      .rectangle(0, 0, COUNT_WIDTH, 8, 0xffe066)
+      .setOrigin(0, 0.5)
+      .setDepth(HUD_DEPTH + 1);
 
     const railHeight = ICON_SIZE + RAIL_PAD * 2;
     this.railPlate = this.add
@@ -404,25 +415,38 @@ export class HudScene extends Phaser.Scene {
   }
 
   /**
-   * Five glance slots: Nitro, Missile, Mine, Oil, Jump. Count sits beside the
-   * icon. Empty stock dims the icon; turbo tints gold without changing size.
+   * Five glance slots: Nitro, Missile, Mine, Oil, Jump. Nitro is a fill bar;
+   * the others keep a count. Empty stock dims the icon; burning nitro tints gold.
    */
   private applyLoadout(readout: HudReadout): void {
+    const capacity = Math.max(
+      1,
+      Number.isFinite(readout.turboCapacity) ? readout.turboCapacity! : 10,
+    );
+    const tank = Math.max(0, Number.isFinite(readout.turbos) ? readout.turbos! : 0);
+    const fraction = Math.min(1, tank / capacity);
     const counts = [
-      Math.max(0, Number.isFinite(readout.turbos) ? readout.turbos! : 0),
+      tank,
       Math.max(0, Number.isFinite(readout.ammo) ? readout.ammo : 0),
       Math.max(0, Number.isFinite(readout.mines) ? readout.mines! : 0),
       Math.max(0, Number.isFinite(readout.oil) ? readout.oil! : 0),
       Math.max(0, Number.isFinite(readout.jumps) ? readout.jumps! : 0),
     ];
+    this.loadoutCounts[0]?.setVisible(false);
+    this.nitroFill.width = Math.max(1, (COUNT_WIDTH - 4) * fraction);
+    this.nitroFill.setFillStyle(readout.turboActive === true ? 0xffe066 : 0xd8dae2);
+    this.nitroTrack.setAlpha(tank <= 0 ? EMPTY_ICON_ALPHA : 0.95);
+    this.nitroFill.setAlpha(tank <= 0 ? 0.2 : 1);
     for (let index = 0; index < LOADOUT_SLOT_COUNT; index += 1) {
-      const count = Math.round(counts[index] ?? 0);
-      this.loadoutCounts[index]?.setText(String(count).padStart(2, ' '));
+      if (index > 0) {
+        const count = Math.round(counts[index] ?? 0);
+        this.loadoutCounts[index]?.setText(String(count).padStart(2, ' '));
+      }
       const icon = this.loadoutIcons[index];
       if (icon === undefined) {
         continue;
       }
-      const empty = count <= 0;
+      const empty = index === 0 ? tank <= 0 : (counts[index] ?? 0) <= 0;
       icon.setAlpha(empty ? EMPTY_ICON_ALPHA : 0.95);
       if (index === 0 && readout.turboActive === true) {
         icon.setTint(0xffe066);
@@ -474,6 +498,11 @@ export class HudScene extends Phaser.Scene {
       icon.setPosition(slotX + ICON_SIZE / 2, iconY);
       icon.setDisplaySize(ICON_SIZE, ICON_SIZE);
       this.loadoutCounts[index]?.setPosition(slotX + ICON_SIZE + ICON_COUNT_GAP, iconY);
+      if (index === 0) {
+        const barX = slotX + ICON_SIZE + ICON_COUNT_GAP;
+        this.nitroTrack.setPosition(barX, iconY);
+        this.nitroFill.setPosition(barX + 2, iconY);
+      }
     });
 
     // Analog cluster: bottom-right, the only free corner — top corners hold

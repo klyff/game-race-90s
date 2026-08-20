@@ -1,4 +1,4 @@
-import { isAudioMuted, setAudioMuted } from './AudioPrefs.ts';
+import { isAudioMuted, onAudioMuteChange, setAudioMuted } from './AudioPrefs.ts';
 import { BedPlayer } from './BedPlayer.ts';
 import { pickLoadedMusicBed } from './BedRegistry.ts';
 import { musicBedUrl } from '../../data/audio/MusicBeds.ts';
@@ -73,6 +73,7 @@ export class RaceAudio {
   private idleShutoff: EngineIdleShutoffState = ENGINE_IDLE_SHUTOFF_INITIAL;
   private muted = isAudioMuted();
   private lastRpmFraction = 0.15;
+  private readonly unmuteFocus: () => void;
 
   /**
    * `score` is the current world's theme (T-040) — optional so tests and any
@@ -88,6 +89,9 @@ export class RaceAudio {
     this.baseMasterVolume = masterVolume;
 
     this.context = createAudioContext();
+    this.unmuteFocus = onAudioMuteChange(muted => {
+      this.applyMute(muted);
+    });
     if (this.context === null) return;
 
     this.master = this.context.createGain();
@@ -236,10 +240,14 @@ export class RaceAudio {
     this.explosion?.play(intensity);
   }
 
-  /** Silences everything without tearing the graph down, for a mute key. */
+  /** Player mute (M / pause). Focus mute is applied separately. */
   setMuted(muted: boolean): void {
-    this.muted = muted;
     setAudioMuted(muted);
+    this.applyMute(isAudioMuted());
+  }
+
+  private applyMute(muted: boolean): void {
+    this.muted = muted;
     this.bed?.setMuted(muted);
     this.music?.setMuted(muted);
     this.narrator.setMuted(muted);
@@ -285,6 +293,7 @@ export class RaceAudio {
   }
 
   destroy(): void {
+    this.unmuteFocus();
     this.engine?.stop();
     this.skid?.stop();
     this.brake?.stop();

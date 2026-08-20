@@ -395,8 +395,10 @@ export class RaceField {
         integrity: createCarIntegrity(),
         inventory: createWeaponInventory(perkProfile(entry.perk)),
         jumps: createJumpCharges(),
-        turbos: createTurboCharges(),
-        turboRemaining: 0,
+        turbos: createNitroTank(),
+        turboCapacity: nitroCapacityForTier(0),
+        turboFillSeconds: nitroFillSecondsForTier(0),
+        turboBurning: false,
         pendingImpactSpeed: 0,
         explodedThisStep: false,
         respawnedThisStep: false,
@@ -554,8 +556,8 @@ export class RaceField {
       racer.integrity = createCarIntegrity();
       racer.inventory = createWeaponInventory(racer.perk);
       racer.jumps = createJumpCharges();
-      racer.turbos = createTurboCharges();
-      racer.turboRemaining = 0;
+      racer.turbos = createNitroTank();
+      racer.turboBurning = false;
       racer.pendingImpactSpeed = 0;
       racer.explodedThisStep = false;
       racer.respawnedThisStep = false;
@@ -707,15 +709,21 @@ export class RaceField {
         racer.worldAdvantage,
         this.planetId,
       );
-      if (racer.turboRemaining > 0) {
-        racer.turboRemaining = Math.max(0, racer.turboRemaining - stepSeconds);
-      }
+      const nitro = stepNitro(
+        racer.turbos,
+        racer.turboCapacity,
+        racer.turboFillSeconds,
+        command.boost,
+        stepSeconds,
+      );
+      racer.turbos = nitro.tank;
+      racer.turboBurning = nitro.burning;
       const stats = drivingStats(
         worlded,
         racer.perk,
         command.brake > 0,
         draft,
-        racer.turboRemaining > 0,
+        racer.turboBurning,
       );
       const step = stepVehicleOnTrack(
         racer.state,
@@ -727,7 +735,7 @@ export class RaceField {
         this.projectionWindow,
         stepSeconds,
         surface => perkSurface(surface, racer.perk),
-        racer.turboRemaining > 0,
+        racer.turboBurning,
       );
 
       racer.state = step.state;
@@ -988,7 +996,6 @@ export class RaceField {
       if (after > before) {
         racer.inventory = refillWeaponInventory(racer.inventory, racer.stats, racer.perk);
         racer.jumps = refillJumpCharges(racer.jumps);
-        racer.turbos = refillTurboCharges(racer.turbos);
       }
     });
   }
@@ -1046,15 +1053,9 @@ export class RaceField {
   }
 
   private resolveTurboCommand(racer: RacerRuntime, command: InputCommand): void {
-    if (!command.boost || racer.turboRemaining > 0) {
+    if (!command.boost || racer.turbos <= 0) {
       return;
     }
-    const next = consumeTurbo(racer.turbos);
-    if (next === null) {
-      return;
-    }
-    racer.turbos = next;
-    racer.turboRemaining = TURBO_DURATION_SECONDS;
     if (isAirborne(racer.state) && racer.pendingRampFlight && !racer.airTurboKicked) {
       racer.state = applyAirTurboKick(racer.state);
       racer.airTurboKicked = true;

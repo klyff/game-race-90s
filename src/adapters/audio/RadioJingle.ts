@@ -1,3 +1,4 @@
+import { isAudioMuted } from './AudioPrefs.ts';
 import { noteFrequency } from './MusicScore.ts';
 
 /** Short radio sting when the last car takes the flag. */
@@ -31,6 +32,9 @@ function createContext(): AudioContext | null {
  * Missing Web Audio is silent, not fatal.
  */
 export function playRadioJingle(): number {
+  if (isAudioMuted()) {
+    return RADIO_JINGLE_DURATION_SECONDS;
+  }
   const ctx = createContext();
   if (ctx === null) {
     return RADIO_JINGLE_DURATION_SECONDS;

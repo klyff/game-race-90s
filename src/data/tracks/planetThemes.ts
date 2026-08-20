@@ -43,7 +43,7 @@ export interface PlanetTheme {
   /**
    * How the racing surface is drawn. `asphalt` is a flat ribbon with grooves
    * and grain — shadows stay painted, they never read as raceable ramps.
-   * `rock` is the packed-slab bed the later worlds use.
+   * `rock` is leftover packed-slab code; all campaign worlds use asphalt.
    */
   readonly surface: 'asphalt' | 'rock';
 }

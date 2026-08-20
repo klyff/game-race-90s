@@ -89,7 +89,7 @@ describe('analyzeTrackTraps', () => {
       expect(Math.abs(slot.lateral)).toBeLessThan(half - puck + 1e-6);
       expect(Math.abs(slot.lateral)).toBeGreaterThanOrEqual(5);
       const fromLine = Math.abs(spline.signedDelta(thunderBasin.startLineDistance, slot.distance));
-      expect(fromLine).toBeGreaterThanOrEqual(40);
+      expect(fromLine).toBeGreaterThanOrEqual(200);
       for (const zone of thunderBasin.rampZones ?? []) {
         const fromStart = spline.signedDelta(zone.triggerDistance - 8, slot.distance);
         const window = zone.triggerLength + 16;

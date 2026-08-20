@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { setFocusMuted } from './adapters/audio/AudioPrefs.ts';
 import { BootScene } from './scenes/BootScene.ts';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene.ts';
 import { GarageScene } from './scenes/GarageScene.ts';
@@ -68,8 +69,24 @@ if (import.meta.env.MODE !== 'production') {
   (window as unknown as { game?: Phaser.Game }).game = game;
 }
 
+function syncFocusMute(): void {
+  const hidden = document.hidden === true;
+  const unfocused = typeof document.hasFocus === 'function' && !document.hasFocus();
+  setFocusMuted(hidden || unfocused);
+}
+
 game.events.on(Phaser.Core.Events.HIDDEN, () => {
   game.loop.wake();
+  setFocusMuted(true);
+});
+game.events.on(Phaser.Core.Events.VISIBLE, () => {
+  syncFocusMute();
+});
+game.events.on(Phaser.Core.Events.BLUR, () => {
+  setFocusMuted(true);
+});
+game.events.on(Phaser.Core.Events.FOCUS, () => {
+  syncFocusMute();
 });
 
 const canvas = game.canvas;

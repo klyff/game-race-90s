@@ -14,7 +14,7 @@ import { traceLayer } from './LayerTrace.ts';
  * Draws the whole circuit once, as flat static geometry, into a single
  * `Phaser.GameObjects.Graphics`. World 1 (Thunder Basin) is coral asphalt
  * with longitudinal grooves and grain — painted shadows, never a channel
- * that reads as a raceable ramp. Later worlds keep the carved rock bed.
+ * that reads as a raceable ramp. Every world uses this asphalt recipe.
  * There is no dashed centreline.
  *
  * The track never changes shape after authoring, so everything is built once

@@ -114,8 +114,7 @@ export class KeyboardDriver {
       dropOil: Phaser.Input.Keyboard.JustDown(this.keyOil),
       dropMine: Phaser.Input.Keyboard.JustDown(this.keyMine),
       jump: Phaser.Input.Keyboard.JustDown(this.keyJump),
-      // isDown, not JustDown: the sim already refuses a second charge while
-      // turboRemaining > 0, and a tap during the lights is otherwise lost.
+      // isDown, not JustDown: the gauge burns while held.
       boost: this.keyTurbo.isDown || this.keyTurboAlt.isDown,
     };
   }

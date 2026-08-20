@@ -500,7 +500,7 @@ describe('RaceField — ramp landings (T-050)', () => {
     player.lateralOffset = lateral;
   }
 
-  it('a 45° hot landing costs 4% before armor and stuns for 1s', () => {
+  it('a 20° hot landing costs 4% before armor and stuns for 1s', () => {
     const field = rampField();
     const player = field.player;
     const zone = track.rampZones![0]!;
@@ -520,7 +520,7 @@ describe('RaceField — ramp landings (T-050)', () => {
     expect(player.turbos).toBe(turbos);
   });
 
-  it('15°/30° ramp landings and hops do not pay the landing tax', () => {
+  it('10° ramp landings and hops do not pay the landing tax', () => {
     const field = rampField();
     const player = field.player;
     const mid = track.rampZones![1]!;

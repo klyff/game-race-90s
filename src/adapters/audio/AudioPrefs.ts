@@ -2,6 +2,9 @@
  * Session-wide mute and narrator locale.
  * Splash, results, pause and race all read the same flags.
  * Locale persists in localStorage; mute stays in memory for the tab.
+ *
+ * Two mute layers: the player's M key / pause menu, and window/tab focus.
+ * Effective mute is OR. Restoring focus never clears a user mute.
  */
 
 import {
@@ -12,15 +15,48 @@ import {
 
 const LOCALE_KEY = 'race90s.narratorLocale';
 
-let muted = false;
+let userMuted = false;
+let focusMuted = false;
+const listeners = new Set<(muted: boolean) => void>();
+
 let locale: NarratorLocale = readStoredLocale();
 
 export function isAudioMuted(): boolean {
-  return muted;
+  return userMuted || focusMuted;
 }
 
+export function isUserAudioMuted(): boolean {
+  return userMuted;
+}
+
+export function isFocusAudioMuted(): boolean {
+  return focusMuted;
+}
+
+/** Player mute (M key / pause). Does not touch focus mute. */
 export function setAudioMuted(next: boolean): void {
-  muted = next;
+  userMuted = next === true;
+  notifyMute();
+}
+
+/** Tab hidden or window blurred. Does not touch the player's mute. */
+export function setFocusMuted(next: boolean): void {
+  focusMuted = next === true;
+  notifyMute();
+}
+
+export function onAudioMuteChange(callback: (muted: boolean) => void): () => void {
+  listeners.add(callback);
+  return () => {
+    listeners.delete(callback);
+  };
+}
+
+function notifyMute(): void {
+  const muted = isAudioMuted();
+  for (const listener of listeners) {
+    listener(muted);
+  }
 }
 
 export function getNarratorLocale(): NarratorLocale {

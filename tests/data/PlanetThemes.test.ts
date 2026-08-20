@@ -36,17 +36,14 @@ describe('planetThemes', () => {
     }
   });
 
-  it('Thunder Basin is coral asphalt; later worlds stay rock', () => {
+  it('every world is asphalt like Basin I; Basin stays coral', () => {
     const basin = themeForPlanetId('thunder-basin');
     expect(basin.surface).toBe('asphalt');
     expect((basin.tarmac >> 16) & 0xff).toBeGreaterThan(180);
     expect((basin.tarmac >> 8) & 0xff).toBeGreaterThan(80);
     expect(basin.tarmac & 0xff).toBeLessThan(140);
     for (const theme of PLANET_THEMES) {
-      if (theme.planetId === 'thunder-basin') {
-        continue;
-      }
-      expect(theme.surface).toBe('rock');
+      expect(theme.surface).toBe('asphalt');
     }
   });
 });

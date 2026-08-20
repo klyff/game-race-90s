@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   AIR_TURBO_HEIGHT_BONUS,
   AIR_TURBO_RANGE_BONUS,
-  HOT_45_HEIGHT_BONUS,
-  HOT_45_RANGE_BONUS,
+  HOT_STEEP_HEIGHT_BONUS,
+  HOT_STEEP_RANGE_BONUS,
   HOT_APPROACH_FRAC,
   HOT_FLAT_HEIGHT_BONUS,
   HOT_FLAT_RANGE_BONUS,
@@ -54,15 +54,14 @@ const STATS: VehicleStats = {
   aimRadius: 3.5,
 };
 
-const ZONE_45: RampZone = {
+const ZONE_20: RampZone = {
   triggerDistance: 200,
   triggerLength: 12,
   launchSpeed: 12,
-  inclineDegrees: 45,
+  inclineDegrees: 20,
 };
 
-const ZONE_30: RampZone = { ...ZONE_45, inclineDegrees: 30, launchSpeed: 13 };
-const ZONE_15: RampZone = { ...ZONE_45, inclineDegrees: 15, launchSpeed: 11 };
+const ZONE_10: RampZone = { ...ZONE_20, inclineDegrees: 10, launchSpeed: 11 };
 
 const THROTTLE: InputCommand = { ...IDLE_INPUT, throttle: 1 };
 
@@ -83,29 +82,24 @@ describe('RampLaunch table', () => {
     expect(RAMP_LANDING_DAMAGE).toBe(0.04);
     expect(HOT_APPROACH_FRAC).toBe(0.85);
     expect(TURBO_SPEED_BONUS).toBe(0.35);
-    expect(minClimbFraction(45)).toBe(0.45);
-    expect(minClimbFraction(30)).toBe(0.3);
-    expect(minClimbFraction(15)).toBe(0.15);
-    expect(rampArcadeBonus(45, true)).toEqual({
-      height: HOT_45_HEIGHT_BONUS,
-      range: HOT_45_RANGE_BONUS,
+    expect(minClimbFraction(20)).toBe(0.2);
+    expect(minClimbFraction(10)).toBe(0.1);
+    expect(rampArcadeBonus(20, true)).toEqual({
+      height: HOT_STEEP_HEIGHT_BONUS,
+      range: HOT_STEEP_RANGE_BONUS,
     });
-    expect(rampArcadeBonus(30, true)).toEqual({
+    expect(rampArcadeBonus(10, true)).toEqual({
       height: HOT_FLAT_HEIGHT_BONUS,
       range: HOT_FLAT_RANGE_BONUS,
     });
-    expect(rampArcadeBonus(15, true)).toEqual({
-      height: HOT_FLAT_HEIGHT_BONUS,
-      range: HOT_FLAT_RANGE_BONUS,
-    });
-    expect(rampArcadeBonus(45, false)).toEqual({ height: 0, range: 0 });
+    expect(rampArcadeBonus(20, false)).toEqual({ height: 0, range: 0 });
   });
 });
 
 describe('resolveRampContact', () => {
   it('launches a full-throttle turbo car higher and farther than the same car at 60% cold', () => {
-    const hot = resolveRampContact(atSpeed(0.95), ZONE_45, STATS, THROTTLE, true);
-    const cold = resolveRampContact(atSpeed(0.6), ZONE_45, STATS, THROTTLE, false);
+    const hot = resolveRampContact(atSpeed(0.95), ZONE_20, STATS, THROTTLE, true);
+    const cold = resolveRampContact(atSpeed(0.6), ZONE_20, STATS, THROTTLE, false);
     expect(hot.kind).toBe('launch');
     expect(cold.kind).toBe('launch');
     if (hot.kind !== 'launch' || cold.kind !== 'launch') {
@@ -118,8 +112,8 @@ describe('resolveRampContact', () => {
     );
   });
 
-  it('rejects a 45° ramp below 45% maxSpeed with a backward shove', () => {
-    const result = resolveRampContact(atSpeed(0.4), ZONE_45, STATS, THROTTLE, true);
+  it('rejects a 20° ramp below 20% maxSpeed with a backward shove', () => {
+    const result = resolveRampContact(atSpeed(0.15), ZONE_20, STATS, THROTTLE, true);
     expect(result.kind).toBe('reject');
     expect(result.state.height).toBe(0);
     expect(result.state.verticalVelocity).toBe(0);
@@ -128,49 +122,48 @@ describe('resolveRampContact', () => {
 
   it('rejects when the contact sum cannot launch both axes', () => {
     const reverse: InputCommand = { ...IDLE_INPUT, reverse: 1 };
-    const result = resolveRampContact(atSpeed(-0.5), ZONE_45, STATS, reverse, false);
+    const result = resolveRampContact(atSpeed(-0.5), ZONE_20, STATS, reverse, false);
     expect(result.kind).toBe('reject');
     expect(result.state.height).toBe(0);
   });
 
-  it('rejects 30° below 30% and 15° below 15%', () => {
-    expect(resolveRampContact(atSpeed(0.25), ZONE_30, STATS, THROTTLE, false).kind).toBe('reject');
-    expect(resolveRampContact(atSpeed(0.1), ZONE_15, STATS, THROTTLE, false).kind).toBe('reject');
+  it('rejects 10° below 10%', () => {
+    expect(resolveRampContact(atSpeed(0.05), ZONE_10, STATS, THROTTLE, false).kind).toBe('reject');
   });
 
   it('applies only the car sum when above the climb gate but not hot', () => {
-    const result = resolveRampContact(atSpeed(0.6), ZONE_45, STATS, THROTTLE, false);
+    const result = resolveRampContact(atSpeed(0.6), ZONE_20, STATS, THROTTLE, false);
     expect(result.kind).toBe('launch');
     if (result.kind !== 'launch') {
       return;
     }
     expect(result.hot).toBe(false);
     const force = carForceAtContact(atSpeed(0.6), STATS, THROTTLE, false);
-    const vertRaw = ZONE_45.launchSpeed + LAUNCH_CAR_SCALE * force;
+    const vertRaw = ZONE_20.launchSpeed + LAUNCH_CAR_SCALE * force;
     const horizRaw = STATS.maxSpeed * 0.6 * (1 + LAUNCH_HORIZ_SCALE * Math.max(0, force));
     expect(result.state.verticalVelocity).toBeCloseTo(vertRaw * JUMP_HEIGHT_SCALE, 5);
     expect(length(result.state.velocity)).toBeCloseTo(horizRaw, 5);
   });
 
-  it('multiplies a 45° hot launch by the 1.50 height / 1.25 range table', () => {
-    const result = resolveRampContact(atSpeed(0.95), ZONE_45, STATS, THROTTLE, true);
+  it('multiplies a 20° hot launch by the 1.50 height / 1.25 range table', () => {
+    const result = resolveRampContact(atSpeed(0.95), ZONE_20, STATS, THROTTLE, true);
     expect(result.kind).toBe('launch');
     if (result.kind !== 'launch') {
       return;
     }
     expect(result.hot).toBe(true);
     const force = carForceAtContact(atSpeed(0.95), STATS, THROTTLE, true);
-    const vertRaw = ZONE_45.launchSpeed + LAUNCH_CAR_SCALE * force;
+    const vertRaw = ZONE_20.launchSpeed + LAUNCH_CAR_SCALE * force;
     const horizRaw = STATS.maxSpeed * 0.95 * (1 + LAUNCH_HORIZ_SCALE * Math.max(0, force));
     expect(result.state.verticalVelocity).toBeCloseTo(
-      vertRaw * JUMP_HEIGHT_SCALE * Math.sqrt(1 + HOT_45_HEIGHT_BONUS),
+      vertRaw * JUMP_HEIGHT_SCALE * Math.sqrt(1 + HOT_STEEP_HEIGHT_BONUS),
       5,
     );
-    expect(length(result.state.velocity)).toBeCloseTo(horizRaw * (1 + HOT_45_RANGE_BONUS), 5);
+    expect(length(result.state.velocity)).toBeCloseTo(horizRaw * (1 + HOT_STEEP_RANGE_BONUS), 5);
   });
 
-  it('multiplies hot 15° and 30° by 1.10 height / 1.40 range', () => {
-    for (const zone of [ZONE_15, ZONE_30]) {
+  it('multiplies hot 10° by 1.10 height / 1.40 range', () => {
+    for (const zone of [ZONE_10]) {
       const result = resolveRampContact(atSpeed(0.95), zone, STATS, THROTTLE, true);
       expect(result.kind).toBe('launch');
       if (result.kind !== 'launch') {
@@ -186,8 +179,8 @@ describe('resolveRampContact', () => {
   });
 
   it('stays cold below 85% even with turbo, and at 85%+ without turbo', () => {
-    const withTurbo = resolveRampContact(atSpeed(0.7), ZONE_45, STATS, THROTTLE, true);
-    const noTurbo = resolveRampContact(atSpeed(0.95), ZONE_45, STATS, THROTTLE, false);
+    const withTurbo = resolveRampContact(atSpeed(0.7), ZONE_20, STATS, THROTTLE, true);
+    const noTurbo = resolveRampContact(atSpeed(0.95), ZONE_20, STATS, THROTTLE, false);
     expect(withTurbo.kind).toBe('launch');
     expect(noTurbo.kind).toBe('launch');
     if (withTurbo.kind === 'launch') {
@@ -203,9 +196,9 @@ describe('resolveRampContact', () => {
 
 describe('jump flatten', () => {
   it('lowers the apex and keeps the same airtime as the 40-g table', () => {
-    expect(rampAirtimeSeconds(ZONE_15)).toBeCloseTo((2 * ZONE_15.launchSpeed) / RAMP_GRAVITY_REF, 5);
-    expect(rampPeakHeight(ZONE_15)).toBeCloseTo(
-      ((ZONE_15.launchSpeed * ZONE_15.launchSpeed) / (2 * RAMP_GRAVITY_REF)) * JUMP_HEIGHT_SCALE,
+    expect(rampAirtimeSeconds(ZONE_10)).toBeCloseTo((2 * ZONE_10.launchSpeed) / RAMP_GRAVITY_REF, 5);
+    expect(rampPeakHeight(ZONE_10)).toBeCloseTo(
+      ((ZONE_10.launchSpeed * ZONE_10.launchSpeed) / (2 * RAMP_GRAVITY_REF)) * JUMP_HEIGHT_SCALE,
       5,
     );
   });
@@ -214,38 +207,39 @@ describe('jump flatten', () => {
 describe('arcade takeoff at the lip', () => {
   it('rides the slab and pops at the lip, not partway up', () => {
     expect(RAMP_LIP_LENGTH).toBe(3);
-    expect(isRampLaunchWindow(ZONE_45.triggerDistance, ZONE_45)).toBe(false);
-    expect(isRampLaunchWindow(ZONE_45.triggerDistance + ZONE_45.triggerLength / 3, ZONE_45)).toBe(
+    expect(isRampLaunchWindow(ZONE_20.triggerDistance, ZONE_20)).toBe(false);
+    expect(isRampLaunchWindow(ZONE_20.triggerDistance + ZONE_20.triggerLength / 3, ZONE_20)).toBe(
       false,
     );
     expect(
-      isRampLaunchWindow(ZONE_45.triggerDistance + ZONE_45.triggerLength - RAMP_LIP_LENGTH, ZONE_45),
+      isRampLaunchWindow(ZONE_20.triggerDistance + ZONE_20.triggerLength - RAMP_LIP_LENGTH, ZONE_20),
     ).toBe(true);
-    expect(rampProgress(ZONE_45.triggerDistance + 4, ZONE_45)).toBeCloseTo(4 / 12, 5);
+    expect(rampProgress(ZONE_20.triggerDistance + 4, ZONE_20)).toBeCloseTo(4 / 12, 5);
   });
 
   it('draws the lip from the invented angle, not the ballistic peak', () => {
-    expect(rampVisualPeak(ZONE_15)).toBeCloseTo(12 * Math.tan((15 * Math.PI) / 180), 5);
-    expect(rampVisualPeak(ZONE_45)).toBeCloseTo(12, 5);
-    expect(rampVisualPeak(ZONE_45)).toBeGreaterThan(rampPeakHeight(ZONE_45));
+    expect(rampVisualPeak(ZONE_10)).toBeCloseTo(12 * Math.tan((10 * Math.PI) / 180), 5);
+    expect(rampVisualPeak(ZONE_20)).toBeCloseTo(12 * Math.tan((20 * Math.PI) / 180), 5);
+    expect(rampVisualPeak(ZONE_20)).toBeGreaterThan(rampPeakHeight(ZONE_20));
   });
 });
 
 describe('Thunder Basin ramps', () => {
-  it('authors 15° then 30° on Basin I', () => {
-    expect(thunderBasin.rampZones?.map(z => z.inclineDegrees)).toEqual([15, 15, 30]);
+  it('authors 10° then 20° on Basin I', () => {
+    expect(thunderBasin.rampZones?.map(z => z.inclineDegrees)).toEqual([10, 10, 20]);
     expect(thunderBasin.rampZones?.map(z => z.triggerDistance)).toEqual([200, 720, 1240]);
   });
 
-  it('authors 45° then 30° on Basin II', () => {
-    expect(thunderBasinTwo.rampZones?.map(z => z.inclineDegrees)).toEqual([45, 30]);
-    expect(thunderBasinTwo.rampZones?.map(z => z.triggerDistance)).toEqual([280, 1520]);
+  it('authors 10° then 20° on Basin II after the start run-up', () => {
+    expect(thunderBasinTwo.rampZones?.map(z => z.inclineDegrees)).toEqual([10, 20]);
+    expect(thunderBasinTwo.rampZones?.[0]?.triggerDistance).toBeGreaterThanOrEqual(200);
+    expect(thunderBasinTwo.rampZones?.map(z => z.triggerDistance)).toEqual([420, 1520]);
   });
 });
 
 describe('applyAirTurboKick', () => {
-  it('adds 5% height and 10% range once, and stacks on a 45° hot launch', () => {
-    const launched = resolveRampContact(atSpeed(0.95), ZONE_45, STATS, THROTTLE, true);
+  it('adds 5% height and 10% range once, and stacks on a 20° hot launch', () => {
+    const launched = resolveRampContact(atSpeed(0.95), ZONE_20, STATS, THROTTLE, true);
     expect(launched.kind).toBe('launch');
     if (launched.kind !== 'launch') {
       return;
@@ -263,11 +257,11 @@ describe('applyAirTurboKick', () => {
     expect(twice.verticalVelocity).toBeGreaterThan(kicked.verticalVelocity);
   });
 
-  it('sees a 45° lip from the approach and while on the slab', () => {
+  it('sees a 10° lip from the approach and while on the slab', () => {
     const zone = thunderBasinTwo.rampZones![0]!;
     const length = 2400;
-    expect(rampApproach(zone.triggerDistance - 40, thunderBasinTwo, length)?.inclineDegrees).toBe(45);
-    expect(rampApproach(zone.triggerDistance + 4, thunderBasinTwo, length)?.inclineDegrees).toBe(45);
+    expect(rampApproach(zone.triggerDistance - 40, thunderBasinTwo, length)?.inclineDegrees).toBe(10);
+    expect(rampApproach(zone.triggerDistance + 4, thunderBasinTwo, length)?.inclineDegrees).toBe(10);
     expect(rampApproach(zone.triggerDistance - 200, thunderBasinTwo, length)).toBeNull();
   });
 });

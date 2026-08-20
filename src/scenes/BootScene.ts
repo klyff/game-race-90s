@@ -54,6 +54,8 @@ import {
   HUD_ICONS,
   GASOLINE_SPRITE_FILE,
   GASOLINE_SPRITE_KEY,
+  CROWD_ASSET_DIRECTORY,
+  CROWD_SPRITES,
   TRAP_PROP_SPRITES,
   WOOD_CHIP_SPRITES,
   WEAPON_ASSET_DIRECTORY,
@@ -94,6 +96,7 @@ export class BootScene extends Phaser.Scene {
       GASOLINE_SPRITE_KEY,
       ...TRAP_PROP_SPRITES.map(prop => prop.key),
       ...WOOD_CHIP_SPRITES.map(chip => chip.key),
+      ...CROWD_SPRITES.map(sprite => sprite.key),
       ...SCRAP_SPRITES.map(sprite => sprite.key),
       ...PLANET_THEMES.map(theme => theme.artKey),
       ...PLANET_THEMES.map(theme => theme.groundKey),
@@ -192,6 +195,9 @@ export class BootScene extends Phaser.Scene {
     }
     for (const chip of WOOD_CHIP_SPRITES) {
       this.load.image(chip.key, `${TRAPS_ASSET_DIRECTORY}/${chip.file}`);
+    }
+    for (const sprite of CROWD_SPRITES) {
+      this.load.image(sprite.key, `${CROWD_ASSET_DIRECTORY}/${sprite.file}`);
     }
     for (const scrap of SCRAP_SPRITES) {
       this.load.image(scrap.key, `${DEBRIS_ASSET_DIRECTORY}/${scrap.file}`);

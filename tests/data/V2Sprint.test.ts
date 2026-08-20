@@ -31,9 +31,9 @@ describe('V2 origin, camera, radio, bogmire', () => {
     expect(RADIO_JINGLE_DURATION_SECONDS).toBeLessThan(3);
   });
 
-  it('authors Bogmire I with a teaching lip and a void 45°', () => {
+  it('authors Bogmire I with a teaching lip and a void 20°', () => {
     expect(isAuthoredTrackId('bogmire-deep-1')).toBe(true);
     const track = findTrack('bogmire-deep-1');
-    expect(track.rampZones?.map(zone => zone.inclineDegrees)).toEqual([15, 45]);
+    expect(track.rampZones?.map(zone => zone.inclineDegrees)).toEqual([10, 20]);
   });
 });

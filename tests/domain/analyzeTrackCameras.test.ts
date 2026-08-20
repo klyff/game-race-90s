@@ -32,6 +32,6 @@ describe('analyzeTrackCameras', () => {
     const two = analyzeTrackCameras(thunderBasinTwo);
     expect(countTriggers(two, CAMERA_TRIGGER_KIND.RAMP)).toBe(2);
     const ramps = two.triggers.filter(t => t.kind === CAMERA_TRIGGER_KIND.RAMP);
-    expect(ramps.map(r => r.startDistance)).toEqual([280, 1520]);
+    expect(ramps.map(r => r.startDistance)).toEqual([420, 1520]);
   });
 });

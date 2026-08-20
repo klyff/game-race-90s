@@ -1,4 +1,4 @@
-import { isAudioMuted, setAudioMuted } from './AudioPrefs.ts';
+import { isAudioMuted, isUserAudioMuted, onAudioMuteChange, setAudioMuted } from './AudioPrefs.ts';
 import { BedPlayer } from './BedPlayer.ts';
 import { pickLoadedMusicBed } from './BedRegistry.ts';
 import { musicBedUrl } from '../../data/audio/MusicBeds.ts';
@@ -40,9 +40,13 @@ export class TitleAudio {
   private readonly music: TitleMusic | null = null;
   private readonly bed: BedPlayer | null = null;
   private muted = isAudioMuted();
+  private readonly unmuteFocus: () => void;
 
   constructor() {
     this.context = createAudioContext();
+    this.unmuteFocus = onAudioMuteChange(muted => {
+      this.applyMute(muted);
+    });
     const bed = pickLoadedMusicBed();
     if (bed !== undefined) {
       this.bed = new BedPlayer(musicBedUrl(bed));
@@ -86,16 +90,20 @@ export class TitleAudio {
     this.music?.start();
   }
 
-  /** Silences the loop without stopping it, so unmuting resumes in place. */
+  /** Player mute. Focus mute is applied separately. */
   setMuted(muted: boolean): void {
-    this.muted = muted;
     setAudioMuted(muted);
+    this.applyMute(isAudioMuted());
+  }
+
+  private applyMute(muted: boolean): void {
+    this.muted = muted;
     this.bed?.setMuted(muted);
     this.music?.setMuted(muted);
   }
 
   toggleMute(): void {
-    this.setMuted(!this.muted);
+    this.setMuted(!isUserAudioMuted());
   }
 
   /**
@@ -105,6 +113,7 @@ export class TitleAudio {
    * Phaser scene ends, so without it the title riff plays straight over the race.
    */
   destroy(): void {
+    this.unmuteFocus();
     this.bed?.stop();
     this.music?.stop();
     this.noise?.stop();
