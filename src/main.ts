@@ -12,6 +12,7 @@ import { RaceScene } from './scenes/RaceScene.ts';
 import { ResultsScene } from './scenes/ResultsScene.ts';
 import { SplashScene } from './scenes/SplashScene.ts';
 import { TrackSelectScene } from './scenes/TrackSelectScene.ts';
+import { WorldPassScene } from './scenes/WorldPassScene.ts';
 
 /**
  * Browser entry point. Everything interesting happens in the scenes; this file
@@ -47,6 +48,7 @@ const game = new Phaser.Game({
     RaceScene,
     HudScene,
     ResultsScene,
+    WorldPassScene,
     PauseScene,
     HelpScene,
   ],

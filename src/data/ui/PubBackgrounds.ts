@@ -1,9 +1,9 @@
 /**
- * Post-race pub interiors. Results picks one at random and paints the
- * podium, ranking and purse on top of it.
+ * AfterTrack interiors (the old pubs). Results picks one at random and paints
+ * the podium, ranking and purse on top of it.
  */
 
-export const PUB_BACKGROUND_DIRECTORY = 'assets/ui';
+export const PUB_BACKGROUND_DIRECTORY = 'assets/ui/aftertrack';
 
 export interface PubBackground {
   readonly id: string;
@@ -11,12 +11,16 @@ export interface PubBackground {
 }
 
 export const PUB_BACKGROUNDS: readonly PubBackground[] = [
-  { id: 'pub-1', file: 'pub_1.png' },
-  { id: 'pub-2', file: 'pub_2.png' },
-  { id: 'pub-3', file: 'pub_3.png' },
-  { id: 'pub-4', file: 'pub_4.png' },
-  { id: 'pub-5', file: 'pub_5.png' },
-  { id: 'pub-6', file: 'pub_6.png' },
+  { id: 'lounge-01', file: 'lounge-01.png' },
+  { id: 'lounge-02', file: 'lounge-02.png' },
+  { id: 'lounge-03', file: 'lounge-03.png' },
+  { id: 'lounge-04', file: 'lounge-04.png' },
+  { id: 'lounge-05', file: 'lounge-05.png' },
+  { id: 'lounge-06', file: 'lounge-06.png' },
+  { id: 'lounge-07', file: 'lounge-07.png' },
+  { id: 'lounge-08', file: 'lounge-08.png' },
+  { id: 'lounge-09', file: 'lounge-09.png' },
+  { id: 'lounge-10', file: 'lounge-10.png' },
 ];
 
 export function pubBackgroundUrl(pub: PubBackground): string {

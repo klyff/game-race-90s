@@ -3,9 +3,16 @@ import { cartPortraitKey } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import { DRIVER_CARDS, driverCardKey, driverCardUrl } from '../data/cards/DriverCards.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
-import { creditWallet, loadActiveCareer, loadPoints, recordProgress } from '../adapters/progress/ProgressStore.ts';
+import {
+  creditWallet,
+  loadActiveCareer,
+  loadPoints,
+  loadWonTracks,
+  recordProgress,
+} from '../adapters/progress/ProgressStore.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
 import { pickPubBackground, PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/PubBackgrounds.ts';
+import { worldPassForFinish } from '../data/ui/WorldPassBackgrounds.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
 import { playRadioJingle, RADIO_JINGLE_DURATION_SECONDS } from '../adapters/audio/RadioJingle.ts';
@@ -81,6 +88,7 @@ export class ResultsScene extends Phaser.Scene {
   private racePoints = 0;
   private balance = 0;
   private leaving = false;
+  private wonBefore: readonly string[] = [];
   private audio!: TitleAudio;
   private rankRows: RankRow[] = [];
 
@@ -108,6 +116,7 @@ export class ResultsScene extends Phaser.Scene {
   init(data: ResultsSceneData): void {
     this.payload = data;
     this.leaving = false;
+    this.wonBefore = loadWonTracks();
     const slot = campaignSlotForTrackId(data.trackId);
     const planetIndex = slot?.planetIndex ?? 1;
     const trackN = slot?.trackN ?? 1;
@@ -397,6 +406,19 @@ export class ResultsScene extends Phaser.Scene {
     this.audio.destroy();
     const wait = playGuitarSolo();
     this.time.delayedCall(Math.max(0, wait) * 1000, () => {
+      const pass = worldPassForFinish(
+        this.payload.trackId,
+        this.payload.playerPosition,
+        this.wonBefore,
+      );
+      if (pass !== undefined) {
+        this.scene.start(SCENE_KEY.WORLD_PASS, {
+          manifest: this.payload.manifest,
+          linesByTrack: this.payload.linesByTrack,
+          passId: pass.id,
+        });
+        return;
+      }
       this.scene.start(SCENE_KEY.GARAGE, {
         manifest: this.payload.manifest,
         linesByTrack: this.payload.linesByTrack,

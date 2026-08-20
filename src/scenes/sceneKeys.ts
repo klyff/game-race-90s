@@ -17,6 +17,7 @@ export const SCENE_KEY = {
   RACE: 'race',
   HUD: 'hud',
   RESULTS: 'results',
+  WORLD_PASS: 'world-pass',
   PAUSE: 'pause',
   HELP: 'help',
 } as const;
@@ -47,7 +48,7 @@ export function trapsCacheKey(trackId: string): string {
 /** Where `npm run gen:traps` writes its output, relative to the served root. */
 export const TRAPS_ASSET_DIRECTORY = 'assets/traps';
 
-/** Where `npm run gen:sprites` writes its output, relative to the served root. */
+/** Fleet PNGs from `gen:sprites`; roster JSON from `gen:cars-json`. */
 export const CAR_ASSET_DIRECTORY = 'assets/cars';
 
 /** Drop folder for new-fleet heroes (`car_1_hero.png`). Strips are `car_1_strip.png`. */
