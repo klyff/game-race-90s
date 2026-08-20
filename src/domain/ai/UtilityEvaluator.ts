@@ -107,7 +107,7 @@ export function evaluateUtilities(
   const mem = memory === null ? 0 : memoryEffect(memory, profile.opponentMemory);
   const fightTactical = raceTacticalValue(situation, true);
   const raceTactical = raceTacticalValue(situation, false);
-  const stretchPush = opportunities.finalStretch > 0 ? 1.2 : 1;
+  const stretchPush = opportunities.finalStretch > 0 ? 1.35 : 1;
   const noise = (id: string): number =>
     noiseSeed.length === 0 ? 0 : (hashUnit(`${noiseSeed}:${id}`, 0x51ed) - 0.5) * 0.03;
 

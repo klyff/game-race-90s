@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { profileFor } from '../../../src/domain/ai/DriverRoster.ts';
 import { combineUtility, evaluateUtilities, TACTICAL_INTENTION } from '../../../src/domain/ai/UtilityEvaluator.ts';
-import { isFinalLap } from '../../../src/domain/ai/SituationEvaluator.ts';
+import { isFinalLap, lastLapPackRole, raceTacticalValue } from '../../../src/domain/ai/SituationEvaluator.ts';
 import { buildStatNormalizer, capabilitiesFromStats } from '../../../src/domain/ai/VehicleCapabilityModel.ts';
 import type { VehicleCapabilities } from '../../../src/domain/ai/VehicleCapabilityModel.ts';
 import type { RaceSituation } from '../../../src/domain/ai/SituationEvaluator.ts';
@@ -134,7 +134,7 @@ describe('utility evaluator', () => {
     expect(berserker.selected).not.toBe(TACTICAL_INTENTION.RECOVER);
   });
 
-  it('last lap heats the fight instead of protecting the lead', () => {
+  it('last lap heats the podium fight instead of protecting the lead', () => {
     const roster = [stats(), stats({ mass: 1400 })];
     const capabilities = capsFor(roster, stats());
     const early = evaluateUtilities(profileFor('ALINE'), capabilities, situation(), null);
@@ -149,7 +149,28 @@ describe('utility evaluator', () => {
     const lateRam = late.scores.find(score => score.intention === TACTICAL_INTENTION.RAM);
     const lateRace = late.scores.find(score => score.intention === TACTICAL_INTENTION.RACE);
     expect(lateRam?.terms.tacticalValue).toBeGreaterThan(earlyRam?.terms.tacticalValue ?? 0);
-    expect(lateRace?.terms.tacticalValue).toBeGreaterThan(earlyRace?.terms.tacticalValue ?? 0);
+    expect(lateRam?.terms.tacticalValue).toBeGreaterThan(lateRace?.terms.tacticalValue ?? 0);
+    expect(earlyRace).toBeDefined();
+  });
+
+  it('last-lap backmarkers do not get the podium fight heat', () => {
+    const roster = [stats(), stats({ mass: 1400 })];
+    const capabilities = capsFor(roster, stats());
+    const p1 = evaluateUtilities(
+      profileFor('ALINE'),
+      capabilities,
+      situation({ position: 1, lapsCompleted: 2, lapsTotal: 3 }),
+      null,
+    );
+    const p4 = evaluateUtilities(
+      profileFor('ALINE'),
+      capabilities,
+      situation({ position: 4, lapsCompleted: 2, lapsTotal: 3 }),
+      null,
+    );
+    const p1Ram = p1.scores.find(score => score.intention === TACTICAL_INTENTION.RAM);
+    const p4Ram = p4.scores.find(score => score.intention === TACTICAL_INTENTION.RAM);
+    expect(p1Ram?.terms.tacticalValue).toBeGreaterThan(p4Ram?.terms.tacticalValue ?? 1);
   });
 
   it('treats lapsCompleted == lapsTotal - 1 as the last racing lap', () => {
@@ -157,5 +178,11 @@ describe('utility evaluator', () => {
     expect(isFinalLap(0, 1)).toBe(true);
     expect(isFinalLap(1, 3)).toBe(false);
     expect(isFinalLap(3, 3)).toBe(false);
+    expect(lastLapPackRole(2, 3, 1)).toBe('podium');
+    expect(lastLapPackRole(2, 3, 3)).toBe('podium');
+    expect(lastLapPackRole(2, 3, 4)).toBe('backmarker');
+    expect(lastLapPackRole(1, 3, 1)).toBeNull();
+    const podium = situation({ position: 1, lapsCompleted: 2, lapsTotal: 3 });
+    expect(raceTacticalValue(podium, true)).toBeGreaterThan(raceTacticalValue(podium, false));
   });
 });

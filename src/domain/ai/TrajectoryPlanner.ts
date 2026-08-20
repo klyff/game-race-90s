@@ -8,6 +8,7 @@ import { trackFullHalfWidth, type TrackDefinition } from '../track/TrackDefiniti
 import { rampApproach } from '../track/RampZone.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
 import { TACTICAL_INTENTION, type TacticalIntention } from './UtilityEvaluator.ts';
+import { isPodiumSeat } from './SituationEvaluator.ts';
 import { clamp, clamp01 } from './math.ts';
 import { generatePathCandidates } from './CandidateGenerator.ts';
 import { ROLLOUT_HORIZON, rolloutCandidate } from './PredictiveRollout.ts';
@@ -209,6 +210,7 @@ export interface FuturePlanInput {
   readonly aheadGap: number | null;
   readonly behindGap: number | null;
   readonly lastLap?: boolean;
+  readonly position?: number;
 }
 
 export function planFutures(input: FuturePlanInput): {
@@ -219,12 +221,13 @@ export function planFutures(input: FuturePlanInput): {
   const maxOffset = maxSafeOffset(input.track, input.collisionRadius);
   const generated = 11 + (input.gapLateral === null ? 0 : 1);
   const ramp = rampApproach(input.distance, input.track, input.trackLength);
+  const lastLapPodium = input.lastLap === true && isPodiumSeat(input.position ?? 99);
   const unique = generatePathCandidates(
     input.currentOffset,
     input.lineOffset,
     maxOffset,
     input.gapLateral,
-    ramp !== null || input.lastLap === true ? 1 : 0.55,
+    ramp !== null || lastLapPodium ? 1 : 0.55,
   );
   const scored: TrajectoryCandidate[] = [];
   let bestIntention: TacticalIntention = TACTICAL_INTENTION.RACE;
@@ -247,7 +250,7 @@ export function planFutures(input: FuturePlanInput): {
       trackLength: input.trackLength,
       opponentPrediction: input.profile.opponentPrediction,
       vehiclePhysics: input.profile.vehiclePhysics,
-      lastLap: input.lastLap === true,
+      lastLap: lastLapPodium,
     });
     const future = scoreFuture(candidate, rollout, {
       profile: input.profile,
@@ -259,6 +262,8 @@ export function planFutures(input: FuturePlanInput): {
       switchPenalty: input.switchPenalty,
       aheadGap: input.aheadGap,
       behindGap: input.behindGap,
+      lastLap: input.lastLap === true,
+      podium: lastLapPodium,
     }, cap);
     if (future === null) {
       scored.push({

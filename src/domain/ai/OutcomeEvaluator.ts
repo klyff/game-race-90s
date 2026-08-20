@@ -47,6 +47,8 @@ export interface ScoreContext {
   readonly switchPenalty: number;
   readonly aheadGap: number | null;
   readonly behindGap: number | null;
+  readonly lastLap?: boolean;
+  readonly podium?: boolean;
 }
 
 export function outcomeFromRollout(
@@ -98,15 +100,18 @@ export function outcomeFromRollout(
   };
 }
 
-export function raceCore(outcome: OutcomeVector, raceFocus: number): number {
+export function raceCore(outcome: OutcomeVector, raceFocus: number, lastLapPodium = false): number {
+  const collide = lastLapPodium ? 0.22 : 0.9;
+  const passW = lastLapPodium ? 0.75 : 0.35;
+  const speedW = lastLapPodium ? 0.7 : 0.45;
   return (
     outcome.progressGain * (1.15 + raceFocus * 0.25) +
-    outcome.positionGain * 0.35 +
-    outcome.exitSpeed * 0.45 -
+    outcome.positionGain * passW +
+    outcome.exitSpeed * speedW -
     outcome.offTrackRisk * 1.1 -
     outcome.wallRisk * 0.55 -
-    outcome.accidentalCollision * 0.9 -
-    outcome.selfLoss * 0.7
+    outcome.accidentalCollision * collide -
+    outcome.selfLoss * (lastLapPodium ? 0.28 : 0.7)
   );
 }
 
@@ -133,10 +138,11 @@ export function scoreFuture(
   }
   const outcome = outcomeFromRollout(candidate, rollout, context, horizonProgressCap);
   const traits = decisionTraits(context.profile);
-  const core = raceCore(outcome, traits.raceFocus);
+  const lastLapPodium = context.lastLap === true && context.podium === true;
+  const core = raceCore(outcome, traits.raceFocus, lastLapPodium);
   const tactical = tacticalBias(outcome, context.profile);
   const downside = outcome.offTrackRisk + outcome.wallRisk + outcome.accidentalCollision + outcome.selfLoss;
-  const riskPenalty = (1.45 - traits.riskTolerance) * downside;
+  const riskPenalty = (lastLapPodium ? 0.45 : 1.45 - traits.riskTolerance) * downside;
   if (rollout.feasible === FEASIBILITY.MARGINAL && traits.riskTolerance < 0.72 && downside > 0.85) {
     return null;
   }

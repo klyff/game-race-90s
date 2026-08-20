@@ -51,11 +51,10 @@ export function evaluateOpportunities(situation: RaceSituation): SituationOpport
   const alignedAhead = ahead !== null && Math.abs(ahead.lateralDelta) < 4;
   const alignedBehind = behind !== null && Math.abs(behind.lateralDelta) < 4;
   const closing = ahead !== null && ahead.closingSpeed > 2;
-  const finalStretch = isFinalLap(situation.lapsCompleted, situation.lapsTotal)
-    ? situation.position <= 2
+  const finalStretch =
+    isFinalLap(situation.lapsCompleted, situation.lapsTotal) && isPodiumSeat(situation.position)
       ? 1
-      : 0.7
-    : 0;
+      : 0;
   const packPressure = (closeAhead ? 0.45 : 0) + (closeBehind ? 0.45 : 0);
 
   return {
@@ -76,12 +75,31 @@ export function isFinalLap(lapsCompleted: number, lapsTotal: number): boolean {
   return lapsTotal > 0 && lapsCompleted >= lapsTotal - 1 && lapsCompleted < lapsTotal;
 }
 
+/** 1-based race position still fighting for the podium. */
+export function isPodiumSeat(position: number): boolean {
+  return position >= 1 && position <= 3;
+}
+
+export function lastLapPackRole(
+  lapsCompleted: number,
+  lapsTotal: number,
+  position: number,
+): 'podium' | 'backmarker' | null {
+  if (!isFinalLap(lapsCompleted, lapsTotal)) {
+    return null;
+  }
+  return isPodiumSeat(position) ? 'podium' : 'backmarker';
+}
+
 export function raceTacticalValue(situation: RaceSituation, fight: boolean): number {
   const leading = situation.position === 1 ? 1 : situation.position === 2 ? 0.7 : 0.4;
-  if (isFinalLap(situation.lapsCompleted, situation.lapsTotal)) {
-    return fight
-      ? clamp01(0.8 + (situation.position > 1 ? 0.18 : 0.1))
-      : clamp01(0.88 + leading * 0.1);
+  const pack = lastLapPackRole(situation.lapsCompleted, situation.lapsTotal, situation.position);
+  if (pack === 'podium') {
+    // Invert protect-the-lead: fight beats coast, including P1.
+    return fight ? 1 : clamp01(0.62 + (situation.position === 1 ? 0.08 : 0.04));
+  }
+  if (pack === 'backmarker') {
+    return fight ? 0.12 : 0.22;
   }
   return fight ? clamp01(0.55 + (situation.position > 3 ? 0.2 : 0)) : clamp01(0.6 + leading * 0.15);
 }

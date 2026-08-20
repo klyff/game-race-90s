@@ -317,6 +317,7 @@ export class RacingAgent {
       aheadGap: ahead?.gapAhead ?? null,
       behindGap: behind?.gapBehind ?? null,
       lastLap: !input.finished && isFinalLap(input.lapsCompleted, input.lapsTotal),
+      position: input.position,
     });
     const threshold = HYSTERESIS + traits.commitment * 0.18;
     const keep =

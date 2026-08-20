@@ -1565,10 +1565,11 @@ export class RaceField {
           decision?.lateralOffset,
           this.track,
           lastLap,
+          standing?.position ?? this.racers.length,
         );
     const climbing = rampApproach(racer.distance, this.track, this.spline.totalLength) !== null;
     const drive =
-      decision !== undefined && decision.reverse > 0 && !climbing
+      decision !== undefined && decision.reverse > 0 && !climbing && !lastLap
         ? { ...steered, reverse: decision.reverse, throttle: 0 }
         : steered;
 
