@@ -48,7 +48,6 @@ export interface ScoreContext {
   readonly aheadGap: number | null;
   readonly behindGap: number | null;
   readonly lastLap?: boolean;
-  readonly podium?: boolean;
 }
 
 export function outcomeFromRollout(
@@ -138,7 +137,7 @@ export function scoreFuture(
   }
   const outcome = outcomeFromRollout(candidate, rollout, context, horizonProgressCap);
   const traits = decisionTraits(context.profile);
-  const lastLapPodium = context.lastLap === true && context.podium === true;
+  const lastLapPodium = context.lastLap === true;
   const core = raceCore(outcome, traits.raceFocus, lastLapPodium);
   const tactical = tacticalBias(outcome, context.profile);
   const downside = outcome.offTrackRisk + outcome.wallRisk + outcome.accidentalCollision + outcome.selfLoss;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findTrack } from '../../../src/data/tracks/registry.ts';
 import { TrackSpline } from '../../../src/domain/track/TrackSpline.ts';
-import { AIDriver, LAST_LAP_BACKMARKER_SPEED } from '../../../src/domain/vehicle/AIDriver.ts';
+import { AIDriver } from '../../../src/domain/vehicle/AIDriver.ts';
 import { createVehicleState } from '../../../src/domain/vehicle/Vehicle.ts';
 import { scale, angleOf } from '../../../src/domain/math/Vec2.ts';
 import { profileFor } from '../../../src/domain/ai/DriverRoster.ts';
@@ -36,22 +36,21 @@ function rollingState(speed: number) {
   return { state, projection };
 }
 
-describe('last-lap pack split', () => {
+describe('last-lap finish fight', () => {
   it('P1 floors it on the last lap instead of braking to protect the lead', () => {
     const driver = new AIDriver();
     const { state, projection } = rollingState(48);
-    const command = driver.command(state, projection, stats, spline, undefined, [], 0, undefined, track, true, 1);
+    const command = driver.command(state, projection, stats, spline, undefined, [], 0, undefined, track, true);
     expect(command.throttle).toBe(1);
     expect(command.brake).toBe(0);
   });
 
-  it(`P4 crawls toward ${LAST_LAP_BACKMARKER_SPEED} u/s on the last lap`, () => {
+  it('P4 still floors it on the last lap until it takes the flag', () => {
     const driver = new AIDriver();
-    const { state, projection } = rollingState(50);
-    const command = driver.command(state, projection, stats, spline, undefined, [], 0, undefined, track, true, 4);
-    expect(command.throttle).toBe(0);
-    expect(command.brake).toBeGreaterThan(0);
-    expect(command.boost).toBe(false);
+    const { state, projection } = rollingState(48);
+    const command = driver.command(state, projection, stats, spline, undefined, [], 0, undefined, track, true);
+    expect(command.throttle).toBe(1);
+    expect(command.brake).toBe(0);
   });
 
   it('last-lap podium raceCore fears contact less than a normal lap', () => {
@@ -103,7 +102,7 @@ describe('last-lap pack split', () => {
       behindGap: 14,
     };
     const normal = scoreFuture(pass, tight, ctx, 24)?.score ?? -99;
-    const heat = scoreFuture(pass, tight, { ...ctx, lastLap: true, podium: true }, 24)?.score ?? -99;
+    const heat = scoreFuture(pass, tight, { ...ctx, lastLap: true }, 24)?.score ?? -99;
     expect(heat).toBeGreaterThan(normal);
   });
 });

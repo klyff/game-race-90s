@@ -50,6 +50,7 @@ import {
 } from '../vehicle/RivalAgent.ts';
 import { RacingAgent } from '../ai/RacingAgent.ts';
 import type { AgentDebugSnapshot } from '../ai/RacingAgent.ts';
+import { fieldReachedLastLap } from '../ai/SituationEvaluator.ts';
 import { buildStatNormalizer, planningStats, type StatNormalizer } from '../ai/VehicleCapabilityModel.ts';
 import type { TrackLinesManifest } from './RacingLine.ts';
 import type { CameraContactEvent } from '../camera/AccidentWatch.ts';
@@ -1497,6 +1498,11 @@ export class RaceField {
     const standing = this.standingOf(racer.carId, racerIndex);
     const raceRow = this.raceState.racers.find(entry => entry.racerIndex === racerIndex);
     const finishDistance = Math.max(1, this.track.laps * this.spline.totalLength);
+    const fieldLastLap = fieldReachedLastLap(
+      this.track.laps,
+      this.raceState.standings.map(entry => entry.lapsCompleted),
+    );
+    const lastLap = standing?.finished !== true && fieldLastLap;
     const effective = planningStats(
       racer.stats,
       racer.perk,
@@ -1529,6 +1535,7 @@ export class RaceField {
         lapsTotal: this.track.laps,
         progressToFinish: Math.min(1, (raceRow?.progress.totalProgress ?? 0) / finishDistance),
         finished: standing?.finished === true,
+        fieldLastLap,
         track: this.track,
         spline: this.spline,
         line: brain?.line,
@@ -1549,9 +1556,6 @@ export class RaceField {
       this.pace.options,
     );
 
-    const lastLap =
-      standing?.finished !== true &&
-      (standing?.lapsCompleted ?? 0) >= Math.max(0, this.track.laps - 1);
     const steered = brain === undefined
       ? this.pace.command(racer.state, projection, effective, this.spline)
       : brain.driver.command(
@@ -1565,7 +1569,6 @@ export class RaceField {
           decision?.lateralOffset,
           this.track,
           lastLap,
-          standing?.position ?? this.racers.length,
         );
     const climbing = rampApproach(racer.distance, this.track, this.spline.totalLength) !== null;
     const drive =

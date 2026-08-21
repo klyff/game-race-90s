@@ -91,6 +91,7 @@ export interface AgentTickInput {
   readonly lapsTotal: number;
   readonly progressToFinish: number;
   readonly finished: boolean;
+  readonly fieldLastLap?: boolean;
   readonly track: TrackDefinition;
   readonly spline: TrackSpline;
   readonly line: RacingLine | undefined;
@@ -316,7 +317,7 @@ export class RacingAgent {
       switchPenalty,
       aheadGap: ahead?.gapAhead ?? null,
       behindGap: behind?.gapBehind ?? null,
-      lastLap: !input.finished && isFinalLap(input.lapsCompleted, input.lapsTotal),
+      lastLap: !input.finished && (isFinalLap(input.lapsCompleted, input.lapsTotal) || input.fieldLastLap === true),
       position: input.position,
     });
     const threshold = HYSTERESIS + traits.commitment * 0.18;
@@ -374,6 +375,7 @@ function situationFrom(input: AgentTickInput): RaceSituation {
     spinning: Math.abs(input.state.yawSpin) > 4,
     offRoad: Math.abs(input.lateralOffset) > input.halfWidth,
     finished: input.finished,
+    fieldLastLap: input.fieldLastLap === true,
     ahead: closestAhead(input),
     behind: closestBehind(input),
   };

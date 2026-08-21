@@ -26,6 +26,7 @@ export interface RaceSituation {
   readonly spinning: boolean;
   readonly offRoad: boolean;
   readonly finished: boolean;
+  readonly fieldLastLap?: boolean;
   readonly ahead: NearbyRival | null;
   readonly behind: NearbyRival | null;
 }
@@ -52,7 +53,8 @@ export function evaluateOpportunities(situation: RaceSituation): SituationOpport
   const alignedBehind = behind !== null && Math.abs(behind.lateralDelta) < 4;
   const closing = ahead !== null && ahead.closingSpeed > 2;
   const finalStretch =
-    isFinalLap(situation.lapsCompleted, situation.lapsTotal) && isPodiumSeat(situation.position)
+    !situation.finished &&
+    (isFinalLap(situation.lapsCompleted, situation.lapsTotal) || situation.fieldLastLap === true)
       ? 1
       : 0;
   const packPressure = (closeAhead ? 0.45 : 0) + (closeBehind ? 0.45 : 0);
@@ -75,31 +77,41 @@ export function isFinalLap(lapsCompleted: number, lapsTotal: number): boolean {
   return lapsTotal > 0 && lapsCompleted >= lapsTotal - 1 && lapsCompleted < lapsTotal;
 }
 
-/** 1-based race position still fighting for the podium. */
-export function isPodiumSeat(position: number): boolean {
-  return position >= 1 && position <= 3;
+/** True once anyone has reached the last racing lap (including finishers). */
+export function fieldReachedLastLap(
+  lapsTotal: number,
+  fieldLapsCompleted: readonly number[],
+): boolean {
+  return fieldLapsCompleted.some(laps => isFinalLap(laps, lapsTotal) || laps >= lapsTotal);
 }
 
+/** Anyone still racing after the last lap has started. Finish is the primary goal. */
 export function lastLapPackRole(
   lapsCompleted: number,
   lapsTotal: number,
-  position: number,
-): 'podium' | 'backmarker' | null {
-  if (!isFinalLap(lapsCompleted, lapsTotal)) {
+  fieldOnLastLap = false,
+  finished = false,
+): 'fight' | null {
+  if (finished) {
     return null;
   }
-  return isPodiumSeat(position) ? 'podium' : 'backmarker';
+  if (isFinalLap(lapsCompleted, lapsTotal) || fieldOnLastLap) {
+    return 'fight';
+  }
+  return null;
 }
 
 export function raceTacticalValue(situation: RaceSituation, fight: boolean): number {
   const leading = situation.position === 1 ? 1 : situation.position === 2 ? 0.7 : 0.4;
-  const pack = lastLapPackRole(situation.lapsCompleted, situation.lapsTotal, situation.position);
-  if (pack === 'podium') {
-    // Invert protect-the-lead: fight beats coast, including P1.
-    return fight ? 1 : clamp01(0.62 + (situation.position === 1 ? 0.08 : 0.04));
-  }
-  if (pack === 'backmarker') {
-    return fight ? 0.12 : 0.22;
+  const pack = lastLapPackRole(
+    situation.lapsCompleted,
+    situation.lapsTotal,
+    situation.fieldLastLap === true,
+    situation.finished,
+  );
+  if (pack === 'fight') {
+    // Finish first, then spoil anyone ahead — both stay hot. Personality still picks the method.
+    return fight ? 1 : clamp01(0.94 + leading * 0.06);
   }
   return fight ? clamp01(0.55 + (situation.position > 3 ? 0.2 : 0)) : clamp01(0.6 + leading * 0.15);
 }

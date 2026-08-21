@@ -40,9 +40,6 @@ export interface RivalView {
  */
 export const AI_DEFAULT_AGGRESSION = 0.9;
 
-/** Arcade crawl for last-lap cars outside the podium fight. */
-export const LAST_LAP_BACKMARKER_SPEED = 10;
-
 /**
  * NPC driver that follows a searched racing line and reacts to rivals ahead.
  *
@@ -86,13 +83,10 @@ export class AIDriver {
     lateralOverride?: number,
     track?: TrackDefinition,
     lastLap = false,
-    position = 99,
   ): InputCommand {
     const speed = Math.hypot(state.velocity.x, state.velocity.y);
     const speedRatio = stats.maxSpeed > 0 ? speed / stats.maxSpeed : 0;
     const ramp = track === undefined ? null : rampApproach(projection.distance, track, spline.totalLength);
-    const podiumLastLap = lastLap && position >= 1 && position <= 3;
-    const backmarkerLastLap = lastLap && !podiumLastLap;
     const traits = this.traits;
     const committed =
       traits !== undefined && commitCornerPlan(traits, speedRatio, isStraight(spline, projection.distance));
@@ -118,22 +112,20 @@ export class AIDriver {
             ...this.driveOptions,
             cornerLookAheadMinimum: commitLook * (0.35 + (1 - traits.daring / 10) * 0.5),
           };
-    const pushedOpts = podiumLastLap
+    const pushedOpts = lastLap
       ? {
           ...cornerOpts,
           cornerSafetyFactor: Math.min(1, cornerOpts.cornerSafetyFactor * 1.25),
         }
       : cornerOpts;
     let target = cornerTargetSpeed(projection, stats, spline, speed, pushedOpts);
-    if (backmarkerLastLap) {
-      target = LAST_LAP_BACKMARKER_SPEED;
-    } else if (ramp !== null) {
+    if (ramp !== null) {
       target = Math.max(
         target,
         minClimbFraction(ramp.inclineDegrees) * stats.maxSpeed * 1.12,
         stats.maxSpeed * 0.88,
       );
-    } else if (podiumLastLap) {
+    } else if (lastLap) {
       target = Math.min(stats.maxSpeed, target * 1.22);
     }
     let { throttle, brake } = speedCommand(
@@ -144,9 +136,7 @@ export class AIDriver {
     );
 
     const ahead = closestRivalAhead(projection.distance, rivals, spline.totalLength);
-    if (backmarkerLastLap) {
-      // Crawl. speedCommand already holds ~10 u/s.
-    } else if (ramp !== null || podiumLastLap) {
+    if (ramp !== null || lastLap) {
       throttle = 1;
       brake = 0;
     } else if (ahead !== null && ahead.gap < 18 && ahead.gap > 0 && speedRatio >= 0.42) {
@@ -163,9 +153,7 @@ export class AIDriver {
       dropOil: false,
       dropMine: false,
       jump: false,
-      boost:
-        !backmarkerLastLap &&
-        ((ramp !== null && speedRatio < 0.85) || (podiumLastLap && speedRatio < 0.96)),
+      boost: (ramp !== null && speedRatio < 0.85) || (lastLap && speedRatio < 0.96),
     };
   }
 }
