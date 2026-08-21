@@ -4,9 +4,9 @@ import type { CarModelDef } from '../schema.ts';
 /**
  * DELOREAN — Brushed-steel time machine.
  *
- * A wedge-bodied coupe with a flat deck and pop-up lights: pure straight-line
- * pace and acceleration, paid for with paper-thin armour (owner's chosen
- * weakness). Local space is +X forward, +Y left, +Z up. Roughly 4.2 long.
+ * Special car 1. Arcade stick (high grip, late brakes) plus Flux so ice,
+ * swamp and rust do not dump it. Chrome Verge stays titular; the handling
+ * is for every world. Local space is +X forward, +Y left, +Z up.
  */
 export const delorean: CarModelDef = {
   id: 'delorean',
@@ -118,21 +118,18 @@ export const delorean: CarModelDef = {
     },
   ],
 
-  // Flat-out pace: highest acceleration on the roster, near-top speed, but the
-  // thinnest armour of any car — one clean missile ends its race.
   stats: {
-    mass: 900,
-    enginePower: 42,
-    brakeForce: 44,
-    maxSpeed: 92,
-    grip: 24,
-    steerRate: 2.8,
-    steerSpeedFalloff: 0.5,
-    armor: 0.18,
-    ammoCapacity: 4,
+    mass: 880,
+    enginePower: 40,
+    brakeForce: 50,
+    maxSpeed: 88,
+    grip: 36,
+    steerRate: 3.05,
+    steerSpeedFalloff: 0.36,
+    armor: 0.32,
+    ammoCapacity: 10,
     collisionRadius: 1.75,
-    aimRadius: 3.0,
+    aimRadius: 3.2,
   },
-  // Rides the draft for extra straight-line punch — its whole game.
-  perk: CAR_PERK.SLIPSTREAM,
+  perk: CAR_PERK.FLUX,
 };

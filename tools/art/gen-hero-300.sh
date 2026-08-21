@@ -5,8 +5,13 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 shopt -s nullglob
 for dir in "$root"/public/matrix_car/*_hero; do
   n="$(basename "$dir" | sed 's/_hero$//')"
-  src="$dir/car_${n}_hero.png"
-  dst="$dir/car_${n}_hero_300.png"
+  if [[ "$n" =~ ^[0-9]+$ ]]; then
+    src="$dir/car_${n}_hero.png"
+    dst="$dir/car_${n}_hero_300.png"
+  else
+    src="$dir/${n}_hero.png"
+    dst="$dir/${n}_hero_300.png"
+  fi
   if [[ ! -f "$src" ]]; then
     continue
   fi

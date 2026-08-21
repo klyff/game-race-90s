@@ -18,16 +18,17 @@ from pathlib import Path
 
 def pack_folder(folder: Path) -> Path | None:
     folder = folder.resolve()
-    m = re.match(r"^(\d+)_hero$", folder.name)
+    m = re.match(r"^(.+)_hero$", folder.name)
     if not m:
-        raise SystemExit(f"pasta esperada N_hero, recebi: {folder.name}")
-    car_n = int(m.group(1))
-    frames = sorted(folder.glob(f"car_{car_n}_a*.png"))
+        raise SystemExit(f"pasta esperada {{id}}_hero, recebi: {folder.name}")
+    stem = m.group(1)
+    prefix = f"car_{stem}" if stem.isdigit() else stem
+    frames = sorted(folder.glob(f"{prefix}_a*.png"))
     if not frames:
-        print(f"skip {folder.name}: nenhum car_{car_n}_a*.png")
+        print(f"skip {folder.name}: nenhum {prefix}_a*.png")
         return None
 
-    out_tar = folder / f"car_{car_n}_sources.tar.gz"
+    out_tar = folder / f"{prefix}_sources.tar.gz"
     # Rewrite archive cleanly from current loose frames
     with tarfile.open(out_tar, "w:gz") as tar:
         for p in frames:
@@ -48,7 +49,7 @@ def main() -> None:
     root = args.path.resolve()
     if args.all:
         folders = sorted(
-            d for d in root.iterdir() if d.is_dir() and re.match(r"^\d+_hero$", d.name)
+            d for d in root.iterdir() if d.is_dir() and re.match(r"^.+_hero$", d.name)
         )
         if not folders:
             raise SystemExit(f"nenhuma pasta *_hero em {root}")

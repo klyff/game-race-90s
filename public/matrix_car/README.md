@@ -13,6 +13,7 @@
 | `N_hero/car_N_hero.png` | **Vitrine** — não mexer; fora do array |
 | [`INDEX.md`](./INDEX.md) | **Índice 1–33** — nome ↔ still; tour garage |
 | `N_hero/car_N_a000.png` … `a029.png` | Frames (+12° / +0.4 h por slot) |
+| `delorean_hero/` | Especial 1 — vitrine + 30 frames + strip (não é o carro 1) |
 | `RELOGIO.md` | Contrato + tabela |
 | `PROMPT_30.md` | Prompt de geração |
 | `PASSO_A_PASSO.md` | **Passo a passo completo** + fonte do que já foi feito |

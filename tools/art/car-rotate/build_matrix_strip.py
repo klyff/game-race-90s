@@ -132,11 +132,21 @@ def production_scale_block(
     }
 
 
-def list_frame_paths(folder: Path, car_n: int) -> list[tuple[int, Path]]:
+def parse_hero_folder(folder: Path) -> tuple[str, str]:
+    """`1_hero` → (`1`, `car_1`); `delorean_hero` → (`delorean`, `delorean`)."""
+    m = re.match(r"^(.+)_hero$", folder.name)
+    if not m:
+        raise SystemExit(f"pasta esperada {{id}}_hero, recebi: {folder.name}")
+    stem = m.group(1)
+    prefix = f"car_{stem}" if stem.isdigit() else stem
+    return stem, prefix
+
+
+def list_frame_paths(folder: Path, prefix: str) -> list[tuple[int, Path]]:
     """Numbered frames only — hero never enters. Loose PNGs preferred."""
     out: list[tuple[int, Path]] = []
-    for p in folder.glob(f"car_{car_n}_a*.png"):
-        m = re.search(rf"car_{car_n}_a(\d+)\.png$", p.name)
+    for p in folder.glob(f"{prefix}_a*.png"):
+        m = re.search(rf"{re.escape(prefix)}_a(\d+)\.png$", p.name)
         if not m:
             continue
         out.append((int(m.group(1)), p))
@@ -144,26 +154,26 @@ def list_frame_paths(folder: Path, car_n: int) -> list[tuple[int, Path]]:
     return out
 
 
-def extract_sources_tar(folder: Path, car_n: int, dest: Path) -> list[tuple[int, Path]]:
-    """Extract car_N_sources.tar.gz into dest; return (index, path) list."""
-    tar_path = folder / f"car_{car_n}_sources.tar.gz"
+def extract_sources_tar(folder: Path, prefix: str, dest: Path) -> list[tuple[int, Path]]:
+    """Extract {{prefix}}_sources.tar.gz into dest; return (index, path) list."""
+    tar_path = folder / f"{prefix}_sources.tar.gz"
     if not tar_path.is_file():
         return []
     dest.mkdir(parents=True, exist_ok=True)
     with tarfile.open(tar_path, "r:gz") as tar:
         tar.extractall(dest)
-    return list_frame_paths(dest, car_n)
+    return list_frame_paths(dest, prefix)
 
 
 def resolve_frame_paths(
-    folder: Path, car_n: int
+    folder: Path, prefix: str
 ) -> tuple[list[tuple[int, Path]], Path | None]:
     """Return frames + optional temp dir to clean (when sourced from tar)."""
-    frames = list_frame_paths(folder, car_n)
+    frames = list_frame_paths(folder, prefix)
     if frames:
         return frames, None
-    tmp = Path(tempfile.mkdtemp(prefix=f"matrix_car_{car_n}_"))
-    frames = extract_sources_tar(folder, car_n, tmp)
+    tmp = Path(tempfile.mkdtemp(prefix=f"matrix_car_{prefix}_"))
+    frames = extract_sources_tar(folder, prefix, tmp)
     if not frames:
         # cleanup empty tmp
         try:
@@ -198,17 +208,15 @@ def trim_plus_margin(
 
 def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
     folder = folder.resolve()
-    m = re.match(r"^(\d+)_hero$", folder.name)
-    if not m:
-        raise SystemExit(f"pasta esperada N_hero, recebi: {folder.name}")
-    car_n = int(m.group(1))
+    stem, prefix = parse_hero_folder(folder)
+    car_key: int | str = int(stem) if stem.isdigit() else stem
     out_dir = (out_dir or folder).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    frames, tmp_src = resolve_frame_paths(folder, car_n)
+    frames, tmp_src = resolve_frame_paths(folder, prefix)
     if not frames:
         raise SystemExit(
-            f"nenhum car_{car_n}_a*.png nem car_{car_n}_sources.tar.gz em {folder}"
+            f"nenhum {prefix}_a*.png nem {prefix}_sources.tar.gz em {folder}"
         )
 
     try:
@@ -278,9 +286,9 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
             )
             x += pad.width
 
-        out_png_art = out_dir / f"car_{car_n}_strip.png"  # discarded — rebuild when needed
-        out_png_64 = out_dir / f"car_{car_n}_strip_64.png"
-        out_json = out_dir / f"car_{car_n}_strip.json"
+        out_png_art = out_dir / f"{prefix}_strip.png"  # discarded — rebuild when needed
+        out_png_64 = out_dir / f"{prefix}_strip_64.png"
+        out_json = out_dir / f"{prefix}_strip.json"
 
         # Art strip only in temp → magick → keep strip_64; delete any old art PNG on disk
         magick_pct_str = f"{MAGICK_PCT}%"
@@ -304,9 +312,9 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
 
         compact_strip_64(out_png_64)
 
-        sources_name = f"car_{car_n}_sources.tar.gz"
+        sources_name = f"{prefix}_sources.tar.gz"
         payload = {
-            "car": car_n,
+            "car": car_key,
             "folder": str(folder),
             "strip": None,
             "strip_64": out_png_64.name,

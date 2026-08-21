@@ -6,7 +6,7 @@
  * Do not flip the PNG; rename here when the still is right and the name is wrong.
  *
  * Garage carousel walks `garageCarouselIds()` (folders 1–33 + Delorean).
- * Unlock only gates the buy button — locked cars stay in the list.
+ * Delorean is special car 1 in `delorean_hero`. Unlock only gates the buy button.
  */
 
 export const MATRIX_CAR_INDEX_SIZE = 33;
@@ -79,7 +79,7 @@ export function matrixIndexCarId(n: number): string {
   return matrixCarRow(n).carId;
 }
 
-/** Garage carousel: one id per folder 1–33, then the Delorean (no matrix folder). */
+/** Garage carousel: one id per folder 1–33, then the Delorean (`delorean_hero`). */
 export function tourIndexCarIds(): readonly string[] {
   return MATRIX_CAR_INDEX.map(entry => entry.carId);
 }

@@ -6,8 +6,8 @@ import type { VehicleStats } from '../../src/domain/vehicle/VehicleStats.ts';
 
 /**
  * One imported fleet car. Art comes from `fleet-src/{source}`; stats/perk/world
- * for numbered cars come from `CarStatMatrix` (folder `N_hero`). Delorean has
- * no matrix number and keeps its own template.
+ * for numbered cars come from `CarStatMatrix` (folder `N_hero`). Delorean is
+ * special car 1 in `delorean_hero` and keeps its own template.
  */
 export interface FleetCarDef {
   readonly id: string;
@@ -37,17 +37,17 @@ function matrixFields(
 }
 
 const STATS_DELOREAN: VehicleStats = {
-  mass: 900,
-  enginePower: 42,
-  brakeForce: 44,
-  maxSpeed: 92,
-  grip: 24,
-  steerRate: 2.8,
-  steerSpeedFalloff: 0.5,
-  armor: 0.18,
-  ammoCapacity: 8,
+  mass: 880,
+  enginePower: 40,
+  brakeForce: 50,
+  maxSpeed: 88,
+  grip: 36,
+  steerRate: 3.05,
+  steerSpeedFalloff: 0.36,
+  armor: 0.32,
+  ammoCapacity: 10,
   collisionRadius: 1.75,
-  aimRadius: 3,
+  aimRadius: 3.2,
 };
 
 /** Official 20-car roster, car-select order. Names come from MatrixCarIndex. */
@@ -59,8 +59,8 @@ export const FLEET_CARS: readonly FleetCarDef[] = [
     id: 'delorean',
     source: 'Car_Delorean.png',
     displayName: 'Delorean',
-    archetype: 'Steel wedge — Chrome Verge titular',
-    perk: CAR_PERK.SLIPSTREAM,
+    archetype: 'Special 1 — flux wedge, sticks on every world',
+    perk: CAR_PERK.FLUX,
     homePlanetId: 'chrome-verge',
     worldAdvantage: WORLD_ADVANTAGE.PRIMARY,
     stats: STATS_DELOREAN,

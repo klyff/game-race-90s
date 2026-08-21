@@ -154,7 +154,7 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
 
   it('lap times fit measured bands (±25% margin)', () => {
     // Measured on 2026-08-18 after CarStatMatrix (Basin teaching band slower):
-    // car-1 37.08  car-2 37.27  car-5 37.47  delorean 35.53  car-9-turbo 39.35
+    // car-1 37.08  car-2 37.27  car-5 37.47  delorean 31.13 (flux, 2026-08-21)  car-9-turbo 39.35
     // car-3 34.07  car-13 34.12  car-4 33.90  car-17 34.33
     // car-8-strong 41.93  car-12-strong 41.47  car-6-tank 46.97  car-18 45.20
     // car-11 33.30  car-15 32.97  car-7-turbo 40.10  car-20 38.50

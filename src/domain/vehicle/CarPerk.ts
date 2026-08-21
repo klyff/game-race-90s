@@ -168,6 +168,14 @@ export const CAR_PERKS: Readonly<Record<CarPerkId, CarPerkProfile>> = Object.fre
     description: 'Always on the boil. Pulls away on the straight without needing a draft.',
     turboSpeedBonus: 0.12,
   }),
+  [CAR_PERK.FLUX]: profile({
+    id: CAR_PERK.FLUX,
+    displayName: 'Flux',
+    description: 'Sticks on every world. Cuts dirt, bites under braking, and hums a little extra on the straight.',
+    offroadRecovery: 0.8,
+    brakingGripMultiplier: 1.25,
+    turboSpeedBonus: 0.08,
+  }),
 });
 
 /** The profile for a perk id, or the neutral profile when a car has no perk. */

@@ -536,6 +536,7 @@ describe('cart portraits', () => {
     expect(matrixHeroUrl(6)).toBe('matrix_car/6_hero/car_6_hero.png');
     expect(matrixHeroNumber('car-6-tank')).toBe(6);
     expect(matrixHeroNumber('delorean')).toBeUndefined();
+    expect(portraitCandidateUrls('delorean')[0]).toBe('matrix_car/delorean_hero/delorean_hero_300.png');
     expect(portraitCandidateUrls('car-1')[0]).toBe('matrix_car/1_hero/car_1_hero_300.png');
     expect(portraitCandidateUrls('car_1')[0]).toBe('matrix_car/1_hero/car_1_hero_300.png');
     expect(portraitCandidateUrls('car-1')).toHaveLength(1);

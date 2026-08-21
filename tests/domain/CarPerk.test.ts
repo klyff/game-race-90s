@@ -56,6 +56,7 @@ const TRENCH_GRIP_PROFILE = CAR_PERKS[CAR_PERK.TRENCH_GRIP];
 const ARSENAL_PROFILE = CAR_PERKS[CAR_PERK.ARSENAL];
 const WAR_TANK_PROFILE = CAR_PERKS[CAR_PERK.WAR_TANK];
 const TURBO_PROFILE = CAR_PERKS[CAR_PERK.TURBO];
+const FLUX_PROFILE = CAR_PERKS[CAR_PERK.FLUX];
 
 function input(overrides: Partial<InputCommand>): InputCommand {
   return { ...IDLE_INPUT, ...overrides };
@@ -474,6 +475,28 @@ describe('CarPerk — Turbo is always-on pace', () => {
     const expected = airBladeStats.maxSpeed * (1 + TURBO_PROFILE.turboSpeedBonus);
     expect(undrafted.maxSpeed).toBeCloseTo(expected, 5);
     expect(undrafted.enginePower).toBeCloseTo(airBladeStats.enginePower * (1 + TURBO_PROFILE.turboSpeedBonus), 5);
+  });
+});
+
+describe('CarPerk — Flux is the all-world special', () => {
+  const STEPS = Math.round(2 / DT);
+  const fluxOffroad = perkSurface(OFFROAD, FLUX_PROFILE);
+  const neutralOffroad = perkSurface(OFFROAD, NEUTRAL_PERK);
+  const fluxOnDirt = integrateForwardDistance(dirtDevilStats, fluxOffroad, STEPS);
+  const neutralOnDirt = integrateForwardDistance(dirtDevilStats, neutralOffroad, STEPS);
+
+  it('covers more dirt than a neutral car in the same 2s', () => {
+    expect(fluxOnDirt.distance).toBeGreaterThan(neutralOnDirt.distance);
+  });
+
+  it('still pays something for leaving the road', () => {
+    const fluxOnTarmac = integrateForwardDistance(dirtDevilStats, TARMAC, STEPS);
+    expect(fluxOnDirt.distance).toBeLessThan(fluxOnTarmac.distance);
+  });
+
+  it('hums extra pace without a draft', () => {
+    const undrafted = drivingStats(airBladeStats, FLUX_PROFILE, false, 0);
+    expect(undrafted.maxSpeed).toBeCloseTo(airBladeStats.maxSpeed * (1 + FLUX_PROFILE.turboSpeedBonus), 5);
   });
 });
 

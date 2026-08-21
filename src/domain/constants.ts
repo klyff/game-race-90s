@@ -113,6 +113,7 @@ export const CAR_PERK = {
   ARSENAL: 'arsenal',
   WAR_TANK: 'war-tank',
   TURBO: 'turbo',
+  FLUX: 'flux',
 } as const;
 export type CarPerkId = (typeof CAR_PERK)[keyof typeof CAR_PERK];
 

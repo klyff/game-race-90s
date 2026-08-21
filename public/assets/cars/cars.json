@@ -1046,33 +1046,35 @@
     {
       "id": "delorean",
       "displayName": "Delorean",
-      "archetype": "Steel wedge — Chrome Verge titular",
-      "image": "delorean.png",
+      "archetype": "Special 1 — flux wedge, sticks on every world",
+      "image": "matrix_car/delorean_hero/delorean_strip_64.png",
       "shadow": {
         "width": 43,
         "height": 16
       },
       "stats": {
-        "mass": 900,
-        "enginePower": 42,
-        "brakeForce": 44,
-        "maxSpeed": 92,
-        "grip": 24,
-        "steerRate": 2.8,
-        "steerSpeedFalloff": 0.5,
-        "armor": 0.18,
-        "ammoCapacity": 8,
+        "mass": 880,
+        "enginePower": 40,
+        "brakeForce": 50,
+        "maxSpeed": 88,
+        "grip": 36,
+        "steerRate": 3.05,
+        "steerSpeedFalloff": 0.36,
+        "armor": 0.32,
+        "ammoCapacity": 10,
         "collisionRadius": 1.75,
-        "aimRadius": 3,
+        "aimRadius": 3.2,
         "collisionAlong": 2.25,
         "collisionAcross": 1.03,
         "collisionSquareMin": 1.03,
         "collisionSquareMax": 2.25,
         "collisionSquare": 1.64
       },
-      "perk": "slipstream",
+      "perk": "flux",
       "homePlanetId": "chrome-verge",
-      "worldAdvantage": 0.9
+      "worldAdvantage": 0.9,
+      "frameCount": 30,
+      "framesJson": "matrix_car/delorean_hero/delorean_strip.json"
     }
   ]
 }

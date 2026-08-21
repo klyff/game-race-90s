@@ -65,9 +65,21 @@ Ordem de geração por carro:
 | Faltam | `0–24` |
 | Strip parcial | `2_hero/car_2_strip_64.png` + `.json` (rebuild ao completar) |
 
+### delorean — especial 1 (2026-08-21)
+
+| item | estado |
+|------|--------|
+| Pasta | `delorean_hero/` — **não** é o `1_hero` (Marauder) |
+| Vitrine | `delorean_hero.png` (quieta, 1536×1024) · pose **4:00 = indice[25]** |
+| Garage | `delorean_hero_300.png` |
+| Frames | **30 / 30** · `delorean_a000`…`a029` · 1700×1254 |
+| a025 | cópia normalizada da vitrine (chroma + extent) — hero não foi mexido |
+| Strip | `delorean_strip_64.png` + `delorean_strip.json` |
+| Física | perk **flux** · grip alto · titular Chrome Verge · serve todos os mundos |
+
 ### cars 3–33
 
-- Só vitrine · **0** frames de rotação (exceto o progresso acima no 2)
+- Só vitrine · **0** frames de rotação (exceto o progresso acima no 2 e strips 18–21)
 
 ---
 

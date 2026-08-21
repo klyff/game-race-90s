@@ -304,7 +304,7 @@ export function cartPortraitToken(carId: string): string {
 
 /**
  * Matrix vitrine index. `car-1` and `car_1` are both 1.
- * `delorean` has no folder.
+ * `delorean` lives in `delorean_hero`, not a numbered folder.
  */
 export function matrixHeroNumber(carId: string): number | undefined {
   const match = /(\d+)/.exec(carId);
@@ -356,6 +356,14 @@ export function applyAvailableMatrixStrips(manifest: CarSetManifest): CarSetMani
       if (isBBoxSheet(car)) {
         return car;
       }
+      if (car.id === 'delorean') {
+        return {
+          ...car,
+          image: deloreanStripUrl(),
+          framesJson: deloreanStripJsonUrl(),
+          frameCount: 30,
+        };
+      }
       const n = matrixHeroNumber(car.id);
       if (n === undefined || !matrixStripReady(n)) {
         return car;
@@ -398,6 +406,9 @@ export function playableCarIds(manifest: CarSetManifest): readonly string[] {
  * Missing files are optional at Boot; garage falls back to the yaw strip.
  */
 export function portraitCandidateUrls(carId: string): readonly string[] {
+  if (carId === 'delorean') {
+    return [deloreanHero300Url()];
+  }
   const n = matrixHeroNumber(carId);
   if (n !== undefined) {
     return [matrixHero300Url(n)];
@@ -513,6 +524,20 @@ export function matrixStripUrl(n: number): string {
 
 export function matrixStripJsonUrl(n: number): string {
   return `matrix_car/${n}_hero/car_${n}_strip.json`;
+}
+
+export const DELOREAN_MATRIX_FOLDER = 'delorean_hero';
+
+export function deloreanHero300Url(): string {
+  return 'matrix_car/delorean_hero/delorean_hero_300.png';
+}
+
+export function deloreanStripUrl(): string {
+  return 'matrix_car/delorean_hero/delorean_strip_64.png';
+}
+
+export function deloreanStripJsonUrl(): string {
+  return 'matrix_car/delorean_hero/delorean_strip.json';
 }
 
 export function matrixStripCacheKey(carId: string): string {

@@ -42,5 +42,8 @@ Garage carousel always walks this list (locked cars stay visible; buy is gated b
 | 31 | `car_31` | Black Gold | Black / gold sedan |
 | 32 | `car_32` | White H | White coupe, Honda H |
 | 33 | `car_33` | Purple Wing | Purple sedan |
+| — | `delorean` | Delorean | Special 1 — stainless flux wedge, 4:00 hero |
 
 Yaw clock (a000…a029) stays in `RELOGIO.md`. This file is car identity, not frame yaw.
+
+**Delorean** is not folder `1` (that is Marauder). It lives in `delorean_hero/`: vitrine `delorean_hero.png`, garage `delorean_hero_300.png`, frames `delorean_a000`…`a029`, strip `delorean_strip_64.png`.

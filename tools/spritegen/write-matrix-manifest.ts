@@ -2,6 +2,9 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  deloreanHero300Url,
+  deloreanStripJsonUrl,
+  deloreanStripUrl,
   matrixHero300Url,
   matrixHeroNumber,
   matrixHeroUrl,
@@ -210,21 +213,43 @@ function sheetForFolder(n: number, previous: readonly PreviousSheet[]): CarSheet
   };
 }
 
+function deloreanHasStrip(): boolean {
+  return (
+    existsSync(join(REPO_ROOT, 'public', deloreanStripUrl())) &&
+    existsSync(join(REPO_ROOT, 'public', deloreanStripJsonUrl()))
+  );
+}
+
 function deloreanSheet(previous: readonly PreviousSheet[]): CarSheetManifest {
   const def = FLEET_CARS.find(car => car.id === 'delorean');
   if (def === undefined) {
     throw new Error('FLEET_CARS is missing delorean');
   }
-  return {
+  const playable = deloreanHasStrip();
+  const hero300 = join(REPO_ROOT, 'public', deloreanHero300Url());
+  const image = playable
+    ? deloreanStripUrl()
+    : existsSync(hero300)
+      ? deloreanHero300Url()
+      : 'delorean.png';
+  const sheet: CarSheetManifest = {
     id: def.id,
     displayName: def.displayName,
     archetype: def.archetype,
-    image: 'delorean.png',
+    image,
     shadow: previousShadow(previous, def.id),
     stats: withCollisionBox(def.stats, collisionBoxForCarId(def.id)),
     perk: def.perk,
     homePlanetId: def.homePlanetId,
     worldAdvantage: def.worldAdvantage,
+  };
+  if (!playable) {
+    return sheet;
+  }
+  return {
+    ...sheet,
+    frameCount: MATRIX_YAW_FRAMES,
+    framesJson: deloreanStripJsonUrl(),
   };
 }
 
@@ -232,6 +257,7 @@ export interface MatrixManifestWrite {
   readonly path: string;
   readonly folders: readonly number[];
   readonly playable: readonly number[];
+  readonly deloreanPlayable: boolean;
   readonly carCount: number;
 }
 
@@ -249,6 +275,7 @@ export function writeMatrixManifest(): MatrixManifestWrite {
     return sheetForFolder(n, previous);
   });
   cars.push(deloreanSheet(previous));
+  const deloreanPlayable = deloreanHasStrip();
 
   const manifest: CarSetManifest = {
     frameWidth: CAR_FRAME_WIDTH,
@@ -259,7 +286,7 @@ export function writeMatrixManifest(): MatrixManifestWrite {
     cars,
   };
   writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`);
-  return { path: MANIFEST_PATH, folders, playable, carCount: cars.length };
+  return { path: MANIFEST_PATH, folders, playable, deloreanPlayable, carCount: cars.length };
 }
 
 function main(): void {
@@ -268,6 +295,9 @@ function main(): void {
     `cars.json ← ${result.folders.length} matrix folder(s), ${result.playable.length} playable strip(s), ${result.carCount} roster row(s)`,
   );
   console.log(`  playable: ${result.playable.join(', ') || '(none)'}`);
+  if (result.deloreanPlayable) {
+    console.log('  special: delorean');
+  }
   console.log(`  wrote ${result.path}`);
 }
 
