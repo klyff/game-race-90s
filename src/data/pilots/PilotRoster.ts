@@ -1,9 +1,11 @@
 /**
- * Championship pilot names. 20 regulars locked at career start for every
- * track, plus 5 jokers that take the front of the field on world 10.
+ * Championship pilot names. 21 regulars locked at career start for every
+ * track (KLYFF first), plus 5 jokers that take the front of the field on
+ * world 10.
  */
 
 export const REGULAR_PILOTS = [
+  'KLYFF',
   'ALINE',
   'ENZO',
   'FLUFE',
@@ -32,7 +34,7 @@ export const JOKER_PILOTS = ['VIKTOR', 'SEAMUS', 'NEGAO', 'LUCA', 'ZOR9'] as con
 /** @deprecated Use JOKER_PILOTS. Kept so older tests and saves still compile. */
 export const MYSTERIOUS_PILOTS = JOKER_PILOTS;
 
-export const RIVALS_PER_SAVE = 20;
+export const RIVALS_PER_SAVE = 21;
 export const MYSTERIOUS_SWAP_COUNT = 5;
 export const CHAMPIONSHIP_SIZE = 10;
 
@@ -46,7 +48,7 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-/** Deterministic shuffle of the 20 regulars. Seed from the slot clock so a reload is stable. */
+/** Deterministic shuffle of the 21 regulars. Seed from the slot clock so a reload is stable. */
 export function drawRivalNames(seed: number): string[] {
   const rng = mulberry32(Number.isFinite(seed) ? seed : 1);
   const pool = [...REGULAR_PILOTS];
@@ -64,7 +66,7 @@ export function drawRivalNames(seed: number): string[] {
 }
 
 /**
- * Worlds 1-9 keep the locked 20. World 10 drops the five lowest-scoring
+ * Worlds 1-9 keep the locked 21. World 10 drops the five lowest-scoring
  * regulars and puts the five jokers at the front of the field so they race.
  */
 export function rivalsForPlanet(

@@ -118,6 +118,24 @@ export class MenuController {
     return discarded;
   }
 
+  /**
+   * Move the cursor by `delta` slots (not just one). Character-select uses
+   * this for 2D grid arrows: ±1 across a row, ±columns up/down.
+   */
+  jump(delta: number): MenuResult {
+    if (delta === 0 || !Number.isFinite(delta)) {
+      return { type: 'none' };
+    }
+    const discarded = this.discardCurrentIfDirty();
+    this.cursor = wrapIndex(this.cursor + Math.trunc(delta), this.items.length);
+    return discarded;
+  }
+
+  /** Snap the cursor to an index. Used for pointer hits on a grid. */
+  selectIndex(index: number): void {
+    this.cursor = wrapIndex(index, this.items.length);
+  }
+
   /** Cycle the highlighted option. Returns false when the row is an action. */
   cycle(direction: number): boolean {
     const item = this.items[this.cursor];

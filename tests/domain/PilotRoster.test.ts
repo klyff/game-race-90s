@@ -8,17 +8,20 @@ import {
 } from '../../src/data/pilots/PilotRoster.ts';
 
 describe('PilotRoster', () => {
-  it('locks all 20 regulars deterministically', () => {
+  it('locks all 21 regulars deterministically, KLYFF first', () => {
     const a = drawRivalNames(12345);
     const b = drawRivalNames(12345);
     expect(a).toEqual(b);
     expect(a).toHaveLength(RIVALS_PER_SAVE);
-    expect(REGULAR_PILOTS).toHaveLength(20);
+    expect(REGULAR_PILOTS).toHaveLength(21);
+    expect(REGULAR_PILOTS[0]).toBe('KLYFF');
+    expect(RIVALS_PER_SAVE).toBe(21);
     expect(new Set(a).size).toBe(RIVALS_PER_SAVE);
     expect(a.every(name => (REGULAR_PILOTS as readonly string[]).includes(name))).toBe(true);
+    expect(a).toContain('KLYFF');
   });
 
-  it('keeps the same twenty until world 10, then puts the five jokers first', () => {
+  it('keeps the same locker until world 10, then puts the five jokers first', () => {
     const rivals = drawRivalNames(99);
     const scores = rivals.map((_, index) => index * 10);
     expect(rivalsForPlanet(rivals, scores, 9)).toEqual(rivals);

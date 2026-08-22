@@ -38,6 +38,19 @@ describe('MenuController', () => {
     expect(menu.selectedId).toBe('return');
   });
 
+  it('jumps several slots and wraps, and can snap to an index', () => {
+    const menu = actionMenu();
+    menu.jump(2);
+    expect(menu.selectedId).toBe('quit');
+    menu.jump(-3);
+    expect(menu.selectedId).toBe('quit');
+    menu.jump(1);
+    expect(menu.selectedId).toBe('return');
+    menu.selectIndex(1);
+    expect(menu.selectedId).toBe('save');
+    expect(menu.jump(0).type).toBe('none');
+  });
+
   it('activates the highlighted action on confirm', () => {
     const menu = actionMenu();
     menu.move(1);

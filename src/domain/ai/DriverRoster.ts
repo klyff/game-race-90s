@@ -1,6 +1,6 @@
 /**
  * Race name → DriverProfile. Named pilots stay named.
- * FLUFE is Emma. KLYFF is available if the player types it.
+ * FLUFE is Emma. KLYFF is the first regular on the face grid and in the locker.
  */
 
 import {

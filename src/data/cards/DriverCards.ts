@@ -17,7 +17,7 @@ function card(name: string, file: string): DriverCard {
   return { name, key: `driver-card:${name}`, file };
 }
 
-/** Regulars, jokers, and the creator card. */
+/** Regulars (KLYFF first on the face grid) and world-10 jokers. */
 export const DRIVER_CARDS: readonly DriverCard[] = [
   card('ALINE', 'Aline.png'),
   card('ENZO', 'enzo.png'),

@@ -11,13 +11,13 @@ language as `public/assets/cards/klyff.png`.
 - Always end the prompt with: **Make it in 16-bit like the card that is in public/assets/cards/klyff.png**
 
 **Roster rules:**
-- 20 regulars are locked when a career starts. They race every planet.
+- 21 regulars are locked when a career starts (KLYFF first). They race every planet.
 - On planet 10 (Verdant Fault) the 5 JOKERS take the front of the field.
-- Klyff is the game creator. He is a card, not an NPC rival. The player types their own 5-letter name in the garage.
+- Klyff is the game creator and the first face on CHOOSE YOUR FACE. He is a regular rival.
 
 ---
 
-## KLYFF — Creator (not a rival)
+## KLYFF — Creator (first regular)
 
 **Race name:** KLYFF
 **Card file:** `klyff.png` / `klyff.txt`
@@ -32,7 +32,7 @@ Make it in 16-bit like the card that is in public/assets/cards/klyff.png
 
 ---
 
-## 20 REGULARS — every planet
+## 21 REGULARS — every planet
 
 ### 1. ALINE
 **Race name:** ALINE
