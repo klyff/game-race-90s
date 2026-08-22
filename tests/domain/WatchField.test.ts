@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { MEDIUM_PROFILES } from '../../src/domain/ai/DriverProfile.ts';
 import {
+  applyWatchPin,
   nextWatchTrack,
   splitWatchRoster,
   watchAttractTracks,
@@ -41,6 +42,12 @@ describe('WatchField', () => {
     expect(odd.reserve).toEqual(FLEET.slice(0, 10));
   });
 
+  it('keeps nogo labs out of the default watch grid', () => {
+    const mixed = [...FLEET, 'nogo-98', 'nogo-99'];
+    expect(watchCarIds(mixed)).toEqual(FLEET);
+    expect(watchCarIds(['nogo-99', 'car_2', 'car_18'])).toEqual(['car_2', 'car_18']);
+  });
+
   it('uses the clock fleet once ten or more new strips are listed', () => {
     const mixed = ['car-1', 'car-2', ...Array.from({ length: 12 }, (_, index) => `car_${index + 2}`)];
     expect(watchCarIds(mixed)).toEqual(mixed.filter(id => id.startsWith('car_')));
@@ -64,6 +71,17 @@ describe('WatchField', () => {
     expect(tracks[0]).toBe('thunder-basin');
     expect(tracks[1]).toBe('thunder-basin-2');
     expect(tracks[2]).toBe('thunder-basin-3');
+  });
+
+  it('pins a spectator pairing at seat 0 without dropping the rest', () => {
+    const pinned = applyWatchPin(['car-1', 'car-2', 'delorean'], ['TECHNICIAN', 'RAZOR'], {
+      carId: 'delorean',
+      pilot: 'KLYFF',
+    });
+    expect(pinned.field[0]).toBe('delorean');
+    expect(pinned.pilots[0]).toBe('KLYFF');
+    expect(pinned.field).toEqual(['delorean', 'car-1', 'car-2']);
+    expect(pinned.pilots).toEqual(['KLYFF', 'TECHNICIAN', 'RAZOR']);
   });
 
   it('walks the splash Watch pool in a circle', () => {

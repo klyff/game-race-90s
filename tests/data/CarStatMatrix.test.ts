@@ -82,7 +82,8 @@ describe('cars.json follows CarStatMatrix for indices 1–30', () => {
       group.push(handlingTuple(car.stats));
       byIndex.set(n, group);
     }
-    expect(byIndex.size).toBe(30);
+    expect(byIndex.size).toBe(5);
+    expect([...byIndex.keys()].sort((a, b) => a - b)).toEqual([1, 18, 19, 20, 21]);
   });
 
   it('keeps car_18 a heavy tank on Vulkanis', () => {
@@ -93,15 +94,11 @@ describe('cars.json follows CarStatMatrix for indices 1–30', () => {
     expect(sheet.stats.maxSpeed).toBeLessThan(findCarSheet(manifest, 'car-1').stats.maxSpeed);
   });
 
-  it('does not rewrite cars 31–45 onto the teaching Marauder row', () => {
-    const marauder = handlingTuple(carStatRow(1).stats);
+  it('does not list parked leftover folders (31–33) in the live roster', () => {
     const leftovers = manifest.cars.filter(car => {
       const n = matrixHeroNumber(car.id);
       return n !== undefined && n > 30;
     });
-    expect(leftovers.length).toBeGreaterThan(0);
-    for (const car of leftovers) {
-      expect(handlingTuple(car.stats)).not.toBe(marauder);
-    }
+    expect(leftovers).toEqual([]);
   });
 });

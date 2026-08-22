@@ -5,9 +5,13 @@
  * share this row. Pose of every vitrine is 4h–3h (typical indice[25] = 300°).
  * Do not flip the PNG; rename here when the still is right and the name is wrong.
  *
- * Garage carousel walks `garageCarouselIds()` (folders 1–33 + Delorean).
+ * Garage carousel walks `garageCarouselIds()` — folders that still exist as
+ * `{N}_hero` (no `x_` park) plus Delorean. Identity rows 1–33 stay here.
  * Delorean is special car 1 in `delorean_hero`. Unlock only gates the buy button.
  */
+
+/** Matrix folders that are on disk as `{N}_hero` (not `x_{N}_hero`). */
+export const AVAILABLE_MATRIX_NUMBERS = [1, 18, 19, 20, 21] as const;
 
 export const MATRIX_CAR_INDEX_SIZE = 33;
 
@@ -79,13 +83,17 @@ export function matrixIndexCarId(n: number): string {
   return matrixCarRow(n).carId;
 }
 
-/** Garage carousel: one id per folder 1–33, then the Delorean (`delorean_hero`). */
+/** Identity walk of every authored row (including parked folders). */
 export function tourIndexCarIds(): readonly string[] {
   return MATRIX_CAR_INDEX.map(entry => entry.carId);
 }
 
+/** Shop / garage: available `{N}_hero` folders plus the Delorean. */
 export function garageCarouselIds(): readonly string[] {
-  return [...tourIndexCarIds(), 'delorean'];
+  const available = MATRIX_CAR_INDEX.filter(entry =>
+    (AVAILABLE_MATRIX_NUMBERS as readonly number[]).includes(entry.n),
+  ).map(entry => entry.carId);
+  return [...available, 'delorean'];
 }
 
 export function matrixCarName(n: number): string {

@@ -46,10 +46,17 @@ import {
 } from '../adapters/render/LayerTrace.ts';
 import { TuningOverlay } from '../adapters/render/TuningOverlay.ts';
 import { formatAiOverlay } from '../adapters/render/AiOverlayFormat.ts';
+import { formatClockYawLines } from '../adapters/render/TuningOverlayFormat.ts';
 import { TyreMarks } from '../adapters/render/TyreMarks.ts';
 import { CrowdView } from '../adapters/render/CrowdView.ts';
 import { VehicleView } from '../adapters/render/VehicleView.ts';
-import { findCarSheet, frameIndexForHeading, playableCarIds } from '../data/cars/CarManifest.ts';
+import {
+  findCarSheet,
+  frameIndexForHeading,
+  isNogoLabCarId,
+  playableCarIds,
+  sheetFrameCount,
+} from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
@@ -75,17 +82,20 @@ import { NarratorDirector } from '../domain/audio/NarratorDirector.ts';
 import { clipsInPlan, planNarratorRace } from '../domain/audio/NarratorPlan.ts';
 import type { InputCommand } from '../domain/input/InputCommand.ts';
 import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
+import { clockYawFromWorldHeading } from '../domain/math/IsoClock.ts';
 import { angleOf, dot, fromAngle, length } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
 import { assignNpcCars, seatCarId } from '../domain/race/CarAssignment.ts';
 import { CAREER_NPC_COUNT, npcPilotNames } from '../domain/race/CareerGrid.ts';
 import {
+  applyWatchPin,
   nextWatchTrack,
   splitWatchRoster,
   watchCarIds,
   watchPilots,
   WATCH_RACER_COUNT,
 } from '../domain/race/WatchField.ts';
+import { profileFor } from '../domain/ai/DriverRoster.ts';
 import {
   DEBUG_IA_CAMERA_MAP_FRACTION,
   DEBUG_IA_RACER_COUNT,
@@ -181,6 +191,9 @@ interface RaceSceneData {
   readonly debugIaNpcCount?: number;
   /** `,` / `.` cycle this pool in watch. Splash `P` uses Thunder Basin I–III. */
   readonly watchTrackPool?: readonly string[];
+  /** Spectator test: pin this pilot on this car (chase starts there). */
+  readonly watchPinPilot?: string;
+  readonly watchPinCar?: string;
 }
 
 /** One explosion waiting to be presented, queued inside a simulation step. */
@@ -228,6 +241,8 @@ export class RaceScene extends Phaser.Scene {
   private debugIaLogElapsed = 0;
   private debugIaSeats: readonly DebugIaSeat[] = [];
   private watchTrackPool: readonly string[] | undefined;
+  private watchPinPilot: string | undefined;
+  private watchPinCar: string | undefined;
   private watchCameraKind: WatchCameraKind = WATCH_CAMERA_KIND.BROADCAST;
   /** 0 = leader, 1 = 2nd, … used in chase. Does not wrap. */
   private watchPlace = 0;
@@ -316,6 +331,8 @@ export class RaceScene extends Phaser.Scene {
     this.debugIaSeats = [];
     this.watch = data.watch === true || this.debugIa;
     this.watchTrackPool = data.watchTrackPool;
+    this.watchPinPilot = data.watchPinPilot;
+    this.watchPinCar = data.watchPinCar;
     this.watchCameraKind = WATCH_CAMERA_KIND.BROADCAST;
     this.watchPlace = 0;
     this.watchPinned = false;
@@ -405,6 +422,7 @@ export class RaceScene extends Phaser.Scene {
       trapCatalog: this.loadTrapCatalog(),
       trapSeed: trapSeed(planet?.seed ?? 1, this.trackId),
     });
+    this.pinWatchFocus();
     this.views = this.field.racers.map(racer =>
       new VehicleView(this, this.manifest, findCarSheet(this.manifest, racer.carId), this.projection, {
         farLod: this.debugIa,
@@ -425,6 +443,9 @@ export class RaceScene extends Phaser.Scene {
     this.trackRenderer.syncToCamera(this.cameras.main);
 
     this.overlay = new TuningOverlay(this, this.cameras.main);
+    if (this.watch && isNogoLabCarId(this.carId)) {
+      this.overlay.show();
+    }
 
     this.bindSceneKeys();
     this.respawn();
@@ -1174,14 +1195,48 @@ export class RaceScene extends Phaser.Scene {
     ];
   }
 
+  private watchPin(): { carId: string; pilot: string } | undefined {
+    const carId = this.watchPinCar?.trim();
+    if (carId === undefined || carId.length === 0) {
+      return undefined;
+    }
+    if (!playableCarIds(this.manifest).includes(carId)) {
+      return undefined;
+    }
+    const rawPilot = this.watchPinPilot?.trim();
+    const pilot =
+      rawPilot !== undefined && rawPilot.length > 0
+        ? profileFor(rawPilot).displayName
+        : watchPilots()[0] ?? 'TECHNICIAN';
+    return { carId, pilot };
+  }
+
+  private pinWatchFocus(): void {
+    const pin = this.watchPin();
+    if (pin === undefined) {
+      return;
+    }
+    const index = this.field.racers.findIndex(
+      racer => racer.carId === pin.carId || racer.carId.startsWith(`${pin.carId}#`),
+    );
+    if (index < 0) {
+      return;
+    }
+    this.aiFocusIndex = index;
+    this.watchPinned = true;
+    this.watchPlace = 0;
+  }
+
   private buildWatchEntries(): readonly RacerEntry[] {
     const allIds = watchCarIds(playableCarIds(this.manifest));
     const planetTwoIndex = Math.max(0, this.planetIndex - 1);
     const { field, reserve } = splitWatchRoster(allIds, planetTwoIndex);
-    const pilots = watchPilots();
+    const pin = this.watchPin();
+    const pinned = applyWatchPin(field, watchPilots(), pin);
     this.sittingRivals = reserve.map(carId => findCarSheet(this.manifest, carId).displayName);
     this.pilotNames = {};
-    const ids = field.slice(0, WATCH_RACER_COUNT);
+    const ids = pinned.field.slice(0, WATCH_RACER_COUNT);
+    const pilots = pinned.pilots;
     this.carId = ids[0] ?? this.carId;
     return ids.map((carId, index) => {
       const sheet = findCarSheet(this.manifest, carId);
@@ -1434,6 +1489,8 @@ export class RaceScene extends Phaser.Scene {
       debugIaMix: this.debugIaMix,
       debugIaNpcCount: this.debugIaNpcCount,
       watchTrackPool: this.watchTrackPool,
+      watchPinPilot: this.watchPinPilot,
+      watchPinCar: this.watchPinCar,
     } satisfies RaceSceneData);
   }
 
@@ -1654,7 +1711,21 @@ export class RaceScene extends Phaser.Scene {
       zoom: this.cameras.main.zoom,
       muted: this.audio.isMuted,
       spriteFrame: this.playerView()?.sprite.frame.name ?? '0',
+      clockLines: this.clockYawLines(player),
       aiLines: this.aiOverlayLines(),
+    });
+  }
+
+  private clockYawLines(player: { readonly carId: string; readonly state: { readonly heading: number } }): readonly string[] {
+    const sheet = findCarSheet(this.manifest, player.carId);
+    const frameCount = sheetFrameCount(sheet, this.manifest);
+    const drawnFrame = this.playerView()?.sprite.frame.name ?? '0';
+    return formatClockYawLines({
+      heading: player.state.heading,
+      clockYaw: clockYawFromWorldHeading(player.state.heading),
+      expectedIndex: frameIndexForHeading(player.state.heading, frameCount),
+      drawnFrame,
+      frameCount,
     });
   }
 

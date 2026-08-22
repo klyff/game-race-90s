@@ -339,7 +339,7 @@ export function matrixHero300Url(n: number): string {
  * when the PNG+JSON pair is on disk; this list is the boot remap fallback.
  * `car-1` / `car_1` share folder 1.
  */
-export const MATRIX_STRIP_NUMBERS = [1, 2, 18, 19, 20, 21] as const;
+export const MATRIX_STRIP_NUMBERS = [1, 18, 19, 20, 21] as const;
 
 export function matrixStripReady(n: number): boolean {
   return (MATRIX_STRIP_NUMBERS as readonly number[]).includes(n);
@@ -491,7 +491,10 @@ export function frameIndexForHeading(heading: number, frameCount: number): numbe
 export const MATRIX_PRODUCTION_SCALE = 64 / 1700;
 
 export interface MatrixStripFrameBox {
+  /** Pack order in the PNG (holes recompacted). Do not use as Phaser name on nogo labs. */
   readonly i: number;
+  /** Official clock slot 0–29. */
+  readonly clockIndex: number;
   readonly x: number;
   readonly y: number;
   readonly w: number;
@@ -522,8 +525,52 @@ export function matrixStripUrl(n: number): string {
   return `matrix_car/${n}_hero/car_${n}_strip_64.png`;
 }
 
+export function matrixStripYawUrl(n: number): string {
+  return `matrix_car/${n}_hero/car_${n}_strip_64_yaw.png`;
+}
+
 export function matrixStripJsonUrl(n: number): string {
   return `matrix_car/${n}_hero/car_${n}_strip.json`;
+}
+
+export const NOGO_LABS = [
+  { n: 98, id: 'nogo-98', displayName: 'NOGO 98', sourceId: 'delorean' },
+  { n: 99, id: 'nogo-99', displayName: 'NOGO 99', sourceId: 'car-1' },
+] as const;
+
+export function isNogoLabCarId(carId: string): boolean {
+  return /^nogo-\d+$/.test(carId);
+}
+
+export function isNogoMatrixNumber(n: number): boolean {
+  return n === 98 || n === 99;
+}
+
+/** Watch-only labs. Not written into cars.json / garage. */
+export function applyNogoLabs(manifest: CarSetManifest): CarSetManifest {
+  const extra: CarSheetManifest[] = [];
+  for (const lab of NOGO_LABS) {
+    if (manifest.cars.some(car => car.id === lab.id)) {
+      continue;
+    }
+    const source = manifest.cars.find(car => car.id === lab.sourceId) ?? manifest.cars[0];
+    if (source === undefined) {
+      continue;
+    }
+    extra.push({
+      ...source,
+      id: lab.id,
+      displayName: lab.displayName,
+      archetype: `nogo lab copy of ${lab.sourceId}`,
+      image: matrixStripYawUrl(lab.n),
+      framesJson: matrixStripJsonUrl(lab.n),
+      frameCount: 30,
+    });
+  }
+  if (extra.length === 0) {
+    return manifest;
+  }
+  return { ...manifest, cars: [...manifest.cars, ...extra] };
 }
 
 export const DELOREAN_MATRIX_FOLDER = 'delorean_hero';
@@ -546,6 +593,7 @@ export function matrixStripCacheKey(carId: string): string {
 
 function readFrameBox(raw: Record<string, unknown>, index: number): MatrixStripFrameBox {
   const i = typeof raw['i'] === 'number' ? raw['i'] : typeof raw['index'] === 'number' ? raw['index'] : index;
+  const clockIndex = typeof raw['index'] === 'number' && Number.isInteger(raw['index']) ? raw['index'] : i;
   const x = raw['x'];
   const y = raw['y'];
   const w = raw['w'];
@@ -574,7 +622,7 @@ function readFrameBox(raw: Record<string, unknown>, index: number): MatrixStripF
       pivotY = (cy - y) / h;
     }
   }
-  return { i, x, y, w, h, pivotX, pivotY };
+  return { i, clockIndex, x, y, w, h, pivotX, pivotY };
 }
 
 /**
@@ -631,7 +679,7 @@ export function applyMatrixStripToSheet(
   const box = collisionFromMatrixStrip(strip, pixelsPerUnit);
   return {
     ...sheet,
-    frameCount: strip.count,
+    frameCount: strip.count === 30 || isNogoLabCarId(sheet.id) ? 30 : strip.count,
     stats: withSquares({
       ...sheet.stats,
       collisionAlong: box.along,

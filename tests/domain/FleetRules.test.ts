@@ -46,7 +46,7 @@ beforeEach(() => {
 
 describe('tank loadout', () => {
   it('starts with double missiles and refills to double capacity', () => {
-    const tank = findCarSheet(manifest, 'car-6-tank');
+    const tank = findCarSheet(manifest, 'car-18');
     expect(missileStartCount(tankPerk)).toBe(MISSILE_START_COUNT * 2);
     expect(createWeaponInventory(tankPerk).missiles).toBe(12);
     expect(missileCapacity(tank.stats, tankPerk)).toBe(tank.stats.ammoCapacity * 2);
@@ -90,10 +90,10 @@ describe('hazard size', () => {
 
 describe('tank ram spin', () => {
   it('applies an oil-like yawSpin to the other car on contact', () => {
-    const tank = findCarSheet(manifest, 'car-6-tank');
+    const tank = findCarSheet(manifest, 'car-18');
     const other = findCarSheet(manifest, 'car-1');
     const entries: RacerEntry[] = [
-      { carId: tank.id, stats: tank.stats, perk: tank.perk, isPlayer: true },
+      { carId: tank.id, stats: tank.stats, perk: CAR_PERK.WAR_TANK, isPlayer: true },
       { carId: other.id, stats: other.stats, perk: other.perk, isPlayer: false },
     ];
     const field = new RaceField(entries, track, freshSpline(), {
@@ -107,11 +107,11 @@ describe('tank ram spin', () => {
   });
 
   it('credits the player for a hard ram as the aggressor', () => {
-    const tank = findCarSheet(manifest, 'car-6-tank');
+    const tank = findCarSheet(manifest, 'car-18');
     const other = findCarSheet(manifest, 'car-1');
     const field = new RaceField(
       [
-        { carId: tank.id, stats: tank.stats, perk: tank.perk, isPlayer: true },
+        { carId: tank.id, stats: tank.stats, perk: CAR_PERK.WAR_TANK, isPlayer: true },
         { carId: other.id, stats: other.stats, perk: other.perk, isPlayer: false },
       ],
       track,

@@ -19,5 +19,7 @@ out/
 .tmp/
 _originais/
 graphify-out/
+# 1700px clock frames — iCloud: game-development/game-race-90s - sources
+**/*_sources.tar.gz
 .graphcache/
 *.original.md

@@ -5,13 +5,13 @@
 **Garage still:** `car_N_hero_300.png`  
 **Pose:** 4h–3h (typical `indice[25] = 4:00 = 300°`)
 
-Garage carousel always walks this list (locked cars stay visible; buy is gated by world). Tour (`?tour=1` or type TOUR) lights every still.
+Garage carousel walks **available** folders only (`1`, `18`–`21` + Delorean). Parked cars live in `x_{N}_hero` and stay out of the shop. Identity rows 1–33 stay in `MatrixCarIndex.ts`. Tour (`?tour=1` or type TOUR) lights the available stills.
 
 | N | Garage id | Name | Still |
 |--:|-----------|------|-------|
 | 1 | `car-1` | Marauder | Blue police wedge, lightbar |
-| 2 | `car-2` | LEÃO | Magenta hot rod, exposed engine |
-| 3 | `car-3` | Swamp Rat | Orange off-road, roof rockets |
+| 2 | `car-2` | LEÃO | Magenta hot rod, exposed engine · **parked** `x_2_hero` |
+| 3 | `car-3` | Swamp Rat | Orange off-road, roof rockets · **parked** `x_3_hero` |
 | 4 | `car-4` | Blue Wing | Blue open-wheel |
 | 5 | `car-5` | Sand Viper | Pink / cyan off-road hatch |
 | 6 | `car-6-tank` | Yellow Haul | Yellow pickup, roof turret |
@@ -45,5 +45,8 @@ Garage carousel always walks this list (locked cars stay visible; buy is gated b
 | — | `delorean` | Delorean | Special 1 — stainless flux wedge, 4:00 hero |
 
 Yaw clock (a000…a029) stays in `RELOGIO.md`. This file is car identity, not frame yaw.
+
+**Available now:** `1_hero`, `18_hero`–`21_hero`, `delorean_hero`.  
+**Parked (out of shop):** `x_2_hero`, `x_3_hero`–`x_17_hero`, `x_22_hero`–`x_33_hero` — vitrine kept; reopen only with ≥25 frames. See [`INVENTORY.md`](./INVENTORY.md).
 
 **Delorean** is not folder `1` (that is Marauder). It lives in `delorean_hero/`: vitrine `delorean_hero.png`, garage `delorean_hero_300.png`, frames `delorean_a000`…`a029`, strip `delorean_strip_64.png`.

@@ -135,7 +135,7 @@ export function discoverMatrixHeroNumbers(matrixRoot: string = MATRIX_ROOT): rea
       continue;
     }
     const n = Number(match[1]);
-    if (Number.isInteger(n) && n > 0) {
+    if (Number.isInteger(n) && n > 0 && n !== 98 && n !== 99) {
       numbers.push(n);
     }
   }

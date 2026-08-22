@@ -2,9 +2,11 @@ import Phaser from 'phaser';
 import {
   applyAvailableMatrixStrips,
   applyMatrixStripToSheet,
+  applyNogoLabs,
   carSheetImageUrl,
   cartPortraitKey,
   isBBoxSheet,
+  isNogoLabCarId,
   isPlayableCarSheet,
   matrixHeroNumber,
   matrixStripCacheKey,
@@ -21,6 +23,8 @@ import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { enableTourMode, enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
 import {
   enableWatchModeFromSearch,
+  watchCarFromSearch,
+  watchPilotFromSearch,
   watchTrackFromSearch,
 } from '../adapters/progress/WatchMode.ts';
 import {
@@ -125,7 +129,9 @@ export class BootScene extends Phaser.Scene {
     let manifest: CarSetManifest;
     let linesByTrack: Record<string, TrackLinesManifest>;
     try {
-      manifest = applyAvailableMatrixStrips(parseCarSetManifest(this.cache.json.get(CAR_MANIFEST_KEY)));
+      manifest = applyNogoLabs(
+        applyAvailableMatrixStrips(parseCarSetManifest(this.cache.json.get(CAR_MANIFEST_KEY))),
+      );
     } catch (error) {
       this.failBoot(error instanceof Error ? error.message : String(error));
       return;
@@ -252,6 +258,8 @@ export class BootScene extends Phaser.Scene {
             linesByTrack,
             trackId,
             watch: true,
+            watchPinPilot: watchPilotFromSearch(location.search),
+            watchPinCar: watchCarFromSearch(location.search),
           });
           return;
         }
@@ -280,7 +288,8 @@ export class BootScene extends Phaser.Scene {
   private addBBoxFrames(carId: string, strip: MatrixStripAtlas): void {
     const texture = this.textures.get(carId);
     for (const frame of strip.frames) {
-      const added = texture.add(String(frame.i), 0, frame.x, frame.y, frame.w, frame.h);
+      const frameName = isNogoLabCarId(carId) ? String(frame.clockIndex) : String(frame.i);
+      const added = texture.add(frameName, 0, frame.x, frame.y, frame.w, frame.h);
       if (added === null) {
         continue;
       }

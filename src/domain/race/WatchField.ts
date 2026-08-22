@@ -6,7 +6,7 @@
  * on the next circuit instead of sitting unused.
  */
 
-import { isNewFleetCarId } from '../../data/cars/CarManifest.ts';
+import { isNewFleetCarId, isNogoLabCarId } from '../../data/cars/CarManifest.ts';
 import { MEDIUM_PROFILES, type DriverProfile } from '../ai/DriverProfile.ts';
 import { PLANETS, TRACKS_PER_PLANET, planetTrackId } from '../../data/tracks/planets.ts';
 
@@ -47,9 +47,30 @@ export function watchAttractTracks(): readonly string[] {
  * Prefer the clock-fleet (`car_2`…) once enough strips are installed.
  * Career still uses the hyphen roster; watch is the place to look at new art.
  */
+export interface WatchSeatPin {
+  readonly carId: string;
+  readonly pilot: string;
+}
+
+/** Put the pinned car and pilot in seat 0 so watch can chase that pairing. */
+export function applyWatchPin(
+  field: readonly string[],
+  pilots: readonly string[],
+  pin: WatchSeatPin | undefined,
+): { readonly field: readonly string[]; readonly pilots: readonly string[] } {
+  if (pin === undefined || pin.carId.length === 0 || pin.pilot.length === 0) {
+    return { field, pilots };
+  }
+  return {
+    field: [pin.carId, ...field.filter(id => id !== pin.carId)],
+    pilots: [pin.pilot, ...pilots.filter(name => name !== pin.pilot)],
+  };
+}
+
 export function watchCarIds(carIds: readonly string[]): readonly string[] {
-  const neu = carIds.filter(isNewFleetCarId);
-  return neu.length >= WATCH_RACER_COUNT ? neu : carIds;
+  const playable = carIds.filter(id => !isNogoLabCarId(id));
+  const neu = playable.filter(isNewFleetCarId);
+  return neu.length >= WATCH_RACER_COUNT ? neu : playable;
 }
 
 export function watchFieldPacks(carIds: readonly string[]): {

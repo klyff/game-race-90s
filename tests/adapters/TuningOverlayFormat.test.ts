@@ -8,6 +8,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+  formatClockYawLines,
   formatTuningOverlay,
   type TuningOverlayReadout,
 } from '../../src/adapters/render/TuningOverlayFormat.ts';
@@ -551,6 +552,20 @@ describe('formatTuningOverlay', () => {
         }),
       );
       expect(lines[4]).toContain('frame 12');
+    });
+
+    it('appends clock yaw lines without breaking the first six', () => {
+      const clock = formatClockYawLines({
+        heading: 0,
+        clockYaw: (296.565 * Math.PI) / 180,
+        expectedIndex: 25,
+        drawnFrame: '25',
+        frameCount: 30,
+      });
+      const lines = formatTuningOverlay(readout({ clockLines: clock }));
+      expect(lines.slice(0, 6)).toHaveLength(6);
+      expect(lines.join('\n')).toContain('idx 25/30');
+      expect(lines.join('\n')).toContain('drawn 25');
     });
   });
 });

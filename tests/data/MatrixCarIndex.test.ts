@@ -47,24 +47,23 @@ describe('MatrixCarIndex', () => {
     expect(matrixCarRow(30).displayName).toBe('VERDÃO');
   });
 
-  it('walks shop ids for 1–20, clock ids for 21–33, then the Delorean', () => {
+  it('walks shop ids for 1–20, clock ids for 21–33, then the available carousel', () => {
     const tour = tourIndexCarIds();
     expect(tour).toHaveLength(33);
     expect(tour[0]).toBe('car-1');
     expect(tour[15]).toBe('car-16');
     expect(tour[20]).toBe('car_21');
     expect(tour[32]).toBe('car_33');
-    expect(garageCarouselIds()).toEqual([...tour, 'delorean']);
+    expect(garageCarouselIds()).toEqual(['car-1', 'car-18', 'car-19', 'car-20', 'car_21', 'delorean']);
     const shopNumbers = new Set(
       GARAGE_CATALOG.map(entry => matrixHeroNumber(entry.carId)).filter(
         (n): n is number => n !== undefined,
       ),
     );
+    expect(shopNumbers).toEqual(new Set([1, 18, 19, 20, 21]));
     for (const row of MATRIX_CAR_INDEX) {
       if (shopNumbers.has(row.n)) {
         expect(GARAGE_CATALOG.some(entry => entry.carId === row.carId)).toBe(true);
-      } else {
-        expect(row.carId).toBe(`car_${row.n}`);
       }
     }
   });

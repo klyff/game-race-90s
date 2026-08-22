@@ -5,16 +5,12 @@ Keeps only the production strip on disk. Art-size strip is built in memory / tem
 and discarded (rebuild anytime with this script when needed).
 
 Algorithm (as specified):
-  1. Collect car_N_a*.png sorted by index (skip hero).
-  2. For each: trim alpha bbox, then +16px left and +16px right (32px total H).
-  3. largura_total = sum of padded widths.
-  4. strip_h = max(padded heights) + 2*STRIP_BREATHE; canvas (largura_total, strip_h);
-     y = strip_h/2 - trimCar.height/2
-  5. collisionCenters[i].x = x + padded.width/2 ; .y = strip_h/2 always.
-  6. ONE invisible collision_rect: w,h = (min+max)/2 of content bboxes.
-  7. Production strip only: magick -resize (64/1700*100)% → car_N_strip_64.png
-     (art PNG discarded; arrays/JSON keep 1700-space numbers)
-  8. compact_images.sh subprocess on that strip_64 only (hero stays out)
+  1. Collect car_N_a*.png by clock index (skip hero). Never compact holes.
+  2. Emit 30 named slots, i == index. Missing slot = empty named cell.
+  3. For each real frame: trim alpha bbox, then +16px left and +16px right.
+  4. Collision from real frames only: w,h = (min+max)/2 of content bboxes.
+  5. Production strip only: magick -resize (64/1700*100)% → car_N_strip_64.png
+  6. compact_images.sh subprocess on that strip_64 only (hero stays out)
 
 Usage:
   python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/1_hero
@@ -44,6 +40,7 @@ PROD_DST_W = 64
 # Arrays/JS: SCALE = 64/1700. Magick % = SCALE*100. Scaled strip W = SCALE * strip.width
 PROD_SCALE = PROD_DST_W / PROD_SRC_W  # 0.0376470588
 MAGICK_PCT = PROD_SCALE * 100  # 3.764705882352941 → -resize 3.764705882352941%
+CLOCK_SLOTS = 30
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -220,18 +217,22 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
         )
 
     try:
-        # (index, path, padded, content_w, content_h)
-        trimmed: list[tuple[int, Path, Image.Image, int, int]] = []
-        largura_total = 0
+        by_index: dict[int, tuple[Path, Image.Image, int, int]] = {}
         for idx, path in frames:
+            if idx < 0 or idx >= CLOCK_SLOTS:
+                print(f"WARN skip {path.name}: index {idx} outside 0..{CLOCK_SLOTS - 1}")
+                continue
             im = Image.open(path)
             pad, cw, ch = trim_plus_margin(im, MARGIN_X, MARGIN_Y)
-            trimmed.append((idx, path, pad, cw, ch))
-            largura_total += pad.width
+            by_index[idx] = (path, pad, cw, ch)
 
-        # One shared invisible collision rect = mean of min/max content bboxes
-        content_ws = [t[3] for t in trimmed]
-        content_hs = [t[4] for t in trimmed]
+        present = [by_index[i] for i in range(CLOCK_SLOTS) if i in by_index]
+        if not present:
+            raise SystemExit(f"nenhum frame 0..{CLOCK_SLOTS - 1} em {folder}")
+
+        # Collision from real frames only — empty slots must not shrink the box.
+        content_ws = [t[2] for t in present]
+        content_hs = [t[3] for t in present]
         min_w, max_w = min(content_ws), max(content_ws)
         min_h, max_h = min(content_hs), max(content_hs)
         col_w = round((min_w + max_w) / 2)
@@ -246,27 +247,45 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
             "note": "único retângulo = média (min+max)/2; anda no centro do carro",
         }
 
-        strip_h = max(t[2].height for t in trimmed) + 2 * STRIP_BREATHE
+        typical_w = max(1, round(sum(content_ws) / len(content_ws)))
+        typical_h = max(1, round(sum(content_hs) / len(content_hs)))
+        empty_pad, empty_cw, empty_ch = trim_plus_margin(
+            Image.new("RGBA", (typical_w, typical_h), (0, 0, 0, 0)),
+            MARGIN_X,
+            MARGIN_Y,
+        )
+
+        # 30 named slots, i == clock index. Hole = empty named cell (no compact).
+        slots: list[tuple[int, str, Image.Image, int, int, bool]] = []
+        for index in range(CLOCK_SLOTS):
+            if index in by_index:
+                path, pad, cw, ch = by_index[index]
+                slots.append((index, path.name, pad, cw, ch, False))
+            else:
+                slots.append((index, f"{prefix}_a{index:03d}.png", empty_pad, empty_cw, empty_ch, True))
+
+        largura_total = sum(slot[2].width for slot in slots)
+        strip_h = max(slot[2].height for slot in slots) + 2 * STRIP_BREATHE
         strip = Image.new("RGBA", (largura_total, strip_h), (0, 0, 0, 0))
         array_centros: list[dict] = []
         x = 0
         meta_frames: list[dict] = []
 
-        for i, (idx, path, pad, cw, ch) in enumerate(trimmed):
-            # Vertical center with breathing room: y = strip_h/2 - trim.h/2
+        for index, source, pad, cw, ch, hole in slots:
             y = (strip_h - pad.height) // 2
             cx = x + pad.width / 2
             cy = strip_h / 2
-            strip.paste(pad, (x, y), pad)
-            # retângulo invisível centrado no carro
+            if not hole:
+                strip.paste(pad, (x, y), pad)
             col_x1 = cx - col_w / 2
             col_y1 = cy - col_h / 2
-            array_centros.append({"i": i, "index": idx, "x": cx, "y": cy})
+            array_centros.append({"i": index, "index": index, "x": cx, "y": cy})
             meta_frames.append(
                 {
-                    "i": i,
-                    "index": idx,
-                    "source": path.name,
+                    "i": index,
+                    "index": index,
+                    "source": source,
+                    "empty": hole,
                     "x": x,
                     "y": y,
                     "w": pad.width,
@@ -330,7 +349,10 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
             "margin_x": MARGIN_X,
             "margin_y": MARGIN_Y,
             "strip_breathe": STRIP_BREATHE,
-            "count": len(trimmed),
+            "count": CLOCK_SLOTS,
+            "clock_slots": CLOCK_SLOTS,
+            "i_equals_index": True,
+            "holes": [slot[0] for slot in slots if slot[5]],
             "hero_excluded": True,
             "collision_rect": collision_rect,
             "collision_centers": array_centros,
@@ -352,7 +374,8 @@ def build_strip(folder: Path, out_dir: Path | None = None) -> tuple[Path, Path]:
         out_json.write_text(json.dumps(payload, indent=2) + "\n")
         print(
             f"OK art(temp) {largura_total}x{strip_h}  "
-            f"frames={len(trimmed)}  margin_x={MARGIN_X}px (±16 → 32) breathe={STRIP_BREATHE}px  "
+            f"slots={CLOCK_SLOTS} present={len(present)}  "
+            f"margin_x={MARGIN_X}px (±16 → 32) breathe={STRIP_BREATHE}px  "
             f"(grande descartado)"
         )
         print(

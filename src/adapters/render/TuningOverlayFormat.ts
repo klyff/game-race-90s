@@ -38,6 +38,8 @@ export interface TuningOverlayReadout {
   readonly spriteFrame: string | number;
   /** Optional Racing AI debug block, appended under the handling readout. */
   readonly aiLines?: readonly string[];
+  /** Optional 2:1 clock yaw: heading → expected strip index vs drawn frame. */
+  readonly clockLines?: readonly string[];
 }
 
 /**
@@ -128,8 +130,26 @@ export function formatTuningOverlay(readout: TuningOverlayReadout): readonly str
   const line6 = `[T] overlay  [C] car  [R] respawn  [M] ${muteLabel}`;
 
   const lines = [line1, line2, line3, line4, line5, line6];
+  if (readout.clockLines !== undefined && readout.clockLines.length > 0) {
+    lines.push('', ...readout.clockLines);
+  }
   if (readout.aiLines !== undefined && readout.aiLines.length > 0) {
     lines.push('', ...readout.aiLines);
   }
   return lines;
+}
+
+export function formatClockYawLines(input: {
+  readonly heading: number;
+  readonly clockYaw: number;
+  readonly expectedIndex: number;
+  readonly drawnFrame: string;
+  readonly frameCount: number;
+}): readonly string[] {
+  const headingDeg = ((input.heading * 180) / Math.PI + 360) % 360;
+  const yawDeg = ((input.clockYaw * 180) / Math.PI + 360) % 360;
+  return [
+    `hdg ${headingDeg.toFixed(1)}°   yaw ${yawDeg.toFixed(1)}°   idx ${input.expectedIndex}/${input.frameCount}`,
+    `drawn ${input.drawnFrame}`,
+  ];
 }

@@ -63,6 +63,32 @@ export function watchTrackFromSearch(search: string): string | undefined {
     : undefined;
 }
 
+export function watchPilotFromSearch(search: string): string | undefined {
+  const raw = typeof search === 'string' ? search : '';
+  const query = raw.startsWith('?') ? raw.slice(1) : raw;
+  let params: URLSearchParams;
+  try {
+    params = new URLSearchParams(query);
+  } catch {
+    return undefined;
+  }
+  const pilot = params.get('pilot')?.trim();
+  return pilot !== undefined && pilot.length > 0 ? pilot : undefined;
+}
+
+export function watchCarFromSearch(search: string): string | undefined {
+  const raw = typeof search === 'string' ? search : '';
+  const query = raw.startsWith('?') ? raw.slice(1) : raw;
+  let params: URLSearchParams;
+  try {
+    params = new URLSearchParams(query);
+  } catch {
+    return undefined;
+  }
+  const car = params.get('car')?.trim() || params.get('watchPinCar')?.trim();
+  return car !== undefined && car.length > 0 ? car : undefined;
+}
+
 export function enableWatchModeFromSearch(search: string): boolean {
   if (!watchModeFromSearch(search)) {
     return false;

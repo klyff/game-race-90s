@@ -88,7 +88,7 @@ describe('WeaponInventory', () => {
   });
 
   it('Arsenal raises the missile refill ceiling by reloadMultiplier', () => {
-    const battle = manifest.cars.find(car => car.id === 'car-10')!;
+    const battle = manifest.cars.find(car => car.id === 'car-1')!;
     const arsenal = CAR_PERKS[CAR_PERK.ARSENAL];
     expect(missileCapacity(battle.stats, NEUTRAL_PERK)).toBe(battle.stats.ammoCapacity);
     expect(missileCapacity(battle.stats, arsenal)).toBe(battle.stats.ammoCapacity * 3);
@@ -312,9 +312,9 @@ describe('RaceField weapons', () => {
     expect(field.playerWeaponHits).toEqual({ missiles: 0, oil: 0, mines: 0, contacts: 0 });
   });
 
-  it('car-10 on the roster carries the Arsenal perk', () => {
-    const battle = manifest.cars.find(car => car.id === 'car-10')!;
-    expect(battle.perk).toBe(CAR_PERK.ARSENAL);
+  it('CAMO STAR on the roster carries the Anvil perk', () => {
+    const tank = manifest.cars.find(car => car.id === 'car-18')!;
+    expect(tank.perk).toBe(CAR_PERK.ANVIL);
   });
 
   it('an NPC drops a hazard when a rival is closing right behind it', () => {

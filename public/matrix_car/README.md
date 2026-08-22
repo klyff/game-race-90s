@@ -17,7 +17,10 @@
 | `RELOGIO.md` | Contrato + tabela |
 | `PROMPT_30.md` | Prompt de geração |
 | `PASSO_A_PASSO.md` | **Passo a passo completo** + fonte do que já foi feito |
+| [`INVENTORY.md`](./INVENTORY.md) | Inventário 1–33 + Delorean + nogo 98/99 |
 | `1_hero/INDEX_ANGLES.md` | Inventário do carro 1 |
+| `31_hero/INDEX_ANGLES.md` | Coordenadas 2:1 (lab, sem strip) |
+| `98_hero/` · `99_hero/` | Labs nogo (Delorean / Marauder) + linha verde |
 
 ## Contrato rápido
 

@@ -63,10 +63,10 @@ describe('CarStatBars — real roster', () => {
     }
   });
 
-  it('air-blade has the highest SPEED fraction, exactly 1 (roster maxSpeed is 95)', () => {
-    const bars = statBars(manifest, 'car-7-turbo');
+  it('Ash Comet has the highest SPEED fraction, exactly 1 (roster maxSpeed is 93)', () => {
+    const bars = statBars(manifest, 'car-20');
     const speedBar = bars.find(b => b.label === 'SPEED')!;
-    expect(speedBar.value).toBe(95);
+    expect(speedBar.value).toBe(93);
     expect(speedBar.fraction).toBe(1);
 
     for (const carId of carIds) {
@@ -76,7 +76,7 @@ describe('CarStatBars — real roster', () => {
   });
 
   it('cryo-hollow cars share the highest GRIP fraction', () => {
-    const snowGrip = statBars(manifest, 'car-4').find(b => b.label === 'GRIP')!.fraction;
+    const snowGrip = statBars(manifest, 'car-19').find(b => b.label === 'GRIP')!.fraction;
 
     for (const carId of carIds) {
       const otherGrip = statBars(manifest, carId).find(b => b.label === 'GRIP')!.fraction;
@@ -85,10 +85,10 @@ describe('CarStatBars — real roster', () => {
   });
 
   it('the tank has the highest ARMOR fraction (the roster armor king)', () => {
-    const magmaArmor = statBars(manifest, 'car-6-tank').find(b => b.label === 'ARMOR')!.fraction;
+    const magmaArmor = statBars(manifest, 'car-18').find(b => b.label === 'ARMOR')!.fraction;
 
     for (const carId of carIds) {
-      if (carId === 'car-6-tank') continue;
+      if (carId === 'car-18') continue;
       const otherArmor = statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction;
       // car_18 is the Vulkanis heavy; a tie on armor is allowed.
       expect(magmaArmor).toBeGreaterThanOrEqual(otherArmor);
@@ -96,7 +96,7 @@ describe('CarStatBars — real roster', () => {
   });
 
   it('air-blade has the lowest ARMOR fraction, exactly MINIMUM_BAR_FRACTION', () => {
-    const airBladeArmor = statBars(manifest, 'car-7-turbo').find(b => b.label === 'ARMOR')!.fraction;
+    const airBladeArmor = statBars(manifest, 'car-20').find(b => b.label === 'ARMOR')!.fraction;
     expect(airBladeArmor).toBe(MINIMUM_BAR_FRACTION);
 
     for (const carId of carIds) {

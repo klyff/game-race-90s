@@ -81,8 +81,8 @@ describe('CarIntegrity', () => {
       const car = createCarIntegrity();
       const impact78 = 78;
 
-      const denseHavac = applyImpactDamage(car, impact78, carsByArmor['car-8-strong']);
-      const fragileBlade = applyImpactDamage(car, impact78, carsByArmor['car-7-turbo']);
+      const denseHavac = applyImpactDamage(car, impact78, carsByArmor['car-18']);
+      const fragileBlade = applyImpactDamage(car, impact78, carsByArmor['car-20']);
 
       // Both should take damage, havac might survive better if not destroyed.
       // havac: (78 - 6)² / 3200 * (1 - 0.6) = 5184 / 3200 * 0.4 = 0.648
@@ -270,13 +270,13 @@ describe('CarIntegrity', () => {
         const havacDamaged = applyImpactDamage(
           carHavac,
           70,
-          carsByArmor['car-8-strong'],
+          carsByArmor['car-18'],
           DAMAGE_ROLE.VICTIM,
         );
         const bladeDamaged = applyImpactDamage(
           carBlade,
           70,
-          carsByArmor['car-7-turbo'],
+          carsByArmor['car-20'],
           DAMAGE_ROLE.VICTIM,
         );
 
@@ -290,13 +290,13 @@ describe('CarIntegrity', () => {
         const havacDamaged = applyImpactDamage(
           carHavac,
           70,
-          carsByArmor['car-8-strong'],
+          carsByArmor['car-18'],
           DAMAGE_ROLE.AGGRESSOR,
         );
         const bladeDamaged = applyImpactDamage(
           carBlade,
           70,
-          carsByArmor['car-7-turbo'],
+          carsByArmor['car-20'],
           DAMAGE_ROLE.AGGRESSOR,
         );
 
@@ -315,12 +315,12 @@ describe('CarIntegrity', () => {
         rawDamage,
         carsByArmor['car-1'],
       );
-      const bladeHit = applyWeaponDamage(car, rawDamage, carsByArmor['car-7-turbo']);
+      const bladeHit = applyWeaponDamage(car, rawDamage, carsByArmor['car-20']);
 
-      // Both lose integrity, but marauder loses less (armor 0.4 > 0.15).
+      // Both lose integrity, but marauder loses less (armor 0.4 > 0.16).
       expect(marauderHit.integrity).toBeGreaterThan(bladeHit.integrity);
-      expect(marauderHit.integrity).toBe(1 - rawDamage * (1 - 0.4));
-      expect(bladeHit.integrity).toBe(1 - rawDamage * (1 - 0.15));
+      expect(marauderHit.integrity).toBe(1 - rawDamage * (1 - carsByArmor['car-1'].armor));
+      expect(bladeHit.integrity).toBe(1 - rawDamage * (1 - carsByArmor['car-20'].armor));
     });
 
     it('does not apply damage for zero rawDamage', () => {
@@ -554,16 +554,16 @@ describe('Damage arithmetic verification', () => {
     expect(damaged.integrity).toBe(1);
   });
 
-  it('documents armor mitigation: havac (0.6) survives better than air-blade (0.15) at 51 u/s', () => {
+  it('documents armor mitigation: camo tank (0.8) survives better than Ash Comet (0.16) at 51 u/s', () => {
     const car = createCarIntegrity();
 
-    const havacHit = applyImpactDamage(car, 51, carsByArmor['car-8-strong']);
-    const bladeHit = applyImpactDamage(car, 51, carsByArmor['car-7-turbo']);
+    const havacHit = applyImpactDamage(car, 51, carsByArmor['car-18']);
+    const bladeHit = applyImpactDamage(car, 51, carsByArmor['car-20']);
 
-    // havac: (51 - 6)² / 3200 * (1 - 0.6) = 2025 / 3200 * 0.4 = 0.2531
-    // blade: (51 - 6)² / 3200 * (1 - 0.15) = 2025 / 3200 * 0.85 = 0.5379
-    expect(havacHit.integrity).toBeCloseTo(0.747, 2);
-    expect(bladeHit.integrity).toBeCloseTo(0.462, 2);
+    // camo:  (51 - 6)² / 3200 * (1 - 0.8)  = 2025 / 3200 * 0.2  = 0.1266 → 0.873
+    // comet: (51 - 6)² / 3200 * (1 - 0.16) = 2025 / 3200 * 0.84 = 0.5316 → 0.468
+    expect(havacHit.integrity).toBeCloseTo(0.873, 2);
+    expect(bladeHit.integrity).toBeCloseTo(0.468, 2);
     expect(havacHit.integrity).toBeGreaterThan(bladeHit.integrity);
   });
 });

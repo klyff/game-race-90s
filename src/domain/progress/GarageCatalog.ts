@@ -11,8 +11,8 @@ export const WORLD_ONE_EXTRA_PRICE = 70_000;
 export const PRICE_GROWTH = 0.4;
 export const SELL_FRACTION = 0.8;
 
-export const STARTER_CAR_IDS = ['car-1', 'car-2'] as const;
-export const WORLD_ONE_LOCKED_CAR_IDS = ['car-3', 'car-16'] as const;
+export const STARTER_CAR_IDS = ['car-1', 'car_21'] as const;
+export const WORLD_ONE_LOCKED_CAR_IDS = ['car-18', 'car-19'] as const;
 
 /** First podium is spent unlocking the two world-1 extras, not a later wave. */
 const CLEARS_FOR_WORLD_ONE_EXTRAS = 1;
@@ -42,29 +42,14 @@ function wavePrice(unlockPlanet: number): number {
   return roundPrice(WORLD_ONE_EXTRA_PRICE * (1 + PRICE_GROWTH) ** (unlockPlanet - 1));
 }
 
-/** Shop order: starters, world-1 extras, then one wave per later planet. */
+/** Shop order: the six available cars (1, 18–21, Delorean). Parked `x_*` stay out. */
 export const GARAGE_CATALOG: readonly CatalogEntry[] = [
   { carId: 'car-1', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
-  { carId: 'car-2', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
-  { carId: 'car-3', price: WORLD_ONE_EXTRA_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
-  { carId: 'car-16', price: WORLD_ONE_EXTRA_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
-  { carId: 'car-5', price: wavePrice(2), unlockPlanet: 2, tier: CAR_TIER.WEAK },
-  { carId: 'car-13', price: wavePrice(2), unlockPlanet: 2, tier: CAR_TIER.WEAK },
-  { carId: 'car-19', price: wavePrice(2), unlockPlanet: 2, tier: CAR_TIER.WEAK },
-  { carId: 'car-4', price: wavePrice(3), unlockPlanet: 3, tier: CAR_TIER.MEDIUM },
-  { carId: 'car-17', price: wavePrice(3), unlockPlanet: 3, tier: CAR_TIER.MEDIUM },
-  { carId: 'car-8-strong', price: wavePrice(3), unlockPlanet: 3, tier: CAR_TIER.MEDIUM },
-  { carId: 'car-12-strong', price: wavePrice(4), unlockPlanet: 4, tier: CAR_TIER.MEDIUM },
-  { carId: 'car-11', price: wavePrice(4), unlockPlanet: 4, tier: CAR_TIER.MEDIUM },
-  { carId: 'car-15', price: wavePrice(4), unlockPlanet: 4, tier: CAR_TIER.MEDIUM },
-  { carId: 'car-18', price: wavePrice(5), unlockPlanet: 5, tier: CAR_TIER.HEAVY },
-  { carId: 'car-10', price: wavePrice(5), unlockPlanet: 5, tier: CAR_TIER.HEAVY },
-  { carId: 'car-14', price: wavePrice(6), unlockPlanet: 6, tier: CAR_TIER.HEAVY },
-  { carId: 'car-6-tank', price: wavePrice(6), unlockPlanet: 6, tier: CAR_TIER.HEAVY },
-  { carId: 'delorean', price: wavePrice(7), unlockPlanet: 7, tier: CAR_TIER.HEAVY },
-  { carId: 'car-9-turbo', price: wavePrice(7), unlockPlanet: 7, tier: CAR_TIER.HEAVY },
-  { carId: 'car-7-turbo', price: wavePrice(8), unlockPlanet: 8, tier: CAR_TIER.HEAVY },
-  { carId: 'car-20', price: wavePrice(8), unlockPlanet: 8, tier: CAR_TIER.HEAVY },
+  { carId: 'car_21', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
+  { carId: 'car-18', price: WORLD_ONE_EXTRA_PRICE, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: 'car-19', price: WORLD_ONE_EXTRA_PRICE, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: 'car-20', price: wavePrice(2), unlockPlanet: 2, tier: CAR_TIER.HEAVY },
+  { carId: 'delorean', price: wavePrice(3), unlockPlanet: 3, tier: CAR_TIER.HEAVY },
 ];
 
 export function catalogEntry(carId: string): CatalogEntry | undefined {
@@ -100,7 +85,7 @@ export function isCarUnlocked(
   if (isStarterCar(carId)) {
     return true;
   }
-  // World-1 extras (Swamp Rat / Pink Mini) stay locked until the first podium.
+  // World-1 extras (CAMO STAR / Cyber Pink) stay locked until the first podium.
   if ((WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(carId)) {
     return clearedTrackCount >= 1 || highestUnlockedPlanet > 1;
   }

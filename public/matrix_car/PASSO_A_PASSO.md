@@ -41,29 +41,28 @@ Ordem de geração por carro:
 
 ## 2) O que JÁ está feito (as is)
 
-### Vitrines (33 cars)
+### Vitrines
 
-- Pastas `1_hero` … `33_hero`
-- Cada uma tem `car_N_hero.png` (vitrine, quieta)
+- **Ativos:** `1_hero`, `18_hero`–`21_hero`, `delorean_hero`
+- **Parked:** `x_{N}_hero` (2, 3–17, 22–33) — vitrine quieta, fora da loja
+- Cada pasta tem `car_N_hero.png` (vitrine, quieta)
 
 ### car_1 — array + strip
 
 | item | estado |
 |------|--------|
-| Frames | **26 / 30** — faltam índices **`4, 12, 15, 25`** · fontes em `car_1_sources.tar.gz` |
-| Presentes | `0–3, 5–11, 13–14, 16–24, 26–29` |
-| Mapa as is | `ARRAY_ROTATED_FIRST.md` (inclui **original** pré-rename) |
-| Strip | `1_hero/car_1_strip_64.png` + `car_1_strip.json` (arte grande descartada) |
-| Colisão | 1 retângulo invisível = `(min+max)/2` → arte **767×528** · prod **29×20** |
+| Frames | **30 / 30** — buracos `4, 12, 15, 25` preenchidos |
+| Strip | `1_hero/car_1_strip_64.png` + `car_1_strip.json` (30 slots, `i == index`) |
+| Colisão | 1 retângulo invisível = `(min+max)/2` |
 | Escala no JSON | bloco `production_scale` (`SCALE = 64/1700`) |
 
-### car_2 — começo da metade A
+### car_2 — parked
 
 | item | estado |
 |------|--------|
-| Frames | **5 / 30** — `a025` … `a029` · fontes em `car_2_sources.tar.gz` |
-| Faltam | `0–24` |
-| Strip parcial | `2_hero/car_2_strip_64.png` + `.json` (rebuild ao completar) |
+| Pasta | `x_2_hero/` — **5 / 30** (`a025`…`a029`) |
+| Motivo | >5 buracos; roda de 5 quebrava o yaw |
+| Reabrir | só com ≥25 frames |
 
 ### delorean — especial 1 (2026-08-21)
 
@@ -77,9 +76,13 @@ Ordem de geração por carro:
 | Strip | `delorean_strip_64.png` + `delorean_strip.json` |
 | Física | perk **flux** · grip alto · titular Chrome Verge · serve todos os mundos |
 
-### cars 3–33
+### cars 3–17 e 22–33
 
-- Só vitrine · **0** frames de rotação (exceto o progresso acima no 2 e strips 18–21)
+- Parked em `x_{N}_hero` · só vitrine · **0** frames de rotação
+
+### cars 18–21 + Delorean
+
+- **30 / 30** · strips ativas na loja
 
 ---
 
@@ -212,12 +215,11 @@ python3 - <<'PY'
 from pathlib import Path
 import re
 base = Path('public/matrix_car')
-for d in sorted(base.glob('*_hero'), key=lambda p: int(p.name.split('_')[0])):
-    n = int(d.name.split('_')[0])
-    frames = sorted(int(re.search(r'_a(\d+)', p.name).group(1))
-                    for p in d.glob(f'car_{n}_a*.png'))
-    miss = [i for i in range(30) if i not in frames]
-    print(f'{n:2d}  {len(frames):2d}/30  miss={miss or "-"}')
+for d in sorted(base.glob('*_hero')):
+    if d.name.startswith('x_'):
+        print(f'parked  {d.name}')
+        continue
+    print(f'active  {d.name}')
 PY
 
 # strip
@@ -228,7 +230,6 @@ python3 tools/art/car-rotate/build_matrix_strip.py public/matrix_car/2_hero
 
 ## 9) Próximo ato
 
-1. **Metade A:** completar `2_hero` (`a000`–`a024`), depois `3`…`17`  
-2. **Metade B (cloud):** começar em `18_hero` com este passo a passo + `CLOUD_HANDOFF.md`  
-3. Opcional: preencher buracos do `1_hero`  
-4. Atualizar `ARRAY_ROTATED_FIRST.md` / `STATUS.md` quando o as is mudar
+1. Reabrir `x_*` só quando um carro tiver **≥25** frames no relógio  
+2. Não gerar arte nos parked neste passe  
+3. Atualizar `ARRAY_ROTATED_FIRST.md` / `STATUS.md` quando o as is mudar
