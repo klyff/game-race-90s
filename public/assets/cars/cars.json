@@ -285,6 +285,42 @@
       "frameCount": 32,
       "clock": "counter_clockwise",
       "framesJson": "assets/cars/3-red-oh-red/car_strip_64x64.json"
+    },
+    {
+      "id": "5-all-pink-fury",
+      "displayName": "All Pink Fury",
+      "archetype": "Candy-pink convertible coupe — hood laser, open cabin",
+      "image": "assets/cars/5-all-pink-fury/car_strip_64x64.png",
+      "shadow": {
+        "width": 42,
+        "height": 20
+      },
+      "stats": {
+        "mass": 950,
+        "enginePower": 30,
+        "brakeForce": 45,
+        "maxSpeed": 64,
+        "grip": 28,
+        "steerRate": 2.55,
+        "steerSpeedFalloff": 0.48,
+        "armor": 0.36,
+        "ammoCapacity": 13,
+        "collisionRadius": 1.66,
+        "aimRadius": 3.45,
+        "collisionAlong": 1.66,
+        "collisionAcross": 1.1952,
+        "collisionSquareMin": 1.1952,
+        "collisionSquareMax": 1.66,
+        "collisionSquare": 1.4276
+      },
+      "perk": "arsenal",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7,
+      "frameWidth": 67,
+      "frameHeight": 67,
+      "frameCount": 32,
+      "clock": "counter_clockwise",
+      "framesJson": "assets/cars/5-all-pink-fury/car_strip_64x64.json"
     }
   ]
 }

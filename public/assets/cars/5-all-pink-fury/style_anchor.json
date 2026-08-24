@@ -1,0 +1,12 @@
+{
+  "body_type": "low wide convertible coupe, top down, arcade pixel art with black outlines",
+  "base_color": "saturated candy pink, wide-body flared arches",
+  "hood_weapon": "LOCKED: single large machine laser gun mounted on the center of the HOOD, not the roof. Dark charcoal body with bolts and cooling fins; neon-pink glow on the barrel sides and a pink circular muzzle. Human locked this hood mount from r0.",
+  "hood": "two sets of three black cooling vents flanking the central laser",
+  "cabin": "open convertible cockpit; short black-framed windshield; two black high-back racing bucket seats; dark dashboard with steering wheel on the right",
+  "front_details": "dual rectangular headlight clusters (white / light-blue glass); black recessed horizontal grille; small orange turn signals under the headlights; two small circular pink-glow fog lights in the lower bumper; dark grey/black front splitter with a thin pink pinstripe",
+  "wheels": "dark wheels under flared pink arches, readable at 64px",
+  "mirrors": "small aerodynamic body-colored pink side mirrors at the A-pillar base",
+  "windows": "short dark windshield with light-blue / white diagonal glass dither; open cabin, no roof",
+  "paint_finish": "clean high-fidelity pixel art, limited pink palette, visible pixels, no chrome / PBR / gloss render"
+}

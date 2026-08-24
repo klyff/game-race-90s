@@ -1,0 +1,17 @@
+{
+  "id": "5-all-pink-fury",
+  "inventory_n": 5,
+  "slug": "all-pink-fury",
+  "displayName": "All Pink Fury",
+  "spec": "Conversivel Coupe, Pixel art, Pink, mounted machine Laser Gun on hood, arcade combat-racer style, background HEX: #00B140",
+  "source_run_dir": "/Users/klyff/git/game-race-90s/car-sprites/2026-08-24_all-pink-fury",
+  "hero_frame": 7,
+  "hero_role": "shop / garage / results still \u2014 always strip frame 7",
+  "hero_source": "keyed/out_frame_07.png",
+  "hero_file": "car_hero.png",
+  "frame_count": 32,
+  "direction": "counter_clockwise",
+  "index0": "6 o'clock facing camera",
+  "clock": "counter_clockwise",
+  "exported_at": "2026-08-24T14:23:28.643162+00:00"
+}

@@ -16,11 +16,13 @@ describe('GarageCatalog', () => {
     expect(GARAGE_CATALOG.map(entry => entry.carId)).toEqual([
       '2-sportivo-blue-combat',
       '3-red-oh-red',
+      '5-all-pink-fury',
       '1-muscle-car-gray-number9',
     ]);
     expect(shopCarIds()).toEqual([
       '2-sportivo-blue-combat',
       '3-red-oh-red',
+      '5-all-pink-fury',
       '1-muscle-car-gray-number9',
     ]);
     expect(shopCarIds()).not.toContain('car_21');
@@ -30,11 +32,13 @@ describe('GarageCatalog', () => {
     expect(shopCarIds()).not.toContain('5-raider-sedan-cream-cannon');
     expect(shopCarIds()).not.toContain('6-war-muscle-red-bomber');
     expect(shopCarIds()).not.toContain('7-scav-wagon-olive-cannon');
+    expect(shopCarIds()).not.toContain('4-pickup-army-green-wasteland');
   });
 
   it('prices the starter at $50k, Red Oh Red at $62k, and Gray Muscle at $98k', () => {
     expect(listPrice('2-sportivo-blue-combat')).toBe(STARTER_PRICE);
     expect(listPrice('3-red-oh-red')).toBe(62_000);
+    expect(listPrice('5-all-pink-fury')).toBe(87_000);
     expect(listPrice('1-muscle-car-gray-number9')).toBe(98_000);
     expect(listPrice('car-18')).toBe(0);
     expect(listPrice('car_21')).toBe(0);
@@ -49,6 +53,7 @@ describe('GarageCatalog', () => {
     expect(isCarUnlocked('2-sportivo-blue-combat', 1, 0)).toBe(true);
     expect(isStarterCar('3-red-oh-red')).toBe(false);
     expect(isCarUnlocked('3-red-oh-red', 1, 0)).toBe(true);
+    expect(isCarUnlocked('5-all-pink-fury', 1, 0)).toBe(true);
     expect(isStarterCar('1-muscle-car-gray-number9')).toBe(false);
     expect(isStarterCar('car-18')).toBe(false);
   });
@@ -75,10 +80,11 @@ describe('GarageCatalog', () => {
 
   it('keeps world 1 NPCs on Blue Combat and Red Oh Red, adds Gray Muscle on world 2', () => {
     const early = npcRosterForPlanet(1);
-    expect(early).toEqual(['2-sportivo-blue-combat', '3-red-oh-red']);
+    expect(early).toEqual(['2-sportivo-blue-combat', '3-red-oh-red', '5-all-pink-fury']);
     expect(npcRosterForPlanet(2)).toEqual([
       '2-sportivo-blue-combat',
       '3-red-oh-red',
+      '5-all-pink-fury',
       '1-muscle-car-gray-number9',
     ]);
     expect(npcRosterForPlanet(8)).not.toContain('delorean');

@@ -138,7 +138,43 @@ const RED_OH_RED = spinnerCar({
   },
 });
 
-export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [GRAY_MUSCLE, BLUE_COMBAT, RED_OH_RED];
+/**
+ * All Pink Fury — candy-pink convertible, hood laser. Medium, shop ~$87k.
+ * Arcade consult: fun > realism, high grip, COM planted (not a twitchy light).
+ * Teaching speed ~60 u/s — do not clone the old 78 Marauder. Hood laser → arsenal.
+ */
+const ALL_PINK_FURY = spinnerCar({
+  id: 'all-pink-fury',
+  displayName: 'All Pink Fury',
+  callName: 'Pink Fury',
+  archetype: 'Candy-pink convertible coupe — hood laser, open cabin',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'chrome-verge',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.MEDIUM,
+  unlockPlanet: 1,
+  price: 87_000,
+  stats: {
+    mass: 950,
+    enginePower: 30,
+    brakeForce: 45,
+    maxSpeed: 64,
+    grip: 28,
+    steerRate: 2.55,
+    steerSpeedFalloff: 0.48,
+    armor: 0.36,
+    ammoCapacity: 13,
+    collisionRadius: 1.66,
+    aimRadius: 3.45,
+  },
+});
+
+export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
+  GRAY_MUSCLE,
+  BLUE_COMBAT,
+  RED_OH_RED,
+  ALL_PINK_FURY,
+];
 
 export function spinnerCarIds(): readonly string[] {
   return SPINNER_CAR_INDEX.map(car => car.id);

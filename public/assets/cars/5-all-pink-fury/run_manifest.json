@@ -1,0 +1,493 @@
+{
+  "run_id": "2026-08-24_all-pink-fury",
+  "name": "All Pink Fury",
+  "spec": "Conversivel Coupe, Pixel art, Pink, mounted machine Laser Gun on hood, arcade combat-racer style, background HEX: #00B140",
+  "save_dir": "car-sprites/2026-08-24_all-pink-fury",
+  "background_mode": "chroma_key",
+  "started_at": "2026-08-24T13:39:00+0000",
+  "config": {
+    "status": "VALIDATED",
+    "validated_on": "2026-08-22",
+    "fixed_output_px": [
+      1024,
+      1024
+    ],
+    "max_retries_per_frame": 2
+  },
+  "status": "EXPORTED",
+  "style_anchor": "style_anchor.json",
+  "frames": {
+    "0": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 0,
+      "path": "out_frame_00.png",
+      "status": "APPROVED",
+      "human_approved": true,
+      "note": "Human locked r0 as style anchor (2026-08-24). Hood laser stays. Later r1\u2013r2 discarded. Scale/axis FAIL kept (17.2% / y 65 vs 138); yaw OK.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_00_r0.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "chosen": true,
+          "diff": "scale 870 vs 742 (17.2%); axis (-3.0, 65.0) vs (-4.3, 138.0) (tol \u00b131px); yaw OK"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r1.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 677 vs 742 (8.7%); axis PASS; yaw aspect 1.303 closer to frame 16 (180\u00b0) than slot 0 (1.175)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r2.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 821 vs 742 (10.7%); aspect 1.487 vs 1.175 (26.6%) \u2014 closer to frame 14 (157.5\u00b0)"
+        }
+      ]
+    },
+    "1": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_01.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "Max 3. r0 only attempt with yaw OK (scale +18.1%, axis fail). r1/r2 wrong slot. Keep r0 to continue belt.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_01_r0.png",
+          "chosen": true,
+          "diff": "scale 909 vs 769 (18.1%); axis (-12.5, 66.5) vs (47.1, 139.4); yaw OK; palette 0.02"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r1.png",
+          "diff": "scale 719 vs 769 (6.5%); axis PASS; aspect 1.426 vs 1.226 (closer to frame 15)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r2.png",
+          "diff": "scale 831 vs 769 (8.0%); axis (26.5, 89.5) vs (47.1, 139.4); aspect 1.392 closer to frame 16"
+        }
+      ]
+    },
+    "2": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_02.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r2 yaw OK. Scale -9.7%, axis x left. r0/r1 slot-confused.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r0.png",
+          "diff": "scale 757 vs 847 (10.6%); axis (3.0, 167.5) vs (52.8, 140.8); aspect 1.535 closer to frame 15"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r1.png",
+          "diff": "scale 1037 vs 847 (22.5%); axis (23.0, 32.5); aspect 1.540 closer to frame 15"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_02_r2.png",
+          "chosen": true,
+          "diff": "scale 764 vs 847 (9.7%); axis (-4.0, 147.0) vs (52.8, 140.8); yaw OK; palette 0.08"
+        }
+      ]
+    },
+    "3": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_03.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r1 yaw+scale PASS; axis y high (66 vs 140). r2 overcorrected.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r0.png",
+          "diff": "scale PASS; axis (14, 141) vs (49.9, 140); aspect 1.859 vs 1.615"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_03_r1.png",
+          "chosen": true,
+          "diff": "scale PASS; yaw PASS; axis (33.0, 66.0) vs (49.9, 140.1); palette 0.66"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r2.png",
+          "diff": "scale 823 vs 916 (10.1%); axis (-1.5, 220.5); aspect 2.008 closer to frame 11"
+        }
+      ]
+    },
+    "4": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_04.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r0 scale PASS; aspect 1.880 vs 1.809 (slot-confused with 13); axis nearly. Best of 3.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_04_r0.png",
+          "chosen": true,
+          "diff": "scale PASS; axis (15.0, 106.5) vs (42.1, 138.0); aspect 1.880 closer to frame 13"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r1.png",
+          "diff": "axis (19.0, 12.0); aspect 1.612 closer to frame 14"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r2.png",
+          "diff": "axis (11.0, 172.0); aspect 1.900 closer to frame 13"
+        }
+      ]
+    },
+    "5": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_05.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r1 scale+axis PASS; slot-confused aspect 2.062 vs 1.981 (frame 12).",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r0.png",
+          "diff": "scale PASS; axis (-1.5, 134.0) vs (32.8, 134.4); aspect 2.049 closer to frame 12"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_05_r1.png",
+          "chosen": true,
+          "diff": "scale PASS; axis PASS; aspect 2.062 closer to frame 12; palette 0.42"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r2.png",
+          "diff": "axis (4.5, 79.5); aspect 2.083 closer to frame 12"
+        }
+      ]
+    },
+    "6": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_06.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r1 yaw+scale PASS; axis y 63 vs 130. r2 overshot down.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r0.png",
+          "diff": "scale PASS; axis (-11.5, 74.5) vs (20.7, 130.1); aspect 2.323 closer to frame 10"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_06_r1.png",
+          "chosen": true,
+          "diff": "scale PASS; yaw PASS; axis (4.5, 63.0) vs (20.7, 130.1); palette 0.40"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r2.png",
+          "diff": "scale PASS?; yaw PASS?; axis (11.0, 244.5) vs (20.7, 130.1)"
+        }
+      ]
+    },
+    "7": {
+      "result": "ACCEPT_SOFT",
+      "retries": 2,
+      "path": "out_frame_07.png",
+      "status": "PASS",
+      "note": "Hero. r2 hard gates PASS; palette 0.75 soft.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_07_r0.png",
+          "diff": "scale+yaw PASS; axis (7.0, 67.5) vs (-5.7, 118.0)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_07_r1.png",
+          "diff": "axis (6.5, 206.0) too low"
+        },
+        {
+          "id": "r2",
+          "result": "ACCEPT_SOFT",
+          "path": "attempts/out_frame_07_r2.png",
+          "chosen": true,
+          "diff": "hard PASS; palette 0.75"
+        }
+      ]
+    },
+    "8": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_08.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r1 yaw+scale PASS; axis y high. r0 yaw 15.7% over; r2 too low.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_08_r0.png",
+          "diff": "scale+axis PASS; aspect 3.538 vs 3.057 (15.7%)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_08_r1.png",
+          "chosen": true,
+          "diff": "scale+yaw PASS; axis (3.5, 15.5) vs (-6.4, 106.7)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_08_r2.png",
+          "diff": "axis (3.5, 264.0) too low"
+        }
+      ]
+    },
+    "9": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_09.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r2 yaw+scale PASS; axis y 66 vs 133. r1 scale+axis PASS but slot-confused.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_09_r0.png",
+          "diff": "scale PASS; axis (5.5, 38.0); aspect 3.079 closer to frame 22"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_09_r1.png",
+          "diff": "scale+axis PASS; aspect 3.050 closer to frame 22"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_09_r2.png",
+          "chosen": true,
+          "diff": "scale+yaw PASS; axis (3.0, 66.0) vs (-5.0, 133.0); palette 0.53"
+        }
+      ]
+    },
+    "10": {
+      "result": "ACCEPT_SOFT",
+      "retries": 1,
+      "path": "out_frame_10.png",
+      "status": "PASS",
+      "note": "r1 hard PASS; palette 0.61 soft.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_10_r0.png",
+          "diff": "scale PASS; axis (-1.5, 92.5) vs (-28.5, 153.6); aspect 2.851 vs 2.455"
+        },
+        {
+          "id": "r1",
+          "result": "ACCEPT_SOFT",
+          "path": "attempts/out_frame_10_r1.png",
+          "chosen": true,
+          "diff": "hard PASS; palette 0.61"
+        }
+      ]
+    },
+    "11": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_11.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r1 best axis y; all 3 slot-confused 11 vs 20 (aspect ~2.3 vs 2.23). Visual is rear-left.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_11_r0.png",
+          "diff": "scale PASS; axis (-2.5, 138.5) vs (-42.8, 165.0); aspect 2.335 closer to frame 20"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_11_r1.png",
+          "chosen": true,
+          "diff": "scale PASS; axis (-7.5, 172.5) vs (-42.8, 165.0); aspect 2.323 closer to frame 20"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_11_r2.png",
+          "diff": "axis (-6.0, 108.5); aspect 2.292 closer to frame 20"
+        }
+      ]
+    },
+    "12": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_12.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r1 scale PASS; aspect 2.221 vs 2.074 slot-confused. Visual rear-left.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_12_r0.png",
+          "diff": "scale 1022 vs 956 (6.9%); axis (-7.5, 181.5); aspect 2.330"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_12_r1.png",
+          "chosen": true,
+          "diff": "scale PASS; axis (-22.5, 105.5) vs (-51.3, 170.7); aspect 2.221 closer to frame 26"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_12_r2.png",
+          "diff": "axis (-3.0, 88.0); aspect 2.227"
+        }
+      ]
+    },
+    "13": {
+      "result": "ACCEPT_SOFT",
+      "retries": 0,
+      "path": "out_frame_13.png",
+      "status": "PASS",
+      "note": "r0 hard PASS; palette 0.34 soft.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "ACCEPT_SOFT",
+          "path": "attempts/out_frame_13_r0.png",
+          "chosen": true,
+          "diff": "hard PASS; palette 0.34"
+        }
+      ]
+    },
+    "14": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_14.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r0 scale+axis PASS; aspect 2.028 vs 1.719 (18%). Best of 3.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_14_r0.png",
+          "chosen": true,
+          "diff": "scale+axis PASS; aspect 2.028 vs 1.719 (18%) closer to frame 4"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_14_r1.png",
+          "diff": "scale 901 vs 840; axis (-21.5, 123.0); aspect 1.993"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_14_r2.png",
+          "diff": "axis (-23.5, 179.0); aspect 2.074"
+        }
+      ]
+    },
+    "15": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_15.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r1 scale PASS; aspect 1.787 vs 1.538 (16.2%). Best of 3.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_15_r0.png",
+          "diff": "scale 612 vs 767 (20.2%); axis (-126, 235.5); aspect 2.007"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_15_r1.png",
+          "chosen": true,
+          "diff": "scale PASS; axis (-11.0, 206.5) vs (-54.9, 179.2); aspect 1.787 vs 1.538 (16.2%)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_15_r2.png",
+          "diff": "scale 942 vs 767 (22.8%); aspect 2.063"
+        }
+      ]
+    },
+    "16": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_16.png",
+      "status": "CHOSEN_YAW_OK",
+      "note": "r2 yaw+axis PASS; scale +8.6%. Best of 3.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r0.png",
+          "diff": "scale 600 vs 691 (13.1%); axis (-6.5, 217.0); aspect 1.534 closer to frame 3"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r1.png",
+          "diff": "scale 837 vs 691 (21.2%); axis (-4.5, 116.0); aspect 1.474"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_16_r2.png",
+          "chosen": true,
+          "diff": "yaw+axis PASS; scale 750 vs 691 (8.6%)"
+        }
+      ]
+    }
+  },
+  "export_id": "5-all-pink-fury"
+}
