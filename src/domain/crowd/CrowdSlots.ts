@@ -145,27 +145,21 @@ export function pickTrackCrowd(
     });
   }
 
+  const usable = length - span;
   const lapBudget = Math.max(0, CROWD_COUNT - slots.length);
-  if (lapBudget === 0 || length <= span + 8) {
+  if (lapBudget === 0 || usable <= 8) {
     return slots;
   }
 
-  let placed = 0;
-  let probe = 0;
-  while (placed < lapBudget && probe < lapBudget * 4) {
-    const t = (placed + 0.5 + ((seed >>> 0) % 7) * 0.03) / lapBudget;
-    const distance = wrapDistance(start + t * length + probe * 1.7, length);
-    probe += 1;
-    if (inStartSpan(distance, start, length)) {
-      continue;
-    }
+  for (let i = 0; i < lapBudget; i += 1) {
+    const along = START_SPAN_AFTER + 4 + ((i + 0.5) / lapBudget) * (usable - 8);
+    const distance = wrapDistance(start + along, length);
     const index = slots.length;
     slots.push({
       kind: kindAt(index, flasherOffset),
       distance,
       lateral: crowdLateral(index + 1, wall),
     });
-    placed += 1;
   }
 
   return slots;
@@ -212,8 +206,8 @@ export function crowdHitsFromCars(
         continue;
       }
       const speed = length(car.velocity);
-      const throwVelocity =
-        speed > 1 ? car.velocity : scale(normalize(add(position, scale(car.position, -1))), 8);
+      const away = add(position, scale(car.position, -1));
+      const throwVelocity = speed > 1 ? car.velocity : scale(normalize(away), 8);
       hits.push({ slotIndex: index, position, throwVelocity });
       break;
     }

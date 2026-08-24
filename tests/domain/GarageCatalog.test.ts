@@ -61,11 +61,9 @@ describe('GarageCatalog', () => {
     expect(isStarterCar('car-18')).toBe(false);
   });
 
-  it('locks Gray Muscle until world 2 or enough podium clears', () => {
+  it('locks Gray Muscle until world 2', () => {
     expect(isCarUnlocked('1-muscle-car-gray-number9', 1, 0)).toBe(false);
     expect(carUnlockHint('1-muscle-car-gray-number9', 1, 0)).toBe('UNLOCKS IN WORLD 2');
-    expect(isCarUnlocked('1-muscle-car-gray-number9', 1, 1)).toBe(false);
-    expect(isCarUnlocked('1-muscle-car-gray-number9', 1, 6)).toBe(true);
     expect(isCarUnlocked('1-muscle-car-gray-number9', 2, 0)).toBe(true);
     expect(carUnlockHint('1-muscle-car-gray-number9', 2, 0)).toBeNull();
   });

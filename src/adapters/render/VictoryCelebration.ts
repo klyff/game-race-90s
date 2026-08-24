@@ -299,7 +299,5 @@ export class VictoryCelebration {
       );
       this.overlay.restore();
     }
-
-    void this.origin;
   }
 }

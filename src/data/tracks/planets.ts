@@ -13,9 +13,9 @@
  * that its featured car is (or is closest to) the fastest across the roster; the
  * bias is the lever used to steer that outcome.
  *
- * Featured cars are spinner-only (32 CCW). With two live models the
- * "featured is fastest" check is loose — do not rerun `gen:lines` until
- * more spinner strips exist.
+ * Featured cars are spinner-only (32 CCW). With three live models the
+ * "featured is fastest" check is still loose — do not rerun `gen:lines`
+ * until the roster is denser.
  */
 
 export interface PlanetTerrain {

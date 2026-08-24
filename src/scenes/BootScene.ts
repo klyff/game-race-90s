@@ -65,6 +65,7 @@ import {
   GASOLINE_SPRITE_KEY,
   CROWD_ASSET_DIRECTORY,
   CROWD_SPRITES,
+  CRATE_SMASH_SPRITES,
   TRAP_PROP_SPRITES,
   WOOD_CHIP_SPRITES,
   WEAPON_ASSET_DIRECTORY,
@@ -105,6 +106,7 @@ export class BootScene extends Phaser.Scene {
       GASOLINE_SPRITE_KEY,
       ...TRAP_PROP_SPRITES.map(prop => prop.key),
       ...WOOD_CHIP_SPRITES.map(chip => chip.key),
+      ...CRATE_SMASH_SPRITES.map(smash => smash.key),
       ...CROWD_SPRITES.map(sprite => sprite.key),
       ...SCRAP_SPRITES.map(sprite => sprite.key),
       ...PLANET_THEMES.map(theme => theme.artKey),
@@ -213,6 +215,9 @@ export class BootScene extends Phaser.Scene {
     }
     for (const chip of WOOD_CHIP_SPRITES) {
       this.load.image(chip.key, `${TRAPS_ASSET_DIRECTORY}/${chip.file}`);
+    }
+    for (const smash of CRATE_SMASH_SPRITES) {
+      this.load.image(smash.key, `${TRAPS_ASSET_DIRECTORY}/${smash.file}`);
     }
     for (const sprite of CROWD_SPRITES) {
       this.load.image(sprite.key, `${CROWD_ASSET_DIRECTORY}/${sprite.file}`);

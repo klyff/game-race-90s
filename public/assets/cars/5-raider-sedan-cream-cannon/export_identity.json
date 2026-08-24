@@ -1,0 +1,17 @@
+{
+  "id": "5-raider-sedan-cream-cannon",
+  "inventory_n": 5,
+  "slug": "raider-sedan-cream-cannon",
+  "displayName": "Hood Howitzer",
+  "spec": "Sedan, Dirty cream, black stripes + hood cannon, Mad Max raider, background HEX: #00B140",
+  "source_run_dir": "/Users/klyff/git/game-race-90s/car-sprites/2026-08-23_raider-sedan-cream-cannon",
+  "hero_frame": 7,
+  "hero_role": "shop / garage / results still \u2014 always strip frame 7",
+  "hero_source": "keyed/out_frame_07.png",
+  "hero_file": "car_hero.png",
+  "frame_count": 32,
+  "direction": "counter_clockwise",
+  "index0": "6 o'clock facing camera",
+  "clock": "counter_clockwise",
+  "exported_at": "2026-08-24T02:52:42.334106+00:00"
+}

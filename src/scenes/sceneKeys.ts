@@ -112,6 +112,16 @@ export const WOOD_CHIP_SPRITES = [1, 2, 3, 4, 5, 6].map(n => ({
   file: `wood-chip-${String(n).padStart(2, '0')}.png`,
 }));
 
+export const CRATE_SMASH_SPRITES = [1, 2, 3, 4].map(n => ({
+  key: `trap-crate-smash-${String(n).padStart(2, '0')}`,
+  file: `crate-smash-${String(n).padStart(2, '0')}.png`,
+}));
+
+export function crateSmashTextureKey(frame: number): string {
+  const n = Math.max(1, Math.min(4, Math.floor(frame)));
+  return `trap-crate-smash-${String(n).padStart(2, '0')}`;
+}
+
 export const CROWD_ASSET_DIRECTORY = 'assets/crowd';
 export const CROWD_SPRITES = [
   { key: 'crowd-rock', file: 'rock.png' },

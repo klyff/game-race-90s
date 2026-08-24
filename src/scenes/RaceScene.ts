@@ -1796,7 +1796,10 @@ export class RaceScene extends Phaser.Scene {
         sprite.setVisible(false);
       }
     }
-    this.explosions.setVisible(!this.paintHidden.has('fx'));
+    const fxOn = !this.paintHidden.has('fx');
+    this.explosions.setVisible(fxOn);
+    this.wood.setVisible(fxOn);
+    this.victory.setVisible(fxOn);
   }
 
   private tickFpsLog(deltaSeconds: number): void {
