@@ -107,7 +107,163 @@ const BLUE_COMBAT = spinnerCar({
   },
 });
 
-export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [GRAY_MUSCLE, BLUE_COMBAT];
+/**
+ * Red Oh Red — pixel sport, roof cannon, dual white stripes.
+ * Arcade medium for Thunder Basin: planted vs Blue Combat, still ~60 u/s
+ * teaching speed (not the old 78 Marauder). Roof gun → arsenal, not turbo.
+ */
+const RED_OH_RED = spinnerCar({
+  id: 'red-oh-red',
+  displayName: 'Red Oh Red',
+  callName: 'Red Oh Red',
+  archetype: 'Red pixel sport — roof cannon, dual white stripes',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'thunder-basin',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.MEDIUM,
+  unlockPlanet: 1,
+  price: 62_000,
+  stats: {
+    mass: 980,
+    enginePower: 29,
+    brakeForce: 44,
+    maxSpeed: 63,
+    grip: 28,
+    steerRate: 2.5,
+    steerSpeedFalloff: 0.49,
+    armor: 0.38,
+    ammoCapacity: 12,
+    collisionRadius: 1.68,
+    aimRadius: 3.5,
+  },
+});
+
+/**
+ * Sand Hauler — wasteland pickup, roof twin MG. Level-1 NPC "dumb truck":
+ * heavy, slow, planted. Thunder Basin teaching band.
+ */
+const SAND_HAULER = spinnerCar({
+  id: 'wasteland-pickup-sand-mg',
+  displayName: 'Sand Hauler',
+  callName: 'Sand Hauler',
+  archetype: 'Sand pickup — yellow stripes, roof twin machine gun',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'thunder-basin',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.WEAK,
+  unlockPlanet: 1,
+  price: 48_000,
+  stats: {
+    mass: 1180,
+    enginePower: 24,
+    brakeForce: 46,
+    maxSpeed: 56,
+    grip: 30,
+    steerRate: 2.15,
+    steerSpeedFalloff: 0.42,
+    armor: 0.44,
+    ammoCapacity: 14,
+    collisionRadius: 1.82,
+    aimRadius: 3.6,
+  },
+});
+
+/**
+ * Hood Howitzer — cream raider sedan, center-hood cannon.
+ */
+const HOOD_HOWITZER = spinnerCar({
+  id: 'raider-sedan-cream-cannon',
+  displayName: 'Hood Howitzer',
+  callName: 'Howitzer',
+  archetype: 'Cream sedan — black stripes, hood-center cannon',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'thunder-basin',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.MEDIUM,
+  unlockPlanet: 1,
+  price: 52_000,
+  stats: {
+    mass: 960,
+    enginePower: 27,
+    brakeForce: 44,
+    maxSpeed: 60,
+    grip: 28,
+    steerRate: 2.45,
+    steerSpeedFalloff: 0.46,
+    armor: 0.36,
+    ammoCapacity: 10,
+    collisionRadius: 1.7,
+    aimRadius: 3.45,
+  },
+});
+
+/**
+ * Red Bomber — war-red muscle, rear bomb rack.
+ */
+const RED_BOMBER = spinnerCar({
+  id: 'war-muscle-red-bomber',
+  displayName: 'Red Bomber',
+  callName: 'Bomber',
+  archetype: 'War-red muscle — white side stripes, rear bomb launcher',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'thunder-basin',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.MEDIUM,
+  unlockPlanet: 1,
+  price: 55_000,
+  stats: {
+    mass: 1040,
+    enginePower: 28,
+    brakeForce: 45,
+    maxSpeed: 62,
+    grip: 27,
+    steerRate: 2.35,
+    steerSpeedFalloff: 0.48,
+    armor: 0.4,
+    ammoCapacity: 8,
+    collisionRadius: 1.72,
+    aimRadius: 3.4,
+  },
+});
+
+/**
+ * Olive Scav — army wagon, roof ring cannon. Slow convoy hauler.
+ */
+const OLIVE_SCAV = spinnerCar({
+  id: 'scav-wagon-olive-cannon',
+  displayName: 'Olive Scav',
+  callName: 'Scav',
+  archetype: 'Olive wagon — orange hazard bars, roof ring cannon',
+  perk: CAR_PERK.TRENCH_GRIP,
+  homePlanetId: 'thunder-basin',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.WEAK,
+  unlockPlanet: 1,
+  price: 46_000,
+  stats: {
+    mass: 1100,
+    enginePower: 25,
+    brakeForce: 47,
+    maxSpeed: 58,
+    grip: 31,
+    steerRate: 2.2,
+    steerSpeedFalloff: 0.4,
+    armor: 0.42,
+    ammoCapacity: 10,
+    collisionRadius: 1.86,
+    aimRadius: 3.55,
+  },
+});
+
+export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
+  GRAY_MUSCLE,
+  BLUE_COMBAT,
+  RED_OH_RED,
+  SAND_HAULER,
+  HOOD_HOWITZER,
+  RED_BOMBER,
+  OLIVE_SCAV,
+];
 
 export function spinnerCarIds(): readonly string[] {
   return SPINNER_CAR_INDEX.map(car => car.id);

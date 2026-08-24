@@ -1,4 +1,4 @@
-import { add, scale } from '../math/Vec2.ts';
+import { add, distance, length, normalize, scale } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
 import { trackFullHalfWidth, type TrackDefinition } from '../track/TrackDefinition.ts';
 import type { TrackSpline } from '../track/TrackSpline.ts';
@@ -13,15 +13,25 @@ export const CROWD_KIND = {
 
 export type CrowdKind = (typeof CROWD_KIND)[keyof typeof CROWD_KIND];
 
-export const CROWD_COUNT = 26;
+/** Original start-line pack. Live races spawn this times `CROWD_COUNT_SCALE`. */
+export const CROWD_BASE_COUNT = 26;
+export const CROWD_COUNT_SCALE = 6;
+export const CROWD_COUNT = CROWD_BASE_COUNT * CROWD_COUNT_SCALE;
+/** Denser pack on both shoulders of start/finish (2× the original 26). */
+export const CROWD_START_COUNT = CROWD_BASE_COUNT * 2;
+export const CROWD_LAP_COUNT = CROWD_COUNT - CROWD_START_COUNT;
 export const CROWD_FLASHER_EVERY = 26;
 /** How close the leader must be (arc units) before cheer / flasher swap frame. */
 export const CROWD_REACT_RADIUS = 42;
+/** Person hit circle. Cars on a wall scrape can clip the inner row. */
+export const CROWD_HIT_RADIUS = 1.05;
 /** First person sits this far before the line; last sits this far after. */
-const START_SPAN_BEFORE = 8;
-const START_SPAN_AFTER = 72;
-/** Extra offset past the wall so feet sit on the dirt, not the ribbon. */
-const OUTSIDE_WALL = 2.4;
+const START_SPAN_BEFORE = 12;
+const START_SPAN_AFTER = 88;
+/** Inner row: just inside the wall, on the dirt, so a scrape can hit them. */
+const INNER_INSET = 0.55;
+/** Outer row: past the wall, visual density the cars cannot reach. */
+const OUTER_PAD = 2.1;
 
 const CYCLE: readonly CrowdKind[] = [
   CROWD_KIND.ROCK,
@@ -34,6 +44,19 @@ export interface CrowdSlot {
   readonly kind: CrowdKind;
   readonly distance: number;
   readonly lateral: number;
+}
+
+export interface CrowdCarTarget {
+  readonly position: Vec2;
+  readonly radius: number;
+  readonly velocity: Vec2;
+  readonly airborne: boolean;
+}
+
+export interface CrowdHit {
+  readonly slotIndex: number;
+  readonly position: Vec2;
+  readonly throwVelocity: Vec2;
 }
 
 function hash32(text: string): number {
@@ -75,31 +98,125 @@ export function crowdIsReacting(
   return arcSeparation(slot.distance, leaderDistance, trackLength) <= CROWD_REACT_RADIUS;
 }
 
+function kindAt(index: number, flasherOffset: number): CrowdKind {
+  if (index % CROWD_FLASHER_EVERY === flasherOffset) {
+    return CROWD_KIND.FLASHER;
+  }
+  return CYCLE[index % CYCLE.length]!;
+}
+
+function crowdLateral(index: number, wall: number): number {
+  const side = index % 2 === 0 ? 1 : -1;
+  const stagger = ((index * 5) % 7) * 0.22;
+  const inner = index % 3 !== 2;
+  const reach = inner ? wall - INNER_INSET - stagger : wall + OUTER_PAD + stagger;
+  return side * reach;
+}
+
+function inStartSpan(distance: number, start: number, length: number): boolean {
+  const along = wrapDistance(distance - start, length);
+  return along <= START_SPAN_AFTER || along >= length - START_SPAN_BEFORE;
+}
+
 /**
- * ~26 adults on both shoulders of the start. Always face the camera at runtime.
- * One slot in 26 is the flasher; the rest cycle rock / punk / piriguete / cheer.
+ * ~156 adults: a dense pack on both shoulders of start/finish, the rest
+ * ringing the lap. Always face the camera at runtime. One slot in 26 is
+ * the flasher; the rest cycle rock / punk / piriguete / cheer.
  */
-export function pickStartCrowd(track: TrackDefinition, seed: number): readonly CrowdSlot[] {
+export function pickTrackCrowd(
+  track: TrackDefinition,
+  seed: number,
+  trackLength: number,
+): readonly CrowdSlot[] {
   const start = track.startLineDistance;
-  const wall = trackFullHalfWidth(track) + OUTSIDE_WALL;
-  const flasherIndex = (Number.isFinite(seed) ? seed >>> 0 : 1) % CROWD_COUNT;
+  const wall = trackFullHalfWidth(track);
+  const length = Number.isFinite(trackLength) && trackLength > 0 ? trackLength : 1;
+  const flasherOffset = (Number.isFinite(seed) ? seed >>> 0 : 1) % CROWD_FLASHER_EVERY;
   const span = START_SPAN_BEFORE + START_SPAN_AFTER;
   const slots: CrowdSlot[] = [];
-  for (let index = 0; index < CROWD_COUNT; index += 1) {
-    const t = index / (CROWD_COUNT - 1);
+
+  for (let index = 0; index < CROWD_START_COUNT; index += 1) {
+    const t = CROWD_START_COUNT <= 1 ? 0 : index / (CROWD_START_COUNT - 1);
     const distance = start - START_SPAN_BEFORE + t * span;
-    const side = index % 2 === 0 ? 1 : -1;
-    const stagger = ((index * 3) % 5) * 0.35;
     slots.push({
-      kind: index === flasherIndex ? CROWD_KIND.FLASHER : CYCLE[index % CYCLE.length]!,
+      kind: kindAt(index, flasherOffset),
       distance,
-      lateral: side * (wall + stagger),
+      lateral: crowdLateral(index, wall),
     });
   }
+
+  const lapBudget = Math.max(0, CROWD_COUNT - slots.length);
+  if (lapBudget === 0 || length <= span + 8) {
+    return slots;
+  }
+
+  let placed = 0;
+  let probe = 0;
+  while (placed < lapBudget && probe < lapBudget * 4) {
+    const t = (placed + 0.5 + ((seed >>> 0) % 7) * 0.03) / lapBudget;
+    const distance = wrapDistance(start + t * length + probe * 1.7, length);
+    probe += 1;
+    if (inStartSpan(distance, start, length)) {
+      continue;
+    }
+    const index = slots.length;
+    slots.push({
+      kind: kindAt(index, flasherOffset),
+      distance,
+      lateral: crowdLateral(index + 1, wall),
+    });
+    placed += 1;
+  }
+
   return slots;
+}
+
+/** @deprecated Use `pickTrackCrowd` — kept for call-site greps during the rename. */
+export function pickStartCrowd(
+  track: TrackDefinition,
+  seed: number,
+  trackLength = 0,
+): readonly CrowdSlot[] {
+  return pickTrackCrowd(track, seed, trackLength);
 }
 
 export function crowdWorldPosition(spline: TrackSpline, slot: CrowdSlot): Vec2 {
   const frame = spline.frameAt(slot.distance);
   return add(frame.position, scale(frame.normal, slot.lateral));
+}
+
+/**
+ * Indices of standing people a grounded car just overlapped. Throw velocity
+ * follows the car so the body flies in the direction of the hit.
+ */
+export function crowdHitsFromCars(
+  worldPositions: readonly Vec2[],
+  dead: ReadonlySet<number>,
+  cars: readonly CrowdCarTarget[],
+): readonly CrowdHit[] {
+  const hits: CrowdHit[] = [];
+  for (let index = 0; index < worldPositions.length; index += 1) {
+    if (dead.has(index)) {
+      continue;
+    }
+    const position = worldPositions[index];
+    if (position === undefined) {
+      continue;
+    }
+    for (const car of cars) {
+      if (car.airborne) {
+        continue;
+      }
+      const reach = car.radius + CROWD_HIT_RADIUS;
+      if (distance(position, car.position) > reach) {
+        continue;
+      }
+      const speed = length(car.velocity);
+      const throwVelocity =
+        speed > 1 ? car.velocity : scale(normalize(add(position, scale(car.position, -1))), 8);
+      hits.push({ slotIndex: index, position, throwVelocity });
+      break;
+    }
+  }
+  return hits;
 }

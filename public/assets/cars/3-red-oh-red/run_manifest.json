@@ -1,0 +1,892 @@
+{
+  "run_id": "2026-08-23_red-oh-red",
+  "name": "Red Oh Red",
+  "spec": "Sport Car, Red, Cannon Gun gun n rooth of the car, White stripe to front till the back, Pixel Art Light details - Pixel Art, background HEX: #00B140",
+  "save_dir": "car-sprites/2026-08-23_red-oh-red",
+  "background_mode": "chroma_key",
+  "started_at": "2026-08-24T01:37:50+0000",
+  "config": {
+    "status": "VALIDATED",
+    "validated_on": "2026-08-22",
+    "fixed_output_px": [
+      1024,
+      1024
+    ],
+    "max_retries_per_frame": 2
+  },
+  "status": "FRAMES_COMPLETE",
+  "style_anchor": "style_anchor.json",
+  "frames": {
+    "0": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_00.png",
+      "status": "APPROVED",
+      "human_approved": true,
+      "note": "Human approved r2 as style anchor. Continue through remaining frames; max 2 retries then keep last attempt.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r0.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 811 vs 742 (9.4%); axis (-1.0, 63.0) vs (-4.3, 138.0) (tol \u00b131px)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r1.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 621 vs 742 (16.2%)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r2.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 862 vs 742 (16.3%); axis (-0.5, 58.0) vs (-4.3, 138.0) (tol \u00b131px)"
+        }
+      ]
+    },
+    "1": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_01.png",
+      "kept": "r1",
+      "final": "axis (25.0, 107.0) vs (47.1, 139.4); palette 0.66",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r0.png",
+          "diff": "scale 842 vs 769 (9.4%); axis (19.5, 56.5) vs (47.1, 139.4); palette 0.31"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r1.png",
+          "diff": "axis (25.0, 107.0) vs (47.1, 139.4); palette 0.66"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r2.png",
+          "diff": "scale 818 vs 769 (6.3%); axis (32.5, 20.5) vs (47.1, 139.4); palette 0.66"
+        }
+      ]
+    },
+    "2": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_02.png",
+      "kept": "r1",
+      "final": "axis (18.0, 102.0) vs (52.8, 140.8); scale+palette OK",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r0.png",
+          "diff": "axis (25.5, 81.0) vs (52.8, 140.8)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r1.png",
+          "diff": "axis (18.0, 102.0) vs (52.8, 140.8)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r2.png",
+          "diff": "axis (25.0, 92.5) vs (52.8, 140.8); palette 0.66"
+        }
+      ]
+    },
+    "3": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_03.png",
+      "kept": "r1",
+      "final": "axis (13.0, 102.0) vs (49.9, 140.1); scale+palette OK",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r0.png",
+          "diff": "axis (19.0, 84.5) vs (49.9, 140.1); palette 0.38"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r1.png",
+          "diff": "axis (13.0, 102.0) vs (49.9, 140.1)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r2.png",
+          "diff": "axis (27.5, 93.0) vs (49.9, 140.1); palette 0.44"
+        }
+      ]
+    },
+    "4": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_04.png",
+      "kept": "r2",
+      "final": "axis (22.0, 94.5) vs (42.1, 138.0); scale+palette OK",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r0.png",
+          "diff": "scale 1037 vs 976 (6.2%); axis (9.5, 55.5) vs (42.1, 138.0)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r1.png",
+          "diff": "axis (16.0, 87.0) vs (42.1, 138.0); palette 0.75"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r2.png",
+          "diff": "axis (22.0, 94.5) vs (42.1, 138.0); scale+palette OK"
+        }
+      ]
+    },
+    "5": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_05.png",
+      "kept": "r2",
+      "final": "axis (16.5, 101.5) vs (32.8, 134.4); scale+palette OK (best axis)",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r0.png",
+          "diff": "axis (0.5, 40.5) vs (32.8, 134.4); scale+palette OK"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r1.png",
+          "diff": "axis (15.0, 52.5) vs (32.8, 134.4); scale+palette OK"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r2.png",
+          "diff": "axis (16.5, 101.5) vs (32.8, 134.4); scale+palette OK"
+        }
+      ]
+    },
+    "6": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_06.png",
+      "kept": "r1",
+      "final": "axis (12.5, 94.0) vs (20.7, 130.1); aspect 2.054 vs 2.153; scale+palette OK",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r0.png",
+          "diff": "axis (-9.5, 91.0) vs (20.7, 130.1); aspect 1.769 vs 2.153"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r1.png",
+          "diff": "axis (12.5, 94.0) vs (20.7, 130.1); aspect 2.054 vs 2.153; scale+palette OK"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r2.png",
+          "diff": "axis (14.5, 71.0) vs (20.7, 130.1); aspect 1.792 vs 2.153"
+        }
+      ]
+    },
+    "7": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_07.png",
+      "kept": "r0",
+      "final": "axis (-0.5, 59.5) vs (-5.7, 118.0); scale+palette+aspect OK",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_07_r0.png",
+          "diff": "axis (-0.5, 59.5) vs (-5.7, 118.0); scale+palette OK"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_07_r1.png",
+          "diff": "axis (-1.0, 156.5) vs (-5.7, 118.0); palette 0.66"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_07_r2.png",
+          "diff": "axis (-0.5, 29.5) vs (-5.7, 118.0); aspect 2.273 vs 2.559"
+        }
+      ]
+    },
+    "8": {
+      "result": "ACCEPT_SOFT",
+      "retries": 1,
+      "path": "out_frame_08.png",
+      "kept": "r1",
+      "final": "hard gates PASS; palette 0.53 (soft)",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_08_r0.png",
+          "diff": "axis (0.0, 37.5) vs (-6.4, 106.7); aspect 2.588 vs 3.057; palette 0.35"
+        },
+        {
+          "id": "r1",
+          "result": "ACCEPT_SOFT",
+          "path": "attempts/out_frame_08_r1.png",
+          "diff": "hard PASS; palette 0.53"
+        }
+      ]
+    },
+    "9": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_09.png",
+      "kept": "r2",
+      "final": "axis+scale OK; aspect 2.943 vs 2.773 (slot confusion vs 22)",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_09_r0.png",
+          "diff": "axis (0.0, 33.0) vs (-5.0, 133.0); aspect 2.291 vs 2.773; palette 0.78"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_09_r1.png",
+          "diff": "axis (2.0, 84.0) vs (-5.0, 133.0); aspect 2.328 vs 2.773; palette 0.77"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_09_r2.png",
+          "diff": "axis+scale OK; aspect 2.943 vs 2.773 slot-confusion vs frame 22"
+        }
+      ]
+    },
+    "10": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_10.png",
+      "kept": "r1",
+      "final": "axis (-1.0, 88.5) vs (-28.5, 153.6); scale+aspect+palette OK",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_10_r0.png",
+          "diff": "axis (7.5, 65.5) vs (-28.5, 153.6); slot confusion aspect 2.337"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_10_r1.png",
+          "diff": "axis (-1.0, 88.5) vs (-28.5, 153.6); scale+aspect OK"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_10_r2.png",
+          "diff": "axis (-1.0, 70.5) vs (-28.5, 153.6); palette 0.73"
+        }
+      ]
+    },
+    "11": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_11.png",
+      "kept": "r0",
+      "final": "axis (-7.0, 25.0) vs (-42.8, 165.0); scale+palette+aspect OK",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_11_r0.png",
+          "diff": "axis (-7.0, 25.0) vs (-42.8, 165.0); scale+palette OK"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_11_r1.png",
+          "diff": "axis (-10.5, 101.0) vs (-42.8, 165.0); aspect 2.439 vs 2.230"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_11_r2.png",
+          "diff": "axis (4.0, 39.5) vs (-42.8, 165.0); aspect 2.334 slot-confusion"
+        }
+      ]
+    },
+    "12": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_12.png",
+      "kept": "r1",
+      "final": "scale OK; axis (2.5, 30.5) vs (-51.3, 170.7); aspect 2.297 vs 2.074",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_12_r0.png",
+          "diff": "scale 1046 vs 956 (9.3%); axis (-4.0, 23.0); palette 0.67"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_12_r1.png",
+          "diff": "scale OK; axis (2.5, 30.5) vs (-51.3, 170.7); aspect 2.297 vs 2.074; palette 0.82"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_12_r2.png",
+          "diff": "scale 1016 vs 956 (6.2%); axis (-6.0, 146.0); aspect 2.376"
+        }
+      ]
+    },
+    "13": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_13.png",
+      "kept": "r1",
+      "final": "scale OK; axis (3.0, 44.0) vs (-56.3, 175.6); palette 0.16",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_13_r0.png",
+          "diff": "scale 993 vs 903 (10%); axis (-0.5, 16.5); palette 0.82"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_13_r1.png",
+          "diff": "scale OK; axis (3.0, 44.0) vs (-56.3, 175.6); aspect 2.144 vs 1.907; palette 0.16"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_13_r2.png",
+          "diff": "scale 989 vs 903 (9.5%); axis (-3.5, 40.0); aspect 2.302 vs 1.907"
+        }
+      ]
+    },
+    "14": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_14.png",
+      "kept": "r1",
+      "final": "scale+palette OK; axis (2.5, 27.5) vs (-57.8, 178.5); aspect 1.811 vs 1.719",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_14_r0.png",
+          "diff": "scale 950 vs 840 (13.1%); axis (4.5, 45.0); palette 0.46"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_14_r1.png",
+          "diff": "scale+palette OK; axis (2.5, 27.5) vs (-57.8, 178.5); aspect 1.811 vs 1.719"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_14_r2.png",
+          "diff": "axis (-90.5, 173.5) vs (-57.8, 178.5); palette 0.36"
+        }
+      ]
+    },
+    "15": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_15.png",
+      "kept": "r2",
+      "final": "scale 824 vs 767 (7.4%); axis (-41.0, 117.0) vs (-54.9, 179.2); best of 3",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_15_r0.png",
+          "diff": "scale 872 vs 767 (13.7%); axis (1.0, -4.0); aspect 1.797 vs 1.538"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_15_r1.png",
+          "diff": "scale 692 vs 767 (9.9%); axis (-6.5, 58.0)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_15_r2.png",
+          "diff": "scale 824 vs 767 (7.4%); axis (-41.0, 117.0) vs (-54.9, 179.2); aspect 1.755"
+        }
+      ]
+    },
+    "16": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_16.png",
+      "kept": "r1",
+      "final": "scale+axis OK; aspect 1.217 vs 1.358 (front/rear slot confusion); palette 0.84",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r0.png",
+          "diff": "axis (-1.0, 58.5) vs (-4.3, 177.8); aspect 1.268; palette 0.50"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r1.png",
+          "diff": "scale+axis OK; aspect 1.217 vs 1.358 slot-confusion vs frame 0; palette 0.84"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r2.png",
+          "diff": "axis (-1.0, 100.0); aspect 1.118 vs 1.358; palette 0.50"
+        }
+      ]
+    },
+    "17": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_17.png",
+      "kept": "r0",
+      "final": "scale+aspect OK; axis (24.0, 114.5) vs (49.2, 179.2); palette 0.66",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_17_r0.png",
+          "diff": "axis (24.0, 114.5) vs (49.2, 179.2); palette 0.66; scale+aspect OK"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_17_r1.png",
+          "diff": "scale 838 vs 770 (9.0%); axis OK; palette 0.68"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_17_r2.png",
+          "diff": "axis (29.5, 90.0) vs (49.2, 179.2); palette 0.69; scale OK"
+        }
+      ]
+    },
+    "18": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_18.png",
+      "kept": "r1",
+      "final": "scale+aspect OK; axis (30.0, 88.5) vs (52.8, 179.2); palette 0.70",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_18_r0.png",
+          "diff": "axis (11.0, 97.5); aspect 1.538 vs 1.714; palette 0.64"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_18_r1.png",
+          "diff": "axis (30.0, 88.5) vs (52.8, 179.2); scale+aspect OK; palette 0.70"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_18_r2.png",
+          "diff": "axis (22.0, 63.5) vs (52.8, 179.2); palette 0.66"
+        }
+      ]
+    },
+    "19": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_19.png",
+      "kept": "r1",
+      "final": "scale+aspect+palette OK; axis (37.5, 97.5) vs (48.5, 172.1)",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_19_r0.png",
+          "diff": "axis (3.5, 71.5); aspect 1.970 vs 2.061; palette 0.71"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_19_r1.png",
+          "diff": "axis (37.5, 97.5) vs (48.5, 172.1); scale+aspect+palette OK"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_19_r2.png",
+          "diff": "axis (18.5, 60.0); aspect 1.777 vs 2.061; palette 0.82"
+        }
+      ]
+    },
+    "20": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_20.png",
+      "kept": "r2",
+      "final": "scale+palette OK; axis (12.0, 100.5) vs (32.8, 160.0); aspect 2.155 vs 2.334",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_20_r0.png",
+          "diff": "axis (2.5, 41.5); aspect 2.115 vs 2.334"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_20_r1.png",
+          "diff": "scale 940 vs 1015 (7.4%); axis (20.0, 112.5)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_20_r2.png",
+          "diff": "axis (12.0, 100.5) vs (32.8, 160.0); aspect 2.155 vs 2.334; scale OK"
+        }
+      ]
+    },
+    "21": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_21.png",
+      "kept": "r1",
+      "final": "scale+palette OK; axis (3.5, 86.5) vs (14.3, 145.1); aspect 2.424 vs 2.595",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_21_r0.png",
+          "diff": "axis (0.5, 49.5); aspect 1.904 vs 2.595"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_21_r1.png",
+          "diff": "axis (3.5, 86.5) vs (14.3, 145.1); aspect 2.424 vs 2.595; scale+palette OK"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_21_r2.png",
+          "diff": "axis (3.0, 99.5); aspect 2.446; palette 0.79"
+        }
+      ]
+    },
+    "22": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_22.png",
+      "kept": "r1",
+      "final": "scale+axis OK; aspect 2.776 vs 2.866 (slot confusion vs 9); palette 0.36",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_22_r0.png",
+          "diff": "axis (2.5, 50.0) vs (0.0, 126.6); aspect 1.973 vs 2.866; palette 0.78"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_22_r1.png",
+          "diff": "scale+axis OK; aspect 2.776 vs 2.866; palette 0.36"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_22_r2.png",
+          "diff": "axis (1.0, 78.0); aspect 2.396 vs 2.866; palette 0.35"
+        }
+      ]
+    },
+    "23": {
+      "result": "PASS",
+      "retries": 1,
+      "path": "out_frame_23.png",
+      "kept": "r1",
+      "final": "PASS",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_23_r0.png",
+          "diff": "axis (2.5, 8.5) vs (1.4, 115.2); palette 0.67"
+        },
+        {
+          "id": "r1",
+          "result": "PASS",
+          "path": "attempts/out_frame_23_r1.png",
+          "diff": "PASS"
+        }
+      ]
+    },
+    "24": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_24.png",
+      "kept": "r0",
+      "final": "scale+axis+palette OK; aspect 2.769 vs 3.035 slot-confusion vs 7",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_24_r0.png",
+          "diff": "scale+axis+palette OK; aspect 2.769 vs 3.035 slot-confusion vs frame 7"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_24_r1.png",
+          "diff": "axis (3.5, 70.5) vs (4.3, 108.1); palette 0.82"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_24_r2.png",
+          "diff": "axis (-2.0, 140.0) vs (4.3, 108.1); aspect 2.794"
+        }
+      ]
+    },
+    "25": {
+      "result": "ACCEPT_SOFT",
+      "retries": 1,
+      "path": "out_frame_25.png",
+      "kept": "r1",
+      "final": "hard gates PASS; palette 0.40 (soft)",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_25_r0.png",
+          "diff": "axis (-2.5, 81.0) vs (7.8, 113.1); palette 0.83"
+        },
+        {
+          "id": "r1",
+          "result": "ACCEPT_SOFT",
+          "path": "attempts/out_frame_25_r1.png",
+          "diff": "hard PASS; palette 0.40"
+        }
+      ]
+    },
+    "26": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_26.png",
+      "kept": "r0",
+      "final": "scale+palette+aspect OK; axis (0.0, 87.0) vs (-7.8, 125.2)",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_26_r0.png",
+          "diff": "axis (0.0, 87.0) vs (-7.8, 125.2); scale+palette+aspect OK"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_26_r1.png",
+          "diff": "scale+axis OK; aspect 2.461 vs 2.341; palette 0.74"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_26_r2.png",
+          "diff": "axis (5.0, 30.5); aspect 2.248; palette 0.73"
+        }
+      ]
+    },
+    "27": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_27.png",
+      "kept": "r1",
+      "final": "scale+palette+aspect OK; axis (-8.0, 42.0) vs (-17.1, 129.4)",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_27_r0.png",
+          "diff": "axis (2.5, 11.5) vs (-17.1, 129.4)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_27_r1.png",
+          "diff": "axis (-8.0, 42.0) vs (-17.1, 129.4); scale+palette+aspect OK"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_27_r2.png",
+          "diff": "axis (-1.0, 94.0); aspect 2.406 vs 2.197; palette 0.76"
+        }
+      ]
+    },
+    "28": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_28.png",
+      "kept": "r0",
+      "final": "scale+aspect OK; axis (-1.5, 19.0) vs (-34.9, 136.5); palette 0.46",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_28_r0.png",
+          "diff": "axis (-1.5, 19.0) vs (-34.9, 136.5); palette 0.46; scale+aspect OK"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_28_r1.png",
+          "diff": "axis (-2.0, 37.5); aspect 2.049 vs 1.941"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_28_r2.png",
+          "diff": "axis (-3.5, 24.0); aspect 2.025 vs 1.941"
+        }
+      ]
+    },
+    "29": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_29.png",
+      "kept": "r1",
+      "final": "scale OK; axis (3.5, 28.0) vs (-50.6, 141.5); aspect 1.654 vs 1.556; palette 0.45",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_29_r0.png",
+          "diff": "scale 1016 vs 897 (13.2%); axis (7.0, 25.0); palette 0.47"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_29_r1.png",
+          "diff": "scale OK; axis (3.5, 28.0) vs (-50.6, 141.5); aspect 1.654 vs 1.556; palette 0.45"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_29_r2.png",
+          "diff": "scale 1022 vs 897 (13.9%); axis (3.5, 28.5); aspect 1.834"
+        }
+      ]
+    },
+    "30": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_30.png",
+      "kept": "r1",
+      "final": "axis (-9.5, 15.5) vs (-52.1, 141.5); slot confusion vs frame 3",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_30_r0.png",
+          "diff": "axis (0.0, 2.0) vs (-52.1, 141.5); slot confusion vs frame 3"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_30_r1.png",
+          "diff": "axis (-9.5, 15.5) vs (-52.1, 141.5); slot confusion; palette 0.73"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_30_r2.png",
+          "diff": "axis (3.5, 34.5) vs (-52.1, 141.5); aspect 1.656 vs 1.424; palette 0.66"
+        }
+      ]
+    },
+    "31": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_31.png",
+      "kept": "r1",
+      "final": "scale OK; axis (-12.0, 44.5) vs (-49.9, 140.8)",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_31_r0.png",
+          "diff": "scale 870 vs 801 (8.7%); axis (-63.0, 49.5) vs (-49.9, 140.8)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_31_r1.png",
+          "diff": "scale OK; axis (-12.0, 44.5) vs (-49.9, 140.8)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_31_r2.png",
+          "diff": "scale 874 vs 801 (9.1%); axis (-12.0, 33.5); slot confusion vs frame 3"
+        }
+      ]
+    }
+  },
+  "outputs": {
+    "frames": "out_frame_00.png \u2026 out_frame_31.png",
+    "keyed": "keyed/",
+    "strip_hires": "car_strip.png",
+    "atlas_hires": "car_strip.json",
+    "contact_sheet": "contact_sheet.png",
+    "strip_64": "car_strip_64x64.png",
+    "atlas_64": "car_strip_64x64.json",
+    "style_anchor": "style_anchor.json",
+    "hero": "car_hero.png"
+  },
+  "delivery": "not_run \u2014 waiting for human check of contact_sheet.png"
+}

@@ -30,6 +30,11 @@ export interface CatalogEntry {
 /** Shop order. Matrix / Delorean are obsolete and not listed. */
 export const GARAGE_CATALOG: readonly CatalogEntry[] = [
   { carId: '2-sportivo-blue-combat', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: '3-red-oh-red', price: 62_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: '7-scav-wagon-olive-cannon', price: 46_000, unlockPlanet: 1, tier: CAR_TIER.WEAK },
+  { carId: '4-wasteland-pickup-sand-mg', price: 48_000, unlockPlanet: 1, tier: CAR_TIER.WEAK },
+  { carId: '5-raider-sedan-cream-cannon', price: 52_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: '6-war-muscle-red-bomber', price: 55_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
   { carId: '1-muscle-car-gray-number9', price: 98_000, unlockPlanet: 2, tier: CAR_TIER.HEAVY },
 ];
 
@@ -71,7 +76,12 @@ export function isCarUnlocked(
   if (entry.unlockPlanet <= highestUnlockedPlanet) {
     return true;
   }
-  const extras = GARAGE_CATALOG.filter(item => !isStarterCar(item.carId) && !isOutOfServiceCarId(item.carId));
+  const extras = GARAGE_CATALOG.filter(
+    item =>
+      !isStarterCar(item.carId) &&
+      !isOutOfServiceCarId(item.carId) &&
+      item.unlockPlanet > highestUnlockedPlanet,
+  );
   const index = extras.findIndex(item => item.carId === carId);
   if (index < 0) {
     return false;

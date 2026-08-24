@@ -34,6 +34,7 @@ import { parseTrackTrapCatalog } from '../data/tracks/TrackTraps.ts';
 import { ExplosionEffect } from '../adapters/render/ExplosionEffect.ts';
 import { MetalScrapEffect } from '../adapters/render/MetalScrapEffect.ts';
 import { WoodDebrisEffect } from '../adapters/render/WoodDebrisEffect.ts';
+import { VictoryCelebration } from '../adapters/render/VictoryCelebration.ts';
 import type { HudReadout } from '../adapters/render/HudFormat.ts';
 import { IsoProjection } from '../adapters/render/IsoProjection.ts';
 import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
@@ -89,7 +90,7 @@ import { clockYawFromWorldHeading } from '../domain/math/IsoClock.ts';
 import { angleOf, dot, fromAngle, length } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
 import { resolveCareerField, seatCarId } from '../domain/race/CarAssignment.ts';
-import { CAREER_NPC_COUNT, npcPilotNames } from '../domain/race/CareerGrid.ts';
+import { CAREER_NPC_COUNT, npcPilotNamesForPlanet } from '../domain/race/CareerGrid.ts';
 import {
   applyWatchPin,
   nextWatchTrack,
@@ -117,8 +118,9 @@ import type { RacerEntry, RacerRuntime } from '../domain/race/RaceField.ts';
 import type { TrackDefinition } from '../domain/track/TrackDefinition.ts';
 import { TrackSpline } from '../domain/track/TrackSpline.ts';
 import { CAR_CONDITION, IMPACT_DAMAGE_THRESHOLD } from '../domain/vehicle/CarIntegrity.ts';
+import { isAirborne } from '../domain/vehicle/Vehicle.ts';
 import { missileCapacity } from '../domain/weapons/WeaponInventory.ts';
-import { crowdSeed, pickStartCrowd } from '../domain/crowd/CrowdSlots.ts';
+import { crowdSeed, pickTrackCrowd } from '../domain/crowd/CrowdSlots.ts';
 import { trapSeed } from '../domain/traps/pickRaceTraps.ts';
 import { TRAP_KIND } from '../domain/traps/TrapCatalog.ts';
 import { HAZARD_KIND } from '../domain/weapons/Hazard.ts';
@@ -262,6 +264,7 @@ export class RaceScene extends Phaser.Scene {
   private explosions!: ExplosionEffect;
   private scraps!: MetalScrapEffect;
   private wood!: WoodDebrisEffect;
+  private victory!: VictoryCelebration;
   private chaseCamera!: ChaseCamera;
   private zoomPolicy!: CameraZoomPolicy;
   private chaseWatchZoomPolicy!: CameraZoomPolicy;
@@ -398,6 +401,7 @@ export class RaceScene extends Phaser.Scene {
     this.hitRewards = new HitRewardEffect(this, this.projection);
     this.scraps = new MetalScrapEffect(this, this.projection);
     this.wood = new WoodDebrisEffect(this, this.projection);
+    this.victory = new VictoryCelebration(this, this.projection);
     this.explosions = new ExplosionEffect(this, this.projection, {
       burnMarkLifetimeSeconds:
         BURN_MARK_LIFETIME_LAPS * (this.spline.totalLength / OIL_LAP_REFERENCE_SPEED),
@@ -431,7 +435,7 @@ export class RaceScene extends Phaser.Scene {
     );
     this.crowd = new CrowdView(
       this,
-      pickStartCrowd(this.track, crowdSeed(planet?.seed ?? 1, this.trackId)),
+      pickTrackCrowd(this.track, crowdSeed(planet?.seed ?? 1, this.trackId), this.spline.totalLength),
       this.spline,
       this.projection,
       this.manifest.pixelsPerUnit,
@@ -501,6 +505,8 @@ export class RaceScene extends Phaser.Scene {
     this.explosions.update(deltaSeconds);
     this.scraps.update(deltaSeconds);
     this.wood.update(deltaSeconds);
+    this.crowd?.update(deltaSeconds);
+    this.victory.update(deltaSeconds);
     this.chaseCamera.follow(this.followedRacer().state, deltaSeconds, this.targetZoom(deltaSeconds));
     // Hit / explosion camera kick — off while we try the start without the sway.
     // const impulse = this.cameraImpulse.sample(deltaSeconds);
@@ -815,7 +821,17 @@ export class RaceScene extends Phaser.Scene {
     });
     const leader = this.field.standings[0];
     const leadRacer = leader !== undefined ? this.field.racers[leader.racerIndex] : undefined;
-    this.crowd?.sync(leadRacer?.distance ?? 0);
+    this.crowd?.sync(
+      leadRacer?.distance ?? 0,
+      this.field.racers
+        .filter(racer => racer.integrity.condition !== CAR_CONDITION.DESTROYED)
+        .map(racer => ({
+          position: racer.state.position,
+          radius: racer.stats.collisionRadius,
+          velocity: racer.state.velocity,
+          airborne: isAirborne(racer.state),
+        })),
+    );
   }
 
   /**
@@ -1139,7 +1155,7 @@ export class RaceScene extends Phaser.Scene {
       career?.rivalPoints ?? [],
       this.planetIndex,
     );
-    const npcPilots = npcPilotNames(rivals, CAREER_NPC_COUNT);
+    const npcPilots = npcPilotNamesForPlanet(rivals, CAREER_NPC_COUNT, this.planetIndex);
     this.pilotNames = { [this.carId]: this.playerPilotName };
     npcIds.forEach((id, index) => {
       this.pilotNames[seatCarId(id, index)] = npcPilots[index] ?? `RIV${index + 1}`;
@@ -1552,6 +1568,7 @@ export class RaceScene extends Phaser.Scene {
     this.explosions.clear();
     this.scraps.clear();
     this.wood.clear();
+    this.victory.clear();
     this.audio.reset();
     this.field.racers.forEach((racer, index) => {
       this.views[index]?.setVisible(true);
@@ -1608,6 +1625,10 @@ export class RaceScene extends Phaser.Scene {
       this.wrongWayHold += deltaSeconds;
     } else {
       this.wrongWayHold = 0;
+    }
+
+    if (!spectator && humanFinished && !this.lastPlayerFinished && position === 1) {
+      this.victory.play(this.player.state.position);
     }
 
     const offer = this.narrator.update({
@@ -1886,6 +1907,7 @@ export class RaceScene extends Phaser.Scene {
     this.hitRewards.destroy();
     this.scraps.destroy();
     this.wood.destroy();
+    this.victory.destroy();
     this.explosions.destroy();
     this.crowd?.destroy();
     this.crowd = undefined;

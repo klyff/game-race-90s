@@ -26,6 +26,11 @@ describe('imported fleet sheets', () => {
       ...garageCarouselIds(),
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
+      '3-red-oh-red',
+      '4-wasteland-pickup-sand-mg',
+      '5-raider-sedan-cream-cannon',
+      '6-war-muscle-red-bomber',
+      '7-scav-wagon-olive-cannon',
     ]);
     for (const car of manifest.cars) {
       expect(isBBoxSheet(car)).toBe(true);
@@ -45,6 +50,11 @@ describe('imported fleet sheets', () => {
       ...garageCarouselIds(),
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
+      '3-red-oh-red',
+      '4-wasteland-pickup-sand-mg',
+      '5-raider-sedan-cream-cannon',
+      '6-war-muscle-red-bomber',
+      '7-scav-wagon-olive-cannon',
     ]);
   });
 });

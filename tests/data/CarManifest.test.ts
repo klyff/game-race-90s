@@ -114,8 +114,13 @@ describe('parseCarSetManifest', () => {
       'delorean',
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
+      '3-red-oh-red',
+      '4-wasteland-pickup-sand-mg',
+      '5-raider-sedan-cream-cannon',
+      '6-war-muscle-red-bomber',
+      '7-scav-wagon-olive-cannon',
     ]);
-    expect(manifest.cars.length).toBe(8);
+    expect(manifest.cars.length).toBe(13);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -550,7 +555,7 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(8);
+    expect(manifest.cars.length).toBe(13);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
@@ -633,6 +638,11 @@ describe('spinner strip atlas', () => {
     expect(careerFleetCarIds(manifest)).toEqual([
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
+      '3-red-oh-red',
+      '4-wasteland-pickup-sand-mg',
+      '5-raider-sedan-cream-cannon',
+      '6-war-muscle-red-bomber',
+      '7-scav-wagon-olive-cannon',
     ]);
   });
 

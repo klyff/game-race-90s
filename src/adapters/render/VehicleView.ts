@@ -7,7 +7,7 @@ import {
   sheetFrameCount,
   type ClockDirection,
 } from '../../data/cars/CarManifest.ts';
-import { add, fromAngle, perpendicularLeft, scale } from '../../domain/math/Vec2.ts';
+import { add, fromAngle, scale } from '../../domain/math/Vec2.ts';
 import type { VehicleState } from '../../domain/vehicle/Vehicle.ts';
 import { IsoProjection } from './IsoProjection.ts';
 
@@ -19,6 +19,10 @@ import { IsoProjection } from './IsoProjection.ts';
  * simulation state of its own: `sync` is a pure read of `VehicleState` into
  * two Phaser game objects, so multiple views can watch the same car (e.g. a
  * future minimap) without fighting over ownership.
+ *
+ * Marker lights used to sit on the nose and tail so yaw would read when the
+ * iso sheet was ambiguous. The live 32-frame strips already carry headlights
+ * and tails in the pixels; fake ellipses are gone until real light is wired.
  */
 
 /**
@@ -35,26 +39,19 @@ const OWN_SHADOW_DEPTH_OFFSET = 0.001;
 /** Alpha of the ground shadow ellipse. Low enough to read as a soft contact shadow. */
 const SHADOW_ALPHA = 0.35;
 
-/** How far past the collision radius the nose / tail markers sit. */
-const LIGHT_NOSE = 0.92;
-const LIGHT_TAIL = 0.82;
-const LIGHT_LATERAL = 0.32;
-
 export interface VehicleViewExtras {
   /** Consumable turbo is burning: tint the body and throw exhaust. */
   readonly turboActive?: boolean;
 }
 
 export interface VehicleViewOptions {
-  /** Far observation camera: hide lights and exhaust. */
+  /** Far observation camera: hide exhaust. */
   readonly farLod?: boolean;
 }
 
 export class VehicleView {
   readonly sprite: Phaser.GameObjects.Sprite;
   private readonly shadow: Phaser.GameObjects.Ellipse;
-  private readonly headlights: readonly Phaser.GameObjects.Ellipse[];
-  private readonly taillights: readonly Phaser.GameObjects.Ellipse[];
   private readonly exhaust: readonly Phaser.GameObjects.Ellipse[];
   private readonly projection: IsoProjection;
   private readonly noseReach: number;
@@ -95,26 +92,9 @@ export class VehicleView {
     this.sprite.setOrigin(manifest.origin.x, manifest.origin.y);
     this.sprite.setScale(displayScale);
 
-    // Iso yaw is a 180° trap: front and rear poses can read as the same car
-    // going the other way. Marker lights are tied to heading, not the sheet,
-    // so "which way is forward" stays obvious even when the art is ambiguous.
-    this.headlights = [0, 1].map(() =>
-      scene.add.ellipse(0, 0, 6, 3.5, 0xfff4b0).setAlpha(0.95),
-    );
-    this.taillights = [0, 1].map(() =>
-      scene.add.ellipse(0, 0, 5, 3, 0xff2a2a).setAlpha(0.9),
-    );
     this.exhaust = [0, 1, 2].map(() =>
       scene.add.ellipse(0, 0, 7, 4, 0xff9a2a).setVisible(false).setAlpha(0.7),
     );
-    if (this.farLod) {
-      for (const light of this.headlights) {
-        light.setVisible(false);
-      }
-      for (const light of this.taillights) {
-        light.setVisible(false);
-      }
-    }
   }
 
   /** Moves sprite and shadow to match `state`. Called once per rendered frame. */
@@ -139,7 +119,6 @@ export class VehicleView {
     }
 
     if (!this.farLod) {
-      this.placeLights(state, depth);
       this.placeExhaust(state, depth, turbo);
     }
   }
@@ -147,12 +126,6 @@ export class VehicleView {
   setVisible(visible: boolean): void {
     this.sprite.setVisible(visible);
     this.shadow.setVisible(visible);
-    for (const light of this.headlights) {
-      light.setVisible(visible && !this.farLod);
-    }
-    for (const light of this.taillights) {
-      light.setVisible(visible && !this.farLod);
-    }
     if (!visible) {
       for (const flame of this.exhaust) {
         flame.setVisible(false);
@@ -163,29 +136,8 @@ export class VehicleView {
   destroy(): void {
     this.sprite.destroy();
     this.shadow.destroy();
-    for (const light of this.headlights) {
-      light.destroy();
-    }
-    for (const light of this.taillights) {
-      light.destroy();
-    }
     for (const flame of this.exhaust) {
       flame.destroy();
-    }
-  }
-
-  private placeLights(state: VehicleState, depth: number): void {
-    const forward = fromAngle(state.heading);
-    const side = perpendicularLeft(forward);
-    const lightDepth = depth + 0.02;
-    for (let i = 0; i < 2; i += 1) {
-      const lateral = scale(side, (i === 0 ? -1 : 1) * this.noseReach * LIGHT_LATERAL);
-      const nose = add(add(state.position, scale(forward, this.noseReach * LIGHT_NOSE)), lateral);
-      const tail = add(add(state.position, scale(forward, -this.noseReach * LIGHT_TAIL)), lateral);
-      const noseScreen = this.projection.toScreen(nose, state.height);
-      const tailScreen = this.projection.toScreen(tail, state.height);
-      this.headlights[i]?.setPosition(noseScreen.x, noseScreen.y).setDepth(lightDepth);
-      this.taillights[i]?.setPosition(tailScreen.x, tailScreen.y).setDepth(lightDepth);
     }
   }
 
