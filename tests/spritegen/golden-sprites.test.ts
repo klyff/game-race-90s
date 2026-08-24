@@ -22,15 +22,10 @@ describe('imported fleet sheets', () => {
     expect(manifest.frameHeight).toBe(CAR_FRAME_HEIGHT);
     expect(manifest.frameCount).toBe(CAR_SPRITE_FRAMES);
     expect(manifest.cars.map(car => car.id)).toEqual([
-      'car-1',
       ...garageCarouselIds(),
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
       '3-red-oh-red',
-      '4-wasteland-pickup-sand-mg',
-      '5-raider-sedan-cream-cannon',
-      '6-war-muscle-red-bomber',
-      '7-scav-wagon-olive-cannon',
     ]);
     for (const car of manifest.cars) {
       expect(isBBoxSheet(car)).toBe(true);
@@ -46,15 +41,10 @@ describe('imported fleet sheets', () => {
     const ids = manifest.cars.map(car => car.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toEqual([
-      'car-1',
       ...garageCarouselIds(),
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
       '3-red-oh-red',
-      '4-wasteland-pickup-sand-mg',
-      '5-raider-sedan-cream-cannon',
-      '6-war-muscle-red-bomber',
-      '7-scav-wagon-olive-cannon',
     ]);
   });
 });

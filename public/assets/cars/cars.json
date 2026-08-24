@@ -9,43 +9,9 @@
   },
   "cars": [
     {
-      "id": "car-1",
-      "displayName": "Marauder",
-      "archetype": "Blue police wedge \u2014 lightbar, hood guns",
-      "image": "matrix_car/1_hero/car_1_strip_64.png",
-      "shadow": {
-        "width": 40,
-        "height": 20
-      },
-      "stats": {
-        "mass": 1000,
-        "enginePower": 27,
-        "brakeForce": 46,
-        "maxSpeed": 60,
-        "grip": 30,
-        "steerRate": 2.5,
-        "steerSpeedFalloff": 0.45,
-        "armor": 0.4,
-        "ammoCapacity": 10,
-        "collisionRadius": 1.7,
-        "aimRadius": 3.5,
-        "collisionAlong": 1.98,
-        "collisionAcross": 1.09,
-        "collisionSquareMin": 1.09,
-        "collisionSquareMax": 1.98,
-        "collisionSquare": 1.535
-      },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.9,
-      "frameCount": 30,
-      "clock": "clockwise",
-      "framesJson": "matrix_car/1_hero/car_1_strip.json"
-    },
-    {
       "id": "car-18",
       "displayName": "CAMO STAR",
-      "archetype": "Tan / green camo tank \u2014 star emblem, main cannon",
+      "archetype": "Tan / green camo tank — star emblem, main cannon",
       "image": "matrix_car/18_hero/car_18_strip_64.png",
       "shadow": {
         "width": 40,
@@ -79,7 +45,7 @@
     {
       "id": "car-19",
       "displayName": "Cyber Pink",
-      "archetype": "Pink / cyan street GT \u2014 neon stripe, hood gatling",
+      "archetype": "Pink / cyan street GT — neon stripe, hood gatling",
       "image": "matrix_car/19_hero/car_19_strip_64.png",
       "shadow": {
         "width": 40,
@@ -113,7 +79,7 @@
     {
       "id": "car-20",
       "displayName": "Ash Comet",
-      "archetype": "Orange off-road SUV \u2014 hood cannons, roof rails",
+      "archetype": "Orange off-road SUV — hood cannons, roof rails",
       "image": "matrix_car/20_hero/car_20_strip_64.png",
       "shadow": {
         "width": 40,
@@ -147,7 +113,7 @@
     {
       "id": "car_21",
       "displayName": "Red Streak",
-      "archetype": "Red sports \u2014 white stripes, hood guns",
+      "archetype": "Red sports — white stripes, hood guns",
       "image": "matrix_car/21_hero/car_21_strip_64.png",
       "shadow": {
         "width": 40,
@@ -181,7 +147,7 @@
     {
       "id": "delorean",
       "displayName": "Delorean",
-      "archetype": "Special 1 \u2014 flux wedge, sticks on every world",
+      "archetype": "Special 1 — flux wedge, sticks on every world",
       "image": "matrix_car/delorean_hero/delorean_strip_64.png",
       "shadow": {
         "width": 40,
@@ -215,7 +181,7 @@
     {
       "id": "1-muscle-car-gray-number9",
       "displayName": "Gray Muscle",
-      "archetype": "Charcoal war coupe \u2014 roof turret, black hood stripe",
+      "archetype": "Charcoal war coupe — roof turret, black hood stripe",
       "image": "assets/cars/1-muscle-car-gray-number9/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -251,7 +217,7 @@
     {
       "id": "2-sportivo-blue-combat",
       "displayName": "Blue Combat Sport",
-      "archetype": "Blue sports coupe \u2014 hood gun, chunky combat kit",
+      "archetype": "Blue sports coupe — hood gun, chunky combat kit",
       "image": "assets/cars/2-sportivo-blue-combat/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -287,7 +253,7 @@
     {
       "id": "3-red-oh-red",
       "displayName": "Red Oh Red",
-      "archetype": "Red pixel sport \u2014 roof cannon, dual white stripes",
+      "archetype": "Red pixel sport — roof cannon, dual white stripes",
       "image": "assets/cars/3-red-oh-red/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -319,150 +285,6 @@
       "frameCount": 32,
       "clock": "counter_clockwise",
       "framesJson": "assets/cars/3-red-oh-red/car_strip_64x64.json"
-    },
-    {
-      "id": "4-wasteland-pickup-sand-mg",
-      "displayName": "Sand Hauler",
-      "archetype": "Sand pickup \u2014 yellow stripes, roof twin machine gun",
-      "image": "assets/cars/4-wasteland-pickup-sand-mg/car_strip_64x64.png",
-      "shadow": {
-        "width": 44,
-        "height": 21
-      },
-      "stats": {
-        "mass": 1180,
-        "enginePower": 24,
-        "brakeForce": 46,
-        "maxSpeed": 56,
-        "grip": 30,
-        "steerRate": 2.15,
-        "steerSpeedFalloff": 0.42,
-        "armor": 0.44,
-        "ammoCapacity": 14,
-        "collisionRadius": 1.82,
-        "aimRadius": 3.6,
-        "collisionAlong": 1.82,
-        "collisionAcross": 1.3104,
-        "collisionSquareMin": 1.3104,
-        "collisionSquareMax": 1.82,
-        "collisionSquare": 1.5652
-      },
-      "perk": "arsenal",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.7,
-      "frameWidth": 71,
-      "frameHeight": 71,
-      "frameCount": 32,
-      "clock": "counter_clockwise",
-      "framesJson": "assets/cars/4-wasteland-pickup-sand-mg/car_strip_64x64.json"
-    },
-    {
-      "id": "5-raider-sedan-cream-cannon",
-      "displayName": "Hood Howitzer",
-      "archetype": "Cream sedan \u2014 black stripes, hood-center cannon",
-      "image": "assets/cars/5-raider-sedan-cream-cannon/car_strip_64x64.png",
-      "shadow": {
-        "width": 42,
-        "height": 20
-      },
-      "stats": {
-        "mass": 960,
-        "enginePower": 27,
-        "brakeForce": 44,
-        "maxSpeed": 60,
-        "grip": 28,
-        "steerRate": 2.45,
-        "steerSpeedFalloff": 0.46,
-        "armor": 0.36,
-        "ammoCapacity": 10,
-        "collisionRadius": 1.7,
-        "aimRadius": 3.45,
-        "collisionAlong": 1.7,
-        "collisionAcross": 1.224,
-        "collisionSquareMin": 1.224,
-        "collisionSquareMax": 1.7,
-        "collisionSquare": 1.462
-      },
-      "perk": "arsenal",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.7,
-      "frameWidth": 68,
-      "frameHeight": 68,
-      "frameCount": 32,
-      "clock": "counter_clockwise",
-      "framesJson": "assets/cars/5-raider-sedan-cream-cannon/car_strip_64x64.json"
-    },
-    {
-      "id": "6-war-muscle-red-bomber",
-      "displayName": "Red Bomber",
-      "archetype": "War-red muscle \u2014 white side stripes, rear bomb launcher",
-      "image": "assets/cars/6-war-muscle-red-bomber/car_strip_64x64.png",
-      "shadow": {
-        "width": 40,
-        "height": 19
-      },
-      "stats": {
-        "mass": 1040,
-        "enginePower": 28,
-        "brakeForce": 45,
-        "maxSpeed": 62,
-        "grip": 27,
-        "steerRate": 2.35,
-        "steerSpeedFalloff": 0.48,
-        "armor": 0.4,
-        "ammoCapacity": 8,
-        "collisionRadius": 1.72,
-        "aimRadius": 3.4,
-        "collisionAlong": 1.72,
-        "collisionAcross": 1.2384,
-        "collisionSquareMin": 1.2384,
-        "collisionSquareMax": 1.72,
-        "collisionSquare": 1.4792
-      },
-      "perk": "arsenal",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.7,
-      "frameWidth": 64,
-      "frameHeight": 64,
-      "frameCount": 32,
-      "clock": "counter_clockwise",
-      "framesJson": "assets/cars/6-war-muscle-red-bomber/car_strip_64x64.json"
-    },
-    {
-      "id": "7-scav-wagon-olive-cannon",
-      "displayName": "Olive Scav",
-      "archetype": "Olive wagon \u2014 orange hazard bars, roof ring cannon",
-      "image": "assets/cars/7-scav-wagon-olive-cannon/car_strip_64x64.png",
-      "shadow": {
-        "width": 43,
-        "height": 21
-      },
-      "stats": {
-        "mass": 1100,
-        "enginePower": 25,
-        "brakeForce": 47,
-        "maxSpeed": 58,
-        "grip": 31,
-        "steerRate": 2.2,
-        "steerSpeedFalloff": 0.4,
-        "armor": 0.42,
-        "ammoCapacity": 10,
-        "collisionRadius": 1.86,
-        "aimRadius": 3.55,
-        "collisionAlong": 1.86,
-        "collisionAcross": 1.3392,
-        "collisionSquareMin": 1.3392,
-        "collisionSquareMax": 1.86,
-        "collisionSquare": 1.5996
-      },
-      "perk": "trench-grip",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.7,
-      "frameWidth": 70,
-      "frameHeight": 70,
-      "frameCount": 32,
-      "clock": "counter_clockwise",
-      "framesJson": "assets/cars/7-scav-wagon-olive-cannon/car_strip_64x64.json"
     }
   ]
 }

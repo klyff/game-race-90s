@@ -82,8 +82,8 @@ describe('cars.json follows CarStatMatrix for indices 1–30', () => {
       group.push(handlingTuple(car.stats));
       byIndex.set(n, group);
     }
-    expect(byIndex.size).toBe(5);
-    expect([...byIndex.keys()].sort((a, b) => a - b)).toEqual([1, 18, 19, 20, 21]);
+    expect(byIndex.size).toBe(4);
+    expect([...byIndex.keys()].sort((a, b) => a - b)).toEqual([18, 19, 20, 21]);
   });
 
   it('keeps car_18 a heavy tank on Vulkanis', () => {
@@ -91,7 +91,7 @@ describe('cars.json follows CarStatMatrix for indices 1–30', () => {
     expect(sheet.homePlanetId).toBe('vulkanis');
     expect(sheet.stats.mass).toBeGreaterThanOrEqual(1400);
     expect(sheet.stats.maxSpeed).toBeLessThanOrEqual(56);
-    expect(sheet.stats.maxSpeed).toBeLessThan(findCarSheet(manifest, 'car-1').stats.maxSpeed);
+    expect(sheet.stats.maxSpeed).toBeLessThan(findCarSheet(manifest, '2-sportivo-blue-combat').stats.maxSpeed);
   });
 
   it('does not list parked leftover folders (31–33) in the live roster', () => {

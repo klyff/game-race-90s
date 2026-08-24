@@ -21,7 +21,7 @@ const carsJsonPath = join(projectRoot, 'public', 'assets', 'cars', 'cars.json');
 function getCarStats() {
   const rawJson = readFileSync(carsJsonPath, 'utf-8');
   const manifest = parseCarSetManifest(JSON.parse(rawJson));
-  return findCarSheet(manifest, 'car-1').stats;
+  return findCarSheet(manifest, '2-sportivo-blue-combat').stats;
 }
 
 function getTrackAndSpline() {

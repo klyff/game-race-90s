@@ -305,7 +305,7 @@ describe('RaceField — car-to-car contact', () => {
   });
 
   it('a war-tank ram costs the other car more integrity than a neutral ram', () => {
-    const marauder = manifest.cars.find(car => car.id === 'car-1')!;
+    const marauder = manifest.cars.find(car => car.id === '2-sportivo-blue-combat')!;
     const spline = freshSpline();
     const frame = spline.frameAt(track.startLineDistance);
     const tangent = frame.tangent;

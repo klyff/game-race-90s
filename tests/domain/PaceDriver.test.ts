@@ -20,7 +20,7 @@ const spline = new TrackSpline(track.controlPoints);
 // Load real car stats.
 const carsJsonRaw = readFileSync(carsJsonPath, 'utf-8');
 const carSetManifest = parseCarSetManifest(JSON.parse(carsJsonRaw));
-const marauderSheet = findCarSheet(carSetManifest, 'car-1');
+const marauderSheet = findCarSheet(carSetManifest, '2-sportivo-blue-combat');
 const marauderStats = marauderSheet.stats;
 
 // Driver instance with defaults.

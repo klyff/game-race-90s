@@ -106,7 +106,6 @@ describe('parseCarSetManifest', () => {
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const ids = manifest.cars.map(car => car.id);
     expect(ids).toEqual([
-      'car-1',
       'car-18',
       'car-19',
       'car-20',
@@ -115,12 +114,8 @@ describe('parseCarSetManifest', () => {
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
       '3-red-oh-red',
-      '4-wasteland-pickup-sand-mg',
-      '5-raider-sedan-cream-cannon',
-      '6-war-muscle-red-bomber',
-      '7-scav-wagon-olive-cannon',
     ]);
-    expect(manifest.cars.length).toBe(13);
+    expect(manifest.cars.length).toBe(8);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -150,20 +145,10 @@ describe('parseCarSetManifest', () => {
     expect(findCarSheet(manifest, 'car_18').id).toBe(findCarSheet(manifest, 'car-18').id);
   });
 
-  it('wires car-1 onto the matrix 1 bbox strip when that pair exists', () => {
+  it('does not list retired Marauder in the live roster', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
-    const manifest = applyAvailableMatrixStrips(parseCarSetManifest(JSON.parse(rawJson)));
-    const sheet = findCarSheet(manifest, 'car-1');
-    expect(isBBoxSheet(sheet)).toBe(true);
-    expect(sheet.image).toBe(matrixStripUrl(1));
-    expect(sheet.framesJson).toBe(matrixStripJsonUrl(1));
-    expect(sheet.frameCount).toBe(30);
-    const strip = parseMatrixStripJson(
-      JSON.parse(readFileSync(join(projectRoot, 'public', 'matrix_car', '1_hero', 'car_1_strip.json'), 'utf-8')),
-    );
-    expect(strip.count).toBe(30);
-    expect(strip.frames[25]).toMatchObject({ i: 25, clockIndex: 25 });
-    expect(frameIndexForHeading(0, sheetFrameCount(sheet, manifest))).toBe(25);
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    expect(manifest.cars.some(car => car.id === 'car-1' || car.id === 'car_1')).toBe(false);
   });
 
   it('reads car_18 production_scale frames and midpoint collision from JSON', () => {
@@ -208,8 +193,8 @@ describe('parseCarSetManifest', () => {
     expect(strip99.frames[4]?.clockIndex).toBe(4);
     const applied = applyMatrixStripToSheet(nogo99, strip99, live.pixelsPerUnit);
     expect(applied.frameCount).toBe(30);
-    const marauder = applyMatrixStripToSheet(findCarSheet(live, 'car-1'), strip99, live.pixelsPerUnit);
-    expect(marauder.frameCount).toBe(30);
+    const leftover = applyMatrixStripToSheet(findCarSheet(live, 'car-18'), strip99, live.pixelsPerUnit);
+    expect(leftover.frameCount).toBe(30);
   });
 
   it('real manifest has frameWidth and frameHeight of 64', () => {
@@ -555,7 +540,7 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(13);
+    expect(manifest.cars.length).toBe(8);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
@@ -639,10 +624,6 @@ describe('spinner strip atlas', () => {
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
       '3-red-oh-red',
-      '4-wasteland-pickup-sand-mg',
-      '5-raider-sedan-cream-cannon',
-      '6-war-muscle-red-bomber',
-      '7-scav-wagon-olive-cannon',
     ]);
   });
 
@@ -662,8 +643,8 @@ describe('findCarSheet', () => {
   it('finds a car by known id', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    const sheet = findCarSheet(manifest, 'car-1');
-    expect(sheet.id).toBe('car-1');
+    const sheet = findCarSheet(manifest, '2-sportivo-blue-combat');
+    expect(sheet.id).toBe('2-sportivo-blue-combat');
   });
 
   it('throws CarManifestError for unknown id', () => {
@@ -680,7 +661,7 @@ describe('findCarSheet', () => {
       expect.fail('Should have thrown');
     } catch (error) {
       if (error instanceof CarManifestError) {
-        expect(error.message).toContain('car-1');
+        expect(error.message).toContain('2-sportivo-blue-combat');
         expect(error.message).toContain('car_21');
         expect(error.message).toContain('delorean');
       } else {

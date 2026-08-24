@@ -142,8 +142,7 @@ export function discoverMatrixHeroNumbers(matrixRoot: string = MATRIX_ROOT): rea
       continue;
     }
     const n = Number(match[1]);
-    // car-1 stays in cars.json for leftover tests; shop/race still hide it.
-    if (n === 1 || (AVAILABLE_MATRIX_NUMBERS as readonly number[]).includes(n)) {
+    if ((AVAILABLE_MATRIX_NUMBERS as readonly number[]).includes(n)) {
       numbers.push(n);
     }
   }

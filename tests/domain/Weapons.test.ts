@@ -88,7 +88,7 @@ describe('WeaponInventory', () => {
   });
 
   it('Arsenal raises the missile refill ceiling by reloadMultiplier', () => {
-    const battle = manifest.cars.find(car => car.id === 'car-1')!;
+    const battle = manifest.cars.find(car => car.id === '2-sportivo-blue-combat')!;
     const arsenal = CAR_PERKS[CAR_PERK.ARSENAL];
     expect(missileCapacity(battle.stats, NEUTRAL_PERK)).toBe(battle.stats.ammoCapacity);
     expect(missileCapacity(battle.stats, arsenal)).toBe(battle.stats.ammoCapacity * 3);

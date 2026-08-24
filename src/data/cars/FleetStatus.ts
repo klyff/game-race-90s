@@ -2,12 +2,18 @@
  * Live fleet rules. Only isometric-car-spinner cars (`N-slug`) race, shop,
  * or stay in a save. Matrix / hyphen / Delorean / nogo ids are obsolete.
  *
- * Sheets may still live in `cars.json` for tests and leftover art. Runtime
- * shop, NPCs, watch, and saves must go through these helpers.
+ * Marauder (`car-1`) is gone from `cars.json`. Runtime shop, NPCs, watch,
+ * and saves must go through these helpers.
  */
 
 /** Gone. Do not shop, race, feature, or keep in a save. */
-export const RETIRED_CAR_IDS = ['car-1'] as const;
+export const RETIRED_CAR_IDS = [
+  'car-1',
+  '4-wasteland-pickup-sand-mg',
+  '5-raider-sedan-cream-cannon',
+  '6-war-muscle-red-bomber',
+  '7-scav-wagon-olive-cannon',
+] as const;
 
 /** @deprecated Matrix leftover. Treated as out of service with every non-spinner id. */
 export const UNAVAILABLE_CAR_IDS = ['delorean'] as const;
@@ -20,6 +26,9 @@ export const FLEET_DEFAULT_CAR_ID = '2-sportivo-blue-combat';
  * does not import CarManifest (CarManifest already imports FleetStatus).
  */
 export function isLiveSpinnerCarId(carId: string): boolean {
+  if ((RETIRED_CAR_IDS as readonly string[]).includes(carId)) {
+    return false;
+  }
   if (carId === 'delorean' || /^nogo-\d+$/.test(carId) || /^car[-_]\d+/.test(carId)) {
     return false;
   }

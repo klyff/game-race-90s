@@ -43,7 +43,7 @@ const DT = SIMULATION_STEP_SECONDS;
 const carManifestJson = readFileSync('public/assets/cars/cars.json', 'utf-8');
 const carManifest = parseCarSetManifest(JSON.parse(carManifestJson));
 
-const marauderStats: VehicleStats = findCarSheet(carManifest, 'car-1').stats;
+const marauderStats: VehicleStats = findCarSheet(carManifest, '2-sportivo-blue-combat').stats;
 const dirtDevilStats: VehicleStats = findCarSheet(carManifest, 'car-19').stats;
 const airBladeStats: VehicleStats = findCarSheet(carManifest, 'car-20').stats;
 const battleTrakStats: VehicleStats = findCarSheet(carManifest, 'car-18').stats;

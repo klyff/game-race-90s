@@ -144,8 +144,8 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     }
   });
 
-  it('Thunder Basin starters stay under the old Marauder PaceDriver top of 75.3', () => {
-    for (const carId of ['car-1', 'car_21'] as const) {
+  it('leftover Thunder Basin sheet stays under the old Marauder PaceDriver top of 75.3', () => {
+    for (const carId of ['car_21'] as const) {
       const sheet = findCarSheet(manifest, carId);
       const result = driveLap(sheet.stats, track, spline);
       expect(result.topSpeed).toBeLessThan(75.3);
@@ -161,7 +161,7 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     // car-10 35.05  car-14 35.67  car-16 34.65  car-19 34.77
 
     const bands: Record<string, { min: number; max: number }> = {
-      'car-1': { min: 27.81, max: 46.35 },
+      '2-sportivo-blue-combat': { min: 27.81, max: 46.35 },
       'car-18': { min: 33.90, max: 56.50 },
       'car-19': { min: 26.08, max: 43.46 },
       'car-20': { min: 28.88, max: 48.13 },
@@ -211,13 +211,13 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
 
     // Correlation: air-blade has the highest maxSpeed (89.1) but should NOT be the fastest by lap
     const airBlade = results.find(r => r.id === 'car-20')!;
-    const marauder = results.find(r => r.id === 'car-1')!;
+    const sportivo = results.find(r => r.id === '2-sportivo-blue-combat')!;
     const airBladeIsHighestMaxSpeed = results.every(r => r.maxSpeed <= airBlade.maxSpeed);
-    const airBladeIsNotFastestLap = airBlade.result.lapSeconds > marauder.result.lapSeconds;
+    const airBladeIsNotFastestLap = airBlade.result.lapSeconds > sportivo.result.lapSeconds;
 
     console.log(`air-blade maxSpeed: ${airBlade.maxSpeed} u/s (highest in cohort)`);
     console.log(`air-blade lap time: ${airBlade.result.lapSeconds.toFixed(2)}s`);
-    console.log(`marauder lap time: ${marauder.result.lapSeconds.toFixed(2)}s`);
+    console.log(`sportivo lap time: ${sportivo.result.lapSeconds.toFixed(2)}s`);
     console.log(`Fact: on Thunder Basin, grip beats top speed — air-blade is not fastest by lap.\n`);
 
     expect(airBladeIsHighestMaxSpeed).toBe(true);

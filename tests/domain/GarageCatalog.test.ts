@@ -16,33 +16,25 @@ describe('GarageCatalog', () => {
     expect(GARAGE_CATALOG.map(entry => entry.carId)).toEqual([
       '2-sportivo-blue-combat',
       '3-red-oh-red',
-      '7-scav-wagon-olive-cannon',
-      '4-wasteland-pickup-sand-mg',
-      '5-raider-sedan-cream-cannon',
-      '6-war-muscle-red-bomber',
       '1-muscle-car-gray-number9',
     ]);
     expect(shopCarIds()).toEqual([
       '2-sportivo-blue-combat',
       '3-red-oh-red',
-      '7-scav-wagon-olive-cannon',
-      '4-wasteland-pickup-sand-mg',
-      '5-raider-sedan-cream-cannon',
-      '6-war-muscle-red-bomber',
       '1-muscle-car-gray-number9',
     ]);
     expect(shopCarIds()).not.toContain('car_21');
     expect(shopCarIds()).not.toContain('delorean');
     expect(shopCarIds()).not.toContain('car-18');
+    expect(shopCarIds()).not.toContain('4-wasteland-pickup-sand-mg');
+    expect(shopCarIds()).not.toContain('5-raider-sedan-cream-cannon');
+    expect(shopCarIds()).not.toContain('6-war-muscle-red-bomber');
+    expect(shopCarIds()).not.toContain('7-scav-wagon-olive-cannon');
   });
 
-  it('prices the Thunder Basin pack and Gray Muscle', () => {
+  it('prices the starter at $50k, Red Oh Red at $62k, and Gray Muscle at $98k', () => {
     expect(listPrice('2-sportivo-blue-combat')).toBe(STARTER_PRICE);
     expect(listPrice('3-red-oh-red')).toBe(62_000);
-    expect(listPrice('7-scav-wagon-olive-cannon')).toBe(46_000);
-    expect(listPrice('4-wasteland-pickup-sand-mg')).toBe(48_000);
-    expect(listPrice('5-raider-sedan-cream-cannon')).toBe(52_000);
-    expect(listPrice('6-war-muscle-red-bomber')).toBe(55_000);
     expect(listPrice('1-muscle-car-gray-number9')).toBe(98_000);
     expect(listPrice('car-18')).toBe(0);
     expect(listPrice('car_21')).toBe(0);
@@ -81,23 +73,12 @@ describe('GarageCatalog', () => {
     }
   });
 
-  it('keeps world 1 NPCs on the Thunder Basin spinner pack, adds Gray Muscle on world 2', () => {
+  it('keeps world 1 NPCs on Blue Combat and Red Oh Red, adds Gray Muscle on world 2', () => {
     const early = npcRosterForPlanet(1);
-    expect(early).toEqual([
-      '2-sportivo-blue-combat',
-      '3-red-oh-red',
-      '7-scav-wagon-olive-cannon',
-      '4-wasteland-pickup-sand-mg',
-      '5-raider-sedan-cream-cannon',
-      '6-war-muscle-red-bomber',
-    ]);
+    expect(early).toEqual(['2-sportivo-blue-combat', '3-red-oh-red']);
     expect(npcRosterForPlanet(2)).toEqual([
       '2-sportivo-blue-combat',
       '3-red-oh-red',
-      '7-scav-wagon-olive-cannon',
-      '4-wasteland-pickup-sand-mg',
-      '5-raider-sedan-cream-cannon',
-      '6-war-muscle-red-bomber',
       '1-muscle-car-gray-number9',
     ]);
     expect(npcRosterForPlanet(8)).not.toContain('delorean');
