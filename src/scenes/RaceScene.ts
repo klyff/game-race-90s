@@ -1569,6 +1569,7 @@ export class RaceScene extends Phaser.Scene {
     this.scraps.clear();
     this.wood.clear();
     this.victory.clear();
+    this.crowd?.reset();
     this.audio.reset();
     this.field.racers.forEach((racer, index) => {
       this.views[index]?.setVisible(true);

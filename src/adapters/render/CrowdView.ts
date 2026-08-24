@@ -127,6 +127,19 @@ export class CrowdView {
     this.flying = next;
   }
 
+  reset(): void {
+    for (const body of this.flying) {
+      this.destroyFlying(body);
+    }
+    this.flying = [];
+    this.dead.clear();
+    for (const sprite of this.sprites) {
+      sprite.setVisible(sprite.scene.textures.exists(sprite.texture.key));
+      sprite.setRotation(0);
+      sprite.setAlpha(1);
+    }
+  }
+
   destroy(): void {
     for (const sprite of this.sprites) {
       sprite.destroy();
