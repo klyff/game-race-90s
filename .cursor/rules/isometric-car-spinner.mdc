@@ -1,0 +1,114 @@
+---
+description: Gera um sprite strip isometrico de 32 frames de um carro (11.25 graus por passo, sentido anti-horario, camera fixa) a partir de um spec visual curto (ex: "Sedan, Red, white stripes, Sporting, background HEX: #00B140"). Use sempre que o usuario pedir para re-skinar/redesenhar um carro em 32 angulos isometricos, gerar sprite sheet estilo jogo, ou mencionar "32 angulos", "isometric spin", "car sprite strip", ou girar um carro numa sequencia fixa de rotacao. Nao rode isso sem parametros/modelo ja validados pela MISSION.md.
+alwaysApply: false
+---
+
+# Isometric Car Spinner
+
+O motor completo deste skill (scripts, fotos de referencia, docs) fica
+centralizado em:
+
+```
+~/.cursor/skills/isometric-car-spinner/
+```
+
+Antes de fazer qualquer coisa, leia nessa pasta, nesta ordem:
+
+1. `SKILL.md` — o workflow: medir referencias -> escalar para o canvas real
+   do gerador (1024px) -> gerar frame 0 + anchor-lock -> gerar **1–16** em
+   cadeia -> `mirror_hemisphere.py` (17–31 = flip de 15–1 no eixo) ->
+   chroma/alpha -> montar strip -> normalizar 64px -> checagem humana ->
+   **export_car.py** para `public/assets/cars/<n>-<slug>/` -> briefing de fisica/UI.
+2. `config.yaml` — checar `status`. Se `status: UNVALIDATED`, PARE e rode
+   `MISSION.md` primeiro. `generate_image.fixed_output_px` e **1024×1024**
+   (nao 1700). `art_style.medium` e `pixel_art`.
+   `retry_policy.max_attempts_per_frame` e **3**.
+3. `MISSION.md` — só se o passo 2 mandar rodar o piloto.
+4. `references/prompt_template.md` e `references/rubric.md` — conforme
+   `SKILL.md` indicar durante o workflow.
+
+## Arcade / PixelArt (obrigatorio)
+
+Este jogo e pixel-art arcade, nao fotoreal. Em **toda** chamada
+`GenerateImage`, incluir o bloco MEDIUM de `references/prompt_template.md`
+(PIXEL ART, silhueta legivel, sem PBR/cromo/grain). O gerador nao tem
+enum de estilo — o texto e o unico canal.
+
+Hard gates (obrigam retry, max 3 tentativas): canvas, escala, eixo,
+**yaw/aspecto do slot CCW**, fundo keyable.
+Soft gates (nao queimar retry): paleta, loop-closure. Se o hard passa,
+`ACCEPT_SOFT` e segue. Nunca uma 4a tentativa. Nunca aceitar yaw errado
+para "nao parar a esteira".
+
+Contrato do relogio: **32 frames**, indice 0 = 0° = 6h, cada passo
+**+11.25° counter-clockwise**. Nao e o relogio de 30 slots do
+`matrix-car-rotate`. Depois dos 32 de um run **novo**,
+`scripts/mirror_hemisphere.py --validate` (que chama `validate_sequence.py`).
+Nao apontar isso a carros ja exportados quando so a skill mudou.
+
+## Regra de bounding box (usada em todo o pipeline)
+
+Um pixel só conta como parte do carro se: (a) nao for transparente, E (b) sua
+cor nao for a do HEX de fundo do spec (dentro de uma tolerancia pequena, pra
+anti-aliasing). Essa regra vive em `scripts/bbox_utils.py` e e usada por todos
+os outros scripts — sempre passar `--background-hex` (o HEX do spec) nas
+chamadas de `assemble_strip.py`, `validate_frame.py`, `validate_sequence.py`
+e `normalize_for_game.py` (ou `--alpha-only` em `native_alpha`).
+
+## Geracao no canvas real, depois normalizacao para o jogo
+
+`GenerateImage` devolve **1024×1024**, sempre. O fluxo é:
+
+1. `scripts/measure_reference.py` mede as 32 fotos na resolucao nativa delas.
+2. `scripts/compute_generation_targets.py` escala essas medidas pra
+   `generation_targets.json` em 1024×1024 — TODO prompt e toda
+   validacao usam esse arquivo, nunca o `reference_metrics.json` cru.
+3. Geracao encadeada de **0–16** (pose photo + frame anterior +
+   PixelArt + style anchor). Max 3 tentativas por angulo gerado.
+   Nunca `GenerateImage` 17–31 — `scripts/mirror_hemisphere.py` completa
+   o cinto (1→31 … 15→17). Polos 0 e 16 nao viram.
+4. `scripts/assemble_strip.py` monta a strip em alta resolucao.
+5. `scripts/normalize_for_game.py` acha a silhueta mais larga entre os 32
+   frames, calcula o fator de escala pra ela virar `target_bbox_px` (64px por
+   padrao), e aplica ESSE MESMO fator em todos os 32.
+
+`car_strip_64x64.png`/`.json` sao o que vai pra pasta do modelo do carro pro
+jogo ler — nao a versao em alta resolucao.
+
+## Onde os outputs vao (IMPORTANTE)
+
+Este skill é compartilhado entre varios projetos. Os outputs de cada
+execução NUNCA vao dentro de `~/.cursor/skills/isometric-car-spinner/outputs/`.
+
+Escreva sempre em, relativo à raiz do projeto atualmente aberto no Cursor:
+
+```
+./car-sprites/<run_id>/
+```
+
+As 32 fotos-base ficam **somente** em:
+
+```
+/Users/klyff/.cursor/skills/isometric-car-spinner/assets/reference_frames
+```
+
+(`frame_00.png` … `frame_31.png`). Não use `public/reference_frames/` nem
+qualquer outra cópia no repo do jogo. `reference_metrics.json` e
+`generation_targets.json` tambem sao lidos de dentro da pasta do skill.
+
+## Nao-negociaveis
+
+- Sempre PixelArt no prompt. Nunca fotoreal.
+- Maximo **3** tentativas por angulo. Soft miss nao consome retry.
+- Frame `i` = `i × 11.25°` CCW a partir do frame 0 (6h). 32 slots.
+- Gerar so 0–16; 17–31 = flip no eixo. Nunca flippar 0 ou 16.
+- Nunca aceitar yaw errado no 0–16 para "completar com flip".
+- Nunca gerar noutro tamanho que nao o `fixed_output_px` (1024×1024).
+- Nunca paralelizar a geracao dos frames 0–16.
+- Nunca pular a validacao por frame.
+- Nunca redimensionar um frame depois de gerado para corrigir escala.
+- Nunca normalizar o bbox de cada frame independentemente.
+- Se faltar alguma das 32 fotos de referencia, parar e perguntar.
+- Entrega: `scripts/export_car.py`. Hero = sempre frame 07.
+- "export car" / exportcar: copiar o run pronto; nao regenerar frames.
+- Mudanca so de skill/docs/tools **nao** regenera carros ja feitos.
