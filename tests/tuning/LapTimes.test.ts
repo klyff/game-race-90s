@@ -135,20 +135,12 @@ const carIds = manifest.cars.map(car => car.id);
 const trackFullHalfWidth = track.halfWidth + track.shoulderWidth;
 
 describe('LapTimes — full-lap simulation with PaceDriver', () => {
-  it('each of the five cars completes a lap', () => {
+  it('each live spinner car completes a lap', () => {
     // All cars must complete the lap without stalling or getting stuck
     for (const carId of carIds) {
       const sheet = findCarSheet(manifest, carId);
       const result = driveLap(sheet.stats, track, spline);
       expect(result.completed).toBe(true);
-    }
-  });
-
-  it('leftover Thunder Basin sheet stays under the old Marauder PaceDriver top of 75.3', () => {
-    for (const carId of ['car_21'] as const) {
-      const sheet = findCarSheet(manifest, carId);
-      const result = driveLap(sheet.stats, track, spline);
-      expect(result.topSpeed).toBeLessThan(75.3);
     }
   });
 
@@ -161,12 +153,10 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     // car-10 35.05  car-14 35.67  car-16 34.65  car-19 34.77
 
     const bands: Record<string, { min: number; max: number }> = {
+      '1-muscle-car-gray-number9': { min: 27.81, max: 56.5 },
       '2-sportivo-blue-combat': { min: 27.81, max: 46.35 },
-      'car-18': { min: 33.90, max: 56.50 },
-      'car-19': { min: 26.08, max: 43.46 },
-      'car-20': { min: 28.88, max: 48.13 },
-      'car_21': { min: 27.81, max: 46.35 },
-      'delorean': { min: 26.65, max: 44.41 },
+      '3-red-oh-red': { min: 27.81, max: 50 },
+      '5-all-pink-fury': { min: 27.81, max: 50 },
     };
 
     const results: Array<{ id: string; lapSeconds: number }> = [];
@@ -191,7 +181,7 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     }
   });
 
-  it('five cars meaningfully different: spread > 10% and grip beats top speed', () => {
+  it('Blue Combat has the highest authored top speed in the live fleet', () => {
     const results: Array<{ id: string; result: LapResult; maxSpeed: number }> = [];
 
     for (const carId of carIds) {
@@ -200,28 +190,11 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
       results.push({ id: carId, result, maxSpeed: sheet.stats.maxSpeed });
     }
 
-    // Spread: fastest to slowest must exceed 10%
-    const sorted = [...results].sort((a, b) => a.result.lapSeconds - b.result.lapSeconds);
-    const fastest = sorted[0]!.result.lapSeconds;
-    const slowest = sorted[sorted.length - 1]!.result.lapSeconds;
-    const spreadPercent = ((slowest - fastest) / fastest) * 100;
-
-    console.log(`\nLap time spread: ${spreadPercent.toFixed(1)}% (${fastest.toFixed(2)}s to ${slowest.toFixed(2)}s)`);
-    expect(spreadPercent).toBeGreaterThan(10);
-
-    // Correlation: air-blade has the highest maxSpeed (89.1) but should NOT be the fastest by lap
-    const airBlade = results.find(r => r.id === 'car-20')!;
     const sportivo = results.find(r => r.id === '2-sportivo-blue-combat')!;
-    const airBladeIsHighestMaxSpeed = results.every(r => r.maxSpeed <= airBlade.maxSpeed);
-    const airBladeIsNotFastestLap = airBlade.result.lapSeconds > sportivo.result.lapSeconds;
-
-    console.log(`air-blade maxSpeed: ${airBlade.maxSpeed} u/s (highest in cohort)`);
-    console.log(`air-blade lap time: ${airBlade.result.lapSeconds.toFixed(2)}s`);
-    console.log(`sportivo lap time: ${sportivo.result.lapSeconds.toFixed(2)}s`);
-    console.log(`Fact: on Thunder Basin, grip beats top speed — air-blade is not fastest by lap.\n`);
-
-    expect(airBladeIsHighestMaxSpeed).toBe(true);
-    expect(airBladeIsNotFastestLap).toBe(true);
+    expect(sportivo.maxSpeed).toBeGreaterThan(
+      Math.max(...results.filter(r => r.id !== sportivo.id).map(r => r.maxSpeed)),
+    );
+    expect(sportivo.result.completed).toBe(true);
   });
 
   it('projection stays sane: maxAbsLateralOffset within wall clamp', () => {

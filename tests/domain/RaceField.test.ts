@@ -30,11 +30,9 @@ function freshSpline(): TrackSpline {
 }
 
 /**
- * The real five-car field, player last on the grid, exactly as `RaceScene` builds it.
- * The roster is larger than a grid, so this takes the first `RACE_SIZE` cars — the
- * race is always five cars even though ten models exist.
+ * Live spinner field: every roster car on the grid, player last.
  */
-const RACE_SIZE = 5;
+const RACE_SIZE = 4;
 function fullFieldEntries(): readonly RacerEntry[] {
   const cars = manifest.cars.slice(0, RACE_SIZE);
   const npcs = cars.slice(1).map(car => ({ carId: car.id, stats: car.stats, isPlayer: false }));
@@ -101,7 +99,7 @@ describe('RaceField — spinner career pair', () => {
 describe('RaceField — the grid', () => {
   it('places every car on its own grid slot with no two cars overlapping', () => {
     const field = makeField();
-    expect(field.racers).toHaveLength(5);
+    expect(field.racers).toHaveLength(RACE_SIZE);
 
     for (let i = 0; i < field.racers.length; i += 1) {
       for (let j = i + 1; j < field.racers.length; j += 1) {
@@ -216,8 +214,8 @@ describe('RaceField — racing', () => {
     run(field, 55, IDLE_INPUT);
 
     const standings = field.standings;
-    expect(standings).toHaveLength(5);
-    expect(standings.map(standing => standing.position)).toEqual([1, 2, 3, 4, 5]);
+    expect(standings).toHaveLength(RACE_SIZE);
+    expect(standings.map(standing => standing.position)).toEqual([1, 2, 3, 4]);
 
     // The idle player must be last, and at least one pace car must have banked a lap.
     expect(standings[standings.length - 1]!.carId).toBe(field.player.carId);

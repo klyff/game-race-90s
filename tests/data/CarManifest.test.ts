@@ -4,18 +4,14 @@ import { dirname, join } from 'node:path';
 import {
   applyAvailableMatrixStrips,
   careerFleetCarIds,
-  applyMatrixStripToSheet,
   applyNogoLabs,
-  carSheetImageUrl,
   CLOCK_DIRECTION,
-  collisionFromMatrixStrip,
   frameIndexForHeading,
   isBBoxSheet,
   isNogoLabCarId,
   isSpinnerCarId,
   parseCarSetManifest,
   parseCarStripJson,
-  parseMatrixStripJson,
   parseSpinnerStripJson,
   findCarSheet,
   cartHeroFile,
@@ -42,13 +38,6 @@ import { CAR_PERK, CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/dom
 const testFileDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(testFileDir, '..', '..');
 const carsJsonPath = join(projectRoot, 'public', 'assets', 'cars', 'cars.json');
-const car18StripJsonPath = join(
-  projectRoot,
-  'public',
-  'matrix_car',
-  '18_hero',
-  'car_18_strip.json',
-);
 
 describe('frameIndexForHeading', () => {
   it('maps world NE (π/4) to frame 0 — nose to screen down / 6h', () => {
@@ -106,17 +95,12 @@ describe('parseCarSetManifest', () => {
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const ids = manifest.cars.map(car => car.id);
     expect(ids).toEqual([
-      'car-18',
-      'car-19',
-      'car-20',
-      'car_21',
-      'delorean',
       '1-muscle-car-gray-number9',
       '2-sportivo-blue-combat',
       '3-red-oh-red',
       '5-all-pink-fury',
     ]);
-    expect(manifest.cars.length).toBe(9);
+    expect(manifest.cars.length).toBe(4);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -125,25 +109,16 @@ describe('parseCarSetManifest', () => {
     expect(manifest.frameCount).toBe(32);
   });
 
-  it('points a ready strip folder at strip_64 + JSON and a vitrine-only folder at hero_300', () => {
+  it('points live spinner sheets at car_strip_64x64', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    const sheet = findCarSheet(manifest, 'car-18');
-    expect(sheet.image).toBe(matrixStripUrl(18));
-    expect(sheet.framesJson).toBe(matrixStripJsonUrl(18));
-    expect(carSheetImageUrl(sheet)).toBe('matrix_car/18_hero/car_18_strip_64.png');
+    const sheet = findCarSheet(manifest, '5-all-pink-fury');
+    expect(sheet.image).toBe('assets/cars/5-all-pink-fury/car_strip_64x64.png');
+    expect(sheet.framesJson).toBe('assets/cars/5-all-pink-fury/car_strip_64x64.json');
     expect(isBBoxSheet(sheet)).toBe(true);
-    expect(sheet.frameCount).toBe(30);
-    expect(sheetFrameCount(sheet, manifest)).toBe(30);
-    expect(sheet.perk).toBe('anvil');
-    expect(sheet.homePlanetId).toBe('vulkanis');
-    expect(manifest.cars.some(car => car.id === 'car-3')).toBe(false);
-  });
-
-  it('resolves clock id car_18 onto the same sheet as shop id car-18', () => {
-    const rawJson = readFileSync(carsJsonPath, 'utf-8');
-    const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    expect(findCarSheet(manifest, 'car_18').id).toBe(findCarSheet(manifest, 'car-18').id);
+    expect(sheet.frameCount).toBe(32);
+    expect(sheetFrameCount(sheet, manifest)).toBe(32);
+    expect(manifest.cars.some(car => car.id === 'car-18' || car.id === 'delorean')).toBe(false);
   });
 
   it('does not list retired Marauder in the live roster', () => {
@@ -152,50 +127,12 @@ describe('parseCarSetManifest', () => {
     expect(manifest.cars.some(car => car.id === 'car-1' || car.id === 'car_1')).toBe(false);
   });
 
-  it('reads car_18 production_scale frames and midpoint collision from JSON', () => {
-    const rawJson = readFileSync(carsJsonPath, 'utf-8');
-    const manifest = parseCarSetManifest(JSON.parse(rawJson));
-    const sheet = findCarSheet(manifest, 'car_18');
-    const strip = parseMatrixStripJson(JSON.parse(readFileSync(car18StripJsonPath, 'utf-8')));
-    expect(strip.count).toBe(30);
-    expect(strip.frames).toHaveLength(30);
-    expect(strip.scale).toBeCloseTo(64 / 1700, 10);
-    expect(strip.collisionRect.w).toBeGreaterThan(0);
-    expect(strip.collisionRect.h).toBeGreaterThan(0);
-    expect(strip.frames[0]).toMatchObject({ i: 0, clockIndex: 0 });
-    expect(strip.frames[15]).toMatchObject({ i: 15, clockIndex: 15 });
-    expect(strip.frames[25]).toMatchObject({ i: 25, clockIndex: 25 });
-    const leftmost = strip.frames.reduce((best, frame) => (frame.x < best.x ? frame : best));
-    expect(leftmost).toMatchObject({ i: 25, clockIndex: 25 });
-    const box = collisionFromMatrixStrip(strip, manifest.pixelsPerUnit);
-    const live = applyMatrixStripToSheet(sheet, strip, manifest.pixelsPerUnit);
-    expect(live.frameCount).toBe(30);
-    expect(live.stats.collisionAlong).toBeCloseTo(box.along, 6);
-    expect(live.stats.collisionAcross).toBeCloseTo(box.across, 6);
-    expect(live.stats.collisionSquare).toBeCloseTo((box.along + box.across) / 2, 6);
-  });
-
-  it('keeps nogo labs at 30 clock frames and names slots by index, not pack i', () => {
+  it('does not inject nogo labs after the matrix archive left', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const catalog = parseCarSetManifest(JSON.parse(rawJson));
-    expect(catalog.cars.some(car => isNogoLabCarId(car.id))).toBe(false);
     const live = applyNogoLabs(applyAvailableMatrixStrips(catalog));
-    const nogo99 = findCarSheet(live, 'nogo-99');
-    const nogo98 = findCarSheet(live, 'nogo-98');
-    expect(nogo99.frameCount).toBe(30);
-    expect(nogo98.frameCount).toBe(30);
-    expect(nogo99.image).toContain('car_99_strip_64_yaw.png');
-    expect(nogo98.image).toContain('car_98_strip_64_yaw.png');
-    const strip99 = parseMatrixStripJson(
-      JSON.parse(readFileSync(join(projectRoot, 'public', 'matrix_car', '99_hero', 'car_99_strip.json'), 'utf-8')),
-    );
-    expect(strip99.count).toBe(30);
-    expect(strip99.frames[4]?.i).toBe(4);
-    expect(strip99.frames[4]?.clockIndex).toBe(4);
-    const applied = applyMatrixStripToSheet(nogo99, strip99, live.pixelsPerUnit);
-    expect(applied.frameCount).toBe(30);
-    const leftover = applyMatrixStripToSheet(findCarSheet(live, 'car-18'), strip99, live.pixelsPerUnit);
-    expect(leftover.frameCount).toBe(30);
+    expect(live.cars.some(car => isNogoLabCarId(car.id))).toBe(false);
+    expect(live.cars.map(car => car.id)).toEqual(catalog.cars.map(car => car.id));
   });
 
   it('real manifest has frameWidth and frameHeight of 64', () => {
@@ -541,7 +478,7 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(9);
+    expect(manifest.cars.length).toBe(4);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
@@ -664,8 +601,8 @@ describe('findCarSheet', () => {
     } catch (error) {
       if (error instanceof CarManifestError) {
         expect(error.message).toContain('2-sportivo-blue-combat');
-        expect(error.message).toContain('car_21');
-        expect(error.message).toContain('delorean');
+        expect(error.message).toContain('5-all-pink-fury');
+        expect(error.message).not.toContain('delorean');
       } else {
         throw error;
       }

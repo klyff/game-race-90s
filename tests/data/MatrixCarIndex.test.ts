@@ -54,7 +54,7 @@ describe('MatrixCarIndex', () => {
     expect(tour[15]).toBe('car-16');
     expect(tour[20]).toBe('car_21');
     expect(tour[32]).toBe('car_33');
-    expect(garageCarouselIds()).toEqual(['car-18', 'car-19', 'car-20', 'car_21', 'delorean']);
+    expect(garageCarouselIds()).toEqual([]);
     expect(GARAGE_CATALOG.every(entry => matrixHeroNumber(entry.carId) === undefined)).toBe(true);
     for (const id of garageCarouselIds()) {
       expect(GARAGE_CATALOG.some(entry => entry.carId === id)).toBe(false);

@@ -2,7 +2,7 @@
 
 Skill: **isometric-car-spinner**. Pasta viva: `public/assets/cars/<n>-<slug>/`.
 
-O relógio de 30 slots em `public/matrix_car/` (CW, hero indice[25]) está **obsoleto**. Não gerar, não misturar.
+O relógio de 30 slots (CW, hero indice[25]) foi **removido**. Não gerar, não misturar.
 
 ## Contrato
 

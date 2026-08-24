@@ -17,6 +17,7 @@ dist/
 # generated / scratch — not source
 out/
 .tmp/
+tmp/
 _originais/
 graphify-out/
 # spinner run outputs — stay local, never push the 32-frame work folder

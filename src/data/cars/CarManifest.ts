@@ -646,32 +646,9 @@ export function isNogoMatrixNumber(n: number): boolean {
   return n === 98 || n === 99;
 }
 
-/** Watch-only labs. Not written into cars.json / garage. */
+/** Watch-only labs. Retired with the matrix archive — no extra sheets. */
 export function applyNogoLabs(manifest: CarSetManifest): CarSetManifest {
-  const extra: CarSheetManifest[] = [];
-  for (const lab of NOGO_LABS) {
-    if (manifest.cars.some(car => car.id === lab.id)) {
-      continue;
-    }
-    const source = manifest.cars.find(car => car.id === lab.sourceId) ?? manifest.cars[0];
-    if (source === undefined) {
-      continue;
-    }
-    extra.push({
-      ...source,
-      id: lab.id,
-      displayName: lab.displayName,
-      archetype: `nogo lab copy of ${lab.sourceId}`,
-      image: matrixStripYawUrl(lab.n),
-      framesJson: matrixStripJsonUrl(lab.n),
-      frameCount: 30,
-      clock: CLOCK_DIRECTION.CLOCKWISE,
-    });
-  }
-  if (extra.length === 0) {
-    return manifest;
-  }
-  return { ...manifest, cars: [...manifest.cars, ...extra] };
+  return manifest;
 }
 
 export const DELOREAN_MATRIX_FOLDER = 'delorean_hero';

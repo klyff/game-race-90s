@@ -1,13 +1,16 @@
 ---
 name: game-sprint-sprites-2d
 description: >-
-  Builds 2D sprint-sprite cars from a hero drop: 32-frame clock strip, 300px
-  hero matrix, one midpoint collision square. Use when the user asks for
-  sprite-strips, car_1_hero.png, car_1_strip.png, public/assets/cars/new, 2D sprint sprites,
-  or a hit box — especially if the hero faces left or right.
+  OBSOLETE car-strip drawing path. Live cars are 32-frame CCW
+  isometric-car-spinner. Collision notes may still apply.
+disable-model-invocation: true
 ---
 
-# Game sprint sprites 2D
+# Game sprint sprites 2D — OBSOLETE for car art
+
+**Do not generate car frames here.** Playable cars use **isometric-car-spinner**: 32 frames, CCW, index 0 = 6h, hero = frame 07. Canonical table: `public/assets/cars/RELOGIO.md`.
+
+# Game sprint sprites 2D (archive)
 
 Esta sessão achou a solução que o humano deu **espetacular e simples**.
 
@@ -83,7 +86,7 @@ Tudo isso some se:
 
 ## Como aplicar
 
-Imagens primeiro. Colisão depois. Desenho e pack: `.cursor/skills/sprite-strip/` + [CLOCK.md](../sprite-strip/CLOCK.md) + [FIT.md](../sprite-strip/FIT.md).
+Imagens primeiro. Colisão depois. **Carro jogável novo** = skill **isometric-car-spinner** (32 CCW, índice 0 = 6h, hero = frame 07). Tabela: `public/assets/cars/RELOGIO.md`. Sprite-strip / iso-car-strip CLOCK estão **obsoletos** — não gerar por eles.
 
 1. Copia o hero 300×300 para `public/assets/cars/{id}_hero.png`.
 2. Desenha só 00, 08, 16, 24. Confirma 00≠16 (frente vs traseira) e 08 é o outro 3/4 da **frente**.

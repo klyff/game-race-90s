@@ -44,9 +44,9 @@ const carManifestJson = readFileSync('public/assets/cars/cars.json', 'utf-8');
 const carManifest = parseCarSetManifest(JSON.parse(carManifestJson));
 
 const marauderStats: VehicleStats = findCarSheet(carManifest, '2-sportivo-blue-combat').stats;
-const dirtDevilStats: VehicleStats = findCarSheet(carManifest, 'car-19').stats;
-const airBladeStats: VehicleStats = findCarSheet(carManifest, 'car-20').stats;
-const battleTrakStats: VehicleStats = findCarSheet(carManifest, 'car-18').stats;
+const dirtDevilStats: VehicleStats = findCarSheet(carManifest, '5-all-pink-fury').stats;
+const airBladeStats: VehicleStats = findCarSheet(carManifest, '3-red-oh-red').stats;
+const battleTrakStats: VehicleStats = findCarSheet(carManifest, '1-muscle-car-gray-number9').stats;
 
 const BULLDOZER_PROFILE = CAR_PERKS[CAR_PERK.BULLDOZER];
 const OFF_ROAD_ACE_PROFILE = CAR_PERKS[CAR_PERK.OFF_ROAD_ACE];

@@ -16,7 +16,6 @@ import {
   portraitCandidateUrls,
 } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest, CarSheetManifest, MatrixStripAtlas } from '../data/cars/CarManifest.ts';
-import { isMatrixCarIndex } from '../data/cars/MatrixCarIndex.ts';
 import { PLANET_THEMES } from '../data/tracks/planetThemes.ts';
 import { parseTrackLinesManifest } from '../data/tracks/TrackLines.ts';
 import { TRACKS } from '../data/tracks/registry.ts';
@@ -175,24 +174,10 @@ export class BootScene extends Phaser.Scene {
       }
     }
 
-    const portraitNumbers = new Set<number>();
     for (const car of manifest.cars) {
       if (isSpinnerCarId(car.id)) {
         this.queuePortrait(car.id);
-        continue;
       }
-      const n = matrixHeroNumber(car.id);
-      if (n === undefined) {
-        if (car.id === 'delorean') {
-          this.queuePortrait(car.id);
-        }
-        continue;
-      }
-      if (!isMatrixCarIndex(n) || portraitNumbers.has(n)) {
-        continue;
-      }
-      portraitNumbers.add(n);
-      this.queuePortrait(car.id);
     }
 
     this.load.image(SPLASH_ART_KEY, `${UI_ASSET_DIRECTORY}/${SPLASH_ART_FILE}`);

@@ -10,8 +10,8 @@
  * Identity rows 1–33 stay here for leftover art. Do not shop or race these.
  */
 
-/** Leftover matrix folders still listed in cars.json. Not shoppable. Folder 1 stays on disk retired. */
-export const AVAILABLE_MATRIX_NUMBERS = [18, 19, 20, 21] as const;
+/** Matrix folders are gone from the live tree. */
+export const AVAILABLE_MATRIX_NUMBERS = [] as const;
 
 export const MATRIX_CAR_INDEX_SIZE = 33;
 
@@ -88,12 +88,9 @@ export function tourIndexCarIds(): readonly string[] {
   return MATRIX_CAR_INDEX.map(entry => entry.carId);
 }
 
-/** Leftover matrix sheets still listed in cars.json. Not the live garage. */
+/** Empty: the live garage is spinner-only. */
 export function garageCarouselIds(): readonly string[] {
-  const available = MATRIX_CAR_INDEX.filter(entry =>
-    (AVAILABLE_MATRIX_NUMBERS as readonly number[]).includes(entry.n),
-  ).map(entry => entry.carId);
-  return [...available, 'delorean'];
+  return [];
 }
 
 export function matrixCarName(n: number): string {

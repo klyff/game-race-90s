@@ -335,9 +335,8 @@ describe('RaceField weapons', () => {
     expect(field.playerWeaponHits).toEqual({ missiles: 0, oil: 0, mines: 0, contacts: 0 });
   });
 
-  it('CAMO STAR on the roster carries the Anvil perk', () => {
-    const tank = manifest.cars.find(car => car.id === 'car-18')!;
-    expect(tank.perk).toBe(CAR_PERK.ANVIL);
+  it('live roster has no leftover CAMO STAR tank', () => {
+    expect(manifest.cars.some(car => car.id === 'car-18')).toBe(false);
   });
 
   it('an NPC drops a hazard when a rival is closing right behind it', () => {

@@ -1,17 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  findCarSheet,
-  matrixHeroNumber,
-  parseCarSetManifest,
-} from '../../src/data/cars/CarManifest.ts';
+import { parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
 import {
   CAR_STAT_MATRIX,
   CAR_STAT_MATRIX_SIZE,
   carStatRow,
   handlingTuple,
-  isCarStatMatrixIndex,
 } from '../../src/data/cars/CarStatMatrix.ts';
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -63,42 +58,14 @@ describe('CarStatMatrix', () => {
   });
 });
 
-describe('cars.json follows CarStatMatrix for indices 1–30', () => {
-  it('overlays authored handling without cloning Marauder across the clock fleet', () => {
-    const byIndex = new Map<number, string[]>();
-    for (const car of manifest.cars) {
-      const n = matrixHeroNumber(car.id);
-      if (n === undefined || !isCarStatMatrixIndex(n)) {
-        continue;
-      }
-      const row = carStatRow(n);
-      expect(car.stats.maxSpeed).toBe(row.stats.maxSpeed);
-      expect(car.stats.enginePower).toBe(row.stats.enginePower);
-      expect(car.stats.grip).toBe(row.stats.grip);
-      expect(car.stats.steerRate).toBe(row.stats.steerRate);
-      expect(car.perk).toBe(row.perk);
-      expect(car.homePlanetId).toBe(row.homePlanetId);
-      const group = byIndex.get(n) ?? [];
-      group.push(handlingTuple(car.stats));
-      byIndex.set(n, group);
-    }
-    expect(byIndex.size).toBe(4);
-    expect([...byIndex.keys()].sort((a, b) => a - b)).toEqual([18, 19, 20, 21]);
-  });
-
-  it('keeps car_18 a heavy tank on Vulkanis', () => {
-    const sheet = findCarSheet(manifest, 'car_18');
-    expect(sheet.homePlanetId).toBe('vulkanis');
-    expect(sheet.stats.mass).toBeGreaterThanOrEqual(1400);
-    expect(sheet.stats.maxSpeed).toBeLessThanOrEqual(56);
-    expect(sheet.stats.maxSpeed).toBeLessThan(findCarSheet(manifest, '2-sportivo-blue-combat').stats.maxSpeed);
-  });
-
-  it('does not list parked leftover folders (31–33) in the live roster', () => {
-    const leftovers = manifest.cars.filter(car => {
-      const n = matrixHeroNumber(car.id);
-      return n !== undefined && n > 30;
-    });
-    expect(leftovers).toEqual([]);
+describe('cars.json is the live spinner fleet', () => {
+  it('does not list matrix leftover ids', () => {
+    expect(manifest.cars.map(car => car.id)).toEqual([
+      '1-muscle-car-gray-number9',
+      '2-sportivo-blue-combat',
+      '3-red-oh-red',
+      '5-all-pink-fury',
+    ]);
+    expect(manifest.cars.some(car => car.id === 'car_18' || car.id === 'delorean')).toBe(false);
   });
 });

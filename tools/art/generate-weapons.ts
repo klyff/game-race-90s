@@ -6,8 +6,8 @@
  * 221×221, matching the owner missile contact sheet. Art is authored at 32×32
  * and nearest-neighbour scaled so the pixels stay chunky.
  *
- * If `missile-special-1.png` is present, that owner sheet is left as
- * `missile.png` (this tool only writes oil / mine in that case).
+ * Live missile art is `missile_strip_28.png` (32-frame CCW strip). This tool
+ * never writes or overwrites that strip — only oil / mine / turbo stand-ins.
  */
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -75,34 +75,6 @@ function stamp(
 ): void {
   const [x, y] = rotate(localX, localY, angle);
   plot(frame, x, y, colour);
-}
-
-function drawMissile(angle: number): Uint8Array {
-  const frame = emptyFrame();
-  const body: Rgba = [255, 214, 70, 255];
-  const shade: Rgba = [210, 120, 24, 255];
-  const nose: Rgba = [255, 72, 48, 255];
-  const fin: Rgba = [48, 56, 72, 255];
-  const highlight: Rgba = [255, 244, 180, 255];
-  const exhaust: Rgba = [255, 140, 40, 200];
-
-  for (let x = 7; x <= 24; x += 1) {
-    const half = x < 10 ? 1 : x > 21 ? 1 : 2;
-    for (let y = -half; y <= half; y += 1) {
-      const colour = y < 0 ? highlight : y > 0 ? shade : body;
-      stamp(frame, CENTRE + (x - CENTRE), CENTRE + y, angle, colour);
-    }
-  }
-  stamp(frame, 26, CENTRE, angle, nose);
-  stamp(frame, 25, CENTRE - 1, angle, nose);
-  stamp(frame, 25, CENTRE + 1, angle, nose);
-  stamp(frame, 8, CENTRE - 3, angle, fin);
-  stamp(frame, 8, CENTRE + 3, angle, fin);
-  stamp(frame, 7, CENTRE - 2, angle, fin);
-  stamp(frame, 7, CENTRE + 2, angle, fin);
-  stamp(frame, 6, CENTRE, angle, exhaust);
-  stamp(frame, 5, CENTRE, angle, [255, 90, 20, 160]);
-  return frame;
 }
 
 function drawOil(angle: number): Uint8Array {
@@ -276,7 +248,6 @@ const outDir = join(here, '..', '..', 'public', 'assets', 'weapons');
 mkdirSync(outDir, { recursive: true });
 
 const sheets = [
-  { file: 'missile.png', draw: drawMissile },
   { file: 'oil.png', draw: drawOil },
   { file: 'mine.png', draw: drawMine },
   { file: 'turbo.png', draw: drawTurbo },

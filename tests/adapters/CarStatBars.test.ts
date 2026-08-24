@@ -63,10 +63,9 @@ describe('CarStatBars — real roster', () => {
     }
   });
 
-  it('Ash Comet has the highest SPEED fraction, exactly 1 (roster maxSpeed is 93)', () => {
-    const bars = statBars(manifest, 'car-20');
+  it('Blue Combat has the highest SPEED fraction, exactly 1', () => {
+    const bars = statBars(manifest, '2-sportivo-blue-combat');
     const speedBar = bars.find(b => b.label === 'SPEED')!;
-    expect(speedBar.value).toBe(93);
     expect(speedBar.fraction).toBe(1);
 
     for (const carId of carIds) {
@@ -75,33 +74,23 @@ describe('CarStatBars — real roster', () => {
     }
   });
 
-  it('cryo-hollow cars share the highest GRIP fraction', () => {
-    const snowGrip = statBars(manifest, 'car-19').find(b => b.label === 'GRIP')!.fraction;
+  it('Gray Muscle has the highest GRIP and ARMOR fractions', () => {
+    const grip = statBars(manifest, '1-muscle-car-gray-number9').find(b => b.label === 'GRIP')!.fraction;
+    const armor = statBars(manifest, '1-muscle-car-gray-number9').find(b => b.label === 'ARMOR')!.fraction;
 
     for (const carId of carIds) {
-      const otherGrip = statBars(manifest, carId).find(b => b.label === 'GRIP')!.fraction;
-      expect(snowGrip).toBeGreaterThanOrEqual(otherGrip);
+      expect(statBars(manifest, carId).find(b => b.label === 'GRIP')!.fraction).toBeLessThanOrEqual(grip);
+      expect(statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction).toBeLessThanOrEqual(armor);
     }
   });
 
-  it('the tank has the highest ARMOR fraction (the roster armor king)', () => {
-    const magmaArmor = statBars(manifest, 'car-18').find(b => b.label === 'ARMOR')!.fraction;
-
-    for (const carId of carIds) {
-      if (carId === 'car-18') continue;
-      const otherArmor = statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction;
-      // car_18 is the Vulkanis heavy; a tie on armor is allowed.
-      expect(magmaArmor).toBeGreaterThanOrEqual(otherArmor);
-    }
-  });
-
-  it('air-blade has the lowest ARMOR fraction, exactly MINIMUM_BAR_FRACTION', () => {
-    const airBladeArmor = statBars(manifest, 'car-20').find(b => b.label === 'ARMOR')!.fraction;
-    expect(airBladeArmor).toBe(MINIMUM_BAR_FRACTION);
+  it('Blue Combat has the lowest ARMOR fraction, exactly MINIMUM_BAR_FRACTION', () => {
+    const lightArmor = statBars(manifest, '2-sportivo-blue-combat').find(b => b.label === 'ARMOR')!.fraction;
+    expect(lightArmor).toBe(MINIMUM_BAR_FRACTION);
 
     for (const carId of carIds) {
       const otherArmor = statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction;
-      expect(airBladeArmor).toBeLessThanOrEqual(otherArmor);
+      expect(lightArmor).toBeLessThanOrEqual(otherArmor);
     }
   });
 
@@ -133,7 +122,7 @@ describe('CarStatBars — real roster', () => {
     expect(() => statBars(manifest, 'not-a-real-car')).toThrow();
   });
 
-  it('prints the fraction table for all five cars (for manual eyeballing)', () => {
+  it('prints the fraction table for the live roster (for manual eyeballing)', () => {
     const rows = carIds.map(carId => {
       const bars = statBars(manifest, carId);
       const cells = bars.map(b => `${b.label}=${b.fraction.toFixed(3)} (v=${b.value})`).join('  ');

@@ -9,179 +9,9 @@
   },
   "cars": [
     {
-      "id": "car-18",
-      "displayName": "CAMO STAR",
-      "archetype": "Tan / green camo tank — star emblem, main cannon",
-      "image": "matrix_car/18_hero/car_18_strip_64.png",
-      "shadow": {
-        "width": 40,
-        "height": 20
-      },
-      "stats": {
-        "mass": 1480,
-        "enginePower": 38,
-        "brakeForce": 40,
-        "maxSpeed": 54,
-        "grip": 17,
-        "steerRate": 1.55,
-        "steerSpeedFalloff": 0.7,
-        "armor": 0.8,
-        "ammoCapacity": 8,
-        "collisionRadius": 2.05,
-        "aimRadius": 2.5,
-        "collisionAlong": 2.4,
-        "collisionAcross": 1.36,
-        "collisionSquareMin": 1.36,
-        "collisionSquareMax": 2.4,
-        "collisionSquare": 1.88
-      },
-      "perk": "anvil",
-      "homePlanetId": "vulkanis",
-      "worldAdvantage": 0.7,
-      "frameCount": 30,
-      "clock": "clockwise",
-      "framesJson": "matrix_car/18_hero/car_18_strip.json"
-    },
-    {
-      "id": "car-19",
-      "displayName": "Cyber Pink",
-      "archetype": "Pink / cyan street GT — neon stripe, hood gatling",
-      "image": "matrix_car/19_hero/car_19_strip_64.png",
-      "shadow": {
-        "width": 40,
-        "height": 20
-      },
-      "stats": {
-        "mass": 760,
-        "enginePower": 27,
-        "brakeForce": 41,
-        "maxSpeed": 63,
-        "grip": 36,
-        "steerRate": 3.22,
-        "steerSpeedFalloff": 0.33,
-        "armor": 0.24,
-        "ammoCapacity": 8,
-        "collisionRadius": 1.52,
-        "aimRadius": 3.05,
-        "collisionAlong": 1.86,
-        "collisionAcross": 1.29,
-        "collisionSquareMin": 1.29,
-        "collisionSquareMax": 1.86,
-        "collisionSquare": 1.575
-      },
-      "perk": "off-road-ace",
-      "homePlanetId": "verdant-fault",
-      "worldAdvantage": 0.7,
-      "frameCount": 30,
-      "clock": "clockwise",
-      "framesJson": "matrix_car/19_hero/car_19_strip.json"
-    },
-    {
-      "id": "car-20",
-      "displayName": "Ash Comet",
-      "archetype": "Orange off-road SUV — hood cannons, roof rails",
-      "image": "matrix_car/20_hero/car_20_strip_64.png",
-      "shadow": {
-        "width": 40,
-        "height": 20
-      },
-      "stats": {
-        "mass": 670,
-        "enginePower": 37,
-        "brakeForce": 37,
-        "maxSpeed": 93,
-        "grip": 20,
-        "steerRate": 3.05,
-        "steerSpeedFalloff": 0.66,
-        "armor": 0.16,
-        "ammoCapacity": 8,
-        "collisionRadius": 1.78,
-        "aimRadius": 3.15,
-        "collisionAlong": 2.605,
-        "collisionAcross": 0.95,
-        "collisionSquareMin": 0.95,
-        "collisionSquareMax": 2.605,
-        "collisionSquare": 1.7775
-      },
-      "perk": "slipstream",
-      "homePlanetId": "ash-reach",
-      "worldAdvantage": 0.7,
-      "frameCount": 30,
-      "clock": "clockwise",
-      "framesJson": "matrix_car/20_hero/car_20_strip.json"
-    },
-    {
-      "id": "car_21",
-      "displayName": "Red Streak",
-      "archetype": "Red sports — white stripes, hood guns",
-      "image": "matrix_car/21_hero/car_21_strip_64.png",
-      "shadow": {
-        "width": 40,
-        "height": 20
-      },
-      "stats": {
-        "mass": 960,
-        "enginePower": 24,
-        "brakeForce": 45,
-        "maxSpeed": 55,
-        "grip": 29,
-        "steerRate": 2.45,
-        "steerSpeedFalloff": 0.48,
-        "armor": 0.38,
-        "ammoCapacity": 10,
-        "collisionRadius": 1.68,
-        "aimRadius": 3.45,
-        "collisionAlong": 1.98,
-        "collisionAcross": 1.09,
-        "collisionSquareMin": 1.09,
-        "collisionSquareMax": 1.98,
-        "collisionSquare": 1.535
-      },
-      "perk": "bulldozer",
-      "homePlanetId": "thunder-basin",
-      "worldAdvantage": 0.7,
-      "frameCount": 30,
-      "clock": "clockwise",
-      "framesJson": "matrix_car/21_hero/car_21_strip.json"
-    },
-    {
-      "id": "delorean",
-      "displayName": "Delorean",
-      "archetype": "Special 1 — flux wedge, sticks on every world",
-      "image": "matrix_car/delorean_hero/delorean_strip_64.png",
-      "shadow": {
-        "width": 40,
-        "height": 20
-      },
-      "stats": {
-        "mass": 880,
-        "enginePower": 40,
-        "brakeForce": 50,
-        "maxSpeed": 88,
-        "grip": 36,
-        "steerRate": 3.05,
-        "steerSpeedFalloff": 0.36,
-        "armor": 0.32,
-        "ammoCapacity": 10,
-        "collisionRadius": 1.75,
-        "aimRadius": 3.2,
-        "collisionAlong": 2.25,
-        "collisionAcross": 1.03,
-        "collisionSquareMin": 1.03,
-        "collisionSquareMax": 2.25,
-        "collisionSquare": 1.64
-      },
-      "perk": "flux",
-      "homePlanetId": "chrome-verge",
-      "worldAdvantage": 0.9,
-      "frameCount": 30,
-      "clock": "clockwise",
-      "framesJson": "matrix_car/delorean_hero/delorean_strip.json"
-    },
-    {
       "id": "1-muscle-car-gray-number9",
       "displayName": "Gray Muscle",
-      "archetype": "Charcoal war coupe — roof turret, black hood stripe",
+      "archetype": "Charcoal war coupe \u2014 roof turret, black hood stripe",
       "image": "assets/cars/1-muscle-car-gray-number9/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -217,7 +47,7 @@
     {
       "id": "2-sportivo-blue-combat",
       "displayName": "Blue Combat Sport",
-      "archetype": "Blue sports coupe — hood gun, chunky combat kit",
+      "archetype": "Blue sports coupe \u2014 hood gun, chunky combat kit",
       "image": "assets/cars/2-sportivo-blue-combat/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -253,7 +83,7 @@
     {
       "id": "3-red-oh-red",
       "displayName": "Red Oh Red",
-      "archetype": "Red pixel sport — roof cannon, dual white stripes",
+      "archetype": "Red pixel sport \u2014 roof cannon, dual white stripes",
       "image": "assets/cars/3-red-oh-red/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -289,7 +119,7 @@
     {
       "id": "5-all-pink-fury",
       "displayName": "All Pink Fury",
-      "archetype": "Candy-pink convertible coupe — hood laser, open cabin",
+      "archetype": "Candy-pink convertible coupe \u2014 hood laser, open cabin",
       "image": "assets/cars/5-all-pink-fury/car_strip_64x64.png",
       "shadow": {
         "width": 42,
