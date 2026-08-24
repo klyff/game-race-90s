@@ -34,8 +34,6 @@ export interface HudReadout {
   readonly oil?: number;
   /** Landmines remaining. When set with `oil`, the HUD shows A/S/D counts. */
   readonly mines?: number;
-  /** Hops remaining. When set with oil/mines/turbos, the HUD appends the jump count. */
-  readonly jumps?: number;
   /** Nitro tank fill (0..turboCapacity). */
   readonly turbos?: number;
   /** Nitro tank size. Missing = stock 10. */
@@ -338,7 +336,6 @@ export function formatHud(readout: HudReadout): HudText {
   const oilCount = Math.max(0, Number.isFinite(readout.oil) ? readout.oil! : 0);
   const mineCount = Math.max(0, Number.isFinite(readout.mines) ? readout.mines! : 0);
   const turboCount = Math.max(0, Number.isFinite(readout.turbos) ? readout.turbos! : 0);
-  const jumpCount = Math.max(0, Number.isFinite(readout.jumps) ? readout.jumps! : 0);
   const loadout =
     readout.oil !== undefined && readout.mines !== undefined
       ? `${clampedAmmo}  ${mineCount}  ${oilCount}`
@@ -346,9 +343,6 @@ export function formatHud(readout: HudReadout): HudText {
   let ammo = loadout;
   if (readout.oil !== undefined && readout.mines !== undefined && readout.turbos !== undefined) {
     ammo = `${loadout}  ${turboCount}`;
-    if (readout.jumps !== undefined) {
-      ammo = `${ammo}  ${jumpCount}`;
-    }
   }
 
   // Countdown: "3", "2", "1", "GO!", or null

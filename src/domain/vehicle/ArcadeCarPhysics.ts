@@ -30,7 +30,7 @@ export const OFFROAD: SurfaceConditions = {
   rollingResistance: OFFROAD_ROLLING_RESISTANCE,
 };
 
-/** A car mid-jump touches nothing: no tyre grip, no rolling resistance
+/** A car mid-air touches nothing: no tyre grip, no rolling resistance
  * (T-050). Steering and drag (a function of the car alone, decision 11)
  * still apply — only what the ground would have supplied is zeroed. */
 export const AIRBORNE_SURFACE: SurfaceConditions = {

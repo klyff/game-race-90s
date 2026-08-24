@@ -1,16 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import {
+  clockScreenUnit,
   clockYawFromWorldHeading,
   frameIndexForClockHeading,
   matrixClockLabel,
   matrixClockSlots,
   nearestClockIndexFromWorldChord,
   screenDeltaFromHeading,
+  screenDeltaFromWorldDelta,
   spinnerClockAngleDeg,
   spinnerClockLabel,
   SPINNER_CLOCK_FRAMES,
   SPINNER_HERO_CLOCK_INDEX,
+  worldDeltaFromScreenDelta,
   worldHeadingForClockIndex,
+  worldOffsetBehindClock,
 } from '../../src/domain/math/IsoClock.ts';
 import { findTrack } from '../../src/data/tracks/registry.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
@@ -119,5 +123,23 @@ describe('IsoClock', () => {
       maxError = Math.max(maxError, Math.abs(delta));
     }
     expect(maxError).toBeLessThanOrEqual(arc / 2 + 1e-10);
+  });
+
+  it('inverts screen deltas back to world', () => {
+    const world = { x: 3.2, y: -1.7 };
+    expect(worldDeltaFromScreenDelta(screenDeltaFromWorldDelta(world))).toEqual({
+      x: expect.closeTo(world.x, 10),
+      y: expect.closeTo(world.y, 10),
+    });
+  });
+
+  it('drops 23px toward 12h when the nose is at 6h', () => {
+    const ppu = 8.143264;
+    const offset = worldOffsetBehindClock(Math.PI / 4, 23, ppu);
+    const screen = screenDeltaFromWorldDelta(offset);
+    expect(Math.hypot(screen.x, screen.y) * ppu).toBeCloseTo(23, 5);
+    expect(screen.x).toBeCloseTo(0, 5);
+    expect(screen.y).toBeLessThan(0);
+    expect(clockScreenUnit(0)).toEqual({ x: expect.closeTo(0, 10), y: expect.closeTo(1, 10) });
   });
 });

@@ -16,7 +16,7 @@ export interface VehicleState {
    * Set by weapon hits to produce a spinout; decays on its own.
    */
   readonly yawSpin: number;
-  /** World units above the track surface. 0 when grounded. Set by a jump
+  /** World units above the track surface. 0 when grounded. Set by a ramp launch
    * ramp (T-050) and integrated by `integrateAirborne`, never by `stepVehicle`. */
   readonly height: number;
   /** World units/s. Positive is rising. 0 when grounded. */

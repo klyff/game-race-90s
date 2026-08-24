@@ -7,6 +7,7 @@ import { CameraZoomPolicy } from '../adapters/render/CameraZoomPolicy.ts';
 import { ChaseCamera } from '../adapters/render/ChaseCamera.ts';
 import { analyzeTrackCameras, zoomToFitFraction } from '../domain/camera/analyzeTrackCameras.ts';
 import {
+  applyTurboStraightZoom,
   CAMERA_CLOSE_ZOOM,
   CAMERA_CURVATURE_SPAN_UNITS,
   CAMERA_HOME_ZOOM,
@@ -14,7 +15,6 @@ import {
   CAMERA_QUIT_MASTER_SCALE,
   CAMERA_WIDE_ZOOM,
   CAMERA_ZOOM_STEP,
-  applyTurboStraightZoom,
   spectatorCameraPreset,
   type CameraPreset,
 } from '../domain/camera/CameraPreset.ts';
@@ -37,12 +37,12 @@ import { MetalScrapEffect } from '../adapters/render/MetalScrapEffect.ts';
 import { WoodDebrisEffect } from '../adapters/render/WoodDebrisEffect.ts';
 import { VictoryCelebration } from '../adapters/render/VictoryCelebration.ts';
 import type { HudReadout } from '../adapters/render/HudFormat.ts';
-import { IsoProjection } from '../adapters/render/IsoProjection.ts';
 import {
   sampleCentreline,
   startLineWorld,
   type MinimapSnapshot,
 } from '../adapters/render/MinimapProjection.ts';
+import { IsoProjection } from '../adapters/render/IsoProjection.ts';
 import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
 import {
   dumpDisplayList,
@@ -93,7 +93,7 @@ import { clipsInPlan, planNarratorRace } from '../domain/audio/NarratorPlan.ts';
 import type { InputCommand } from '../domain/input/InputCommand.ts';
 import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
 import { clockYawFromWorldHeading } from '../domain/math/IsoClock.ts';
-import { angleOf, dot, fromAngle, length } from '../domain/math/Vec2.ts';
+import { add, angleOf, dot, fromAngle, length, scale } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
 import { resolveCareerField, seatCarId } from '../domain/race/CarAssignment.ts';
 import { CAREER_NPC_COUNT, npcPilotNamesForPlanet } from '../domain/race/CareerGrid.ts';
@@ -134,6 +134,7 @@ import {
   BURN_MARK_LIFETIME_LAPS,
   CAR_LENGTH_PER_COLLISION_RADIUS,
   HAZARD_BURST_INTENSITY,
+  MISSILE_MIN_DISPLAY_PX,
   MISSILE_SIZE_OF_CAR,
   OIL_LAP_REFERENCE_SPEED,
 } from '../domain/weapons/WeaponConstants.ts';
@@ -147,6 +148,9 @@ import {
   TRAP_CRATE_KEY,
   TRAP_GASOLINE_KEY,
   MINE_SPRITE_KEY,
+  MISSILE_EXHAUST_KEY,
+  MISSILE_EXHAUST_SHEET,
+  MISSILE_SHEET,
   MISSILE_SPRITE_KEY,
   OIL_SPRITE_KEY,
   PLAYER_CAR_ID,
@@ -305,6 +309,7 @@ export class RaceScene extends Phaser.Scene {
    * the graphics layer still draws geometric fallbacks if a sheet is missing.
    */
   private missileSprites: Phaser.GameObjects.Sprite[] = [];
+  private exhaustSprites: Phaser.GameObjects.Sprite[] = [];
   private hazardSprites: Phaser.GameObjects.Sprite[] = [];
   /** True once the player has finished and the results screen has been handed off to. */
   private resultsShown = false;
@@ -693,7 +698,6 @@ export class RaceScene extends Phaser.Scene {
       ammoCapacity: missileCapacity(player.stats, player.perk),
       oil: player.inventory.oil,
       mines: player.inventory.mines,
-      jumps: player.jumps,
       turbos: player.turbos,
       turboCapacity: player.turboCapacity,
       turboActive: player.turboBurning,
@@ -718,16 +722,6 @@ export class RaceScene extends Phaser.Scene {
       name: this.pilotNameOf(entry.carId, entry.racerIndex),
       position: entry.position,
     }));
-  }
-
-  private pilotNameOf(carId: string, racerIndex?: number): string {
-    if (racerIndex !== undefined) {
-      const seated = this.field.racers[racerIndex]?.name;
-      if (seated !== undefined && seated.length > 0) {
-        return seated;
-      }
-    }
-    return this.pilotNames[carId] ?? findCarSheet(this.manifest, carId).displayName;
   }
 
   /**
@@ -755,6 +749,16 @@ export class RaceScene extends Phaser.Scene {
         };
       }),
     };
+  }
+
+  private pilotNameOf(carId: string, racerIndex?: number): string {
+    if (racerIndex !== undefined) {
+      const seated = this.field.racers[racerIndex]?.name;
+      if (seated !== undefined && seated.length > 0) {
+        return seated;
+      }
+    }
+    return this.pilotNames[carId] ?? findCarSheet(this.manifest, carId).displayName;
   }
 
   /**
@@ -891,20 +895,35 @@ export class RaceScene extends Phaser.Scene {
     const px = this.manifest.pixelsPerUnit;
 
     const hasMissileArt = this.textures.exists(MISSILE_SPRITE_KEY);
+    const hasExhaustArt = this.textures.exists(MISSILE_EXHAUST_KEY);
     let missileSlot = 0;
     for (const missile of this.field.activeMissiles) {
       const screen = this.projection.toScreen(missile.position);
       if (hasMissileArt) {
         const sprite = this.missileSprite(missileSlot);
-        missileSlot += 1;
         const heading = angleOf(missile.velocity);
         sprite
           .setVisible(true)
           .setPosition(screen.x, screen.y)
-          .setFrame(frameIndexForHeading(heading, WEAPON_SHEET.frameCount, CLOCK_DIRECTION.CLOCKWISE))
+          .setFrame(frameIndexForHeading(heading, MISSILE_SHEET.frameCount, CLOCK_DIRECTION.COUNTER_CLOCKWISE))
           .setDepth(this.projection.depthOf(missile.position) + 0.5);
         const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * missile.radius;
-        this.scaleWeaponSprite(sprite, carLength * MISSILE_SIZE_OF_CAR * px);
+        const displayPx = Math.max(MISSILE_MIN_DISPLAY_PX, carLength * MISSILE_SIZE_OF_CAR * px);
+        this.scaleWeaponSprite(sprite, displayPx);
+        if (hasExhaustArt) {
+          const exhaust = this.exhaustSprite(missileSlot);
+          const back = fromAngle(heading + Math.PI);
+          const tailWorld = add(missile.position, scale(back, (carLength * MISSILE_SIZE_OF_CAR) * 0.42));
+          const tail = this.projection.toScreen(tailWorld);
+          const flame = Math.floor(this.time.now / 80) % MISSILE_EXHAUST_SHEET.frameCount;
+          exhaust
+            .setVisible(true)
+            .setPosition(tail.x, tail.y)
+            .setFrame(flame)
+            .setDepth(this.projection.depthOf(missile.position) + 0.4);
+          this.scaleWeaponSprite(exhaust, Math.max(12, displayPx * 0.55));
+        }
+        missileSlot += 1;
       } else {
         const radius = Math.max(4, missile.radius * px * 0.45);
         this.weaponLayer.fillStyle(0xffe066, 1);
@@ -912,6 +931,7 @@ export class RaceScene extends Phaser.Scene {
       }
     }
     this.hideFrom(this.missileSprites, missileSlot);
+    this.hideFrom(this.exhaustSprites, missileSlot);
 
     let hazardSlot = 0;
     for (const hazard of this.field.activeHazards) {
@@ -976,6 +996,15 @@ export class RaceScene extends Phaser.Scene {
     if (sprite === undefined) {
       sprite = this.add.sprite(0, 0, MISSILE_SPRITE_KEY, 0).setDepth(41);
       this.missileSprites[index] = sprite;
+    }
+    return sprite;
+  }
+
+  private exhaustSprite(index: number): Phaser.GameObjects.Sprite {
+    let sprite = this.exhaustSprites[index];
+    if (sprite === undefined) {
+      sprite = this.add.sprite(0, 0, MISSILE_EXHAUST_KEY, 0).setDepth(40);
+      this.exhaustSprites[index] = sprite;
     }
     return sprite;
   }
@@ -1852,6 +1881,9 @@ export class RaceScene extends Phaser.Scene {
       for (const sprite of this.missileSprites) {
         sprite.setVisible(false);
       }
+      for (const sprite of this.exhaustSprites) {
+        sprite.setVisible(false);
+      }
       for (const sprite of this.hazardSprites) {
         sprite.setVisible(false);
       }
@@ -1962,6 +1994,10 @@ export class RaceScene extends Phaser.Scene {
       image.destroy();
     }
     this.missileSprites = [];
+    for (const image of this.exhaustSprites) {
+      image.destroy();
+    }
+    this.exhaustSprites = [];
     for (const image of this.hazardSprites) {
       image.destroy();
     }

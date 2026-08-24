@@ -12,7 +12,7 @@ export const RACE_DRIVE_CONTROLS: readonly ControlRow[] = [
   { keys: 'UP', action: 'THROTTLE' },
   { keys: 'DOWN', action: 'BRAKE  ·  HOLD TO REVERSE' },
   { keys: 'LEFT / RIGHT', action: 'STEER' },
-  { keys: 'SPACE', action: 'HOP' },
+  { keys: 'SPACE', action: 'BRAKE' },
   { keys: 'LEFT SHIFT', action: 'TURBO' },
 ];
 

@@ -548,14 +548,12 @@ describe('RaceField — ramp landings (T-050)', () => {
     const lost = before - player.integrity.integrity;
     expect(lost).toBeCloseTo(RAMP_LANDING_DAMAGE * (1 - player.stats.armor), 5);
     expect(player.landingStunRemaining).toBe(RAMP_LANDING_STUN_SECONDS);
-    const jumps = player.jumps;
     const turbos = player.turbos;
-    field.step({ ...IDLE_INPUT, jump: true, boost: true, throttle: 1 }, SIMULATION_STEP_SECONDS);
-    expect(player.jumps).toBe(jumps);
+    field.step({ ...IDLE_INPUT, boost: true, throttle: 1 }, SIMULATION_STEP_SECONDS);
     expect(player.turbos).toBe(turbos);
   });
 
-  it('10° ramp landings and hops do not pay the landing tax', () => {
+  it('10° ramp landings do not pay the landing tax', () => {
     const field = rampField();
     const player = field.player;
     const mid = track.rampZones![1]!;
@@ -566,15 +564,6 @@ describe('RaceField — ramp landings (T-050)', () => {
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
     expect(player.integrity.integrity).toBe(before);
     expect(player.landingStunRemaining).toBe(0);
-
-    const hopField = rampField();
-    hopField.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
-    expect(isAirborne(hopField.player.state)).toBe(true);
-    const hopIntegrity = hopField.player.integrity.integrity;
-    run(hopField, 1.2, IDLE_INPUT);
-    expect(isAirborne(hopField.player.state)).toBe(false);
-    expect(hopField.player.integrity.integrity).toBe(hopIntegrity);
-    expect(hopField.player.landingStunRemaining).toBe(0);
   });
 
   it('a ramp landing past the wall explodes and respawns on the line after the ramp', () => {

@@ -6,9 +6,9 @@
  * is what keeps the AI honest. An NPC cannot cheat by writing velocity directly
  * because it has no way to express that.
  *
- * Weapon keys: missile `C`, oil `Z`, landmine `X`, turbo Left-Shift or `A`. Hop is `Space`.
- * Adapters edge-trigger these so holding a key cannot dump the whole inventory
- * or spend every jump in one frame.
+ * Weapon keys: missile `C`, oil `Z`, landmine `X`, turbo Left-Shift or `A`.
+ * Space is the race brake. Adapters edge-trigger weapons so a held button
+ * cannot dump the whole inventory in one frame.
  */
 export interface InputCommand {
   /** 0..1 */
@@ -25,8 +25,6 @@ export interface InputCommand {
   readonly dropOil: boolean;
   /** Drop a landmine. */
   readonly dropMine: boolean;
-  /** Hop over ground hazards. Ignored while airborne or out of charges. */
-  readonly jump: boolean;
   /** Hold to burn the nitro gauge. */
   readonly boost: boolean;
 }
@@ -39,7 +37,6 @@ export const IDLE_INPUT: InputCommand = {
   fire: false,
   dropOil: false,
   dropMine: false,
-  jump: false,
   boost: false,
 };
 
@@ -61,7 +58,6 @@ export function sanitizeInput(command: InputCommand): InputCommand {
     fire: command.fire,
     dropOil: command.dropOil,
     dropMine: command.dropMine,
-    jump: command.jump,
     boost: command.boost,
   };
 }

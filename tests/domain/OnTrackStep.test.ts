@@ -115,7 +115,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 
@@ -157,7 +156,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 
@@ -208,7 +206,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 
@@ -252,7 +249,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 
@@ -302,7 +298,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 
@@ -347,7 +342,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 
@@ -400,7 +394,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 
@@ -461,7 +454,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 
@@ -512,7 +504,6 @@ describe('OnTrackStep.stepVehicleOnTrack', () => {
         fire: false,
         dropOil: false,
         dropMine: false,
-        jump: false,
         boost: false,
       };
 

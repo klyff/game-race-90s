@@ -7,18 +7,19 @@ import { findTrack } from '../../src/data/tracks/registry.ts';
 import { parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
 import { CAR_PERK, SIMULATION_STEP_SECONDS } from '../../src/domain/constants.ts';
 import { IDLE_INPUT } from '../../src/domain/input/InputCommand.ts';
-import { distance } from '../../src/domain/math/Vec2.ts';
+import {
+  screenDeltaFromHeading,
+  screenDeltaFromWorldDelta,
+} from '../../src/domain/math/IsoClock.ts';
 import { RaceField } from '../../src/domain/race/RaceField.ts';
 import type { RacerEntry } from '../../src/domain/race/RaceField.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
 import { CAR_CONDITION } from '../../src/domain/vehicle/CarIntegrity.ts';
-import { isAirborne } from '../../src/domain/vehicle/Vehicle.ts';
-import { JUMP_START_COUNT } from '../../src/domain/vehicle/JumpCharges.ts';
 import { CAR_PERKS, NEUTRAL_PERK } from '../../src/domain/vehicle/CarPerk.ts';
 import { decideMissileAim } from '../../src/domain/weapons/WeaponAim.ts';
 import {
-  CAR_LENGTH_PER_COLLISION_RADIUS,
-  DROP_BEHIND_CAR_LENGTHS,
+  DROP_BEHIND_PIXELS_PER_UNIT,
+  DROP_BEHIND_SCREEN_PX,
   GASOLINE_BURST_SCALE,
   MINE_RAW_DAMAGE,
   MISSILE_RAW_DAMAGE,
@@ -37,6 +38,9 @@ import {
 import { findMissileHit, launchMissile, resetMissileIds, stepMissile } from '../../src/domain/weapons/Missile.ts';
 import {
   ageHazards,
+  dropBehindScreenPx,
+  dropMine,
+  dropOil,
   HAZARD_KIND,
   oilYawSpinForArmor,
   placeGasoline,
@@ -61,6 +65,15 @@ function twoCarField(): RaceField {
     { carId: b.id, stats: b.stats, isPlayer: true, perk: b.perk },
   ];
   return new RaceField(entries, track, freshSpline(), { countdownSeconds: 0 });
+}
+
+/** Move the dropper off the puck so rivals can arm it. */
+function armDroppedHazard(field: RaceField, hazard: { position: { x: number; y: number } }): void {
+  field.player.state = {
+    ...field.player.state,
+    position: { x: hazard.position.x + 40, y: hazard.position.y + 40 },
+  };
+  field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
 }
 
 beforeEach(() => {
@@ -195,6 +208,10 @@ describe('RaceField weapons', () => {
     // Place the rival on the oil and step so hazard resolution runs.
     const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL)!;
     const rival = field.racers.find(r => !r.isPlayer)!;
+    player.state = {
+      ...player.state,
+      position: { x: oil.position.x + 40, y: oil.position.y + 40 },
+    };
     rival.state = { ...rival.state, position: oil.position };
     const spinBefore = rival.state.yawSpin;
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
@@ -207,6 +224,10 @@ describe('RaceField weapons', () => {
     field.step({ ...IDLE_INPUT, dropOil: true }, SIMULATION_STEP_SECONDS);
     const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL)!;
     const rival = field.racers.find(r => !r.isPlayer)!;
+    field.player.state = {
+      ...field.player.state,
+      position: { x: oil.position.x + 40, y: oil.position.y + 40 },
+    };
     rival.state = { ...rival.state, position: oil.position };
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
     expect(field.playerWeaponHits.oil).toBe(1);
@@ -251,6 +272,7 @@ describe('RaceField weapons', () => {
     const field = twoCarField();
     field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
     const mine = field.activeHazards.find(h => h.kind === HAZARD_KIND.MINE)!;
+    armDroppedHazard(field, mine);
     const rival = field.racers.find(r => !r.isPlayer)!;
     const before = rival.integrity.integrity;
     rival.state = { ...rival.state, position: mine.position };
@@ -304,6 +326,7 @@ describe('RaceField weapons', () => {
     const field = twoCarField();
     field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
     const mine = field.activeHazards.find(h => h.kind === HAZARD_KIND.MINE)!;
+    armDroppedHazard(field, mine);
     const rival = field.racers.find(r => !r.isPlayer)!;
     rival.state = { ...rival.state, position: mine.position };
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
@@ -348,63 +371,7 @@ describe('RaceField weapons', () => {
   });
 });
 
-describe('RaceField hop', () => {
-  it('starts every car with 4 jumps and a hop spends one', () => {
-    const field = twoCarField();
-    expect(field.player.jumps).toBe(JUMP_START_COUNT);
-    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
-    expect(field.player.jumps).toBe(JUMP_START_COUNT - 1);
-    expect(isAirborne(field.player.state)).toBe(true);
-  });
-
-  it('refuses a hop while airborne or when the stock is empty', () => {
-    const field = twoCarField();
-    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
-    expect(field.player.jumps).toBe(3);
-    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
-    expect(field.player.jumps).toBe(3);
-
-    field.player.jumps = 0;
-    field.player.state = { ...field.player.state, height: 0, verticalVelocity: 0 };
-    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
-    expect(field.player.jumps).toBe(0);
-    expect(isAirborne(field.player.state)).toBe(false);
-  });
-
-  it('restores 4 jumps on reset', () => {
-    const field = twoCarField();
-    field.step({ ...IDLE_INPUT, jump: true }, SIMULATION_STEP_SECONDS);
-    expect(field.player.jumps).toBe(3);
-    field.reset();
-    expect(field.player.jumps).toBe(JUMP_START_COUNT);
-  });
-
-  it('refills jumps to 4 when the car completes a lap', () => {
-    const a = manifest.cars[0]!;
-    const b = manifest.cars[1]!;
-    const entries: RacerEntry[] = [
-      { carId: a.id, stats: a.stats, isPlayer: false, perk: a.perk },
-      { carId: b.id, stats: b.stats, isPlayer: true, perk: b.perk },
-    ];
-    // One checkpoint means the start line itself completes a lap, so a short
-    // drive off the grid is enough to exercise the finish-line refill.
-    const field = new RaceField(
-      entries,
-      { ...track, checkpointCount: 1 },
-      freshSpline(),
-      { countdownSeconds: 0, npcWeapons: false },
-    );
-    field.player.jumps = 0;
-    const beforeLaps = field.standingOf(field.player.carId)?.lapsCompleted ?? 0;
-    let laps = beforeLaps;
-    for (let i = 0; i < 240 && laps === beforeLaps; i += 1) {
-      field.step({ ...IDLE_INPUT, throttle: 1 }, SIMULATION_STEP_SECONDS);
-      laps = field.standingOf(field.player.carId)?.lapsCompleted ?? 0;
-    }
-    expect(laps).toBeGreaterThan(beforeLaps);
-    expect(field.player.jumps).toBe(JUMP_START_COUNT);
-  });
-
+describe('RaceField airborne hazards', () => {
   it('an airborne car does not take oil; the slick stays on the track', () => {
     const field = twoCarField();
     field.step({ ...IDLE_INPUT, dropOil: true }, SIMULATION_STEP_SECONDS);
@@ -453,17 +420,79 @@ describe('RaceField hop', () => {
     expect(field.playerWeaponHits.missiles).toBe(0);
   });
 
-  it('throws a mine at least one car length behind the bumper', () => {
+  it('throws a mine just behind the bumper on the clock axis', () => {
     const field = twoCarField();
     const player = field.player;
     field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
     const mine = field.activeHazards.find(h => h.kind === HAZARD_KIND.MINE)!;
-    const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * player.stats.collisionRadius;
-    const gap = distance(player.state.position, mine.position) - player.stats.collisionRadius - mine.radius;
-    expect(gap).toBeGreaterThanOrEqual(carLength * DROP_BEHIND_CAR_LENGTHS - 0.05);
+    const delta = {
+      x: mine.position.x - player.state.position.x,
+      y: mine.position.y - player.state.position.y,
+    };
+    const screen = screenDeltaFromWorldDelta(delta);
+    const screenPx = Math.hypot(screen.x, screen.y) * DROP_BEHIND_PIXELS_PER_UNIT;
+    const expected = dropBehindScreenPx(player.stats.collisionRadius);
+    expect(expected).toBeLessThanOrEqual(DROP_BEHIND_SCREEN_PX);
+    expect(screenPx).toBeCloseTo(expected, 5);
+    const nose = screenDeltaFromHeading(player.state.heading);
+    expect(screen.x * nose.x + screen.y * nose.y).toBeLessThan(0);
     expect(mine.ownerCarId).toBe(player.carId);
-    expect(mine.ownerArmed).toBe(true);
     expect(player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
+  });
+
+  it('oil and mine share the same clock-rear origin', () => {
+    const origin = { x: 10, y: 4 };
+    const heading = Math.PI / 4;
+    const oil = dropOil('p', origin, heading, 1.7, 0, 8);
+    const mine = dropMine('p', origin, heading, 1.7, 0);
+    expect(oil.position).toEqual(mine.position);
+    const screen = screenDeltaFromWorldDelta({
+      x: oil.position.x - origin.x,
+      y: oil.position.y - origin.y,
+    });
+    expect(Math.hypot(screen.x, screen.y) * DROP_BEHIND_PIXELS_PER_UNIT).toBeCloseTo(
+      dropBehindScreenPx(1.7),
+      5,
+    );
+    expect(screen.x).toBeCloseTo(0, 5);
+    expect(screen.y).toBeLessThan(0);
+  });
+
+  it('the dropper never takes their own mine or oil', () => {
+    const field = twoCarField();
+    const player = field.player;
+    field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
+    const mine = field.activeHazards.find(h => h.kind === HAZARD_KIND.MINE)!;
+    player.state = { ...player.state, position: mine.position };
+    const before = player.integrity.integrity;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(player.integrity.integrity).toBe(before);
+    expect(player.integrity.condition).not.toBe(CAR_CONDITION.DESTROYED);
+    expect(field.activeHazards.some(h => h.id === mine.id)).toBe(true);
+
+    field.step({ ...IDLE_INPUT, dropOil: true }, SIMULATION_STEP_SECONDS);
+    const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL)!;
+    const spinBefore = player.state.yawSpin;
+    player.state = { ...player.state, position: oil.position };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(player.state.yawSpin).toBe(spinBefore);
+  });
+
+  it('a rival still hits the dropper oil and mine', () => {
+    const field = twoCarField();
+    const player = field.player;
+    const rival = field.racers.find(r => !r.isPlayer)!;
+    field.step({ ...IDLE_INPUT, dropOil: true }, SIMULATION_STEP_SECONDS);
+    const oil = field.activeHazards.find(h => h.kind === HAZARD_KIND.OIL)!;
+    player.state = {
+      ...player.state,
+      position: { x: oil.position.x + 40, y: oil.position.y + 40 },
+    };
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    rival.state = { ...rival.state, position: oil.position, height: 0, verticalVelocity: 0 };
+    const spinBefore = rival.state.yawSpin;
+    field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);
+    expect(rival.state.yawSpin).toBeGreaterThan(spinBefore);
   });
 });
 
@@ -518,6 +547,7 @@ describe('gasoline barrels', () => {
     const field = twoCarField();
     field.step({ ...IDLE_INPUT, dropMine: true }, SIMULATION_STEP_SECONDS);
     const mine = field.activeHazards.find(hazard => hazard.kind === HAZARD_KIND.MINE)!;
+    armDroppedHazard(field, mine);
     const rival = field.racers.find(racer => !racer.isPlayer)!;
     rival.state = { ...rival.state, position: mine.position };
     field.step(IDLE_INPUT, SIMULATION_STEP_SECONDS);

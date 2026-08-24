@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { Vec2 } from '../../domain/math/Vec2.ts';
 import { add, distance, fromAngle, perpendicularLeft, scale } from '../../domain/math/Vec2.ts';
-import type { VehicleState, VehicleTelemetry } from '../../domain/vehicle/Vehicle.ts';
+import { isAirborne, type VehicleState, type VehicleTelemetry } from '../../domain/vehicle/Vehicle.ts';
 import { IsoProjection } from './IsoProjection.ts';
 import { ROAD_DEPTH } from './TrackRenderer.ts';
 
@@ -175,6 +175,12 @@ export class TyreMarks {
    */
   record(carIndex: number, state: VehicleState, telemetry: VehicleTelemetry): void {
     const trail = this.trailFor(carIndex);
+
+    if (isAirborne(state)) {
+      trail.left.previousPoint = null;
+      trail.right.previousPoint = null;
+      return;
+    }
 
     const isBreakingAway = telemetry.isSliding || telemetry.gripUsage >= this.gripUsageThreshold;
     if (!isBreakingAway) {

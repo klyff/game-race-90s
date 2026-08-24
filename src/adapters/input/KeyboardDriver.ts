@@ -34,7 +34,7 @@
  *   X             = drop landmine (edge-triggered)
  *   Left Shift / A = turbo (hold; 4 charges, +35% for 2s). Hold, not tap:
  *                   JustDown is eaten if Shift is pressed during countdown.
- *   Space         = hop (edge-triggered; 4 charges, refill at the line)
+ *   Space         = race brake (hold; corners and drifts). Does not engage reverse.
  *
  * Movement is arrows only so C/X/Z can be the weapon buttons without
  * fighting the steering. If neither or both horizontal keys are held, steer is 0.
@@ -54,7 +54,7 @@ export class KeyboardDriver {
   private readonly keyMissile: Phaser.Input.Keyboard.Key;
   private readonly keyOil: Phaser.Input.Keyboard.Key;
   private readonly keyMine: Phaser.Input.Keyboard.Key;
-  private readonly keyJump: Phaser.Input.Keyboard.Key;
+  private readonly keyBrake: Phaser.Input.Keyboard.Key;
   private readonly keyTurbo: Phaser.Input.Keyboard.Key;
   private readonly keyTurboAlt: Phaser.Input.Keyboard.Key;
   private readonly reverseLatch: ReverseLatch;
@@ -78,7 +78,7 @@ export class KeyboardDriver {
     this.keyMissile = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
     this.keyOil = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     this.keyMine = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
-    this.keyJump = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.keyBrake = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.keyTurbo = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.keyTurboAlt = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
   }
@@ -107,13 +107,12 @@ export class KeyboardDriver {
 
     return {
       throttle,
-      brake: driveIntent.brake,
+      brake: this.keyBrake.isDown || driveIntent.brake > 0 ? 1 : 0,
       steer,
       reverse: driveIntent.reverse,
       fire: Phaser.Input.Keyboard.JustDown(this.keyMissile),
       dropOil: Phaser.Input.Keyboard.JustDown(this.keyOil),
       dropMine: Phaser.Input.Keyboard.JustDown(this.keyMine),
-      jump: Phaser.Input.Keyboard.JustDown(this.keyJump),
       // isDown, not JustDown: the gauge burns while held.
       boost: this.keyTurbo.isDown || this.keyTurboAlt.isDown,
     };
@@ -127,7 +126,7 @@ export class KeyboardDriver {
     this.keyboardPlugin.removeKey(this.keyMissile);
     this.keyboardPlugin.removeKey(this.keyOil);
     this.keyboardPlugin.removeKey(this.keyMine);
-    this.keyboardPlugin.removeKey(this.keyJump);
+    this.keyboardPlugin.removeKey(this.keyBrake);
     this.keyboardPlugin.removeKey(this.keyTurbo);
     this.keyboardPlugin.removeKey(this.keyTurboAlt);
   }

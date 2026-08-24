@@ -1,5 +1,9 @@
 import { ISO_X, ISO_Y } from '../constants.ts';
-import type { Vec2 } from './Vec2.ts';
+import { VEC2_ZERO, type Vec2 } from './Vec2.ts';
+
+export const SPINNER_CLOCK_FRAMES = 32;
+export const SPINNER_CLOCK_STEP_DEG = 11.25;
+export const SPINNER_HERO_CLOCK_INDEX = 7;
 
 /**
  * 2:1 dimetric: world heading → screen travel. Phaser +Y is down.
@@ -20,6 +24,48 @@ export function screenDeltaFromWorldDelta(delta: Vec2): Vec2 {
     x: ISO_X * (delta.x - delta.y),
     y: ISO_Y * (delta.x + delta.y),
   };
+}
+
+/** Inverse of `screenDeltaFromWorldDelta` (unscaled screen, ppu = 1). */
+export function worldDeltaFromScreenDelta(screen: Vec2): Vec2 {
+  return {
+    x: screen.x / (2 * ISO_X) + screen.y / (2 * ISO_Y),
+    y: screen.y / (2 * ISO_Y) - screen.x / (2 * ISO_X),
+  };
+}
+
+/**
+ * Unit screen vector for a clock yaw. 0 = 6h = +Y (nose to the bottom).
+ * Positive yaw is clockwise in this helper, matching `clockYawFromScreenDelta`.
+ */
+export function clockScreenUnit(yaw: number): Vec2 {
+  return { x: -Math.sin(yaw), y: Math.cos(yaw) };
+}
+
+/**
+ * World offset of `screenPx` exactly behind the car on the 2:1 clock axis.
+ * Snaps to the nearest 32-slot pose so the puck sits on the sprite's rear
+ * (indice[n] nose → indice[n+16] tail), not on raw world heading.
+ */
+export function worldOffsetBehindClock(
+  heading: number,
+  screenPx: number,
+  pixelsPerUnit: number,
+  frameCount: number = SPINNER_CLOCK_FRAMES,
+): Vec2 {
+  const px = Number.isFinite(screenPx) ? screenPx : 0;
+  const ppu = Number.isFinite(pixelsPerUnit) && pixelsPerUnit > 0 ? pixelsPerUnit : 1;
+  if (px === 0) {
+    return VEC2_ZERO;
+  }
+  const slot = nearestClockIndex(clockYawFromWorldHeading(heading), frameCount);
+  const count = Number.isFinite(frameCount) && frameCount > 0 ? Math.floor(frameCount) : SPINNER_CLOCK_FRAMES;
+  const rearYaw = (slot * Math.PI * 2) / count + Math.PI;
+  const screen = clockScreenUnit(rearYaw);
+  return worldDeltaFromScreenDelta({
+    x: (screen.x * px) / ppu,
+    y: (screen.y * px) / ppu,
+  });
 }
 
 /**
@@ -67,10 +113,6 @@ export function nearestClockIndexFromWorldChord(
     frameCount,
   );
 }
-
-export const SPINNER_CLOCK_FRAMES = 32;
-export const SPINNER_CLOCK_STEP_DEG = 11.25;
-export const SPINNER_HERO_CLOCK_INDEX = 7;
 
 /** @deprecated Archive 30-slot CW clock. Live cars use SPINNER_CLOCK_*. */
 export const MATRIX_CLOCK_FRAMES = 30;

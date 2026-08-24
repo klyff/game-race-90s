@@ -163,7 +163,6 @@ export class AIDriver {
       fire: false,
       dropOil: false,
       dropMine: false,
-      jump: false,
       boost: (ramp !== null && speedRatio < 0.85) || (lastLap && speedRatio < 0.96),
     };
   }

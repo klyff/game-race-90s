@@ -59,12 +59,6 @@ import { innerWallParkPose } from '../camera/innerWallPark.ts';
 import { createVehicleState, isAirborne } from '../vehicle/Vehicle.ts';
 import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
 import {
-  consumeJump,
-  createJumpCharges,
-  hopLaunchSpeed,
-  refillJumpCharges,
-} from '../vehicle/JumpCharges.ts';
-import {
   createNitroTank,
   nitroCapacityForTier,
   nitroFillSecondsForTier,
@@ -183,8 +177,6 @@ export interface RacerRuntime {
   integrity: CarIntegrity;
   /** Missiles, oil and mines this car is carrying (T-046). */
   inventory: WeaponInventory;
-  /** Hops remaining this lap. Refills at the finish line. */
-  jumps: number;
   /** Turbo charges remaining this lap. */
   /** Nitro tank fill, 0..turboCapacity. */
   turbos: number;
@@ -395,7 +387,6 @@ export class RaceField {
         lateralOffset: slot.lateralOffset,
         integrity: createCarIntegrity(),
         inventory: createWeaponInventory(perkProfile(entry.perk)),
-        jumps: createJumpCharges(),
         turbos: createNitroTank(),
         turboCapacity: nitroCapacityForTier(0),
         turboFillSeconds: nitroFillSecondsForTier(0),
@@ -556,7 +547,6 @@ export class RaceField {
       racer.lateralOffset = slot.lateralOffset;
       racer.integrity = createCarIntegrity();
       racer.inventory = createWeaponInventory(racer.perk);
-      racer.jumps = createJumpCharges();
       racer.turbos = createNitroTank();
       racer.turboBurning = false;
       racer.pendingImpactSpeed = 0;
@@ -695,7 +685,6 @@ export class RaceField {
 
       if (!frozen) {
         this.resolveWeaponCommand(racer, command);
-        this.resolveHopCommand(racer, command);
         this.resolveTurboCommand(racer, command);
       }
 
@@ -996,7 +985,6 @@ export class RaceField {
       const after = this.standingOf(racer.carId, index)?.lapsCompleted ?? 0;
       if (after > before) {
         racer.inventory = refillWeaponInventory(racer.inventory, racer.stats, racer.perk);
-        racer.jumps = refillJumpCharges(racer.jumps);
       }
     });
   }
@@ -1061,19 +1049,6 @@ export class RaceField {
       racer.state = applyAirTurboKick(racer.state);
       racer.airTurboKicked = true;
     }
-  }
-
-  /** Impart hop velocity when grounded and a charge remains. */
-  private resolveHopCommand(racer: RacerRuntime, command: InputCommand): void {
-    if (!command.jump || isAirborne(racer.state)) {
-      return;
-    }
-    const next = consumeJump(racer.jumps);
-    if (next === null) {
-      return;
-    }
-    racer.jumps = next;
-    racer.state = { ...racer.state, verticalVelocity: hopLaunchSpeed(racer.stats) };
   }
 
   /**

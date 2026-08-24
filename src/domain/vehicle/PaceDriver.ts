@@ -145,7 +145,6 @@ export class PaceDriver {
       fire: false,
       dropOil: false,
       dropMine: false,
-      jump: false,
       boost: false,
     };
   }

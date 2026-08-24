@@ -6,6 +6,11 @@ describe('formatHelpBody', () => {
     const body = formatHelpBody();
     expect(body).toContain('DRIVE');
     expect(body).toContain('THROTTLE');
+    expect(body).toContain('SPACE');
+    expect(body).toContain('BRAKE');
+    expect(body).not.toContain('HOP');
+    expect(body).toContain('DROP LANDMINE');
+    expect(body).toContain('DROP OIL');
     expect(body).toContain('WEAPONS');
     expect(body).toContain('FIRE MISSILE');
     expect(body).toContain('WATCH');

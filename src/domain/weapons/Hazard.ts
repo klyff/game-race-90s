@@ -1,9 +1,12 @@
-import { add, distance, fromAngle, scale } from '../math/Vec2.ts';
+import { worldOffsetBehindClock } from '../math/IsoClock.ts';
+import { add, distance } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
 import { CRATE_SIZE_OF_CAR } from '../traps/TrapRules.ts';
 import {
   CAR_LENGTH_PER_COLLISION_RADIUS,
   DROP_BEHIND_CAR_LENGTHS,
+  DROP_BEHIND_PIXELS_PER_UNIT,
+  DROP_BEHIND_SCREEN_PX,
   GASOLINE_SIZE_OF_CAR,
   MINE_SIZE_OF_CAR,
   OIL_SIZE_OF_CAR,
@@ -37,9 +40,8 @@ export interface TrackHazard {
    */
   readonly distance: number;
   /**
-   * False until the owner drives off the blast radius. Prevents a drop under
-   * the bumper from exploding the thrower; after they leave, anyone (including
-   * the owner on a later lap) can hit it.
+   * False until the owner drives off the blast radius. The dropper is always
+   * immune; this flag only arms the puck for everyone else.
    */
   readonly ownerArmed: boolean;
   /** 0 = on the asphalt. Stacked traps sit above this. */
@@ -65,11 +67,19 @@ export function resetHazardIds(next: number = 1): void {
   nextHazardId = next;
 }
 
-function dropBehind(position: Vec2, heading: number, collisionRadius: number, hazardRadius: number): Vec2 {
+/** Sprite-pixel offset along the clock rear: bumper + a short gap, capped. */
+export function dropBehindScreenPx(collisionRadius: number): number {
   const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * collisionRadius;
-  const dropDistance = carLength / 2 + carLength * DROP_BEHIND_CAR_LENGTHS + hazardRadius;
-  const back = fromAngle(heading + Math.PI);
-  return add(position, scale(back, dropDistance));
+  const fromBumper =
+    (carLength * 0.5 + carLength * DROP_BEHIND_CAR_LENGTHS) * DROP_BEHIND_PIXELS_PER_UNIT;
+  return Math.min(DROP_BEHIND_SCREEN_PX, Math.max(0, fromBumper));
+}
+
+function dropBehind(position: Vec2, heading: number, collisionRadius: number): Vec2 {
+  return add(
+    position,
+    worldOffsetBehindClock(heading, dropBehindScreenPx(collisionRadius), DROP_BEHIND_PIXELS_PER_UNIT),
+  );
 }
 
 export function dropOil(
@@ -86,7 +96,7 @@ export function dropOil(
     id: nextHazardId++,
     kind: HAZARD_KIND.OIL,
     ownerCarId,
-    position: dropBehind(position, heading, collisionRadius, radius),
+    position: dropBehind(position, heading, collisionRadius),
     radius,
     lifeRemaining: Math.max(0, lifetimeSeconds),
     distance: distanceAlongTrack,
@@ -108,7 +118,7 @@ export function dropMine(
     id: nextHazardId++,
     kind: HAZARD_KIND.MINE,
     ownerCarId,
-    position: dropBehind(position, heading, collisionRadius, radius),
+    position: dropBehind(position, heading, collisionRadius),
     radius,
     // Mines persist until hit; a huge life is simpler than a separate flag.
     lifeRemaining: Number.POSITIVE_INFINITY,
@@ -218,8 +228,9 @@ export function armHazards(
 }
 
 /**
- * First hazard overlapping a target. The owner is immune until they drive off
- * the drop (`ownerArmed`); after that anyone, including the owner, can hit it.
+ * First hazard overlapping a target. The dropper never hits their own oil or
+ * mine. Track traps (`ownerCarId` empty) hit everyone. `ownerArmed` only
+ * delays rivals until the thrower has left the blast circle.
  */
 export function findHazardHits(
   hazards: readonly TrackHazard[],
@@ -237,7 +248,10 @@ export function findHazardHits(
       if (claimedCars.has(target.carId)) {
         continue;
       }
-      if (!hazard.ownerArmed && target.carId === hazard.ownerCarId) {
+      if (hazard.ownerCarId !== '' && target.carId === hazard.ownerCarId) {
+        continue;
+      }
+      if (!hazard.ownerArmed) {
         continue;
       }
       if (distance(hazard.position, target.position) <= hazard.radius + target.radius) {

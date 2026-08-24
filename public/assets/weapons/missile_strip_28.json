@@ -1,0 +1,15 @@
+{
+  "id": "missile",
+  "clock": "counter_clockwise",
+  "frameCount": 32,
+  "degreesPerStep": 11.25,
+  "frame0": "6 o'clock, nose toward the bottom of the screen",
+  "cell": { "w": 28, "h": 28 },
+  "layout": "horizontal-strip",
+  "heroFrame": 7,
+  "exhaust": {
+    "file": "missile_exhaust.png",
+    "frameCount": 4,
+    "cell": { "w": 16, "h": 16 }
+  }
+}

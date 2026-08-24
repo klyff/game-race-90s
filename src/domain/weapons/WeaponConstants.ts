@@ -113,8 +113,11 @@ export const MINE_SIZE_OF_CAR = 0.406;
 /** Gasoline barrel diameter as a fraction of a typical car length. Uncoupled from the mine. +20%. */
 export const GASOLINE_SIZE_OF_CAR = 0.336;
 
-/** Missile sprite width as a fraction of the firer's car length. */
-export const MISSILE_SIZE_OF_CAR = 0.7;
+/** Missile sprite width as a fraction of the firer's car length. ~28px at default zoom. */
+export const MISSILE_SIZE_OF_CAR = 0.4;
+
+/** Floor so the dart still reads when the camera is pulled back. */
+export const MISSILE_MIN_DISPLAY_PX = 28;
 
 /** Hit and draw scale vs the firer's collision radius. +30% so the dart reads. */
 export const MISSILE_HIT_RADIUS_SCALE = 1.3;
@@ -161,11 +164,22 @@ export const OIL_LAP_REFERENCE_SPEED = 45;
 export const OIL_YAW_SPIN = 14;
 
 /**
- * How far behind the rear bumper a mine / oil is thrown, in car lengths.
- * Two lengths plus the bumper/radius offset keeps the puck out from under
- * the dropper, including fat sprites like the war tank.
+ * Extra gap past the rear bumper, in car lengths. Keeps the puck on the
+ * asphalt just behind the tail instead of under the chassis or down the road.
  */
-export const DROP_BEHIND_CAR_LENGTHS = 2;
+export const DROP_BEHIND_CAR_LENGTHS = 0.12;
+
+/**
+ * Hard cap on that drop, in sprite pixels on the 2:1 clock.
+ * Never throw further than this even on a long collision box.
+ */
+export const DROP_BEHIND_SCREEN_PX = 23;
+
+/**
+ * Fleet `pixelsPerUnit` so the 23px drop is a world offset the sim can use.
+ * Must match `public/assets/cars/cars.json`.
+ */
+export const DROP_BEHIND_PIXELS_PER_UNIT = 8.143264;
 
 /**
  * How close behind an NPC a rival must be, in world units, before the NPC drops

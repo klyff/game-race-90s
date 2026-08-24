@@ -71,6 +71,12 @@ import {
   WEAPON_ASSET_DIRECTORY,
   WEAPON_SHEET,
   WEAPON_SPRITES,
+  MISSILE_EXHAUST_FILE,
+  MISSILE_EXHAUST_KEY,
+  MISSILE_EXHAUST_SHEET,
+  MISSILE_SHEET,
+  MISSILE_SPRITE_KEY,
+  MISSILE_STRIP_FILE,
 } from './sceneKeys.ts';
 
 /**
@@ -101,6 +107,8 @@ export class BootScene extends Phaser.Scene {
       this.load.json(trapKey, `${TRAPS_ASSET_DIRECTORY}/${track.id}.json`);
     }
     for (const key of [
+      MISSILE_SPRITE_KEY,
+      MISSILE_EXHAUST_KEY,
       ...WEAPON_SPRITES.map(sprite => sprite.key),
       ...HUD_ICONS.map(icon => icon.key),
       GASOLINE_SPRITE_KEY,
@@ -199,6 +207,14 @@ export class BootScene extends Phaser.Scene {
       this.load.image(card.key, driverCardUrl(card));
     }
 
+    this.load.spritesheet(MISSILE_SPRITE_KEY, `${WEAPON_ASSET_DIRECTORY}/${MISSILE_STRIP_FILE}`, {
+      frameWidth: MISSILE_SHEET.frameWidth,
+      frameHeight: MISSILE_SHEET.frameHeight,
+    });
+    this.load.spritesheet(MISSILE_EXHAUST_KEY, `${WEAPON_ASSET_DIRECTORY}/${MISSILE_EXHAUST_FILE}`, {
+      frameWidth: MISSILE_EXHAUST_SHEET.frameWidth,
+      frameHeight: MISSILE_EXHAUST_SHEET.frameHeight,
+    });
     for (const sprite of WEAPON_SPRITES) {
       this.load.spritesheet(sprite.key, `${WEAPON_ASSET_DIRECTORY}/${sprite.file}`, {
         frameWidth: WEAPON_SHEET.frameWidth,

@@ -93,8 +93,8 @@ export function stepVehicleOnTrack(
   // 1. Project the car onto the centreline; use the previous frame's distance as a hint.
   const before = spline.projectNear(state.position, hintDistance, searchWindow);
 
-  // A ramp launches a grounded car that is not already hopping; a car already
-  // airborne re-entering the same zone does not re-launch.
+  // A ramp launches a grounded car; a car already airborne re-entering the
+  // same zone does not re-launch.
   const zone = rampZoneAt(before.distance, track);
   let rampEvent: RampStepEvent = null;
   let launched = state;

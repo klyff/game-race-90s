@@ -72,7 +72,7 @@ export const GROUND_ASSET_DIRECTORY = 'assets/ground';
 /** Where owner-provided weapon art (missile / oil / mine) lives, relative to the served root. */
 export const WEAPON_ASSET_DIRECTORY = 'assets/weapons';
 
-/** Single-frame isometric HUD icons (turbo, missile, mine, oil, jump). */
+/** Single-frame isometric HUD icons (turbo, missile, mine, oil). */
 export const HUD_ICON_DIRECTORY = `${UI_ASSET_DIRECTORY}/hud`;
 
 export const HUD_ICONS = [
@@ -80,14 +80,12 @@ export const HUD_ICONS = [
   { key: 'hud-missile', file: 'hud-missile.png' },
   { key: 'hud-mine', file: 'hud-mine.png' },
   { key: 'hud-oil', file: 'hud-oil.png' },
-  { key: 'hud-jump', file: 'hud-jump.png' },
 ] as const;
 
 export const HUD_TURBO_KEY = 'hud-turbo';
 export const HUD_MISSILE_KEY = 'hud-missile';
 export const HUD_MINE_KEY = 'hud-mine';
 export const HUD_OIL_KEY = 'hud-oil';
-export const HUD_JUMP_KEY = 'hud-jump';
 
 /** Dirty red gasoline barrel still, used as a world hazard. */
 export const GASOLINE_SPRITE_KEY = 'world-gasoline';
@@ -151,24 +149,43 @@ export const DEBRIS_ASSET_DIRECTORY = 'assets/debris';
  * boots and plays with geometric fallbacks when the files are absent, and swaps in
  * the art automatically once the owner drops it into `WEAPON_ASSET_DIRECTORY`.
  *
- * Each file is a 4×8 contact sheet (32 yaw frames), same convention as the cars —
- * NOT a single image. Boot loads them as spritesheets so RaceScene can show one
- * frame instead of the whole grid. `npm run gen:weapons` writes the stand-in art.
+ * Oil / mine / turbo are 4×8 contact sheets (221px cells). The live missile is a
+ * horizontal 32-frame CCW strip at 28px (`missile_strip_28.png`), same clock as
+ * the cars. `npm run gen:weapons` never overwrites the missile strip.
  */
 export const WEAPON_SPRITES = [
-  { key: 'weapon-missile', file: 'missile.png' },
   { key: 'weapon-oil', file: 'oil.png' },
   { key: 'weapon-mine', file: 'mine.png' },
   { key: 'weapon-turbo', file: 'turbo.png' },
 ] as const;
 
-/** Owner missile sheet is 1774×887; 8×4 of 221 leaves a few leftover pixels. */
+/** Owner oil/mine/turbo sheet: 8×4 of 221. */
 export const WEAPON_SHEET = {
   columns: 8,
   rows: 4,
   frameWidth: 221,
   frameHeight: 221,
   frameCount: 32,
+} as const;
+
+/** Live missile: one row of 32 CCW yaw cells, 28×28. Frame 0 = 6 o'clock. */
+export const MISSILE_STRIP_FILE = 'missile_strip_28.png';
+export const MISSILE_SHEET = {
+  columns: 32,
+  rows: 1,
+  frameWidth: 28,
+  frameHeight: 28,
+  frameCount: 32,
+} as const;
+
+export const MISSILE_EXHAUST_FILE = 'missile_exhaust.png';
+export const MISSILE_EXHAUST_KEY = 'weapon-missile-exhaust';
+export const MISSILE_EXHAUST_SHEET = {
+  columns: 4,
+  rows: 1,
+  frameWidth: 16,
+  frameHeight: 16,
+  frameCount: 4,
 } as const;
 
 export const MISSILE_SPRITE_KEY = 'weapon-missile';
