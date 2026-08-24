@@ -27,6 +27,7 @@ import type { SaveData } from '../../domain/progress/SaveSlots.ts';
 import { cashInValue } from '../../domain/progress/SeasonPoints.ts';
 import { highestUnlockedPlanetIndex } from '../../data/tracks/campaign.ts';
 import { isCarUnlocked, listPrice, sellPrice } from '../../domain/progress/GarageCatalog.ts';
+import { isOutOfServiceCarId, sanitizeCarId } from '../../data/cars/FleetStatus.ts';
 import { isTourModeOn } from './TourMode.ts';
 
 const STORAGE_KEY = 'rockn90s.save';
@@ -184,6 +185,7 @@ export function buyCar(carId: string): CareerSlot | null {
     price <= 0 ||
     current.ownedCarIds.includes(carId) ||
     current.cash < price ||
+    isOutOfServiceCarId(carId) ||
     !isCarUnlocked(carId, planet, cleared)
   ) {
     return null;
@@ -212,7 +214,7 @@ export function sellCar(carId: string): CareerSlot | null {
 
 export function equipCar(carId: string): CareerSlot | null {
   const current = loadActiveCareer();
-  if (current === null || !current.ownedCarIds.includes(carId)) {
+  if (current === null || !current.ownedCarIds.includes(carId) || isOutOfServiceCarId(carId)) {
     return null;
   }
   const save = loadSave();
@@ -310,7 +312,7 @@ export function recordProgress(params: {
       clearedTrackIds: cleared,
       rivalPoints,
       trackPoints,
-      equippedCarId: params.carId || slot.equippedCarId,
+      equippedCarId: sanitizeCarId(params.carId || slot.equippedCarId, slot.equippedCarId),
     };
   });
 

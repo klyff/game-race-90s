@@ -1,0 +1,219 @@
+{
+  "run_id": "2026-08-22_sportivo-blue-combat",
+  "name": "Blue Combat Sport",
+  "spec": "Sports Coupe, Blue, mounted machine gun on hood, chunky stylized combat add-ons, arcade combat-racer style, background HEX: #00B140",
+  "background_mode": "chroma_key",
+  "started_at": "2026-08-22T21:12:29+0000",
+  "finished_at": "2026-08-22T22:10:00+0000",
+  "outputs": {
+    "frames": "out_frame_00.png … out_frame_31.png",
+    "keyed": "keyed/",
+    "strip_hires": "car_strip.png",
+    "atlas_hires": "car_strip.json",
+    "contact_sheet": "contact_sheet.png",
+    "strip_64": "car_strip_64x64.png",
+    "atlas_64": "car_strip_64x64.json",
+    "style_anchor": "style_anchor.json"
+  },
+  "normalize": {
+    "widest_frame": 8,
+    "widest_angle_deg": 90.0,
+    "widest_bbox_px": 977,
+    "scale_factor": 0.06551,
+    "canvas_out": "67x67"
+  },
+  "delivery": "not_run — waiting for human check of contact_sheet.png",
+  "frames": {
+    "0": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_00.png",
+      "human_approved": true,
+      "final": "scale 657 vs 742 (11.5%); human-approved look"
+    },
+    "1": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_01.png",
+      "final": "scale+axis PASS; palette 0.49"
+    },
+    "2": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_02.png",
+      "final": "scale+axis PASS; palette 0.70"
+    },
+    "3": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_03.png",
+      "final": "scale+axis PASS; palette 0.80"
+    },
+    "4": {
+      "result": "PASS",
+      "retries": 0,
+      "path": "out_frame_04.png"
+    },
+    "5": {
+      "result": "FAIL",
+      "retries": 2,
+      "path": "out_frame_05.png",
+      "final": "axis Y 92.5 vs 134.4"
+    },
+    "6": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_06.png",
+      "final": "scale+axis PASS; palette 0.75"
+    },
+    "7": {
+      "result": "PASS",
+      "retries": 0,
+      "path": "out_frame_07.png"
+    },
+    "8": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_08.png",
+      "final": "scale+axis PASS; palette 0.79"
+    },
+    "9": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_09.png",
+      "final": "scale+axis PASS; palette 0.64"
+    },
+    "10": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_10.png",
+      "final": "axis Y high; palette 0.53"
+    },
+    "11": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_11.png",
+      "final": "axis X -6 vs -42.8 (Y ok)"
+    },
+    "12": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_12.png",
+      "final": "axis X -18 vs -51 (Y+scale PASS)"
+    },
+    "13": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_13.png",
+      "final": "scale 6.7%; axis X; palette 0.77"
+    },
+    "14": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_14.png",
+      "final": "axis X -27 vs -58; palette 0.82; scale+Y PASS"
+    },
+    "15": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_15.png",
+      "final": "scale 8.7%; axis X -100 vs -55"
+    },
+    "16": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_16.png",
+      "final": "scale 611 vs 691 (11.6%); palette 0.66; axis PASS"
+    },
+    "17": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_17.png",
+      "final": "scale 833 vs 770 (8.3%); palette 0.70; axis PASS"
+    },
+    "18": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_18.png",
+      "final": "scale+axis PASS; palette 0.84"
+    },
+    "19": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_19.png",
+      "final": "axis (9.5, 94.5) vs (48.5, 172); scale+palette PASS"
+    },
+    "20": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_20.png",
+      "final": "axis (6.5, 101) vs (32.8, 160); scale+palette PASS"
+    },
+    "21": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_21.png",
+      "final": "axis Y 69.5 vs 145; scale+palette PASS"
+    },
+    "22": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_22.png",
+      "final": "axis Y 68 vs 127; palette 0.64"
+    },
+    "23": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_23.png",
+      "final": "axis Y 43 vs 115; scale+palette PASS"
+    },
+    "24": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_24.png",
+      "final": "axis Y 58.5 vs 108; scale+palette PASS"
+    },
+    "25": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_25.png",
+      "final": "axis Y 48.5 vs 113; palette 0.69"
+    },
+    "26": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_26.png",
+      "final": "axis Y 51.5 vs 125; palette 0.79"
+    },
+    "27": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_27.png",
+      "final": "axis Y 50.5 vs 129; scale+palette PASS"
+    },
+    "28": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_28.png",
+      "final": "axis ( -3.5, 65) vs (-35, 137); scale+palette PASS"
+    },
+    "29": {
+      "result": "FAIL",
+      "retries": 1,
+      "path": "out_frame_29.png",
+      "final": "scale 6.6%; axis X; palette 0.66"
+    },
+    "30": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_30.png",
+      "final": "scale 961 vs 849 (13.3%); axis"
+    },
+    "31": {
+      "result": "FAIL",
+      "retries": 0,
+      "path": "out_frame_31.png",
+      "final": "scale 878 vs 801 (9.7%); axis; loop closure 0.49"
+    }
+  }
+}

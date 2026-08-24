@@ -19,7 +19,9 @@ out/
 .tmp/
 _originais/
 graphify-out/
-# 1700px clock frames — iCloud: game-development/game-race-90s - sources
-**/*_sources.tar.gz
+# spinner run outputs — stay local, never push the 32-frame work folder
+car-sprites/
+# archives — never commit tarballs (includes *_sources.tar.gz)
+*.tar.gz
 .graphcache/
 *.original.md

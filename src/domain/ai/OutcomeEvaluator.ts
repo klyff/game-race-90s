@@ -142,6 +142,13 @@ export function scoreFuture(
   const tactical = tacticalBias(outcome, context.profile);
   const downside = outcome.offTrackRisk + outcome.wallRisk + outcome.accidentalCollision + outcome.selfLoss;
   const riskPenalty = (lastLapPodium ? 0.45 : 1.45 - traits.riskTolerance) * downside;
+  const bumper =
+    (context.aheadGap ?? 40) < 8 &&
+    rollout.minRivalSep < 0 &&
+    (candidate.kind === CANDIDATE_KIND.KEEP ||
+      candidate.kind === CANDIDATE_KIND.LINE ||
+      candidate.kind === CANDIDATE_KIND.DEFEND);
+  const shovePenalty = bumper ? (lastLapPodium ? 2.1 : 0.85) : 0;
   if (rollout.feasible === FEASIBILITY.MARGINAL && traits.riskTolerance < 0.72 && downside > 0.85) {
     return null;
   }
@@ -150,6 +157,7 @@ export function scoreFuture(
     tactical * 0.55 +
     context.memory * 0.2 -
     riskPenalty -
+    shovePenalty -
     outcome.predictionUncertainty -
     context.switchPenalty;
   return {

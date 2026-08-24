@@ -1,7 +1,13 @@
-# matrix_car — pasta oficial
+# matrix_car — OBSOLETE archive
+
+**Do not use for new or playable cars.** Live yaw is **32 frames CCW** (isometric-car-spinner): index 0 = 6h, hero = frame 07. Canonical table: [`../assets/cars/RELOGIO.md`](../assets/cars/RELOGIO.md).
+
+This folder stays on disk as leftover 30-slot CW art. Do not generate, complete, or ship from here.
+
+# matrix_car — pasta de arquivo
 
 **Local:** `public/matrix_car/`  
-**Gabarito:** [`GABARITO_RELOGIO.png`](./GABARITO_RELOGIO.png) · detalhe em [`RELOGIO.md`](./RELOGIO.md)
+**Gabarito (histórico):** [`GABARITO_RELOGIO.png`](./GABARITO_RELOGIO.png) · detalhe em [`RELOGIO.md`](./RELOGIO.md)
 
 ## O que é cada coisa
 

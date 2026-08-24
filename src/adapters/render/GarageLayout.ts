@@ -1,9 +1,10 @@
 /**
  * Garage hero placement. Pure: no Phaser.
  *
- * `assets/ui/garages/garage-01.png`…`garage-10.png` (1024×576) share an open floor bay. The matrix
- * vitrine parks ON that floor, behind the menus, windshield on the viewing
- * point — not the sprite centre. Transparent padding is ignored when scaling.
+ * `assets/ui/garages/garage-01.png`…`garage-10.png` (1024×576) share an open floor bay.
+ * Spinner `car_hero.png` (frame 07, typically 1024×1024) parks ON that floor,
+ * cabin toward the lamps — not the sprite centre. Transparent padding is ignored
+ * when scaling.
  */
 
 import { coverRect, pointIn } from './SplashLayout.ts';
@@ -24,7 +25,7 @@ export const GARAGE_ART_SIZE: Size = { width: 1024, height: 576 };
 
 /**
  * Cleared concrete bay (hazard stripes). Wider than the first cut — the
- * owner opened the floor so the vitrine can sit in the light.
+ * owner opened the floor so the hero can sit in the light.
  */
 export const GARAGE_BAY = {
   left: 0.2,
@@ -33,18 +34,18 @@ export const GARAGE_BAY = {
   bottom: 0.86,
 } as const;
 
-/** Windshield target inside the bay: centre, toward the back wall / lamps. */
+/** Cabin target inside the bay: centre, toward the back wall / lamps. */
 export const GARAGE_VIEW = { x: 0.5, y: 0.28 } as const;
 
-/** Cabin glass in a 1700×1254 matrix hero. */
-export const HERO_WINDSHIELD = { x: 0.5, y: 0.4 } as const;
+/** Cabin glass on a 1024 spinner hero (frame 07, 3/4 front). */
+export const HERO_WINDSHIELD = { x: 0.5, y: 0.48 } as const;
 
-/** Painted body inside the hero canvas. */
+/** Painted body inside the spinner hero canvas (union of shipped 1024 heroes). */
 export const HERO_OPAQUE = {
-  left: 0.16,
-  top: 0.17,
-  right: 0.84,
-  bottom: 0.82,
+  left: 0.05,
+  top: 0.33,
+  right: 0.96,
+  bottom: 0.83,
 } as const;
 
 export interface GarageHeroLayout {
@@ -71,7 +72,7 @@ export function garageViewPoint(viewport: Size, image: Size): Point {
 }
 
 /**
- * Place a matrix hero so the painted car fills the bay and the windshield
+ * Place a spinner hero so the painted car fills the bay and the cabin
  * sits on the viewing point. `x`/`y` are the glass origin, not the centre.
  */
 export function garageHeroLayout(viewport: Size, image: Size, hero: Size): GarageHeroLayout {
@@ -80,7 +81,7 @@ export function garageHeroLayout(viewport: Size, image: Size, hero: Size): Garag
   const sheet = sanitize(hero);
   const bodyW = sheet.width * (HERO_OPAQUE.right - HERO_OPAQUE.left);
   const bodyH = sheet.height * (HERO_OPAQUE.bottom - HERO_OPAQUE.top);
-  const scale = Math.min(bay.width / bodyW, bay.height / bodyH);
+  const scale = Math.min(bay.width / bodyW, bay.height / bodyH) * 0.9;
   return {
     x: view.x,
     y: view.y,

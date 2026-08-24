@@ -39,6 +39,7 @@
       "homePlanetId": "thunder-basin",
       "worldAdvantage": 0.9,
       "frameCount": 30,
+      "clock": "clockwise",
       "framesJson": "matrix_car/1_hero/car_1_strip.json"
     },
     {
@@ -48,7 +49,7 @@
       "image": "matrix_car/18_hero/car_18_strip_64.png",
       "shadow": {
         "width": 40,
-        "height": 22
+        "height": 20
       },
       "stats": {
         "mass": 1480,
@@ -72,6 +73,7 @@
       "homePlanetId": "vulkanis",
       "worldAdvantage": 0.7,
       "frameCount": 30,
+      "clock": "clockwise",
       "framesJson": "matrix_car/18_hero/car_18_strip.json"
     },
     {
@@ -80,8 +82,8 @@
       "archetype": "Pink / cyan street GT — neon stripe, hood gatling",
       "image": "matrix_car/19_hero/car_19_strip_64.png",
       "shadow": {
-        "width": 43,
-        "height": 21
+        "width": 40,
+        "height": 20
       },
       "stats": {
         "mass": 760,
@@ -105,6 +107,7 @@
       "homePlanetId": "verdant-fault",
       "worldAdvantage": 0.7,
       "frameCount": 30,
+      "clock": "clockwise",
       "framesJson": "matrix_car/19_hero/car_19_strip.json"
     },
     {
@@ -113,8 +116,8 @@
       "archetype": "Orange off-road SUV — hood cannons, roof rails",
       "image": "matrix_car/20_hero/car_20_strip_64.png",
       "shadow": {
-        "width": 43,
-        "height": 16
+        "width": 40,
+        "height": 20
       },
       "stats": {
         "mass": 670,
@@ -138,6 +141,7 @@
       "homePlanetId": "ash-reach",
       "worldAdvantage": 0.7,
       "frameCount": 30,
+      "clock": "clockwise",
       "framesJson": "matrix_car/20_hero/car_20_strip.json"
     },
     {
@@ -146,8 +150,8 @@
       "archetype": "Red sports — white stripes, hood guns",
       "image": "matrix_car/21_hero/car_21_strip_64.png",
       "shadow": {
-        "width": 65,
-        "height": 23
+        "width": 40,
+        "height": 20
       },
       "stats": {
         "mass": 960,
@@ -171,6 +175,7 @@
       "homePlanetId": "thunder-basin",
       "worldAdvantage": 0.7,
       "frameCount": 30,
+      "clock": "clockwise",
       "framesJson": "matrix_car/21_hero/car_21_strip.json"
     },
     {
@@ -179,8 +184,8 @@
       "archetype": "Special 1 — flux wedge, sticks on every world",
       "image": "matrix_car/delorean_hero/delorean_strip_64.png",
       "shadow": {
-        "width": 43,
-        "height": 16
+        "width": 40,
+        "height": 20
       },
       "stats": {
         "mass": 880,
@@ -204,7 +209,80 @@
       "homePlanetId": "chrome-verge",
       "worldAdvantage": 0.9,
       "frameCount": 30,
+      "clock": "clockwise",
       "framesJson": "matrix_car/delorean_hero/delorean_strip.json"
+    },
+    {
+      "id": "1-muscle-car-gray-number9",
+      "displayName": "Gray Muscle",
+      "archetype": "Charcoal war coupe — roof turret, black hood stripe",
+      "image": "assets/cars/1-muscle-car-gray-number9/car_strip_64x64.png",
+      "shadow": {
+        "width": 42,
+        "height": 20
+      },
+      "stats": {
+        "mass": 1120,
+        "enginePower": 28,
+        "brakeForce": 48,
+        "maxSpeed": 61,
+        "grip": 29,
+        "steerRate": 2.25,
+        "steerSpeedFalloff": 0.47,
+        "armor": 0.52,
+        "ammoCapacity": 16,
+        "collisionRadius": 1.76,
+        "aimRadius": 3.85,
+        "collisionAlong": 1.76,
+        "collisionAcross": 1.2672,
+        "collisionSquareMin": 1.2672,
+        "collisionSquareMax": 1.76,
+        "collisionSquare": 1.5136
+      },
+      "perk": "arsenal",
+      "homePlanetId": "thunder-basin",
+      "worldAdvantage": 0.7,
+      "frameWidth": 68,
+      "frameHeight": 68,
+      "frameCount": 32,
+      "clock": "counter_clockwise",
+      "framesJson": "assets/cars/1-muscle-car-gray-number9/car_strip_64x64.json"
+    },
+    {
+      "id": "2-sportivo-blue-combat",
+      "displayName": "Blue Combat Sport",
+      "archetype": "Blue sports coupe — hood gun, chunky combat kit",
+      "image": "assets/cars/2-sportivo-blue-combat/car_strip_64x64.png",
+      "shadow": {
+        "width": 42,
+        "height": 20
+      },
+      "stats": {
+        "mass": 920,
+        "enginePower": 31,
+        "brakeForce": 43,
+        "maxSpeed": 68,
+        "grip": 27,
+        "steerRate": 2.75,
+        "steerSpeedFalloff": 0.5,
+        "armor": 0.33,
+        "ammoCapacity": 10,
+        "collisionRadius": 1.64,
+        "aimRadius": 3.35,
+        "collisionAlong": 1.64,
+        "collisionAcross": 1.1808,
+        "collisionSquareMin": 1.1808,
+        "collisionSquareMax": 1.64,
+        "collisionSquare": 1.4104
+      },
+      "perk": "turbo",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7,
+      "frameWidth": 67,
+      "frameHeight": 67,
+      "frameCount": 32,
+      "clock": "counter_clockwise",
+      "framesJson": "assets/cars/2-sportivo-blue-combat/car_strip_64x64.json"
     }
   ]
 }

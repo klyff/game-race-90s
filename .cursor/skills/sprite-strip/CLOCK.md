@@ -1,4 +1,10 @@
-# Clock — 32 poses
+# Clock — OBSOLETE (do not use)
+
+**Do not use.** Live playable cars use **isometric-car-spinner**: 32 frames, **counter-clockwise**, index 0 = 6h = 0°, hero = frame 07. Canonical table: `public/assets/cars/RELOGIO.md`.
+
+This file is a leftover third clock (32 **CW**, frame 0 = 4:30). Do not “fix” it to 32 CCW and do not generate from it.
+
+# Clock — 32 poses (archive)
 
 The hero may face left or right. **Ignore that.** Frame 0 is always nose **down-right**. Draw the yaw. Do not rotate the hero.
 

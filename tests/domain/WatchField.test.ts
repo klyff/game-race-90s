@@ -13,7 +13,7 @@ import {
   WATCH_RACER_COUNT,
 } from '../../src/domain/race/WatchField.ts';
 
-const FLEET = Array.from({ length: 20 }, (_, index) => `car-${index + 1}`);
+const SPINNER = ['2-sportivo-blue-combat', '1-muscle-car-gray-number9'] as const;
 
 describe('WatchField', () => {
   it('lists all ten medium drivers, technician first', () => {
@@ -30,33 +30,27 @@ describe('WatchField', () => {
     expect(tracks[1]).toBe('chrome-verge-2');
   });
 
-  it('splits the fleet into a race pack and a reserve', () => {
-    const even = splitWatchRoster(FLEET, 0);
-    expect(even.field).toHaveLength(10);
-    expect(even.reserve).toHaveLength(10);
-    expect(even.field).toEqual(FLEET.slice(0, 10));
-    expect(even.reserve).toEqual(FLEET.slice(10, 20));
-
-    const odd = splitWatchRoster(FLEET, 1);
-    expect(odd.field).toEqual(FLEET.slice(10, 20));
-    expect(odd.reserve).toEqual(FLEET.slice(0, 10));
+  it('never falls back to matrix ids and repeats spinner models to fill the grid', () => {
+    const mixed = ['car-1', 'car_21', 'delorean', 'nogo-99', ...SPINNER];
+    const field = watchCarIds(mixed);
+    expect(field).toHaveLength(WATCH_RACER_COUNT);
+    expect(new Set(field)).toEqual(new Set(SPINNER));
+    expect(field.every(id => SPINNER.includes(id as (typeof SPINNER)[number]))).toBe(true);
+    expect(watchCarIds(['nogo-99', 'car_2', 'car-18'])).toEqual([]);
   });
 
-  it('keeps nogo labs out of the default watch grid', () => {
-    const mixed = [...FLEET, 'nogo-98', 'nogo-99'];
-    expect(watchCarIds(mixed)).toEqual(FLEET);
-    expect(watchCarIds(['nogo-99', 'car_2', 'car_18'])).toEqual(['car_2', 'car_18']);
-  });
-
-  it('uses the clock fleet once ten or more new strips are listed', () => {
-    const mixed = ['car-1', 'car-2', ...Array.from({ length: 12 }, (_, index) => `car_${index + 2}`)];
-    expect(watchCarIds(mixed)).toEqual(mixed.filter(id => id.startsWith('car_')));
-    expect(watchCarIds(FLEET)).toEqual(FLEET);
+  it('keeps a long spinner list as-is once ten or more exist', () => {
+    const many = Array.from({ length: 12 }, (_, index) => `${index + 1}-spinner-slug`);
+    expect(watchCarIds(many)).toEqual(many);
   });
 
   it('does not drop cars when building packs', () => {
-    const { packA, packB } = watchFieldPacks(FLEET);
-    expect([...packA, ...packB]).toEqual(FLEET);
+    const fleet = Array.from({ length: 20 }, (_, index) => `${index + 1}-spinner-slug`);
+    const { packA, packB } = watchFieldPacks(fleet);
+    expect([...packA, ...packB]).toEqual(fleet);
+    const even = splitWatchRoster(fleet, 0);
+    expect(even.field).toHaveLength(10);
+    expect(even.reserve).toHaveLength(10);
   });
 
   it('walks planet II tracks in a circle', () => {
@@ -74,13 +68,17 @@ describe('WatchField', () => {
   });
 
   it('pins a spectator pairing at seat 0 without dropping the rest', () => {
-    const pinned = applyWatchPin(['car-1', 'car-2', 'delorean'], ['TECHNICIAN', 'RAZOR'], {
-      carId: 'delorean',
-      pilot: 'KLYFF',
-    });
-    expect(pinned.field[0]).toBe('delorean');
+    const pinned = applyWatchPin(
+      ['2-sportivo-blue-combat', '1-muscle-car-gray-number9'],
+      ['TECHNICIAN', 'RAZOR'],
+      {
+        carId: '1-muscle-car-gray-number9',
+        pilot: 'KLYFF',
+      },
+    );
+    expect(pinned.field[0]).toBe('1-muscle-car-gray-number9');
     expect(pinned.pilots[0]).toBe('KLYFF');
-    expect(pinned.field).toEqual(['delorean', 'car-1', 'car-2']);
+    expect(pinned.field).toEqual(['1-muscle-car-gray-number9', '2-sportivo-blue-combat']);
     expect(pinned.pilots).toEqual(['KLYFF', 'TECHNICIAN', 'RAZOR']);
   });
 

@@ -9,46 +9,54 @@ import {
   sellPrice,
   shopCarIds,
   STARTER_PRICE,
-  WORLD_ONE_EXTRA_PRICE,
 } from '../../src/domain/progress/GarageCatalog.ts';
 
 describe('GarageCatalog', () => {
-  it('prices starters at $50k and world-1 extras at $70k', () => {
-    expect(listPrice('car-1')).toBe(STARTER_PRICE);
-    expect(listPrice('car_21')).toBe(STARTER_PRICE);
-    expect(listPrice('car-18')).toBe(WORLD_ONE_EXTRA_PRICE);
-    expect(listPrice('car-19')).toBe(WORLD_ONE_EXTRA_PRICE);
+  it('lists only spinner cars', () => {
+    expect(GARAGE_CATALOG.map(entry => entry.carId)).toEqual([
+      '2-sportivo-blue-combat',
+      '1-muscle-car-gray-number9',
+    ]);
+    expect(shopCarIds()).toEqual([
+      '2-sportivo-blue-combat',
+      '1-muscle-car-gray-number9',
+    ]);
+    expect(shopCarIds()).not.toContain('car_21');
+    expect(shopCarIds()).not.toContain('delorean');
+    expect(shopCarIds()).not.toContain('car-18');
+  });
+
+  it('prices the starter at $50k and Gray Muscle at $98k', () => {
+    expect(listPrice('2-sportivo-blue-combat')).toBe(STARTER_PRICE);
+    expect(listPrice('1-muscle-car-gray-number9')).toBe(98_000);
+    expect(listPrice('car-18')).toBe(0);
+    expect(listPrice('car_21')).toBe(0);
   });
 
   it('sells at 80% of list', () => {
-    expect(sellPrice('car-1')).toBe(40_000);
+    expect(sellPrice('2-sportivo-blue-combat')).toBe(40_000);
   });
 
-  it('never treats the camo tank as a starter', () => {
+  it('treats Blue Combat as the only starter', () => {
+    expect(isStarterCar('2-sportivo-blue-combat')).toBe(true);
+    expect(isCarUnlocked('2-sportivo-blue-combat', 1, 0)).toBe(true);
+    expect(isStarterCar('1-muscle-car-gray-number9')).toBe(false);
     expect(isStarterCar('car-18')).toBe(false);
-    expect(isCarUnlocked('car-18', 1, 0)).toBe(false);
   });
 
-  it('unlocks world-1 extras after the first podium clear', () => {
-    expect(isCarUnlocked('car-18', 1, 0)).toBe(false);
-    expect(isCarUnlocked('car-18', 1, 1)).toBe(true);
-    expect(carUnlockHint('car-19', 1, 0)).toBe('FINISH TOP 3 TO UNLOCK');
-    expect(carUnlockHint('car-19', 1, 1)).toBeNull();
-    expect(carUnlockHint('car-20', 1, 0)).toBe('UNLOCKS IN WORLD 2');
-    expect(carUnlockHint('car-1', 1, 0)).toBeNull();
-    expect(carUnlockHint('car_21', 1, 0)).toBeNull();
+  it('locks Gray Muscle until world 2 or a podium clear', () => {
+    expect(isCarUnlocked('1-muscle-car-gray-number9', 1, 0)).toBe(false);
+    expect(carUnlockHint('1-muscle-car-gray-number9', 1, 0)).toBe('UNLOCKS IN WORLD 2');
+    expect(isCarUnlocked('1-muscle-car-gray-number9', 1, 1)).toBe(true);
+    expect(isCarUnlocked('1-muscle-car-gray-number9', 2, 0)).toBe(true);
+    expect(carUnlockHint('1-muscle-car-gray-number9', 2, 0)).toBeNull();
   });
 
-  it('does not spend the first podium on a later-world car', () => {
-    expect(isCarUnlocked('car-20', 1, 1)).toBe(false);
-    expect(isCarUnlocked('car-20', 1, 2)).toBe(true);
-  });
-
-  it('lists every catalog car even when the garage is empty', () => {
-    expect(shopCarIds([], 1, 0)).toEqual(GARAGE_CATALOG.map(entry => entry.carId));
-    expect(shopCarIds(['car-1'], 1, 0)).toContain('car-18');
-    expect(isCarUnlocked('car-18', 1, 0)).toBe(false);
-    expect(isCarUnlocked('car-1', 1, 0)).toBe(true);
+  it('treats obsolete matrix ids as retired', () => {
+    expect(isCarUnlocked('car-18', 8, 99)).toBe(false);
+    expect(isCarUnlocked('delorean', 8, 99)).toBe(false);
+    expect(carUnlockHint('car-1', 1, 0)).toBe('RETIRED');
+    expect(carUnlockHint('delorean', 8, 0)).toBe('RETIRED');
   });
 
   it('unlocks every catalog car once planet 8 is open', () => {
@@ -57,18 +65,14 @@ describe('GarageCatalog', () => {
     }
   });
 
-  it('grows later-world prices by about 40%', () => {
-    expect(listPrice('car-20')).toBeGreaterThan(WORLD_ONE_EXTRA_PRICE);
-    expect(listPrice('delorean')).toBeGreaterThan(listPrice('car-20'));
-  });
-
-  it('keeps worlds 1-2 on the weak/medium roster and withholds later heavies', () => {
+  it('keeps world 1 NPCs on Blue Combat and adds Gray Muscle on world 2', () => {
     const early = npcRosterForPlanet(1);
-    expect(early).toContain('car-1');
-    expect(early).toContain('car_21');
-    expect(early).not.toContain('delorean');
-    expect(npcRosterForPlanet(4)).not.toContain('car-20');
-    expect(npcRosterForPlanet(5)).toContain('car-20');
-    expect(npcRosterForPlanet(5)).toContain('delorean');
+    expect(early).toEqual(['2-sportivo-blue-combat']);
+    expect(npcRosterForPlanet(2)).toEqual([
+      '2-sportivo-blue-combat',
+      '1-muscle-car-gray-number9',
+    ]);
+    expect(npcRosterForPlanet(8)).not.toContain('delorean');
+    expect(npcRosterForPlanet(8)).not.toContain('car-20');
   });
 });

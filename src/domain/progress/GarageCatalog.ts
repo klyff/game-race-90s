@@ -1,21 +1,17 @@
 /**
  * Shop prices, unlock waves and NPC roster tiers. Pure: no storage, no Phaser.
  *
- * Starters are $50k. Later waves grow ~40% per world. Everything in this
- * catalog is buyable once planet 8 is unlocked. Sell price is 80% of list.
- * The garage carousel lists every car; unlock only gates the buy button.
+ * Live catalog is spinner-only (32 CCW). Starter is $50k. Sell price is 80%
+ * of list. The garage carousel lists every catalog car; unlock only gates buy.
  */
 
+import { isSpinnerCarId } from '../../data/cars/CarManifest.ts';
+import { isOutOfServiceCarId, isRetiredCarId, isUnavailableCarId } from '../../data/cars/FleetStatus.ts';
+
 export const STARTER_PRICE = 50_000;
-export const WORLD_ONE_EXTRA_PRICE = 70_000;
-export const PRICE_GROWTH = 0.4;
 export const SELL_FRACTION = 0.8;
 
-export const STARTER_CAR_IDS = ['car-1', 'car_21'] as const;
-export const WORLD_ONE_LOCKED_CAR_IDS = ['car-18', 'car-19'] as const;
-
-/** First podium is spent unlocking the two world-1 extras, not a later wave. */
-const CLEARS_FOR_WORLD_ONE_EXTRAS = 1;
+export const STARTER_CAR_IDS = ['2-sportivo-blue-combat'] as const;
 
 export const CAR_TIER = {
   WEAK: 'weak',
@@ -31,25 +27,10 @@ export interface CatalogEntry {
   readonly tier: CarTier;
 }
 
-function roundPrice(value: number): number {
-  return Math.max(0, Math.round(value / 1000) * 1000);
-}
-
-function wavePrice(unlockPlanet: number): number {
-  if (unlockPlanet <= 1) {
-    return WORLD_ONE_EXTRA_PRICE;
-  }
-  return roundPrice(WORLD_ONE_EXTRA_PRICE * (1 + PRICE_GROWTH) ** (unlockPlanet - 1));
-}
-
-/** Shop order: the six available cars (1, 18–21, Delorean). Parked `x_*` stay out. */
+/** Shop order. Matrix / Delorean are obsolete and not listed. */
 export const GARAGE_CATALOG: readonly CatalogEntry[] = [
-  { carId: 'car-1', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
-  { carId: 'car_21', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.WEAK },
-  { carId: 'car-18', price: WORLD_ONE_EXTRA_PRICE, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
-  { carId: 'car-19', price: WORLD_ONE_EXTRA_PRICE, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
-  { carId: 'car-20', price: wavePrice(2), unlockPlanet: 2, tier: CAR_TIER.HEAVY },
-  { carId: 'delorean', price: wavePrice(3), unlockPlanet: 3, tier: CAR_TIER.HEAVY },
+  { carId: '2-sportivo-blue-combat', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: '1-muscle-car-gray-number9', price: 98_000, unlockPlanet: 2, tier: CAR_TIER.HEAVY },
 ];
 
 export function catalogEntry(carId: string): CatalogEntry | undefined {
@@ -70,14 +51,16 @@ export function isStarterCar(carId: string): boolean {
 
 /**
  * A shop car is unlocked when its wave's planet is open, or after enough
- * podium clears. The first clear opens the two world-1 extras; each clear
- * after that unlocks one later catalog car ahead of its planet wave.
+ * podium clears to pull the next catalog car ahead of its planet wave.
  */
 export function isCarUnlocked(
   carId: string,
   highestUnlockedPlanet: number,
   clearedTrackCount: number,
 ): boolean {
+  if (isOutOfServiceCarId(carId)) {
+    return false;
+  }
   const entry = catalogEntry(carId);
   if (entry === undefined) {
     return false;
@@ -85,33 +68,27 @@ export function isCarUnlocked(
   if (isStarterCar(carId)) {
     return true;
   }
-  // World-1 extras (CAMO STAR / Cyber Pink) stay locked until the first podium.
-  if ((WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(carId)) {
-    return clearedTrackCount >= 1 || highestUnlockedPlanet > 1;
-  }
   if (entry.unlockPlanet <= highestUnlockedPlanet) {
     return true;
   }
-  const extras = GARAGE_CATALOG.filter(
-    item => !isStarterCar(item.carId) && !(WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(item.carId),
-  );
+  const extras = GARAGE_CATALOG.filter(item => !isStarterCar(item.carId) && !isOutOfServiceCarId(item.carId));
   const index = extras.findIndex(item => item.carId === carId);
   if (index < 0) {
     return false;
   }
-  return index < clearedTrackCount - CLEARS_FOR_WORLD_ONE_EXTRAS;
+  return index < clearedTrackCount;
 }
 
 /**
- * Cars the garage carousel may show. Always the full catalog — locked cars
- * stay in the list so the player can see what the next worlds unlock.
+ * Cars the garage carousel may show. Always the full live catalog — locked
+ * cars stay in the list so the player can see what the next worlds unlock.
  */
 export function shopCarIds(
   _ownedCarIds: readonly string[] = [],
   _highestUnlockedPlanet = 1,
   _clearedTrackCount = 0,
 ): readonly string[] {
-  return GARAGE_CATALOG.map(entry => entry.carId);
+  return GARAGE_CATALOG.filter(entry => !isRetiredCarId(entry.carId)).map(entry => entry.carId);
 }
 
 /** Why a shop car is still locked, or null when it can be bought. */
@@ -120,11 +97,14 @@ export function carUnlockHint(
   highestUnlockedPlanet: number,
   clearedTrackCount: number,
 ): string | null {
+  if (isRetiredCarId(carId)) {
+    return 'RETIRED';
+  }
+  if (isUnavailableCarId(carId)) {
+    return 'UNAVAILABLE';
+  }
   if (isCarUnlocked(carId, highestUnlockedPlanet, clearedTrackCount)) {
     return null;
-  }
-  if ((WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(carId)) {
-    return 'FINISH TOP 3 TO UNLOCK';
   }
   const entry = catalogEntry(carId);
   if (entry === undefined) {
@@ -136,20 +116,13 @@ export function carUnlockHint(
   return 'WIN MORE RACES TO UNLOCK';
 }
 
-/** Cars NPCs may drive on this planet. */
+/** Cars NPCs may drive on this planet. Spinner-only. */
 export function npcRosterForPlanet(planetIndex: number): readonly string[] {
   const planet = Number.isFinite(planetIndex) ? Math.max(1, Math.floor(planetIndex)) : 1;
   return GARAGE_CATALOG.filter(entry => {
-    if (planet <= 2) {
-      return isStarterCar(entry.carId) || (WORLD_ONE_LOCKED_CAR_IDS as readonly string[]).includes(entry.carId);
+    if (!isSpinnerCarId(entry.carId) || isOutOfServiceCarId(entry.carId)) {
+      return false;
     }
-    if (planet <= 4) {
-      return entry.tier === CAR_TIER.WEAK || entry.tier === CAR_TIER.MEDIUM;
-    }
-    if (planet <= 6) {
-      return entry.unlockPlanet <= planet;
-    }
-    return true;
+    return entry.unlockPlanet <= planet;
   }).map(entry => entry.carId);
 }
-

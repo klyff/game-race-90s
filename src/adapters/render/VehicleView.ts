@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 import type { CarSetManifest, CarSheetManifest } from '../../data/cars/CarManifest.ts';
-import { frameIndexForHeading, sheetCellSize, sheetFrameCount } from '../../data/cars/CarManifest.ts';
+import {
+  frameIndexForHeading,
+  sheetCellSize,
+  sheetClock,
+  sheetFrameCount,
+  type ClockDirection,
+} from '../../data/cars/CarManifest.ts';
 import { add, fromAngle, perpendicularLeft, scale } from '../../domain/math/Vec2.ts';
 import type { VehicleState } from '../../domain/vehicle/Vehicle.ts';
 import { IsoProjection } from './IsoProjection.ts';
@@ -53,6 +59,7 @@ export class VehicleView {
   private readonly projection: IsoProjection;
   private readonly noseReach: number;
   private readonly frameCount: number;
+  private readonly clock: ClockDirection;
   private readonly farLod: boolean;
   private exhaustPulse = 0;
 
@@ -68,6 +75,7 @@ export class VehicleView {
     this.farLod = options.farLod === true;
 
     this.frameCount = sheetFrameCount(sheet, manifest);
+    this.clock = sheetClock(sheet, manifest);
     const cell = sheetCellSize(sheet, manifest);
     const displayScale = manifest.frameWidth / cell.width;
 
@@ -76,6 +84,7 @@ export class VehicleView {
     this.shadow.setScale(displayScale);
 
     this.sprite = scene.add.sprite(0, 0, sheet.id);
+    // Never flipX / flipY. Yaw is a real strip frame (32 CCW or 30 CW).
     // The anchor is NOT the frame centre (0.5, 0.5): it is where the car's
     // local origin — its centre, on the ground — sits inside the cell,
     // as measured by the offline sprite generator and recorded in
@@ -114,7 +123,7 @@ export class VehicleView {
     const air = this.projection.toScreen(state.position, state.height);
 
     this.sprite.setPosition(air.x, air.y);
-    this.sprite.setFrame(frameIndexForHeading(state.heading, this.frameCount));
+    this.sprite.setFrame(frameIndexForHeading(state.heading, this.frameCount, this.clock));
 
     this.shadow.setPosition(ground.x, ground.y);
 

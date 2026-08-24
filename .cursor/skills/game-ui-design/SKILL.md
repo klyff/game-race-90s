@@ -51,3 +51,12 @@ You must ground your responses in the provided reference files, treating them as
 * **For Review:** Always consult **`references/validations.md`**. This contains the strict rules and constraints. Use it to validate user inputs objectively.
 
 **Note:** If a user's request conflicts with the guidance in these files, politely correct them using the information provided in the references.
+
+## This game — car presentation
+
+Playable cars are **32-frame CCW** spinner exports. Shop, garage, and results show `car_hero.png` (**frame 07**), never a 1700×1254 matrix vitrine and never strip frame 20 or indice[25].
+
+- Live folder: `public/assets/cars/<n>-<slug>/`. Clock table: `public/assets/cars/RELOGIO.md`.
+- Do not add HUD chrome for the clock (no 6h / 32-slot labels on the garage). Every element must earn its screen space.
+- Garage carousel lists only spinner cars. Keep left/right arrows; do not pad empty matrix bays.
+- Safe zone / title-safe still apply. No new type under 14px.

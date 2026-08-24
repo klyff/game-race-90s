@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { assignNpcCars, seatCarId } from '../../src/domain/race/CarAssignment.ts';
+import { assignNpcCars, resolveCareerField, seatCarId } from '../../src/domain/race/CarAssignment.ts';
 
 const ROSTER = ['marauder', 'dirt-devil', 'havac', 'air-blade', 'battle-trak'];
 
@@ -63,6 +63,28 @@ describe('assignNpcCars', () => {
     expect(assignNpcCars(ROSTER, 'marauder', 0)).toEqual([]);
     expect(assignNpcCars(ROSTER, 'marauder', -3)).toEqual([]);
     expect(assignNpcCars(ROSTER, 'marauder', Number.NaN)).toEqual([]);
+  });
+
+  it('with two spinner cars, one is the player and the other fills every NPC seat', () => {
+    const fleet = ['1-muscle-car-gray-number9', '2-sportivo-blue-combat'];
+    const field = resolveCareerField(
+      fleet,
+      ['2-sportivo-blue-combat'],
+      '2-sportivo-blue-combat',
+      12,
+      '2-sportivo-blue-combat',
+    );
+    expect(field.playerCarId).toBe('2-sportivo-blue-combat');
+    expect(field.npcIds).toHaveLength(12);
+    expect(new Set(field.npcIds)).toEqual(new Set(['1-muscle-car-gray-number9']));
+    expect(field.npcIds).not.toContain(field.playerCarId);
+  });
+
+  it('remaps a matrix pick onto the spinner default so the grid still starts', () => {
+    const fleet = ['1-muscle-car-gray-number9', '2-sportivo-blue-combat'];
+    const field = resolveCareerField(fleet, fleet, 'car-1', 12, '2-sportivo-blue-combat');
+    expect(field.playerCarId).toBe('2-sportivo-blue-combat');
+    expect(new Set(field.npcIds)).toEqual(new Set(['1-muscle-car-gray-number9']));
   });
 
   it('tags reused models with a seat so finish state cannot leak across twins', () => {

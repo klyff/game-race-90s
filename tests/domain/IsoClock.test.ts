@@ -2,8 +2,15 @@ import { describe, it, expect } from 'vitest';
 import {
   clockYawFromWorldHeading,
   frameIndexForClockHeading,
+  matrixClockLabel,
+  matrixClockSlots,
   nearestClockIndexFromWorldChord,
   screenDeltaFromHeading,
+  spinnerClockAngleDeg,
+  spinnerClockLabel,
+  SPINNER_CLOCK_FRAMES,
+  SPINNER_HERO_CLOCK_INDEX,
+  worldHeadingForClockIndex,
 } from '../../src/domain/math/IsoClock.ts';
 import { findTrack } from '../../src/data/tracks/registry.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
@@ -67,6 +74,36 @@ describe('IsoClock', () => {
       expect(jump).toBeLessThanOrEqual(3);
       previous = index;
     }
+  });
+
+  it('maps every 30-slot clock index back to itself (31_hero coordinate gate)', () => {
+    const slots = matrixClockSlots(30);
+    expect(slots).toHaveLength(30);
+    expect(matrixClockLabel(0)).toBe('6:00');
+    expect(matrixClockLabel(15)).toBe('12:00');
+    expect(matrixClockLabel(25)).toBe('4:00');
+    expect(matrixClockLabel(29)).toBe('5:36');
+    for (const slot of slots) {
+      expect(frameIndexForClockHeading(slot.worldHeading, 30)).toBe(slot.index);
+      expect(frameIndexForClockHeading(worldHeadingForClockIndex(slot.index, 30), 30)).toBe(
+        slot.index,
+      );
+    }
+  });
+
+  it('labels the live 32 CCW spinner clock from 6h', () => {
+    expect(spinnerClockLabel(0)).toBe('6:00');
+    expect(spinnerClockLabel(7)).toBe('3:22.5');
+    expect(spinnerClockLabel(SPINNER_HERO_CLOCK_INDEX)).toBe('3:22.5');
+    expect(spinnerClockLabel(8)).toBe('3:00');
+    expect(spinnerClockLabel(16)).toBe('12:00');
+    expect(spinnerClockLabel(24)).toBe('9:00');
+    expect(spinnerClockLabel(31)).toBe('6:22.5');
+    expect(spinnerClockAngleDeg(7)).toBeCloseTo(78.75, 10);
+    expect(spinnerClockAngleDeg(16)).toBe(180);
+    const slots = matrixClockSlots(SPINNER_CLOCK_FRAMES);
+    expect(slots).toHaveLength(32);
+    expect(slots[7]?.clockLabel).toBe('3:22.5');
   });
 
   it('keeps clock yaw within half a frame of the chosen index', () => {

@@ -1,14 +1,18 @@
 ---
 name: iso-car-strip
 description: >-
-  Redraws one isometric car as a 32-frame clock strip plus two HQ side stills
-  from a model-X handoff pack. Use when the user asks to redraw a car strip,
-  iso-car-strip, fleet strip, clock sprites, or to generate car-N frames from
-  tools/spritegen/handoff/{id}.
+  OBSOLETE. Do not use. Live cars are 32-frame CCW isometric-car-spinner.
+  Historical 32 CW / frame-0=4:30 drawing brief only.
 disable-model-invocation: true
 ---
 
-# Iso car strip
+# Iso car strip — OBSOLETE
+
+**Do not use.** New / playable cars use **isometric-car-spinner**: 32 frames, CCW, index 0 = 6h, hero = frame 07. Canonical table: `public/assets/cars/RELOGIO.md`.
+
+This skill's CLOCK (32 **CW**, frame 0 = 4:30) is a leftover third clock. Do not generate from it.
+
+# Iso car strip (archive)
 
 Draw a car from **model X**. Do not resample, shear, or flip an old strip.
 

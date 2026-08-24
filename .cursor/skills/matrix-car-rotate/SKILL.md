@@ -1,12 +1,18 @@
 ---
 name: matrix-car-rotate
 description: >-
-  Builds and indexes 30-frame isometric car rotations for matrix_car using the
-  clock gabarito (+12°). Use when working on public/matrix_car, car-rotate,
-  hero vitrine, car_N_aXXX frames, RELOGIO, GABARITO_RELOGIO, or car yaw strips.
+  OBSOLETE. Do not use. Live cars are 32-frame CCW isometric-car-spinner.
+  Historical notes for leftover public/matrix_car 30-slot CW files only.
+disable-model-invocation: true
 ---
 
-# Matrix car rotate
+# Matrix car rotate — OBSOLETE
+
+**Do not use.** Playable cars and new art use **isometric-car-spinner**: 32 frames, counter-clockwise, index 0 = 6h = 0°, hero = frame 07 → `car_hero.png`. Canonical table: `public/assets/cars/RELOGIO.md`.
+
+This skill is a historical archive for leftover `public/matrix_car/` files (30 slots, +12° CW, vitrine indice[25]). Leave those PNGs on disk. Do not generate, rename, or complete the old 2–33 batch.
+
+# Matrix car rotate (archive)
 
 Assets live in **`public/matrix_car/`**. Docs mirror: `tools/art/car-rotate/`.
 

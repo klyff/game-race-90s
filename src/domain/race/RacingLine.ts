@@ -126,5 +126,6 @@ export function findLineForCar(
   manifest: TrackLinesManifest,
   carId: string,
 ): RacingLine | undefined {
-  return manifest.lines.find(line => line.carId === carId);
+  const sheetId = carId.includes('#') ? carId.slice(0, carId.indexOf('#')) : carId;
+  return manifest.lines.find(line => line.carId === sheetId);
 }

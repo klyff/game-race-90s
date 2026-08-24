@@ -51,9 +51,12 @@ import { TyreMarks } from '../adapters/render/TyreMarks.ts';
 import { CrowdView } from '../adapters/render/CrowdView.ts';
 import { VehicleView } from '../adapters/render/VehicleView.ts';
 import {
+  CLOCK_DIRECTION,
   findCarSheet,
   frameIndexForHeading,
+  sheetClock,
   isNogoLabCarId,
+  careerFleetCarIds,
   playableCarIds,
   sheetFrameCount,
 } from '../data/cars/CarManifest.ts';
@@ -85,7 +88,7 @@ import { IDLE_INPUT } from '../domain/input/InputCommand.ts';
 import { clockYawFromWorldHeading } from '../domain/math/IsoClock.ts';
 import { angleOf, dot, fromAngle, length } from '../domain/math/Vec2.ts';
 import type { Vec2 } from '../domain/math/Vec2.ts';
-import { assignNpcCars, seatCarId } from '../domain/race/CarAssignment.ts';
+import { resolveCareerField, seatCarId } from '../domain/race/CarAssignment.ts';
 import { CAREER_NPC_COUNT, npcPilotNames } from '../domain/race/CareerGrid.ts';
 import {
   applyWatchPin,
@@ -844,7 +847,7 @@ export class RaceScene extends Phaser.Scene {
         sprite
           .setVisible(true)
           .setPosition(screen.x, screen.y)
-          .setFrame(frameIndexForHeading(heading, WEAPON_SHEET.frameCount))
+          .setFrame(frameIndexForHeading(heading, WEAPON_SHEET.frameCount, CLOCK_DIRECTION.CLOCKWISE))
           .setDepth(this.projection.depthOf(missile.position) + 0.5);
         const carLength = CAR_LENGTH_PER_COLLISION_RADIUS * missile.radius;
         this.scaleWeaponSprite(sprite, carLength * MISSILE_SIZE_OF_CAR * px);
@@ -1143,14 +1146,16 @@ export class RaceScene extends Phaser.Scene {
     if (this.watch) {
       return this.buildWatchEntries();
     }
-    const playable = playableCarIds(this.manifest);
-    if (!playable.includes(this.carId) && playable[0] !== undefined) {
-      this.carId = playable[0];
-    }
-    const planetIds = npcRosterForPlanet(this.planetIndex).filter(id => playable.includes(id));
-    const extra = playable.filter(id => !planetIds.includes(id));
-    const npcSource = planetIds.length > 0 ? [...planetIds, ...extra] : playable;
-    const npcIds = assignNpcCars(npcSource, this.carId, CAREER_NPC_COUNT);
+    const fleet = careerFleetCarIds(this.manifest);
+    const field = resolveCareerField(
+      fleet,
+      npcRosterForPlanet(this.planetIndex),
+      this.carId,
+      CAREER_NPC_COUNT,
+      PLAYER_CAR_ID,
+    );
+    this.carId = field.playerCarId;
+    const npcIds = field.npcIds;
     this.playerPilotName = loadActiveName() || 'YOU';
     const career = loadActiveCareer();
     const rivals = rivalsForPlanet(
@@ -1723,7 +1728,7 @@ export class RaceScene extends Phaser.Scene {
     return formatClockYawLines({
       heading: player.state.heading,
       clockYaw: clockYawFromWorldHeading(player.state.heading),
-      expectedIndex: frameIndexForHeading(player.state.heading, frameCount),
+      expectedIndex: frameIndexForHeading(player.state.heading, frameCount, sheetClock(sheet, this.manifest)),
       drawnFrame,
       frameCount,
     });

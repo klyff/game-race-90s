@@ -5,6 +5,7 @@
 
 import { STARTING_CASH } from './Wallet.ts';
 import { drawRivalNames } from '../../data/pilots/PilotRoster.ts';
+import { sanitizeCarId, sanitizeOwnedCarIds } from '../../data/cars/FleetStatus.ts';
 
 export const CAREER_SLOT_COUNT = 3;
 
@@ -124,8 +125,10 @@ function parseCareerSlot(raw: unknown): CareerSlot | null {
   return {
     cash: Math.max(0, Math.round(s.cash)),
     points: Math.max(0, Math.round(s.points)),
-    ownedCarIds: s.ownedCarIds,
-    equippedCarId: s.equippedCarId,
+    ownedCarIds: sanitizeOwnedCarIds(s.ownedCarIds),
+    equippedCarId: sanitizeOwnedCarIds(s.ownedCarIds).includes(sanitizeCarId(s.equippedCarId))
+      ? sanitizeCarId(s.equippedCarId)
+      : (sanitizeOwnedCarIds(s.ownedCarIds)[0] ?? ''),
     lastPlanetId: s.lastPlanetId,
     lastTrackId: s.lastTrackId,
     rivalNames: s.rivalNames,

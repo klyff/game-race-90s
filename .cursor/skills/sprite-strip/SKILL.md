@@ -1,13 +1,18 @@
 ---
 name: sprite-strip
 description: >-
-  Creates a 32-frame isometric car sprite-strip (128 cell, clock yaw), packs it,
-  and writes the midpoint collision square. Use when the user asks to create,
-  redraw, pack, or install a sprite-strip, fleet strip, clock sprites, car-N
-  frames, or strips for every car_*_hero.png in public/assets/cars/new.
+  OBSOLETE. Do not use. Live cars are 32-frame CCW isometric-car-spinner.
+  Historical 32 CW / frame-0=4:30 pipeline only.
+disable-model-invocation: true
 ---
 
-# Sprite-strip
+# Sprite-strip — OBSOLETE
+
+**Do not use.** New / playable cars use **isometric-car-spinner**: 32 frames, CCW, index 0 = 6h, hero = frame 07. Canonical table: `public/assets/cars/RELOGIO.md`.
+
+This skill's CLOCK (32 **CW**, frame 0 = 4:30) is a leftover third clock. Do not generate from it.
+
+# Sprite-strip (archive)
 
 One car → 32 clock poses → one horizontal strip. Draw from **model X**. Do not resample, shear, or flip an old sheet.
 

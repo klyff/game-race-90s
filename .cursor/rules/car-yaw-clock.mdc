@@ -1,17 +1,18 @@
 ---
 description: >-
-  Always remember matrix_car yaw clock: 0° front, 12h rear, heroes start between
-  4h and 3h, +12° per frame, vitrine files stay untouched.
+  Always remember the live car yaw clock: 32 frames, counter-clockwise,
+  index 0 = 6h = 0°, hero is frame 07. matrix_car is obsolete.
 alwaysApply: true
 ---
 
-# Car yaw clock (matrix_car)
+# Car yaw clock (isometric-car-spinner)
 
-When generating, renaming, or discussing car rotation frames:
+Live playable cars use the **32-frame CCW** spinner clock. Do not mix with the old 30-slot matrix clock.
 
-1. **`0°` = frente absoluta** · **`12h` = traseira absoluta (`180°`)**.
-2. Step **+12°** clockwise · 30 slots `a000`…`a029`.
-3. **Hero / vitrine pose starts between 4h and 3h** (usually **4:00 = 300° = indice[25]**).
-4. Never edit `car_N_hero.png` (vitrine). Fix index by **rename**, never flip.
-5. Canonical docs: **`public/matrix_car/`** — gabarito `GABARITO_RELOGIO.png` + `RELOGIO.md`; skill `matrix-car-rotate`.
-6. Remaining batch starts at **`public/matrix_car/2_hero/`** (work not done until cars 2–33 are finished or gaps listed in STATUS.md).
+1. **32 frames** · step **+11.25°** · **counter-clockwise**.
+2. **Index 0 = 0° = 6h** (nose toward the bottom of the screen).
+3. **Hero / shop / garage / results = frame 07** → `car_hero.png` (~78.75° CCW ≈ 3:22).
+4. Live folder: `public/assets/cars/<n>-<slug>/`. Canonical table: `public/assets/cars/RELOGIO.md`.
+5. New car = skill **isometric-car-spinner** (`export_car.py`). Never flip a frame to “fix” yaw.
+
+**Obsolete:** `public/matrix_car/`, skill `matrix-car-rotate`, and the 30-slot CW gabarito (`a000`…`a029`, hero indice[25]). Leave those files on disk. Do not generate, rename, or ship from that pipeline. Sprite-strip / iso-car-strip CLOCK (32 CW, frame 0 = 4:30) is also obsolete.

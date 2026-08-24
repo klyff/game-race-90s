@@ -10,7 +10,7 @@ export const SAVE_BYTE_BUDGET = 3500;
 export interface SlotProgress {
   /** 5-letter arcade-style name, uppercase A-Z, e.g. 'KLYFF'. Empty string = unused slot. */
   readonly name: string;
-  /** Car id the player last chose, e.g. 'marauder'. */
+  /** Car id the player last chose, e.g. `2-sportivo-blue-combat`. */
   readonly carId: string;
   /** Track ids the player has won, in no particular order. */
   readonly tracksWon: readonly string[];

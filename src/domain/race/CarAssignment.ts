@@ -55,3 +55,31 @@ export function seatCarId(carId: string, seat: number): string {
   }
   return `${carId}#${seat}`;
 }
+
+/**
+ * Career field when the spinner inventory is small: player keeps their pick
+ * if it is in the fleet; otherwise the world-1 default. NPCs take every
+ * other fleet car, repeating to fill the grid. Planet roster only orders
+ * who appears first — it does not hide the rest of the fleet.
+ */
+export function resolveCareerField(
+  fleetIds: readonly string[],
+  planetRosterIds: readonly string[],
+  playerCarId: string,
+  npcCount: number,
+  fallbackPlayerId: string,
+): { readonly playerCarId: string; readonly npcIds: readonly string[] } {
+  const fleet = fleetIds.filter(id => id.length > 0);
+  const player =
+    (fleet.includes(playerCarId) ? playerCarId : undefined) ??
+    (fleet.includes(fallbackPlayerId) ? fallbackPlayerId : undefined) ??
+    fleet[0] ??
+    playerCarId;
+  const planetIds = planetRosterIds.filter(id => fleet.includes(id));
+  const extra = fleet.filter(id => !planetIds.includes(id));
+  const npcSource = planetIds.length > 0 ? [...planetIds, ...extra] : fleet;
+  return {
+    playerCarId: player,
+    npcIds: assignNpcCars(npcSource, player, npcCount),
+  };
+}

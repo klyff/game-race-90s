@@ -10,7 +10,7 @@ import {
   pixelAt,
   readRgba,
 } from './redrawn-io.ts';
-import { ANCHOR_FRAMES, HQ_SIZE, LOOKALIKE_MAX_MAD, STRIP_MARGIN_PX } from './strip-contract.ts';
+import { ANCHOR_FRAMES, HQ_SIZE, LOOKALIKE_MAX_MAD, MATRIX_ANCHOR_FRAMES, STRIP_MARGIN_PX } from './strip-contract.ts';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const REDRAWN_ROOT = join(REPO_ROOT, 'tools', 'spritegen', 'redrawn');
@@ -129,7 +129,7 @@ function main(): void {
   overlayCellBorders(grid, frameSize * PREVIEW_ZOOM, frameSize * PREVIEW_ZOOM, PREVIEW_BORDER);
   const qaPath = join(directory, 'qa-anchors.png');
   writePng(qaPath, grid);
-  console.log(`wrote ${qaPath}  (frames 0 / 8 / 16 / 24)`);
+  console.log(`wrote ${qaPath}  (32-frame ${ANCHOR_FRAMES.join('/')} · matrix ${MATRIX_ANCHOR_FRAMES.join('/')})`);
 
   if (errors.length > 0) {
     throw new Error(`qa-strip ${carId} failed:\n- ${errors.join('\n- ')}`);

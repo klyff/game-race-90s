@@ -4,6 +4,7 @@ import type { CarPerkId, WorldAdvantage } from '../../domain/constants.ts';
 import { collisionBox } from '../../domain/vehicle/CollisionMap.ts';
 import type { CollisionBox } from '../../domain/vehicle/CollisionMap.ts';
 import type { VehicleStats } from '../../domain/vehicle/VehicleStats.ts';
+import { isOutOfServiceCarId } from './FleetStatus.ts';
 
 /**
  * The contract between the offline sprite generator and the runtime.
@@ -14,8 +15,19 @@ import type { VehicleStats } from '../../domain/vehicle/VehicleStats.ts';
  * product and never the other way round.
  *
  * Written to `public/assets/cars/cars.json` by `npm run gen:cars-json`
- * (scans `public/matrix_car/{N}_hero`).
+ * (scans `public/matrix_car/{N}_hero` and `public/assets/cars/<slug>/`).
  */
+
+export const CLOCK_DIRECTION = {
+  CLOCKWISE: 'clockwise',
+  COUNTER_CLOCKWISE: 'counter_clockwise',
+} as const;
+export type ClockDirection = (typeof CLOCK_DIRECTION)[keyof typeof CLOCK_DIRECTION];
+
+/** Default clock: 32-frame spinner is CCW from 6h; matrix 30 stays CW. */
+export function defaultClockForFrameCount(frameCount: number): ClockDirection {
+  return frameCount === 30 ? CLOCK_DIRECTION.CLOCKWISE : CLOCK_DIRECTION.COUNTER_CLOCKWISE;
+}
 
 /** Metadata emitted for each generated sprite sheet. */
 export interface CarSheetManifest {
@@ -37,8 +49,11 @@ export interface CarSheetManifest {
   readonly frameHeight?: number;
   /** Yaw frames when this strip is not the set default (matrix cars are 30). */
   readonly frameCount?: number;
+  /** Yaw walk. Omit to use `defaultClockForFrameCount(frameCount)`. */
+  readonly clock?: ClockDirection;
   /**
-   * Public-root path to a matrix strip JSON (`production_scale.frames`).
+   * Public-root path to a strip JSON. Matrix uses `production_scale.frames`;
+   * spinner cars use `car_strip_64x64.json` (`meta` + `frames[].strip_rect`).
    * When set, Boot loads `image` as one picture and crops these boxes —
    * not a uniform Phaser spritesheet.
    */
@@ -197,8 +212,21 @@ function parseCarSheet(raw: unknown, index: number): CarSheetManifest {
     frameWidth: parseOptionalSize(source['frameWidth'], id, 'frameWidth'),
     frameHeight: parseOptionalSize(source['frameHeight'], id, 'frameHeight'),
     frameCount: parseOptionalFrameCount(source['frameCount'], id),
+    clock: parseOptionalClock(source['clock'], id),
     framesJson: parseOptionalPath(source['framesJson'], id, 'framesJson'),
   };
+}
+
+function parseOptionalClock(raw: unknown, carId: string): ClockDirection | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (raw === CLOCK_DIRECTION.CLOCKWISE || raw === CLOCK_DIRECTION.COUNTER_CLOCKWISE) {
+    return raw;
+  }
+  throw new CarManifestError(
+    `car "${carId}" clock must be "${CLOCK_DIRECTION.CLOCKWISE}" or "${CLOCK_DIRECTION.COUNTER_CLOCKWISE}"`,
+  );
 }
 
 function parseOptionalSize(raw: unknown, carId: string, field: string): number | undefined {
@@ -307,7 +335,7 @@ export function cartPortraitToken(carId: string): string {
  * `delorean` lives in `delorean_hero`, not a numbered folder.
  */
 export function matrixHeroNumber(carId: string): number | undefined {
-  const match = /(\d+)/.exec(carId);
+  const match = /^car[-_](\d+)/.exec(carId) ?? /^nogo-(\d+)$/.exec(carId);
   if (match === null) {
     return undefined;
   }
@@ -362,6 +390,7 @@ export function applyAvailableMatrixStrips(manifest: CarSetManifest): CarSetMani
           image: deloreanStripUrl(),
           framesJson: deloreanStripJsonUrl(),
           frameCount: 30,
+          clock: CLOCK_DIRECTION.CLOCKWISE,
         };
       }
       const n = matrixHeroNumber(car.id);
@@ -373,6 +402,7 @@ export function applyAvailableMatrixStrips(manifest: CarSetManifest): CarSetMani
         image: matrixStripUrl(n),
         framesJson: matrixStripJsonUrl(n),
         frameCount: 30,
+        clock: CLOCK_DIRECTION.CLOCKWISE,
       };
     }),
   };
@@ -389,6 +419,9 @@ export function playableCarIds(manifest: CarSetManifest): readonly string[] {
     if (!isPlayableCarSheet(car)) {
       continue;
     }
+    if (isOutOfServiceCarId(car.id)) {
+      continue;
+    }
     const n = matrixHeroNumber(car.id);
     if (n !== undefined) {
       if (seen.has(n)) {
@@ -402,10 +435,61 @@ export function playableCarIds(manifest: CarSetManifest): readonly string[] {
 }
 
 /**
+ * Career grid when the new 32-frame fleet exists: only those cars.
+ * One is the player; the rest of the seats reuse the other models.
+ * Watch / debug-IA walk `playableCarIds` (retired Marauder and parked
+ * Delorean already stripped).
+ */
+export function careerFleetCarIds(manifest: CarSetManifest): readonly string[] {
+  const playable = playableCarIds(manifest);
+  const spinner = playable.filter(id => isSpinnerCarId(id));
+  return spinner.length > 0 ? spinner : playable;
+}
+
+/**
  * Load order for a garage still. One URL: the 300px matrix still.
  * Missing files are optional at Boot; garage falls back to the yaw strip.
  */
+/** Shop / garage / results still. Always strip frame 7 on spinner cars. */
+export const SPINNER_HERO_FRAME = 7;
+
+/** `1-sportivo-blue-combat` → `{ n: 1, slug: 'sportivo-blue-combat' }`. */
+export function spinnerInventoryParts(carId: string): { readonly n: number; readonly slug: string } | undefined {
+  if (carId === 'delorean' || isNogoLabCarId(carId) || /^car[-_]\d+/.test(carId)) {
+    return undefined;
+  }
+  const match = /^(\d+)-(.+)$/.exec(carId);
+  if (match === null) {
+    return undefined;
+  }
+  const n = Number(match[1]);
+  const slug = match[2];
+  if (!Number.isInteger(n) || n < 1 || slug.length === 0) {
+    return undefined;
+  }
+  return { n, slug };
+}
+
+export function isSpinnerCarId(carId: string): boolean {
+  return spinnerInventoryParts(carId) !== undefined;
+}
+
+export function spinnerHeroUrl(carId: string): string {
+  return `assets/cars/${carId}/car_hero.png`;
+}
+
+export function spinnerStripUrl(carId: string): string {
+  return `assets/cars/${carId}/car_strip_64x64.png`;
+}
+
+export function spinnerStripJsonUrl(carId: string): string {
+  return `assets/cars/${carId}/car_strip_64x64.json`;
+}
+
 export function portraitCandidateUrls(carId: string): readonly string[] {
+  if (isSpinnerCarId(carId)) {
+    return [spinnerHeroUrl(carId)];
+  }
   if (carId === 'delorean') {
     return [deloreanHero300Url()];
   }
@@ -461,6 +545,13 @@ export function sheetFrameCount(sheet: CarSheetManifest, manifest: CarSetManifes
   return sheet.frameCount ?? manifest.frameCount;
 }
 
+export function sheetClock(sheet: CarSheetManifest, manifest?: CarSetManifest): ClockDirection {
+  if (sheet.clock === CLOCK_DIRECTION.CLOCKWISE || sheet.clock === CLOCK_DIRECTION.COUNTER_CLOCKWISE) {
+    return sheet.clock;
+  }
+  return defaultClockForFrameCount(manifest === undefined ? (sheet.frameCount ?? CAR_SPRITE_FRAMES) : sheetFrameCount(sheet, manifest));
+}
+
 /** Looks up one car, failing loudly rather than returning `undefined`. */
 export function findCarSheet(manifest: CarSetManifest, id: string): CarSheetManifest {
   const sheetId = id.includes('#') ? id.slice(0, id.indexOf('#')) : id;
@@ -481,10 +572,19 @@ export function findCarSheet(manifest: CarSetManifest, id: string): CarSheetMani
 
 /**
  * Sprite frame for a world heading on the 2:1 clock.
- * 6h (screen down) is indice[0]. World +X is down-right ≈ 4h (hero), not a000.
+ * 6h (screen down) is indice[0]. Default 32-frame walk is counter-clockwise
+ * (spinner atlas). Pass clockwise for matrix 30 and for weapon sheets.
  */
-export function frameIndexForHeading(heading: number, frameCount: number): number {
-  return frameIndexForClockHeading(heading, frameCount);
+export function frameIndexForHeading(
+  heading: number,
+  frameCount: number,
+  direction: ClockDirection = defaultClockForFrameCount(frameCount),
+): number {
+  const clockwise = frameIndexForClockHeading(heading, frameCount);
+  if (direction === CLOCK_DIRECTION.CLOCKWISE) {
+    return clockwise;
+  }
+  return clockwise === 0 ? 0 : (frameCount - clockwise) % frameCount;
 }
 
 /** Art canvas width → production strip (`SCALE.md`). */
@@ -565,6 +665,7 @@ export function applyNogoLabs(manifest: CarSetManifest): CarSetManifest {
       image: matrixStripYawUrl(lab.n),
       framesJson: matrixStripJsonUrl(lab.n),
       frameCount: 30,
+      clock: CLOCK_DIRECTION.CLOCKWISE,
     });
   }
   if (extra.length === 0) {
@@ -656,6 +757,127 @@ export function parseMatrixStripJson(raw: unknown): MatrixStripAtlas {
   };
 }
 
+function isSpinnerStripRaw(source: Record<string, unknown>): boolean {
+  if (source['production_scale'] !== undefined) {
+    return false;
+  }
+  const frames = source['frames'];
+  if (!Array.isArray(frames) || frames.length === 0) {
+    return false;
+  }
+  const first = frames[0];
+  return typeof first === 'object' && first !== null && 'strip_rect' in first;
+}
+
+function readSpinnerFrameBox(raw: Record<string, unknown>, index: number): MatrixStripFrameBox {
+  const stripRect = requireObject(raw['strip_rect'], `frames[${index}].strip_rect`);
+  const x = stripRect['x'];
+  const y = stripRect['y'];
+  const w = stripRect['w'];
+  const h = stripRect['h'];
+  const i = typeof raw['index'] === 'number' && Number.isInteger(raw['index']) ? raw['index'] : index;
+  if (
+    typeof x !== 'number' ||
+    typeof y !== 'number' ||
+    typeof w !== 'number' ||
+    typeof h !== 'number' ||
+    !(w > 0) ||
+    !(h > 0)
+  ) {
+    throw new CarManifestError(`spinner frame ${index} needs strip_rect with positive x/y/w/h`);
+  }
+  let pivotX = 0.5;
+  let pivotY = 0.5;
+  const pivot = raw['pivot_strip'];
+  if (typeof pivot === 'object' && pivot !== null && !Array.isArray(pivot)) {
+    const point = pivot as Record<string, unknown>;
+    const px = point['x'];
+    const py = point['y'];
+    if (typeof px === 'number' && typeof py === 'number') {
+      pivotX = (px - x) / w;
+      pivotY = (py - y) / h;
+    }
+  }
+  return { i, clockIndex: i, x, y, w, h, pivotX, pivotY };
+}
+
+function spinnerCollisionRect(framesRaw: readonly unknown[]): { readonly w: number; readonly h: number } {
+  let maxW = 0;
+  let maxH = 0;
+  framesRaw.forEach((frame, index) => {
+    const raw = requireObject(frame, `frames[${index}]`);
+    const bbox = raw['bbox_local'];
+    if (typeof bbox === 'object' && bbox !== null && !Array.isArray(bbox)) {
+      const box = bbox as Record<string, unknown>;
+      const x0 = box['x0'];
+      const y0 = box['y0'];
+      const x1 = box['x1'];
+      const y1 = box['y1'];
+      if (
+        typeof x0 === 'number' &&
+        typeof y0 === 'number' &&
+        typeof x1 === 'number' &&
+        typeof y1 === 'number'
+      ) {
+        maxW = Math.max(maxW, x1 - x0);
+        maxH = Math.max(maxH, y1 - y0);
+        return;
+      }
+    }
+    const rect = requireObject(raw['strip_rect'], `frames[${index}].strip_rect`);
+    const w = rect['w'];
+    const h = rect['h'];
+    if (typeof w === 'number') {
+      maxW = Math.max(maxW, w);
+    }
+    if (typeof h === 'number') {
+      maxH = Math.max(maxH, h);
+    }
+  });
+  if (!(maxW > 0) || !(maxH > 0)) {
+    throw new CarManifestError('spinner strip has no usable bbox for collision');
+  }
+  return { w: maxW, h: maxH };
+}
+
+/** Reads a spinner atlas (`car_strip_64x64.json`): 32 frames, CCW from 6h. */
+export function parseSpinnerStripJson(raw: unknown): MatrixStripAtlas {
+  const source = requireObject(raw, 'spinner strip');
+  const framesRaw = source['frames'];
+  if (!Array.isArray(framesRaw) || framesRaw.length === 0) {
+    throw new CarManifestError('"frames" must be a non-empty array');
+  }
+  const frames = framesRaw.map((frame, index) =>
+    readSpinnerFrameBox(requireObject(frame, `frames[${index}]`), index),
+  );
+  const meta = source['meta'];
+  let count = frames.length;
+  if (typeof meta === 'object' && meta !== null && !Array.isArray(meta)) {
+    const stated = (meta as Record<string, unknown>)['frame_count'];
+    if (typeof stated === 'number' && Number.isInteger(stated)) {
+      count = stated;
+    }
+  }
+  if (count !== frames.length) {
+    throw new CarManifestError(`spinner frame_count ${count} does not match frames (${frames.length})`);
+  }
+  return {
+    count,
+    frames,
+    collisionRect: spinnerCollisionRect(framesRaw),
+    scale: 1,
+  };
+}
+
+/** Matrix `production_scale` atlas or spinner `strip_rect` atlas. */
+export function parseCarStripJson(raw: unknown): MatrixStripAtlas {
+  const source = requireObject(raw, 'car strip');
+  if (isSpinnerStripRaw(source)) {
+    return parseSpinnerStripJson(source);
+  }
+  return parseMatrixStripJson(source);
+}
+
 /** Half-extents in world units from the one midpoint production rect. */
 export function collisionFromMatrixStrip(
   strip: MatrixStripAtlas,
@@ -679,7 +901,14 @@ export function applyMatrixStripToSheet(
   const box = collisionFromMatrixStrip(strip, pixelsPerUnit);
   return {
     ...sheet,
-    frameCount: strip.count === 30 || isNogoLabCarId(sheet.id) ? 30 : strip.count,
+    frameCount:
+      strip.count === 30 || isNogoLabCarId(sheet.id)
+        ? 30
+        : strip.count,
+    clock:
+      strip.count === 30 || isNogoLabCarId(sheet.id)
+        ? CLOCK_DIRECTION.CLOCKWISE
+        : (sheet.clock ?? defaultClockForFrameCount(strip.count)),
     stats: withSquares({
       ...sheet.stats,
       collisionAlong: box.along,

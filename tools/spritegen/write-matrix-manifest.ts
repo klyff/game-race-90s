@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  CLOCK_DIRECTION,
   deloreanHero300Url,
   deloreanStripJsonUrl,
   deloreanStripUrl,
@@ -10,14 +11,19 @@ import {
   matrixHeroUrl,
   matrixStripJsonUrl,
   matrixStripUrl,
+  parseSpinnerStripJson,
+  spinnerHeroUrl,
+  spinnerStripJsonUrl,
+  spinnerStripUrl,
   type CarSetManifest,
   type CarSheetManifest,
 } from '../../src/data/cars/CarManifest.ts';
+import { spinnerCarRow } from '../../src/data/cars/SpinnerCarIndex.ts';
 import {
   carStatRow,
   isCarStatMatrixIndex,
 } from '../../src/data/cars/CarStatMatrix.ts';
-import { isMatrixCarIndex, matrixCarRow } from '../../src/data/cars/MatrixCarIndex.ts';
+import { AVAILABLE_MATRIX_NUMBERS, isMatrixCarIndex, matrixCarRow } from '../../src/data/cars/MatrixCarIndex.ts';
 import { CAR_FRAME_HEIGHT, CAR_FRAME_WIDTH, CAR_PERK, CAR_SPRITE_FRAMES, WORLD_ADVANTAGE } from '../../src/domain/constants.ts';
 import type { CarPerkId, WorldAdvantage } from '../../src/domain/constants.ts';
 import type { VehicleStats } from '../../src/domain/vehicle/VehicleStats.ts';
@@ -26,6 +32,7 @@ import { FLEET_CARS } from './fleet.ts';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const MATRIX_ROOT = join(REPO_ROOT, 'public', 'matrix_car');
+const SPINNER_ROOT = join(REPO_ROOT, 'public', 'assets', 'cars');
 const MANIFEST_PATH = join(REPO_ROOT, 'public', 'assets', 'cars', 'cars.json');
 
 const PIXELS_PER_UNIT = 8.143264;
@@ -46,7 +53,7 @@ interface LeftoverIdentity {
   readonly stats: VehicleStats;
 }
 
-/** Folders 31–33 have names but no CarStatMatrix row yet. Must not clone teaching Marauder. */
+/** Folders 31–33 have names but no CarStatMatrix row yet. Must not clone old Marauder stats. */
 const LEFTOVER_IDENTITY: Readonly<Record<number, LeftoverIdentity>> = {
   31: {
     perk: CAR_PERK.TURBO,
@@ -135,7 +142,7 @@ export function discoverMatrixHeroNumbers(matrixRoot: string = MATRIX_ROOT): rea
       continue;
     }
     const n = Number(match[1]);
-    if (Number.isInteger(n) && n > 0 && n !== 98 && n !== 99) {
+    if ((AVAILABLE_MATRIX_NUMBERS as readonly number[]).includes(n)) {
       numbers.push(n);
     }
   }
@@ -209,6 +216,7 @@ function sheetForFolder(n: number, previous: readonly PreviousSheet[]): CarSheet
   return {
     ...sheet,
     frameCount: MATRIX_YAW_FRAMES,
+    clock: CLOCK_DIRECTION.CLOCKWISE,
     framesJson: matrixStripJsonUrl(n),
   };
 }
@@ -249,7 +257,122 @@ function deloreanSheet(previous: readonly PreviousSheet[]): CarSheetManifest {
   return {
     ...sheet,
     frameCount: MATRIX_YAW_FRAMES,
+    clock: CLOCK_DIRECTION.CLOCKWISE,
     framesJson: deloreanStripJsonUrl(),
+  };
+}
+
+function discoverSpinnerSlugs(carsRoot: string = SPINNER_ROOT): readonly string[] {
+  if (!existsSync(carsRoot)) {
+    return [];
+  }
+  const slugs: string[] = [];
+  for (const entry of readdirSync(carsRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    if (entry.name === 'new') {
+      continue;
+    }
+    const folder = join(carsRoot, entry.name);
+    if (
+      existsSync(join(folder, 'export_identity.json')) &&
+      existsSync(join(folder, 'car_strip_64x64.json')) &&
+      existsSync(join(folder, 'car_strip_64x64.png'))
+    ) {
+      slugs.push(entry.name);
+    }
+  }
+  return slugs.sort((left, right) => {
+    const leftMatch = /^(\d+)-/.exec(left);
+    const rightMatch = /^(\d+)-/.exec(right);
+    const leftN = leftMatch === null ? Number.MAX_SAFE_INTEGER : Number(leftMatch[1]);
+    const rightN = rightMatch === null ? Number.MAX_SAFE_INTEGER : Number(rightMatch[1]);
+    return leftN - rightN || left.localeCompare(right);
+  });
+}
+
+function spinnerCellSize(slug: string): { readonly width: number; readonly height: number } {
+  const jsonPath = join(REPO_ROOT, 'public', spinnerStripJsonUrl(slug));
+  const raw = JSON.parse(readFileSync(jsonPath, 'utf-8')) as unknown;
+  const strip = parseSpinnerStripJson(raw);
+  const first = strip.frames[0];
+  if (first === undefined) {
+    return { width: CAR_FRAME_WIDTH, height: CAR_FRAME_HEIGHT };
+  }
+  return { width: first.w, height: first.h };
+}
+
+function spinnerShadow(
+  previous: readonly PreviousSheet[],
+  slug: string,
+  cell: { readonly width: number; readonly height: number },
+): { width: number; height: number } {
+  const prior = previousShadow(previous, slug);
+  if (prior !== DEFAULT_SHADOW) {
+    return prior;
+  }
+  return {
+    width: Math.max(24, Math.round(cell.width * 0.62)),
+    height: Math.max(12, Math.round(cell.height * 0.3)),
+  };
+}
+
+function sheetForSpinner(slug: string, previous: readonly PreviousSheet[]): CarSheetManifest {
+  const authored = spinnerCarRow(slug);
+  let displayName = slug.replace(/-/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+  let archetype = '32-frame spinner export';
+  let stats = leftoverStats(1000, 30, 44, 64, 28, 2.5, 0.45, 0.35, 10, 1.7, 3.4);
+  let perk = leftoverIdentity(1).perk;
+  let homePlanetId = leftoverIdentity(1).homePlanetId;
+  let worldAdvantage = leftoverIdentity(1).worldAdvantage;
+  if (authored !== undefined) {
+    displayName = authored.displayName;
+    archetype = authored.archetype;
+    stats = authored.stats;
+    perk = authored.perk;
+    homePlanetId = authored.homePlanetId;
+    worldAdvantage = authored.worldAdvantage;
+  } else if (existsSync(join(SPINNER_ROOT, slug, 'export_identity.json'))) {
+    try {
+      const identity = JSON.parse(readFileSync(join(SPINNER_ROOT, slug, 'export_identity.json'), 'utf-8')) as {
+        displayName?: string;
+        spec?: string;
+      };
+      if (typeof identity.displayName === 'string' && identity.displayName.length > 0) {
+        displayName = identity.displayName;
+      }
+      if (typeof identity.spec === 'string' && identity.spec.length > 0) {
+        archetype = identity.spec;
+      }
+    } catch {
+      // keep fallbacks
+    }
+  }
+  const cell = spinnerCellSize(slug);
+  const heroPath = join(REPO_ROOT, 'public', spinnerHeroUrl(slug));
+  return {
+    id: slug,
+    displayName,
+    archetype,
+    image: existsSync(join(REPO_ROOT, 'public', spinnerStripUrl(slug)))
+      ? spinnerStripUrl(slug)
+      : existsSync(heroPath)
+        ? spinnerHeroUrl(slug)
+        : spinnerStripUrl(slug),
+    shadow: spinnerShadow(previous, slug, cell),
+    stats: withCollisionBox(stats, {
+      along: stats.collisionAlong ?? stats.collisionRadius,
+      across: stats.collisionAcross ?? Number((stats.collisionRadius * 0.72).toFixed(4)),
+    }),
+    perk,
+    homePlanetId,
+    worldAdvantage,
+    frameWidth: cell.width,
+    frameHeight: cell.height,
+    frameCount: CAR_SPRITE_FRAMES,
+    clock: CLOCK_DIRECTION.COUNTER_CLOCKWISE,
+    framesJson: spinnerStripJsonUrl(slug),
   };
 }
 
@@ -257,10 +380,12 @@ export interface MatrixManifestWrite {
   readonly path: string;
   readonly folders: readonly number[];
   readonly playable: readonly number[];
+  readonly spinnerSlugs: readonly string[];
   readonly deloreanPlayable: boolean;
   readonly carCount: number;
 }
 
+/** Writes every on-disk sheet. Runtime shop/race hide retired Marauder and parked Delorean. */
 export function writeMatrixManifest(): MatrixManifestWrite {
   const folders = discoverMatrixHeroNumbers();
   if (folders.length === 0) {
@@ -275,6 +400,10 @@ export function writeMatrixManifest(): MatrixManifestWrite {
     return sheetForFolder(n, previous);
   });
   cars.push(deloreanSheet(previous));
+  const spinnerSlugs = discoverSpinnerSlugs();
+  for (const slug of spinnerSlugs) {
+    cars.push(sheetForSpinner(slug, previous));
+  }
   const deloreanPlayable = deloreanHasStrip();
 
   const manifest: CarSetManifest = {
@@ -286,7 +415,7 @@ export function writeMatrixManifest(): MatrixManifestWrite {
     cars,
   };
   writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`);
-  return { path: MANIFEST_PATH, folders, playable, deloreanPlayable, carCount: cars.length };
+  return { path: MANIFEST_PATH, folders, playable, spinnerSlugs, deloreanPlayable, carCount: cars.length };
 }
 
 function main(): void {
@@ -295,6 +424,9 @@ function main(): void {
     `cars.json ← ${result.folders.length} matrix folder(s), ${result.playable.length} playable strip(s), ${result.carCount} roster row(s)`,
   );
   console.log(`  playable: ${result.playable.join(', ') || '(none)'}`);
+  if (result.spinnerSlugs.length > 0) {
+    console.log(`  spinner: ${result.spinnerSlugs.join(', ')}`);
+  }
   if (result.deloreanPlayable) {
     console.log('  special: delorean');
   }

@@ -1,0 +1,776 @@
+{
+  "run_id": "2026-08-22_muscle-car-war-gray",
+  "name": "Gray Muscle War Car",
+  "spec": "Muscle Car, Dark Gray, big machine gun n rooth of the car, on hood with black contrast stripe, Aggressive Muscle, background HEX: #00B140",
+  "save_dir": "car-sprites/2026-08-22_muscle-car-gray-number9",
+  "background_mode": "chroma_key",
+  "started_at": "2026-08-22T21:12:00+0000",
+  "config": {
+    "status": "VALIDATED",
+    "validated_on": "2026-08-22",
+    "fixed_output_px": [
+      1024,
+      1024
+    ],
+    "max_retries_per_frame": 2
+  },
+  "frames": {
+    "0": {
+      "result": "PASS",
+      "retries": 2,
+      "path": "out_frame_00.png",
+      "status": "APPROVED",
+      "note": "Human approved r2 as style anchor. style_anchor.json locked from the approved image.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r0.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 683 vs 742 (7.9%); axis (-1.0, 96.5) vs (-4.3, 138.0) (tol \u00b131px)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r1.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 897 vs 742 (20.9%); axis (-2.0, 97.5) vs (-4.3, 138.0) (tol \u00b131px)"
+        },
+        {
+          "id": "r2",
+          "result": "PASS",
+          "path": "out_frame_00.png",
+          "size": [
+            1024,
+            1024
+          ]
+        }
+      ]
+    },
+    "1": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_01.png",
+      "status": "APPROVED",
+      "note": "Human accepted r2 despite FAIL. out_frame_01.png is r2. Continue remaining frames to the end; on 2-retry fail accept best and keep going.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r0.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 894 vs 769 (16.1%); axis (-1.5, 32.0) vs (47.1, 139.4); palette 0.69"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r1.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 660 vs 769 (14.2%); axis (13.0, 111.0) vs (47.1, 139.4); palette 0.84"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r2.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "diff": "scale 712 vs 769 (7.5%); axis (2.5, 99.0) vs (47.1, 139.4); palette 0.36"
+        }
+      ]
+    },
+    "2": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_02.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r0: only scale 7.9% failed; axis+palette passed. r1 axis Y fail; r2 worse all around.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r0.png",
+          "diff": "scale 913 vs 847 (7.9%)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r1.png",
+          "diff": "axis (28.5, 64.0) vs (52.8, 140.8)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r2.png",
+          "diff": "scale 769 vs 847 (9.2%); axis (40, 94.5) vs (52.8, 140.8); palette 0.68"
+        }
+      ]
+    },
+    "3": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_03.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r2 (best palette 0.61). All three failed axis X and palette.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r0.png",
+          "diff": "axis (6, 125) vs (50, 140); palette 0.43"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r1.png",
+          "diff": "axis (29, 82) vs (50, 140); palette 0.35"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r2.png",
+          "diff": "axis (0, 119) vs (50, 140); palette 0.61"
+        }
+      ]
+    },
+    "4": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_04.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r2: only axis Y 104.5 vs 138 (X+palette passed). r0/r1 worse axis+palette.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r0.png",
+          "diff": "axis (-3,77.5) vs (42,138); palette 0.78"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r1.png",
+          "diff": "axis (-1.5,136) vs (42,138); palette 0.65"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r2.png",
+          "diff": "axis (30.5,104.5) vs (42,138); palette pass"
+        }
+      ]
+    },
+    "5": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_05.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r1: only palette 0.74 failed; scale+axis PASS. r0/r2 axis Y fail.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r0.png",
+          "diff": "axis (7.5,98) vs (33,134)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r1.png",
+          "diff": "palette 0.74"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r2.png",
+          "diff": "axis (1,109) vs (33,134)"
+        }
+      ]
+    },
+    "6": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_06.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r2: only palette 0.69 failed; scale+axis PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r0.png",
+          "diff": "scale 1149 vs 1036; axis (-8.5,30.5); palette 0.37"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r1.png",
+          "diff": "scale 900 vs 1036; palette 0.63"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r2.png",
+          "diff": "palette 0.69"
+        }
+      ]
+    },
+    "7": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_07.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r2: only axis Y 70.5 vs 118; scale+palette PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_07_r0.png",
+          "diff": "axis (0.5,36) vs (-6,118); palette 0.69"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_07_r1.png",
+          "diff": "axis (-5.5,169) vs (-6,118)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_07_r2.png",
+          "diff": "axis (-3,70.5) vs (-6,118)"
+        }
+      ]
+    },
+    "8": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_08.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r1: only palette 0.73 failed; scale+axis PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_08_r0.png",
+          "diff": "axis (-2,26.5) vs (-6,107); palette 0.69"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_08_r1.png",
+          "diff": "palette 0.73"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_08_r2.png",
+          "diff": "axis (-4.5,36.5); palette 0.74"
+        }
+      ]
+    },
+    "9": {
+      "result": "PASS",
+      "retries": 0,
+      "path": "out_frame_09.png",
+      "status": "APPROVED",
+      "note": "First attempt PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "PASS",
+          "path": "out_frame_09.png"
+        }
+      ]
+    },
+    "10": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_10.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r1: only palette 0.73 failed; scale+axis PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_10_r0.png",
+          "diff": "axis (-7,64) vs (-29,154); palette 0.27"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_10_r1.png",
+          "diff": "palette 0.73"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_10_r2.png",
+          "diff": "axis (-3.5,54.5); palette 0.56"
+        }
+      ]
+    },
+    "11": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_11.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r0: scale PASS, axis X barely over, better than r1/r2.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_11_r0.png",
+          "diff": "axis (-12,184) vs (-43,165); palette 0.71"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_11_r1.png",
+          "diff": "scale 6.6%; axis (-76,152); palette 0.82"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_11_r2.png",
+          "diff": "scale 6.5%; axis (-8,54)"
+        }
+      ]
+    },
+    "12": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_12.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r1: scale+Y PASS, X just over tolerance.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_12_r0.png",
+          "diff": "scale 1049 vs 956; axis (-10.5,156.5) vs (-51,171)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_12_r1.png",
+          "diff": "axis (-19.5,178) vs (-51,171); palette 0.74"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_12_r2.png",
+          "diff": "scale 1077 vs 956; axis (-1.5,162.5)"
+        }
+      ]
+    },
+    "13": {
+      "result": "PASS",
+      "retries": 1,
+      "path": "out_frame_13.png",
+      "status": "APPROVED",
+      "note": "r1 PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_13_r0.png",
+          "diff": "scale 1037 vs 903; axis (-11.5,177) vs (-56,176); palette 0.75"
+        },
+        {
+          "id": "r1",
+          "result": "PASS",
+          "path": "out_frame_13.png"
+        }
+      ]
+    },
+    "14": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_14.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r2: palette PASS, X good; scale 14.7% large.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_14_r0.png",
+          "diff": "scale 774 vs 840; axis (-113,190) vs (-58,178); palette 0.68"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_14_r1.png",
+          "diff": "scale 1005 vs 840; axis (-30,127.5); palette 0.33"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_14_r2.png",
+          "diff": "scale 963 vs 840; axis (-47.5,145.5) vs (-58,178)"
+        }
+      ]
+    },
+    "15": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_15.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r0: only palette 0.66 failed; scale+axis PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_15_r0.png",
+          "diff": "palette 0.66"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_15_r1.png",
+          "diff": "palette 0.67"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_15_r2.png",
+          "diff": "scale 1019 vs 767; axis (-21.5,64) vs (-55,179)"
+        }
+      ]
+    },
+    "16": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_16.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r2: only scale 8.6% small; axis+palette PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r0.png",
+          "diff": "scale 622 vs 691; axis (-10,223) vs (-4,178)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r1.png",
+          "diff": "scale 751 vs 691; palette 0.66"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r2.png",
+          "diff": "scale 631 vs 691 (8.6%)"
+        }
+      ]
+    },
+    "17": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 1,
+      "path": "out_frame_17.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r0: only palette 0.82 (need 0.85); scale+axis PASS. r1 worse.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_17_r0.png",
+          "diff": "palette 0.82"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_17_r1.png",
+          "diff": "scale 6.9%; axis (26.5,72.5) vs (49,179); palette 0.52"
+        }
+      ]
+    },
+    "18": {
+      "result": "PASS",
+      "retries": 0,
+      "path": "out_frame_18.png",
+      "status": "APPROVED",
+      "note": "First attempt PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "PASS",
+          "path": "out_frame_18.png"
+        }
+      ]
+    },
+    "19": {
+      "result": "PASS",
+      "retries": 2,
+      "path": "out_frame_19.png",
+      "status": "APPROVED",
+      "note": "r2 PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_19_r0.png",
+          "diff": "scale 6.2%; axis (16.5,73) vs (48,172); palette 0.41"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_19_r1.png",
+          "diff": "axis (25,102.5) vs (48,172)"
+        },
+        {
+          "id": "r2",
+          "result": "PASS",
+          "path": "out_frame_19.png"
+        }
+      ]
+    },
+    "20": {
+      "result": "PASS",
+      "retries": 0,
+      "path": "out_frame_20.png",
+      "status": "APPROVED",
+      "note": "First attempt PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "PASS",
+          "path": "out_frame_20.png"
+        }
+      ]
+    },
+    "21": {
+      "result": "PASS",
+      "retries": 1,
+      "path": "out_frame_21.png",
+      "status": "APPROVED",
+      "note": "r1 PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_21_r0.png",
+          "diff": "axis (2.5,28) vs (14,145)"
+        },
+        {
+          "id": "r1",
+          "result": "PASS",
+          "path": "out_frame_21.png"
+        }
+      ]
+    },
+    "22": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 1,
+      "path": "out_frame_22.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r1: palette PASS, axis Y just over. r0 had axis PASS but palette 0.55.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_22_r0.png",
+          "diff": "palette 0.55"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_22_r1.png",
+          "diff": "axis (21.5,88.5) vs (0,127)"
+        }
+      ]
+    },
+    "23": {
+      "result": "PASS",
+      "retries": 0,
+      "path": "out_frame_23.png",
+      "status": "APPROVED",
+      "note": "First attempt PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "PASS",
+          "path": "out_frame_23.png"
+        }
+      ]
+    },
+    "24": {
+      "result": "PASS",
+      "retries": 1,
+      "path": "out_frame_24.png",
+      "status": "APPROVED",
+      "note": "r1 PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_24_r0.png",
+          "diff": "axis (-3,26.5) vs (4,108); palette 0.76"
+        },
+        {
+          "id": "r1",
+          "result": "PASS",
+          "path": "out_frame_24.png"
+        }
+      ]
+    },
+    "25": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 1,
+      "path": "out_frame_25.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r1: only palette 0.67 failed; scale+axis PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_25_r0.png",
+          "diff": "axis (5.5,48.5) vs (8,113); palette 0.73"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_25_r1.png",
+          "diff": "palette 0.67"
+        }
+      ]
+    },
+    "26": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 0,
+      "path": "out_frame_26.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r0: only palette 0.67 failed; scale+axis PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_26_r0.png",
+          "diff": "palette 0.67"
+        }
+      ]
+    },
+    "27": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 1,
+      "path": "out_frame_27.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r0: scale+palette PASS, axis Y just over. r1 worse.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_27_r0.png",
+          "diff": "axis (2.5,94) vs (-17,129)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_27_r1.png",
+          "diff": "axis (4,48.5) vs (-17,129)"
+        }
+      ]
+    },
+    "28": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 1,
+      "path": "out_frame_28.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r1: palette PASS, scale 6.8%.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_28_r0.png",
+          "diff": "scale 8.6%; axis (0.5,89.5) vs (-35,137); palette 0.81"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_28_r1.png",
+          "diff": "scale 6.8%; axis (4.5,92.5) vs (-35,137)"
+        }
+      ]
+    },
+    "29": {
+      "result": "PASS",
+      "retries": 1,
+      "path": "out_frame_29.png",
+      "status": "APPROVED",
+      "note": "r1 PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_29_r0.png",
+          "diff": "scale 1100 vs 897; axis (-4.5,90.5) vs (-51,142)"
+        },
+        {
+          "id": "r1",
+          "result": "PASS",
+          "path": "out_frame_29.png"
+        }
+      ]
+    },
+    "30": {
+      "result": "PASS",
+      "retries": 1,
+      "path": "out_frame_30.png",
+      "status": "APPROVED",
+      "note": "r1 PASS.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_30_r0.png",
+          "diff": "scale 905 vs 849 (6.7%)"
+        },
+        {
+          "id": "r1",
+          "result": "PASS",
+          "path": "out_frame_30.png"
+        }
+      ]
+    },
+    "31": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_31.png",
+      "status": "AUTO_CONTINUE",
+      "note": "Kept r1: scale+X PASS, best loop closure 0.48. r2 loop collapsed to 0.03.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_31_r0.png",
+          "diff": "scale 888 vs 801; loop 0.22"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_31_r1.png",
+          "diff": "axis Y 86.5 vs 141; palette 0.67; loop 0.48"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_31_r2.png",
+          "diff": "scale 892 vs 801; palette 0.85; loop 0.03"
+        }
+      ]
+    }
+  }
+}

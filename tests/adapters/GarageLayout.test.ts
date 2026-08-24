@@ -9,7 +9,7 @@ import {
 } from '../../src/adapters/render/GarageLayout.ts';
 import type { Size } from '../../src/adapters/render/SplashLayout.ts';
 
-const HERO: Size = { width: 1700, height: 1254 };
+const HERO: Size = { width: 1024, height: 1024 };
 
 const VIEWPORTS: readonly Size[] = [
   { width: 1280, height: 720 },

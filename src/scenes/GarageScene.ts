@@ -3,8 +3,13 @@ import { garageBodyBounds, garageHeroLayout } from '../adapters/render/GarageLay
 import { DRIVER_CARDS, driverCardKey, driverCardUrl } from '../data/cards/DriverCards.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
-import { cartPortraitKey, findCarSheet, matrixHeroNumber, sheetCellSize } from '../data/cars/CarManifest.ts';
-import { garageCarouselIds, isMatrixCarIndex, MATRIX_CAR_INDEX_SIZE, matrixCarRow } from '../data/cars/MatrixCarIndex.ts';
+import {
+  cartPortraitKey,
+  findCarSheet,
+  isSpinnerCarId,
+  sheetCellSize,
+  SPINNER_HERO_FRAME,
+} from '../data/cars/CarManifest.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import { STAT_BAR_FIELDS, statBars } from '../adapters/render/CarStatBars.ts';
 import type { StatBar } from '../adapters/render/CarStatBars.ts';
@@ -18,6 +23,7 @@ import {
   isCarUnlocked,
   listPrice,
   sellPrice,
+  shopCarIds,
 } from '../domain/progress/GarageCatalog.ts';
 import { cashInValue } from '../domain/progress/SeasonPoints.ts';
 import { PLAYER_NAME_LENGTH } from '../domain/progress/SaveSlots.ts';
@@ -59,6 +65,7 @@ import {
   HUD_MISSILE_KEY,
   HUD_OIL_KEY,
   HUD_TURBO_KEY,
+  PLAYER_CAR_ID,
   SCENE_KEY,
   garageArtKey,
 } from './sceneKeys.ts';
@@ -70,7 +77,6 @@ export interface GarageSceneData {
 }
 
 const PREVIEW_SCALE = 4.2;
-const PREVIEW_FRAME = 20;
 const HUB_FOCUS = ['buy', 'race', 'sell', 'save'] as const;
 const ARSENAL_KEYS = [HUD_MISSILE_KEY, HUD_MINE_KEY, HUD_OIL_KEY, HUD_TURBO_KEY] as const;
 const ARSENAL_LABELS = ['MSL', 'MINE', 'OIL', 'TURBO'] as const;
@@ -202,7 +208,9 @@ export class GarageScene extends Phaser.Scene {
     this.profileText = this.add.text(0, 0, '', this.profileStyle()).setOrigin(0.5, 0.5);
     this.rankingBox = this.plaque(220, 220);
     this.rankingText = this.add.text(0, 0, '', this.rankStyle()).setOrigin(0.5, 0);
-    this.preview = this.add.sprite(0, 0, this.previewCarId(), PREVIEW_FRAME).setScale(PREVIEW_SCALE);
+    this.preview = this.add
+      .sprite(0, 0, this.previewCarId(), SPINNER_HERO_FRAME)
+      .setScale(PREVIEW_SCALE);
     this.portrait = this.add.image(0, 0, '').setOrigin(0.5, 0.5).setVisible(false);
     this.specBox = this.plaque(260, 220);
     this.specPerkText = this.add.text(0, 0, '', this.captionStyle()).setOrigin(0.5, 0);
@@ -669,7 +677,11 @@ export class GarageScene extends Phaser.Scene {
   }
 
   private shopCars(): string[] {
-    return [...garageCarouselIds()];
+    const shop = shopCarIds();
+    const extra = this.payload.manifest.cars
+      .filter(car => isSpinnerCarId(car.id) && !shop.includes(car.id))
+      .map(car => car.id);
+    return [...shop, ...extra];
   }
 
   private slotLabel(index: number, save: ReturnType<typeof loadSave>): string {
@@ -683,10 +695,6 @@ export class GarageScene extends Phaser.Scene {
   }
 
   private carName(carId: string): string {
-    const n = matrixHeroNumber(carId);
-    if (n !== undefined && isMatrixCarIndex(n)) {
-      return matrixCarRow(n).displayName.toUpperCase();
-    }
     try {
       return findCarSheet(this.payload.manifest, carId).displayName.toUpperCase();
     } catch {
@@ -697,9 +705,9 @@ export class GarageScene extends Phaser.Scene {
   private previewCarId(): string {
     const career = loadActiveCareer();
     if (this.mode === 'hub') {
-      return this.shopCars()[this.shopIndex] ?? career?.equippedCarId ?? 'car-1';
+      return this.shopCars()[this.shopIndex] ?? career?.equippedCarId ?? PLAYER_CAR_ID;
     }
-    return career?.equippedCarId || 'car-1';
+    return career?.equippedCarId || PLAYER_CAR_ID;
   }
 
   private rebuildOverlay(): void {
@@ -769,10 +777,8 @@ export class GarageScene extends Phaser.Scene {
       const unlocked = this.carUnlocked(carId);
       const hint = this.unlockHint(carId);
       const tour = isTourModeOn();
-      const n = matrixHeroNumber(carId);
       this.carNameText.setText(this.carName(carId));
       this.valueText.setColor(owned ? GO : unlocked || tour ? GOLD : LOCKED);
-      const indexBit = n !== undefined ? `INDEX  ${n} / ${MATRIX_CAR_INDEX_SIZE}` : '';
       const statusBit = owned
         ? equipped
           ? 'OWNED  ·  EQUIPPED'
@@ -780,7 +786,7 @@ export class GarageScene extends Phaser.Scene {
         : unlocked
           ? `BUY FOR  ${formatCash(listPrice(carId))}`
           : hint ?? 'LOCKED';
-      this.valueText.setText(indexBit === '' ? statusBit : `${indexBit}  ·  ${statusBit}`);
+      this.valueText.setText(statusBit);
       this.btnBuy.setText(
         owned
           ? equipped
@@ -936,7 +942,7 @@ export class GarageScene extends Phaser.Scene {
       const sheet = findCarSheet(this.payload.manifest, carId);
       const cell = sheetCellSize(sheet, this.payload.manifest);
       this.preview
-        .setTexture(carId, PREVIEW_FRAME)
+        .setTexture(carId, SPINNER_HERO_FRAME)
         .setScale(PREVIEW_SCALE * (this.payload.manifest.frameWidth / cell.width))
         .setVisible(true)
         .setAlpha(lit ? 1 : 0.45);
@@ -948,17 +954,12 @@ export class GarageScene extends Phaser.Scene {
     try {
       bars = statBars(this.payload.manifest, carId);
       const sheet = findCarSheet(this.payload.manifest, carId);
-      const n = matrixHeroNumber(carId);
-      if (isTourModeOn() && n !== undefined && isMatrixCarIndex(n)) {
-        this.specPerkText.setText(matrixCarRow(n).archetype.toUpperCase());
-      } else {
-        const perk = perkProfile(sheet.perk);
-        this.specPerkText.setText(
-          perk.displayName === 'None'
-            ? sheet.archetype.toUpperCase()
-            : `${perk.displayName.toUpperCase()}  ·  ${perk.description.toUpperCase()}`,
-        );
-      }
+      const perk = perkProfile(sheet.perk);
+      this.specPerkText.setText(
+        perk.displayName === 'None'
+          ? sheet.archetype.toUpperCase()
+          : `${perk.displayName.toUpperCase()}  ·  ${perk.description.toUpperCase()}`,
+      );
     } catch {
       this.specPerkText.setText('');
     }

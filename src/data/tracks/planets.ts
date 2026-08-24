@@ -12,6 +12,10 @@
  * The offline line search (`npm run gen:lines`) validates each planet by checking
  * that its featured car is (or is closest to) the fastest across the roster; the
  * bias is the lever used to steer that outcome.
+ *
+ * Featured cars are spinner-only (32 CCW). With two live models the
+ * "featured is fastest" check is loose — do not rerun `gen:lines` until
+ * more spinner strips exist.
  */
 
 export interface PlanetTerrain {
@@ -42,7 +46,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'thunder-basin',
     index: 1,
     displayName: 'Thunder Basin',
-    bestCarId: 'car-1',
+    bestCarId: '2-sportivo-blue-combat',
     seed: 1001,
     terrain: { straightBias: 0.5, cornerTightness: 0.5, surfaceGrip: 1.0, halfWidth: 20 },
   },
@@ -50,7 +54,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'chrome-verge',
     index: 2,
     displayName: 'Chrome Verge',
-    bestCarId: 'delorean',
+    bestCarId: '1-muscle-car-gray-number9',
     seed: 2002,
     terrain: { straightBias: 0.92, cornerTightness: 0.22, surfaceGrip: 1.0, halfWidth: 22 },
   },
@@ -58,7 +62,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'bogmire-deep',
     index: 3,
     displayName: 'Bogmire Deep',
-    bestCarId: 'car-18',
+    bestCarId: '1-muscle-car-gray-number9',
     seed: 3003,
     terrain: { straightBias: 0.35, cornerTightness: 0.62, surfaceGrip: 0.72, halfWidth: 20 },
   },
@@ -66,7 +70,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'cryo-hollow',
     index: 4,
     displayName: 'Cryo Hollow',
-    bestCarId: 'car-19',
+    bestCarId: '2-sportivo-blue-combat',
     seed: 4004,
     terrain: { straightBias: 0.4, cornerTightness: 0.72, surfaceGrip: 0.58, halfWidth: 19 },
   },
@@ -74,7 +78,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'ferro-rust',
     index: 5,
     displayName: 'Ferro Rust',
-    bestCarId: 'car-20',
+    bestCarId: '1-muscle-car-gray-number9',
     seed: 5005,
     terrain: { straightBias: 0.32, cornerTightness: 0.5, surfaceGrip: 0.9, halfWidth: 24 },
   },
@@ -82,7 +86,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'vulkanis',
     index: 6,
     displayName: 'Vulkanis',
-    bestCarId: 'car-18',
+    bestCarId: '1-muscle-car-gray-number9',
     seed: 6006,
     terrain: { straightBias: 0.3, cornerTightness: 0.55, surfaceGrip: 0.85, halfWidth: 24 },
   },
@@ -90,7 +94,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'neon-kasbah',
     index: 7,
     displayName: 'Neon Kasbah',
-    bestCarId: 'car-19',
+    bestCarId: '2-sportivo-blue-combat',
     seed: 7007,
     terrain: { straightBias: 0.28, cornerTightness: 0.88, surfaceGrip: 1.0, halfWidth: 16 },
   },
@@ -98,7 +102,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'ash-reach',
     index: 8,
     displayName: 'Ash Reach',
-    bestCarId: 'car_21',
+    bestCarId: '2-sportivo-blue-combat',
     seed: 8008,
     terrain: { straightBias: 0.95, cornerTightness: 0.2, surfaceGrip: 1.0, halfWidth: 24 },
   },
@@ -106,7 +110,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'voidport',
     index: 9,
     displayName: 'Voidport',
-    bestCarId: 'car-20',
+    bestCarId: '1-muscle-car-gray-number9',
     seed: 9009,
     terrain: { straightBias: 0.55, cornerTightness: 0.48, surfaceGrip: 1.05, halfWidth: 20 },
   },
@@ -114,7 +118,7 @@ export const PLANETS: readonly PlanetDefinition[] = [
     id: 'verdant-fault',
     index: 10,
     displayName: 'Verdant Fault',
-    bestCarId: 'car-19',
+    bestCarId: '2-sportivo-blue-combat',
     seed: 10010,
     terrain: { straightBias: 0.38, cornerTightness: 0.78, surfaceGrip: 0.82, halfWidth: 18 },
   },

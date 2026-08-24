@@ -3,15 +3,20 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
   applyAvailableMatrixStrips,
+  careerFleetCarIds,
   applyMatrixStripToSheet,
   applyNogoLabs,
   carSheetImageUrl,
+  CLOCK_DIRECTION,
   collisionFromMatrixStrip,
   frameIndexForHeading,
   isBBoxSheet,
   isNogoLabCarId,
+  isSpinnerCarId,
   parseCarSetManifest,
+  parseCarStripJson,
   parseMatrixStripJson,
+  parseSpinnerStripJson,
   findCarSheet,
   cartHeroFile,
   cartPortraitFile,
@@ -25,7 +30,11 @@ import {
   matrixStripJsonUrl,
   matrixStripUrl,
   portraitCandidateUrls,
+  sheetClock,
   sheetFrameCount,
+  SPINNER_HERO_FRAME,
+  spinnerHeroUrl,
+  spinnerInventoryParts,
   CarManifestError,
 } from '../../src/data/cars/CarManifest.ts';
 import { CAR_PERK, CAR_SPRITE_FRAMES, CAR_SPRITE_FRAME_ARC } from '../../src/domain/constants.ts';
@@ -49,7 +58,8 @@ describe('frameIndexForHeading', () => {
 
   it('maps world +X to hero ~4h, not a000 (Basin bottom straight)', () => {
     expect(frameIndexForHeading(0, 30)).toBe(25);
-    expect(frameIndexForHeading(0, CAR_SPRITE_FRAMES)).toBe(26);
+    expect(frameIndexForHeading(0, CAR_SPRITE_FRAMES)).toBe(6);
+    expect(frameIndexForHeading(0, CAR_SPRITE_FRAMES, CLOCK_DIRECTION.CLOCKWISE)).toBe(26);
   });
 
   it('maps world SW (5π/4) to rear — 12h, facing the camera', () => {
@@ -95,8 +105,17 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const ids = manifest.cars.map(car => car.id);
-    expect(ids).toEqual(['car-1', 'car-18', 'car-19', 'car-20', 'car_21', 'delorean']);
-    expect(manifest.cars.length).toBe(6);
+    expect(ids).toEqual([
+      'car-1',
+      'car-18',
+      'car-19',
+      'car-20',
+      'car_21',
+      'delorean',
+      '1-muscle-car-gray-number9',
+      '2-sportivo-blue-combat',
+    ]);
+    expect(manifest.cars.length).toBe(8);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -155,6 +174,8 @@ describe('parseCarSetManifest', () => {
     expect(strip.frames[0]).toMatchObject({ i: 0, clockIndex: 0 });
     expect(strip.frames[15]).toMatchObject({ i: 15, clockIndex: 15 });
     expect(strip.frames[25]).toMatchObject({ i: 25, clockIndex: 25 });
+    const leftmost = strip.frames.reduce((best, frame) => (frame.x < best.x ? frame : best));
+    expect(leftmost).toMatchObject({ i: 25, clockIndex: 25 });
     const box = collisionFromMatrixStrip(strip, manifest.pixelsPerUnit);
     const live = applyMatrixStripToSheet(sheet, strip, manifest.pixelsPerUnit);
     expect(live.frameCount).toBe(30);
@@ -529,7 +550,7 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(6);
+    expect(manifest.cars.length).toBe(8);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
@@ -568,6 +589,62 @@ describe('cart portraits', () => {
     expect(portraitCandidateUrls('car-1')[0]).toBe('matrix_car/1_hero/car_1_hero_300.png');
     expect(portraitCandidateUrls('car_1')[0]).toBe('matrix_car/1_hero/car_1_hero_300.png');
     expect(portraitCandidateUrls('car-1')).toHaveLength(1);
+    expect(isSpinnerCarId('1-muscle-car-gray-number9')).toBe(true);
+    expect(isSpinnerCarId('muscle-car-gray-number9')).toBe(false);
+    expect(matrixHeroNumber('1-muscle-car-gray-number9')).toBeUndefined();
+    expect(portraitCandidateUrls('1-muscle-car-gray-number9')[0]).toBe(
+      spinnerHeroUrl('1-muscle-car-gray-number9'),
+    );
+  });
+});
+
+describe('spinner strip atlas', () => {
+  const muscleJson = join(
+    projectRoot,
+    'public',
+    'assets',
+    'cars',
+    '1-muscle-car-gray-number9',
+    'car_strip_64x64.json',
+  );
+
+  it('parses 32 CCW frames from car_strip_64x64.json', () => {
+    const strip = parseSpinnerStripJson(JSON.parse(readFileSync(muscleJson, 'utf-8')));
+    expect(strip.count).toBe(32);
+    expect(strip.frames).toHaveLength(32);
+    expect(strip.frames[0]).toMatchObject({ i: 0, clockIndex: 0 });
+    expect(parseCarStripJson(JSON.parse(readFileSync(muscleJson, 'utf-8'))).count).toBe(32);
+  });
+
+  it('keeps spinner sheets on the counter-clockwise clock', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    const sheet = findCarSheet(manifest, '1-muscle-car-gray-number9');
+    expect(sheet.frameCount).toBe(32);
+    expect(sheetClock(sheet, manifest)).toBe(CLOCK_DIRECTION.COUNTER_CLOCKWISE);
+    expect(sheetFrameCount(sheet, manifest)).toBe(32);
+    expect(SPINNER_HERO_FRAME).toBe(7);
+    expect(spinnerInventoryParts(sheet.id)).toEqual({ n: 1, slug: 'muscle-car-gray-number9' });
+  });
+
+  it('career fleet is only the numbered spinner cars when they exist', () => {
+    const rawJson = readFileSync(carsJsonPath, 'utf-8');
+    const manifest = parseCarSetManifest(JSON.parse(rawJson));
+    expect(careerFleetCarIds(manifest)).toEqual([
+      '1-muscle-car-gray-number9',
+      '2-sportivo-blue-combat',
+    ]);
+  });
+
+  it('CCW remap is a bijection over the 32 authored frames — never a flip', () => {
+    const seen = new Set<number>();
+    for (let clockwise = 0; clockwise < CAR_SPRITE_FRAMES; clockwise += 1) {
+      const ccw = clockwise === 0 ? 0 : (CAR_SPRITE_FRAMES - clockwise) % CAR_SPRITE_FRAMES;
+      seen.add(ccw);
+    }
+    expect(seen.size).toBe(32);
+    expect(frameIndexForHeading(Math.PI / 4, CAR_SPRITE_FRAMES, CLOCK_DIRECTION.COUNTER_CLOCKWISE)).toBe(0);
+    expect(frameIndexForHeading(Math.PI / 4, CAR_SPRITE_FRAMES, CLOCK_DIRECTION.CLOCKWISE)).toBe(0);
   });
 });
 

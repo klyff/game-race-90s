@@ -39,6 +39,7 @@ import {
 } from './TrajectoryPlanner.ts';
 import { applySkillToDriveOptions } from './skillLimits.ts';
 import type { PaceDriverOptions } from '../vehicle/PaceDriver.ts';
+import { BUMPER_GAP } from '../vehicle/AIDriver.ts';
 import { length } from '../math/Vec2.ts';
 import type { Vec2 } from '../math/Vec2.ts';
 import {
@@ -200,11 +201,12 @@ export class RacingAgent {
     }
 
     const intention = this.effectiveIntention();
+    const aheadNow = closestAhead(input);
     const wantFire =
       this.execution === CONTROL_MODE.NORMAL &&
-      intention === TACTICAL_INTENTION.USE_WEAPON &&
       input.canAim &&
-      input.missiles > 0;
+      input.missiles > 0 &&
+      (intention === TACTICAL_INTENTION.USE_WEAPON || bumperStuck(aheadNow));
     const behind = closestBehind(input);
     const fighting =
       this.execution === CONTROL_MODE.NORMAL &&
@@ -289,7 +291,11 @@ export class RacingAgent {
       isTarget: rival.carId === this.targetId,
     }));
     const traits = decisionTraits(this.profile);
-    const switchPenalty = this.lastTrajectory === null ? 0 : 0.05 + traits.commitment * 0.12;
+    const switchPenalty = bumperStuck(ahead)
+      ? 0
+      : this.lastTrajectory === null
+        ? 0
+        : 0.05 + traits.commitment * 0.12;
     const capabilities = this.lastCapabilities;
     const memory = strongestGrudge(this.memory.all(), this.profile.opponentMemory);
     const mem = memory === null ? 0 : memory.grudge * this.profile.opponentMemory;
@@ -322,6 +328,7 @@ export class RacingAgent {
     });
     const threshold = HYSTERESIS + traits.commitment * 0.18;
     const keep =
+      !bumperStuck(ahead) &&
       this.lastTrajectory !== null &&
       this.commitLeft > 0 &&
       planned.winnerScore < this.lastPlanScore + threshold &&
@@ -346,6 +353,10 @@ export class RacingAgent {
     }
     return this.intention;
   }
+}
+
+function bumperStuck(ahead: NearbyRival | null): boolean {
+  return ahead !== null && ahead.gapAhead > 0 && ahead.gapAhead < BUMPER_GAP;
 }
 
 function nearbyForHorizon(input: AgentTickInput): AgentRival[] {

@@ -10,8 +10,9 @@ import {
   isPlayableCarSheet,
   matrixHeroNumber,
   matrixStripCacheKey,
+  isSpinnerCarId,
   parseCarSetManifest,
-  parseMatrixStripJson,
+  parseCarStripJson,
   portraitCandidateUrls,
 } from '../data/cars/CarManifest.ts';
 import type { CarSetManifest, CarSheetManifest, MatrixStripAtlas } from '../data/cars/CarManifest.ts';
@@ -166,6 +167,10 @@ export class BootScene extends Phaser.Scene {
 
     const portraitNumbers = new Set<number>();
     for (const car of manifest.cars) {
+      if (isSpinnerCarId(car.id)) {
+        this.queuePortrait(car.id);
+        continue;
+      }
       const n = matrixHeroNumber(car.id);
       if (n === undefined) {
         if (car.id === 'delorean') {
@@ -278,7 +283,7 @@ export class BootScene extends Phaser.Scene {
       if (!this.textures.exists(car.id) || !this.cache.json.exists(matrixStripCacheKey(car.id))) {
         return { ...car, framesJson: undefined };
       }
-      const strip = parseMatrixStripJson(this.cache.json.get(matrixStripCacheKey(car.id)));
+      const strip = parseCarStripJson(this.cache.json.get(matrixStripCacheKey(car.id)));
       this.addBBoxFrames(car.id, strip);
       return applyMatrixStripToSheet(car, strip, manifest.pixelsPerUnit);
     });

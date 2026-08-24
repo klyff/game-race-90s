@@ -1,12 +1,16 @@
 ---
 description: >-
-  Clock contract for matrix_car rotations — 0° front, 12h rear, hero between 4h–3h,
-  +12° steps, never touch vitrine heroes.
+  OBSOLETE archive. Live yaw is 32 CCW (isometric-car-spinner). Historical
+  30-slot CW contract for leftover public/matrix_car files only.
 globs: public/matrix_car/**,tools/art/car-rotate/**,.cursor/skills/matrix-car-rotate/**
 alwaysApply: false
 ---
 
-# Matrix car rotate
+# Matrix car rotate — OBSOLETE
+
+**Do not use.** New / playable cars use **isometric-car-spinner**: 32 frames, CCW, index 0 = 6h, hero = frame 07. Canonical table: `public/assets/cars/RELOGIO.md`.
+
+This file is the historical 30-slot CW contract for leftover `public/matrix_car/` art. Leave those PNGs on disk. Do not generate, complete the 2–33 batch, or ship from this pipeline.
 
 - Gabarito + docs: **`public/matrix_car/`** — abrir primeiro `GABARITO_RELOGIO.png` + `RELOGIO.md`.
 - Batch restante: **`public/matrix_car/2_hero/`** → `33_hero` (não terminado até 2–33 completos).

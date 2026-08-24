@@ -200,11 +200,11 @@ export const CART_PORTRAIT_SIZE = 300;
 /**
  * Which car the player drives when nobody chose one.
  *
- * `SplashScene` now picks the car and passes it on, so this is the fallback for entering
- * `RaceScene` directly — which the screenshot harness does. `car-1` is the balanced
- * Thunder Basin titular, so it is the right car to land on by default.
+ * Career fleet is the numbered spinner inventory when those cars exist.
+ * World-1 default is Blue Combat Sport. Marauder (`car-1`) is retired;
+ * Delorean is unavailable.
  */
-export const PLAYER_CAR_ID = 'car-1';
+export const PLAYER_CAR_ID = '2-sportivo-blue-combat';
 
 /** The only circuit in v1 (T-008). */
 export const DEFAULT_TRACK_ID = 'thunder-basin';

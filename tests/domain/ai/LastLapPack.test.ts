@@ -105,4 +105,66 @@ describe('last-lap finish fight', () => {
     const heat = scoreFuture(pass, tight, { ...ctx, lastLap: true }, 24)?.score ?? -99;
     expect(heat).toBeGreaterThan(normal);
   });
+
+  it('last-lap KEEP on a bumper loses to a pass so they do not shove', () => {
+    const keep = {
+      id: 'KEEP',
+      kind: CANDIDATE_KIND.KEEP,
+      targetLateral: 0,
+      speedScale: 1,
+    };
+    const pass = {
+      id: 'PASS_LEFT',
+      kind: CANDIDATE_KIND.PASS_LEFT,
+      targetLateral: 4,
+      speedScale: 1,
+    };
+    const overlapping: RolloutResult = {
+      feasible: FEASIBILITY.FEASIBLE,
+      rejectReason: null,
+      progress: 12,
+      exitSpeed: 50,
+      offTrack: 0,
+      wall: 0.05,
+      minRivalSep: -1.4,
+      targetSep: 0.2,
+      samples: [],
+    };
+    const clear: RolloutResult = { ...overlapping, minRivalSep: 3.5, targetSep: 3.5, progress: 16 };
+    const ctx = {
+      profile: profileFor('ALINE'),
+      rammingCapability: 0.5,
+      weaponCapability: 0.5,
+      canAim: false,
+      missiles: 0,
+      memory: 0,
+      switchPenalty: 0,
+      aheadGap: 4,
+      behindGap: 14,
+      lastLap: true,
+    };
+    const shove = scoreFuture(keep, overlapping, ctx, 24)?.score ?? -99;
+    const dive = scoreFuture(pass, clear, ctx, 24)?.score ?? -99;
+    expect(dive).toBeGreaterThan(shove);
+  });
+
+  it('swerves off a bumper instead of shoving on the last lap', () => {
+    const driver = new AIDriver();
+    const { state, projection } = rollingState(48);
+    const clear = driver.command(state, projection, stats, spline, undefined, [], 0, undefined, track, true);
+    const jammed = driver.command(
+      state,
+      projection,
+      stats,
+      spline,
+      undefined,
+      [{ carId: 'tank', distance: projection.distance + 4, lateralOffset: projection.lateralOffset }],
+      0,
+      0,
+      track,
+      true,
+    );
+    expect(jammed.throttle).toBe(1);
+    expect(jammed.steer).not.toBeCloseTo(clear.steer, 2);
+  });
 });

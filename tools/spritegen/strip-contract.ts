@@ -7,6 +7,8 @@ export const REDRAWN_FRAME_SIZE = 128;
 export const REDRAWN_PIXELS_PER_UNIT = STRIP_PIXELS_PER_UNIT * (REDRAWN_FRAME_SIZE / 64);
 export const HQ_SIZE = 512;
 export const ANCHOR_FRAMES = [0, 8, 16, 24] as const;
+/** 30-frame matrix clock: frente / ~9h / 12h / hero 4h. */
+export const MATRIX_ANCHOR_FRAMES = [0, 8, 15, 25] as const;
 
 /** Mean abs RGB below this ⇒ frames 0 and 16 are the same pose. */
 export const LOOKALIKE_MAX_MAD = 32;

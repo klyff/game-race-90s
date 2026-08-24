@@ -7,7 +7,7 @@ import { RaceField } from '../../src/domain/race/RaceField.ts';
 import type { RacerEntry } from '../../src/domain/race/RaceField.ts';
 import { findTrack } from '../../src/data/tracks/registry.ts';
 import type { TrackTrapCatalog } from '../../src/domain/traps/TrapCatalog.ts';
-import { parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
+import { findCarSheet, parseCarSetManifest } from '../../src/data/cars/CarManifest.ts';
 import { TrackSpline } from '../../src/domain/track/TrackSpline.ts';
 import { trackFullHalfWidth } from '../../src/domain/track/TrackDefinition.ts';
 import { CAR_PERK, RACE_PHASE, SIMULATION_STEP_SECONDS } from '../../src/domain/constants.ts';
@@ -62,6 +62,41 @@ function run(field: RaceField, seconds: number, command: InputCommand = FULL_THR
     field.step(command, SIMULATION_STEP_SECONDS);
   }
 }
+
+describe('RaceField — spinner career pair', () => {
+  it('runs player Sportivo plus Muscle NPCs on Thunder Basin with AI', () => {
+    const player = findCarSheet(manifest, '2-sportivo-blue-combat');
+    const npc = findCarSheet(manifest, '1-muscle-car-gray-number9');
+    const field = new RaceField(
+      [
+        {
+          carId: '1-muscle-car-gray-number9#0',
+          name: 'KIRA',
+          stats: npc.stats,
+          perk: npc.perk,
+          isPlayer: false,
+        },
+        {
+          carId: player.id,
+          name: 'YOU',
+          stats: player.stats,
+          perk: player.perk,
+          isPlayer: true,
+        },
+      ],
+      track,
+      freshSpline(),
+      { countdownSeconds: 0, npcWeapons: false },
+    );
+    expect(field.player.carId).toBe('2-sportivo-blue-combat');
+    expect(field.npcNames()).toEqual([
+      { carId: '1-muscle-car-gray-number9#0', name: 'KIRA', gridIndex: 0 },
+    ]);
+    const npcStart = field.racers[0]!.distance;
+    run(field, 1.0, FULL_THROTTLE);
+    expect(field.racers[0]!.distance).toBeGreaterThan(npcStart);
+  });
+});
 
 describe('RaceField — the grid', () => {
   it('places every car on its own grid slot with no two cars overlapping', () => {

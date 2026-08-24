@@ -5,13 +5,13 @@
  * share this row. Pose of every vitrine is 4h–3h (typical indice[25] = 300°).
  * Do not flip the PNG; rename here when the still is right and the name is wrong.
  *
- * Garage carousel walks `garageCarouselIds()` — folders that still exist as
- * `{N}_hero` (no `x_` park) plus Delorean. Identity rows 1–33 stay here.
- * Delorean is special car 1 in `delorean_hero`. Unlock only gates the buy button.
+ * OBSOLETE archive. Live shop is `GARAGE_CATALOG` (spinner only).
+ * `garageCarouselIds()` lists leftover matrix sheets still in `cars.json`.
+ * Identity rows 1–33 stay here for leftover art. Do not shop or race these.
  */
 
-/** Matrix folders that are on disk as `{N}_hero` (not `x_{N}_hero`). */
-export const AVAILABLE_MATRIX_NUMBERS = [1, 18, 19, 20, 21] as const;
+/** Leftover matrix folders still present on disk / in cars.json. Not shoppable. */
+export const AVAILABLE_MATRIX_NUMBERS = [18, 19, 20, 21] as const;
 
 export const MATRIX_CAR_INDEX_SIZE = 33;
 
@@ -88,7 +88,7 @@ export function tourIndexCarIds(): readonly string[] {
   return MATRIX_CAR_INDEX.map(entry => entry.carId);
 }
 
-/** Shop / garage: available `{N}_hero` folders plus the Delorean. */
+/** Leftover matrix sheets still listed in cars.json. Not the live garage. */
 export function garageCarouselIds(): readonly string[] {
   const available = MATRIX_CAR_INDEX.filter(entry =>
     (AVAILABLE_MATRIX_NUMBERS as readonly number[]).includes(entry.n),

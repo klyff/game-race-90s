@@ -1,7 +1,13 @@
-# Relógio + índice das 30 imagens
+# Relógio + índice das 30 imagens — OBSOLETE
+
+**Do not use.** Live playable cars use the 32-frame CCW spinner clock: [`../assets/cars/RELOGIO.md`](../assets/cars/RELOGIO.md) (index 0 = 6h, +11.25° CCW, hero = frame 07). Skill: isometric-car-spinner.
+
+This file is the historical 30-slot CW table for leftover `public/matrix_car/` art.
+
+# Relógio + índice das 30 imagens (arquivo)
 
 **Pasta:** `public/matrix_car/`  
-**Gabarito visual:** [`GABARITO_RELOGIO.png`](./GABARITO_RELOGIO.png)
+**Gabarito visual (histórico):** [`GABARITO_RELOGIO.png`](./GABARITO_RELOGIO.png)
 
 ![Gabarito do relógio → horas / ângulos](./GABARITO_RELOGIO.png)
 

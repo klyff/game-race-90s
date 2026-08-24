@@ -30,7 +30,11 @@ import {
 export interface RivalView {
   readonly carId: string;
   readonly distance: number;
+  readonly lateralOffset?: number;
 }
+
+/** Bumper range: still racing, but staying here is a shove, not a pass. */
+export const BUMPER_GAP = 8;
 
 /**
  * How hard NPCs race by default, 0..1. Owner asked for competitive rivals that
@@ -93,10 +97,18 @@ export class AIDriver {
     const marks = committed ? nextCornerMarks(spline, projection.distance) : null;
     const commitLook =
       traits !== undefined && marks !== null ? cornerCommitLookAhead(traits, marks) : null;
-    const lateral =
+    const ahead = closestRivalAhead(projection.distance, rivals, spline.totalLength);
+    let lateral =
       lateralOverride !== undefined
         ? lateralOverride
         : (line === undefined ? 0 : offsetAt(line, projection.distance + 12, spline)) + laneBias;
+    if (ahead !== null && ahead.gap < BUMPER_GAP) {
+      const rivalD = ahead.rival.lateralOffset ?? projection.lateralOffset;
+      if (Math.abs(lateral - rivalD) < 3.2) {
+        const dir = lateral === rivalD ? (lateral >= 0 ? 1 : -1) : lateral > rivalD ? 1 : -1;
+        lateral = rivalD + dir * 5.2;
+      }
+    }
     const aim = pursuitAimPoint(
       projection,
       spline,
@@ -135,7 +147,6 @@ export class AIDriver {
       this.options.speedDeadband,
     );
 
-    const ahead = closestRivalAhead(projection.distance, rivals, spline.totalLength);
     if (ramp !== null || lastLap) {
       throttle = 1;
       brake = 0;
