@@ -14,6 +14,7 @@ import {
   CAMERA_QUIT_MASTER_SCALE,
   CAMERA_WIDE_ZOOM,
   CAMERA_ZOOM_STEP,
+  applyTurboStraightZoom,
   spectatorCameraPreset,
   type CameraPreset,
 } from '../domain/camera/CameraPreset.ts';
@@ -37,6 +38,11 @@ import { WoodDebrisEffect } from '../adapters/render/WoodDebrisEffect.ts';
 import { VictoryCelebration } from '../adapters/render/VictoryCelebration.ts';
 import type { HudReadout } from '../adapters/render/HudFormat.ts';
 import { IsoProjection } from '../adapters/render/IsoProjection.ts';
+import {
+  sampleCentreline,
+  startLineWorld,
+  type MinimapSnapshot,
+} from '../adapters/render/MinimapProjection.ts';
 import { TrackRenderer } from '../adapters/render/TrackRenderer.ts';
 import {
   dumpDisplayList,
@@ -258,6 +264,13 @@ export class RaceScene extends Phaser.Scene {
   private audioFocusCarId: string | null = null;
   private track!: TrackDefinition;
   private spline!: TrackSpline;
+  /** World-space circuit outline, built once when the spline is ready. */
+  private minimapOutline: readonly Vec2[] = [];
+  private minimapStartLine: readonly [Vec2, Vec2] = [
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+  ];
+  private minimapWorldMargin = 0;
   private projection!: IsoProjection;
   private trackRenderer!: TrackRenderer;
   private tyreMarks!: TyreMarks;
@@ -386,6 +399,13 @@ export class RaceScene extends Phaser.Scene {
       this.track = { ...this.track, laps: 99 };
     }
     this.spline = new TrackSpline(this.track.controlPoints);
+    this.minimapOutline = sampleCentreline(this.spline);
+    this.minimapStartLine = startLineWorld(
+      this.spline,
+      this.track.startLineDistance,
+      this.track.halfWidth,
+    );
+    this.minimapWorldMargin = this.track.halfWidth;
 
     // One number ties sprites and road together (locked decision 3): the scale the
     // sprite generator measured the whole car set at. Hard-coding a road width here
@@ -708,6 +728,33 @@ export class RaceScene extends Phaser.Scene {
       }
     }
     return this.pilotNames[carId] ?? findCarSheet(this.manifest, carId).displayName;
+  }
+
+  /**
+   * Circuit silhouette plus live marks. Focus is the followed car (player in
+   * career, camera target in watch) so the blue triangle always matches the chase.
+   */
+  minimapSnapshot(): MinimapSnapshot | null {
+    if (this.field === undefined || this.minimapOutline.length === 0) {
+      return null;
+    }
+    const focus = this.followedRacer();
+    const focusLaps = this.field.standingOf(focus.carId, focus.gridIndex)?.lapsCompleted ?? 0;
+    return {
+      outline: this.minimapOutline,
+      startLine: this.minimapStartLine,
+      worldMargin: this.minimapWorldMargin,
+      racers: this.field.racers.map(racer => {
+        const standing = this.field.standingOf(racer.carId, racer.gridIndex);
+        const lapped = (standing?.lapsCompleted ?? 0) < focusLaps;
+        return {
+          position: racer.state.position,
+          heading: racer.state.heading,
+          isFocus: racer === focus,
+          faded: (standing?.finished ?? false) || lapped,
+        };
+      }),
+    };
   }
 
   /**
@@ -1285,13 +1332,14 @@ export class RaceScene extends Phaser.Scene {
     const focus = this.followedRacer();
     const spectator = this.watch || this.quitedTheRace;
     if (!spectator) {
-      return this.cameraDirector.sample(
+      const zoom = this.cameraDirector.sample(
         deltaSeconds,
         this.livePolicyZoom(this.zoomPolicy, focus),
         focus.distance,
         this.cameraPreset,
         this.spline.totalLength,
       ).zoom;
+      return this.playerTurboStraightZoom(zoom, focus);
     }
     if (this.watchCameraKind === WATCH_CAMERA_KIND.CHASE) {
       return this.cameraDirector.sample(
@@ -1316,6 +1364,17 @@ export class RaceScene extends Phaser.Scene {
     const lookAhead = Math.max(ZOOM_LOOK_AHEAD_MINIMUM_UNITS, speed * ZOOM_LOOK_AHEAD_SECONDS);
     const curvature = this.spline.curvatureAt(focus.distance + lookAhead, CAMERA_CURVATURE_SPAN_UNITS);
     return policy.targetZoom(speed, focus.stats.maxSpeed, curvature);
+  }
+
+  /** Nitro on a long straight: 10% more zoom-out. Player only, never watch/quit. */
+  private playerTurboStraightZoom(zoom: number, focus: RacerRuntime): number {
+    if (!this.player.isPlayer || !this.player.turboBurning) {
+      return zoom;
+    }
+    const speed = focus.telemetry?.speed ?? 0;
+    const lookAhead = Math.max(ZOOM_LOOK_AHEAD_MINIMUM_UNITS, speed * ZOOM_LOOK_AHEAD_SECONDS);
+    const curvature = this.spline.curvatureAt(focus.distance + lookAhead, CAMERA_CURVATURE_SPAN_UNITS);
+    return applyTurboStraightZoom(zoom, true, curvature);
   }
 
   /** Watch broadcast only: half the circuit, centred on the followed car. */
