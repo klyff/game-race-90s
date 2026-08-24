@@ -113,11 +113,6 @@ function crowdLateral(index: number, wall: number): number {
   return side * reach;
 }
 
-function inStartSpan(distance: number, start: number, length: number): boolean {
-  const along = wrapDistance(distance - start, length);
-  return along <= START_SPAN_AFTER || along >= length - START_SPAN_BEFORE;
-}
-
 /**
  * ~156 adults: a dense pack on both shoulders of start/finish, the rest
  * ringing the lap. Always face the camera at runtime. One slot in 26 is

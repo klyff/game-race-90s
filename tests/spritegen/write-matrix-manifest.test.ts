@@ -9,7 +9,7 @@ const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 describe('discoverMatrixHeroNumbers', () => {
   it('finds only available public/matrix_car/{N}_hero folders, not parked x_*', () => {
     const numbers = discoverMatrixHeroNumbers(join(projectRoot, 'public', 'matrix_car'));
-    expect(numbers).toEqual([...AVAILABLE_MATRIX_NUMBERS]);
+    expect(numbers).toEqual([1, ...AVAILABLE_MATRIX_NUMBERS]);
     expect(numbers).not.toContain(2);
     expect(numbers).not.toContain(3);
     expect(numbers).not.toContain(31);

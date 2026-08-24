@@ -29,7 +29,6 @@ interface Confetti {
   color: number;
   age: number;
   life: number;
-  screen: boolean;
 }
 
 interface Spark {
@@ -62,7 +61,6 @@ export class VictoryCelebration {
   private sparks: Spark[] = [];
   private rockets: Rocket[] = [];
   private playing = false;
-  private origin: Vec2 = { x: 0, y: 0 };
 
   constructor(scene: Phaser.Scene, projection: IsoProjection) {
     this.scene = scene;
@@ -88,7 +86,6 @@ export class VictoryCelebration {
       return;
     }
     this.playing = true;
-    this.origin = worldPosition;
     this.confetti = [];
     this.sparks = [];
     this.rockets = [];
@@ -110,7 +107,6 @@ export class VictoryCelebration {
         color: PALETTE[i % PALETTE.length]!,
         age: 0,
         life: CONFETTI_LIFE * (0.75 + (i % 5) * 0.06),
-        screen: true,
       });
     }
 
