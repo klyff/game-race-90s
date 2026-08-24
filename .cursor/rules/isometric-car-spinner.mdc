@@ -96,6 +96,23 @@ As 32 fotos-base ficam **somente** em:
 qualquer outra cópia no repo do jogo. `reference_metrics.json` e
 `generation_targets.json` tambem sao lidos de dentro da pasta do skill.
 
+## Pose ≠ estilo (DeLorean e gabarito de angulo)
+
+As 32 fotos sao um DeLorean de **angulo/eixo/escala**. Nao sao um carro
+para reskinar. Corpo, pintura e arma vem do spec + `style_anchor.json` +
+o frame **gerado** anterior.
+
+- Nunca escrever no prompt "Redraw the car shown in the FIRST attached
+  image" — essa frase faz a esteira virar copia do DeLorean.
+- Usar `references/prompt_template.md` (bloco POSE GABARITO) e
+  `tools/spinner_prompt.py` no repo, que ja proibem copiar a carroceria
+  da foto (wedge, gull-wing, inox).
+- Se um frame parecer DeLorean / coupe em cunha mesmo com
+  `validate_frame.py` em PASS, e hard fail: retry (max 3) ou parar.
+  Nao aceitar leak de identidade para "nao parar a esteira".
+- `style_anchor.json` deve travar `body_type` e `forbidden`.
+- Mudanca so de skill/docs **nao** regenera carros ja exportados.
+
 ## Nao-negociaveis
 
 - Sempre PixelArt no prompt. Nunca fotoreal.
@@ -112,3 +129,5 @@ qualquer outra cópia no repo do jogo. `reference_metrics.json` e
 - Entrega: `scripts/export_car.py`. Hero = sempre frame 07.
 - "export car" / exportcar: copiar o run pronto; nao regenerar frames.
 - Mudanca so de skill/docs/tools **nao** regenera carros ja feitos.
+- Nunca tratar as fotos de pose como carro para copiar. DeLorean = angulo.
+- Nunca aceitar leak de identidade (DeLorean/wedge/gull-wing) para seguir.

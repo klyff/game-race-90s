@@ -14,5 +14,6 @@ Live playable cars use the **32-frame CCW** spinner clock. Do not mix with the o
 3. **Hero / shop / garage / results = frame 07** → `car_hero.png` (~78.75° CCW ≈ 3:22).
 4. Live folder: `public/assets/cars/<n>-<slug>/`. Canonical table: `public/assets/cars/RELOGIO.md`.
 5. New car = skill **isometric-car-spinner** (`export_car.py`). Never flip a frame to “fix” yaw.
+6. Pose photos are a DeLorean **angle gabarito**, not a style source. Do not copy that body.
 
 **Obsolete:** `public/matrix_car/`, skill `matrix-car-rotate`, and the 30-slot CW gabarito (`a000`…`a029`, hero indice[25]). Leave those files on disk. Do not generate, rename, or ship from that pipeline. Sprite-strip / iso-car-strip CLOCK (32 CW, frame 0 = 4:30) is also obsolete.
