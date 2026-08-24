@@ -11,7 +11,7 @@
       "endDistance": 112,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "speed",

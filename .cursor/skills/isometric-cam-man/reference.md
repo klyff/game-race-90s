@@ -7,18 +7,21 @@
 | Straight | `\|c\| < 0.006` and length ≥ 80 | zoom out 15% (`1.275`) |
 | Speed | straight and length ≥ 400 | zoom out 35% (`0.975`) |
 | Sweeper | `0.006 ≤ \|c\| < 1/70` | none (live policy) |
-| Corner | `\|c\| ≥ 1/70` and length ≥ 24 | zoom in 10% (`2.20`) |
-| Tight | `\|c\| ≥ 0.025` | zoom in 30% (`2.60`) |
+| Corner | `\|c\| ≥ 1/70` and length ≥ 24 | zoom in (`2.065`, 30% less pull-in than 2.20) |
+| Tight | `\|c\| ≥ 0.025` | zoom in (`2.345`, 30% less pull-in than 2.60) |
 | Ramp | authored `rampZones` | zoom out 10% (`1.35`) |
+| Turbo straight | player nitro + `\|c\| < 0.006` | extra zoom out 10% (`× 0.9`) |
 
 ## Zoom band
 
 | Role | Phaser zoom |
 | --- | --- |
 | Home / `0` | 1.75 |
-| Auto curve | 2.20 |
+| Auto curve | 2.065 |
+| Auto tight | 2.345 |
 | Auto straight | 1.275 |
 | Auto ramp | 1.35 |
+| Player turbo on a long straight | current × 0.9 |
 | Skill max in / `[` | 2.60 |
 | Skill auto min out | 0.975 |
 | Manual `]` | 50% of track AABB in the live viewport |

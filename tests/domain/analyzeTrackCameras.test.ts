@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { analyzeTrackCameras, countTriggers } from '../../src/domain/camera/analyzeTrackCameras.ts';
-import { CAMERA_TRIGGER_KIND } from '../../src/domain/camera/CameraPreset.ts';
+import { CAMERA_CLOSE_ZOOM, CAMERA_HOME_ZOOM, CAMERA_TRIGGER_KIND } from '../../src/domain/camera/CameraPreset.ts';
 import { thunderBasin } from '../../src/data/tracks/thunder-basin.track.ts';
 import { thunderBasinTwo } from '../../src/data/tracks/thunder-basin-2.track.ts';
 
@@ -25,7 +25,8 @@ describe('analyzeTrackCameras', () => {
 
   it('zooms in on the west hairpin', () => {
     const curves = preset.triggers.filter(trigger => trigger.kind === CAMERA_TRIGGER_KIND.CURVE);
-    expect(curves.some(trigger => trigger.targetZoom >= 2.2)).toBe(true);
+    expect(curves.some(trigger => trigger.targetZoom >= CAMERA_CLOSE_ZOOM - 1e-9)).toBe(true);
+    expect(curves.every(trigger => trigger.targetZoom > CAMERA_HOME_ZOOM)).toBe(true);
   });
 
   it('tags Basin II with two ramp triggers matching the authored lips', () => {

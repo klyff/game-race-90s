@@ -9,6 +9,7 @@ import {
   CAMERA_HOME_ZOOM,
   CAMERA_MAX_ZOOM_IN,
   CAMERA_RAMP_ZOOM,
+  CAMERA_TIGHT_ZOOM,
   CAMERA_STRAIGHT_CURVATURE,
   CAMERA_TIGHT_CURVATURE,
   CAMERA_TRIGGER_HOLD_SECONDS,
@@ -112,7 +113,7 @@ function triggerFromSegment(segment: RawSegment): CameraTrigger | null {
       endDistance: segment.end + SAMPLE_STEP_UNITS,
       zoomBias: 0.3,
       holdSeconds: CAMERA_TRIGGER_HOLD_SECONDS,
-      targetZoom: CAMERA_MAX_ZOOM_IN,
+      targetZoom: CAMERA_TIGHT_ZOOM,
     };
   }
   if (segment.kind === 'corner' && segment.length >= MIN_CORNER_LENGTH) {

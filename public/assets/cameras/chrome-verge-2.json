@@ -27,7 +27,7 @@
       "endDistance": 1248,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "curve",
@@ -35,7 +35,7 @@
       "endDistance": 1448,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "speed",
@@ -51,7 +51,7 @@
       "endDistance": 2544,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     }
   ]
 }

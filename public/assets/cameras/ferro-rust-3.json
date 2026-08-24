@@ -19,7 +19,7 @@
       "endDistance": 192,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "straight",
@@ -35,7 +35,7 @@
       "endDistance": 496,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "straight",
@@ -51,7 +51,7 @@
       "endDistance": 704,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "straight",
@@ -67,7 +67,7 @@
       "endDistance": 944,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "curve",
@@ -75,7 +75,7 @@
       "endDistance": 1104,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "curve",
@@ -83,7 +83,7 @@
       "endDistance": 1120,
       "zoomBias": 0.3,
       "holdSeconds": 3,
-      "targetZoom": 2.6
+      "targetZoom": 2.345
     },
     {
       "kind": "curve",
@@ -91,7 +91,7 @@
       "endDistance": 1144,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "straight",
@@ -115,7 +115,7 @@
       "endDistance": 1616,
       "zoomBias": 0.3,
       "holdSeconds": 3,
-      "targetZoom": 2.6
+      "targetZoom": 2.345
     },
     {
       "kind": "curve",
@@ -123,7 +123,7 @@
       "endDistance": 1640,
       "zoomBias": 0.1,
       "holdSeconds": 3,
-      "targetZoom": 2.2
+      "targetZoom": 2.065
     },
     {
       "kind": "straight",

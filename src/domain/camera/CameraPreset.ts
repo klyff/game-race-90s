@@ -19,11 +19,23 @@ export type CameraTriggerKind =
 /** Midpoint of today's 1.5–2.0 band. Tecla 0 and trigger expiry land here. */
 export const CAMERA_HOME_ZOOM = 1.75;
 
-/** Curve auto zoom: +10% from today's close (2.0). */
-export const CAMERA_CLOSE_ZOOM = 2.2;
+/**
+ * How much of the old curve pull-in we keep. 0.7 = 30% less close, so chained
+ * corners still show the road ahead.
+ */
+export const CAMERA_CURVE_ZOOM_IN_RETAIN = 0.7;
+
+/** Curve auto zoom: 30% less pull-in than the old 2.2 (home + 0.45 × 0.7). */
+export const CAMERA_CLOSE_ZOOM = 2.065;
+
+/** Tight-hairpin trigger. `[` still uses CAMERA_MAX_ZOOM_IN. */
+export const CAMERA_TIGHT_ZOOM = 2.345;
 
 /** Fast-straight auto zoom: −15% from today's wide (1.5). */
 export const CAMERA_WIDE_ZOOM = 1.275;
+
+/** Extra zoom-out on a long straight while the player's nitro is burning. */
+export const CAMERA_TURBO_STRAIGHT_SCALE = 0.9;
 
 /** Watch / quit live zoom: pulled back on the leader. `[` `]` `0` still override. */
 export const CAMERA_SPECTATOR_ZOOM = CAMERA_WIDE_ZOOM;
@@ -103,4 +115,25 @@ export function distanceInSpan(
     return d >= a && d < b;
   }
   return d >= a || d < b;
+}
+
+/**
+ * 10% more zoom-out on a dead-ahead straight while nitro is on.
+ * Phaser zoom smaller = farther. Corners and missing numbers are left alone.
+ */
+export function applyTurboStraightZoom(
+  zoom: number,
+  turboBurning: boolean,
+  upcomingCurvature: number,
+): number {
+  if (!Number.isFinite(zoom) || zoom <= 0) {
+    return CAMERA_HOME_ZOOM;
+  }
+  if (!turboBurning) {
+    return zoom;
+  }
+  if (!Number.isFinite(upcomingCurvature) || Math.abs(upcomingCurvature) >= CAMERA_STRAIGHT_CURVATURE) {
+    return zoom;
+  }
+  return zoom * CAMERA_TURBO_STRAIGHT_SCALE;
 }

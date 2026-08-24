@@ -2,9 +2,11 @@ import Phaser from 'phaser';
 import { formatHud } from '../adapters/render/HudFormat.ts';
 import type { HudReadout, HudText } from '../adapters/render/HudFormat.ts';
 import { AnalogGauges } from '../adapters/render/AnalogGauges.ts';
+import { MinimapView } from '../adapters/render/MinimapView.ts';
+import type { MinimapSnapshot } from '../adapters/render/MinimapProjection.ts';
+import { RACE_PHASE } from '../domain/constants.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import {
-  HUD_JUMP_KEY,
   HUD_MINE_KEY,
   HUD_MISSILE_KEY,
   HUD_OIL_KEY,
@@ -13,18 +15,25 @@ import {
 } from './sceneKeys.ts';
 
 /**
- * Screen inset for the corner blocks, pixels.
+ * Title-safe floor, pixels. `safeMargin()` grows this to 5% of the shorter
+ * side so corner HUD stays inside TV overscan (game-ui-design safe zone).
  *
  * A plain pixel value is correct here and would NOT be correct inside `RaceScene`:
  * this scene has its own camera at zoom 1 with no scroll, so one unit of this scene
  * is one screen pixel by definition. See the class comment.
  */
-const MARGIN = 32;
+const MARGIN_FLOOR = 32;
+const TITLE_SAFE_FRACTION = 0.05;
+
+function safeMargin(width: number, height: number): number {
+  const shortest = Math.min(width, height);
+  return Math.max(MARGIN_FLOOR, Math.round(shortest * TITLE_SAFE_FRACTION));
+}
 
 /**
  * Loadout rail: native icons are 32×32, shown at 2× (integer scale — pixelArt).
- * Slot is [icon][gap][two-digit count] plus a trailing gap so five sit in a row:
- * [Nitro] 99 [Missile] 99 [Mine] 99 [Oil] 99 [Jump] 99
+ * Slot is [icon][gap][two-digit count] plus a trailing gap so four sit in a row:
+ * [Nitro] 99 [Missile] 99 [Mine] 99 [Oil] 99
  */
 const ICON_NATIVE = 32;
 const ICON_SCALE = 2;
@@ -33,7 +42,7 @@ const ICON_COUNT_GAP = 10;
 const COUNT_WIDTH = 36;
 const SLOT_GAP = 16;
 const SLOT_WIDTH = ICON_SIZE + ICON_COUNT_GAP + COUNT_WIDTH + SLOT_GAP;
-const LOADOUT_SLOT_COUNT = 5;
+const LOADOUT_SLOT_COUNT = 4;
 
 /** Integrity bar spans first icon through last count — no leftover trailing gap. */
 const BAR_WIDTH = SLOT_WIDTH * LOADOUT_SLOT_COUNT - SLOT_GAP;
@@ -46,7 +55,6 @@ const LOADOUT_ICON_KEYS = [
   HUD_MISSILE_KEY,
   HUD_MINE_KEY,
   HUD_OIL_KEY,
-  HUD_JUMP_KEY,
 ] as const;
 
 /** Integrity thresholds at which the bar changes colour. Matches `CAR_CONDITION`. */
@@ -82,6 +90,7 @@ const HUD_DEPTH = 10;
 export interface HudSource {
   hudReadout(): HudReadout;
   standingsWithNames(): readonly { readonly name: string; readonly position: number }[];
+  minimapSnapshot(): MinimapSnapshot | null;
 }
 
 /**
@@ -118,6 +127,7 @@ export class HudScene extends Phaser.Scene {
   private barBackground!: Phaser.GameObjects.Rectangle;
   private barFill!: Phaser.GameObjects.Rectangle;
   private gauge!: AnalogGauges;
+  private minimap!: MinimapView;
 
   /** Last rendered values, so a pulse fires on CHANGE rather than every frame. */
   private lastPosition = '';
@@ -125,6 +135,9 @@ export class HudScene extends Phaser.Scene {
   private lastCash = '';
   private lastCashAmount = 0;
   private lastPoints = '';
+  private lastAmmo = -1;
+  private lastMines = -1;
+  private lastOil = -1;
   private lastCountdown: string | null = null;
   private lastPodiumClock: string | null = null;
   private podiumFlashElapsed = 0;
@@ -177,6 +190,8 @@ export class HudScene extends Phaser.Scene {
 
     this.gauge = new AnalogGauges(this);
     this.gauge.setDepth(HUD_DEPTH);
+    this.minimap = new MinimapView(this);
+    this.minimap.setDepth(HUD_DEPTH);
 
     this.countdownText = this.add
       .text(0, 0, '', this.countdownStyle())
@@ -207,7 +222,10 @@ export class HudScene extends Phaser.Scene {
     // will not tear down on its own; every other owned-object adapter in this codebase
     // (`ExplosionEffect`, `TyreMarks`) is destroyed from a SHUTDOWN hook for the same
     // reason, following the pattern `RaceScene` uses for its own owned resources.
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.gauge.destroy());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.gauge.destroy();
+      this.minimap.destroy();
+    });
   }
 
   update(_time: number, deltaMilliseconds: number): void {
@@ -230,6 +248,7 @@ export class HudScene extends Phaser.Scene {
     this.applyCountdown(text);
     this.applyPodiumTimeout(text, deltaMilliseconds);
     this.applyStandings(source, readout);
+    this.applyMinimap(source, readout);
   }
 
   private applyCash(amount: number): void {
@@ -415,7 +434,26 @@ export class HudScene extends Phaser.Scene {
   }
 
   /**
-   * Five glance slots: Nitro, Missile, Mine, Oil, Jump. Nitro is a fill bar;
+   * Circuit silhouette while the lights are out or the pack is still racing.
+   * Hidden once the race is finished so it does not fight the podium overlay.
+   */
+  private applyMinimap(source: HudSource, readout: HudReadout): void {
+    const live = readout.phase === RACE_PHASE.COUNTDOWN || readout.phase === RACE_PHASE.RACING;
+    if (!live || typeof source.minimapSnapshot !== 'function') {
+      this.minimap.setVisible(false);
+      return;
+    }
+    const snapshot = source.minimapSnapshot();
+    if (snapshot === null) {
+      this.minimap.setVisible(false);
+      return;
+    }
+    this.minimap.setVisible(true);
+    this.minimap.update(snapshot);
+  }
+
+  /**
+   * Four glance slots: Nitro, Missile, Mine, Oil. Nitro is a fill bar;
    * the others keep a count. Empty stock dims the icon; burning nitro tints gold.
    */
   private applyLoadout(readout: HudReadout): void {
@@ -430,9 +468,23 @@ export class HudScene extends Phaser.Scene {
       Math.max(0, Number.isFinite(readout.ammo) ? readout.ammo : 0),
       Math.max(0, Number.isFinite(readout.mines) ? readout.mines! : 0),
       Math.max(0, Number.isFinite(readout.oil) ? readout.oil! : 0),
-      Math.max(0, Number.isFinite(readout.jumps) ? readout.jumps! : 0),
     ];
     this.loadoutCounts[0]?.setVisible(false);
+    const ammo = Math.round(counts[1] ?? 0);
+    const mines = Math.round(counts[2] ?? 0);
+    const oil = Math.round(counts[3] ?? 0);
+    if (this.lastAmmo >= 0 && ammo < this.lastAmmo) {
+      this.pulseCount(1);
+    }
+    if (this.lastMines >= 0 && mines < this.lastMines) {
+      this.pulseCount(2);
+    }
+    if (this.lastOil >= 0 && oil < this.lastOil) {
+      this.pulseCount(3);
+    }
+    this.lastAmmo = ammo;
+    this.lastMines = mines;
+    this.lastOil = oil;
     this.nitroFill.width = Math.max(1, (COUNT_WIDTH - 4) * fraction);
     this.nitroFill.setFillStyle(readout.turboActive === true ? 0xffe066 : 0xd8dae2);
     this.nitroTrack.setAlpha(tank <= 0 ? EMPTY_ICON_ALPHA : 0.95);
@@ -457,8 +509,19 @@ export class HudScene extends Phaser.Scene {
     }
   }
 
+  /** Spend feedback on a loadout count — glanceable, not a new HUD chrome. */
+  private pulseCount(index: number): void {
+    const target = this.loadoutCounts[index];
+    if (target !== undefined) {
+      this.pulse(target, 1.35);
+    }
+  }
+
   /** A short scale-up that settles back, for a value the player should notice. */
   private pulse(target: Phaser.GameObjects.Text, scale: number): void {
+    if (prefersReducedMotion()) {
+      return;
+    }
     this.tweens.killTweensOf(target);
     target.setScale(scale);
     this.tweens.add({
@@ -479,22 +542,35 @@ export class HudScene extends Phaser.Scene {
   private layout(): void {
     const width = this.scale.width;
     const height = this.scale.height;
+    const margin = safeMargin(width, height);
 
-    this.positionText.setPosition(MARGIN, MARGIN);
-    this.lapText.setPosition(MARGIN, MARGIN + 58);
-    this.cashText.setPosition(MARGIN, MARGIN + 88);
-    this.pointsText.setPosition(MARGIN, MARGIN + 112);
+    this.positionText.setPosition(margin, margin);
+    this.lapText.setPosition(margin, margin + 58);
+    this.cashText.setPosition(margin, margin + 88);
+    this.pointsText.setPosition(margin, margin + 112);
 
-    this.timeText.setPosition(width - MARGIN, MARGIN).setOrigin(1, 0);
-    this.standingsText.setPosition(width - MARGIN, MARGIN + 34).setOrigin(1, 0);
+    this.timeText.setPosition(width - margin, margin).setOrigin(1, 0);
+    this.standingsText.setPosition(width - margin, margin + 34).setOrigin(1, 0);
 
-    const barY = height - MARGIN - BAR_HEIGHT;
-    this.barBackground.setPosition(MARGIN, barY);
-    this.barFill.setPosition(MARGIN, barY);
+    // Mid-left, below the cash/pts stack and above the loadout rail. Title-safe
+    // on the left; ~18% of the short side at 1080p (~200px), shrinks if the
+    // window would otherwise overlap the rail.
+    const stackBottom = margin + 112 + 22;
+    const railHeight = ICON_SIZE + RAIL_PAD * 2;
+    const loadoutTop = height - margin - BAR_HEIGHT - RAIL_PAD - railHeight;
+    const budget = Math.max(96, loadoutTop - stackBottom - 12);
+    const target = Math.round(Math.min(width, height) * 0.18);
+    const mapSize = Math.max(96, Math.min(Math.max(target, 160), budget));
+    this.minimap.setSize(mapSize, mapSize);
+    this.minimap.setPosition(margin, stackBottom);
+
+    const barY = height - margin - BAR_HEIGHT;
+    this.barBackground.setPosition(margin, barY);
+    this.barFill.setPosition(margin, barY);
     const iconY = barY - RAIL_PAD - ICON_SIZE / 2;
-    this.railPlate.setPosition(MARGIN - RAIL_PAD, iconY - ICON_SIZE / 2 - RAIL_PAD);
+    this.railPlate.setPosition(margin - RAIL_PAD, iconY - ICON_SIZE / 2 - RAIL_PAD);
     this.loadoutIcons.forEach((icon, index) => {
-      const slotX = MARGIN + index * SLOT_WIDTH;
+      const slotX = margin + index * SLOT_WIDTH;
       icon.setPosition(slotX + ICON_SIZE / 2, iconY);
       icon.setDisplaySize(ICON_SIZE, ICON_SIZE);
       this.loadoutCounts[index]?.setPosition(slotX + ICON_SIZE + ICON_COUNT_GAP, iconY);
@@ -507,10 +583,10 @@ export class HudScene extends Phaser.Scene {
 
     // Analog cluster: bottom-right, the only free corner — top corners hold
     // position/lap and time/standings, bottom-left is the integrity + loadout rail.
-    // Right-aligned using the cluster's own reported size, title-safe MARGIN 32.
+    // Right-aligned using the cluster's own reported size, title-safe 5%.
     const gaugeSize = this.gauge.size;
-    const gaugeX = width - MARGIN - gaugeSize.width;
-    const gaugeY = height - MARGIN - gaugeSize.height;
+    const gaugeX = width - margin - gaugeSize.width;
+    const gaugeY = height - margin - gaugeSize.height;
     this.gauge.setPosition(gaugeX, gaugeY);
 
     // Well above centre on purpose: the chase camera keeps the player's car in the
@@ -519,7 +595,7 @@ export class HudScene extends Phaser.Scene {
     this.countdownText.setPosition(width / 2, height * 0.26);
 
     // Title-safe centre-top: 10% down from the top edge, never the screen corner.
-    const podiumY = Math.max(MARGIN + 48, height * 0.12);
+    const podiumY = Math.max(margin + 48, height * 0.12);
     this.podiumPlate.setPosition(width / 2, podiumY);
     this.podiumClockText.setPosition(width / 2, podiumY);
     this.podiumTimeoutLabel.setPosition(width / 2, podiumY + 44);

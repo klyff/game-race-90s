@@ -18,7 +18,7 @@ import {
 export interface CameraZoomPolicyOptions {
   /** Resting zoom. Defaults to 1.75. */
   readonly homeZoom?: number;
-  /** Zoom used in corners. Defaults to 2.2. */
+  /** Zoom used in corners. Defaults to CAMERA_CLOSE_ZOOM. */
   readonly closeZoom?: number;
   /** Zoom used on fast straights. Defaults to 1.275. */
   readonly wideZoom?: number;
