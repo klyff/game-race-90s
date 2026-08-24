@@ -35,12 +35,14 @@ Explosion: random quadrant, 15% then opposite 15%, H and V together. Zoom ×1.30
 | Key | Player racing | Watch / quit |
 | --- | --- | --- |
 | `[` `]` `0` | zoom in / out / home | same |
-| Arrows | steer | cycle follow target |
-| Space | hop | jump to cluster / attacks |
+| Arrows | steer | cycle follow target (place) |
+| L | — | back to the leader |
+| F | — | chase ↔ aerial broadcast |
+| Space | hop | — |
 
 ## Runtime files
 
 - `src/domain/camera/CameraDirector.ts` — manual > trigger > live
 - `src/domain/camera/CameraImpulse.ts` — shake + wreck zoom punch
-- `src/domain/camera/AccidentWatch.ts` — spectator accidents
+- `src/domain/camera/WatchCamera.ts` — chase (default, +25%) / broadcast toggle
 - `src/domain/camera/innerWallPark.ts` — quit park pose

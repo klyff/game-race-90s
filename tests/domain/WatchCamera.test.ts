@@ -7,6 +7,7 @@ import {
 import {
   CAMERA_WATCH_BROADCAST_MAP_FRACTION,
   CAMERA_WATCH_CHASE_FARTHER,
+  DEFAULT_WATCH_CAMERA_KIND,
   nextWatchCameraKind,
   scaleCameraPresetFarther,
   stepWatchPlace,
@@ -37,11 +38,12 @@ describe('WatchCamera', () => {
     expect(CAMERA_WATCH_BROADCAST_MAP_FRACTION).toBe(0.5);
   });
 
-  it('toggles broadcast and chase', () => {
-    const first: WatchCameraKind = WATCH_CAMERA_KIND.BROADCAST;
-    const chase = nextWatchCameraKind(first);
-    expect(chase).toBe(WATCH_CAMERA_KIND.CHASE);
-    expect(nextWatchCameraKind(chase)).toBe(WATCH_CAMERA_KIND.BROADCAST);
+  it('defaults to chase and toggles broadcast', () => {
+    expect(DEFAULT_WATCH_CAMERA_KIND).toBe(WATCH_CAMERA_KIND.CHASE);
+    const first: WatchCameraKind = DEFAULT_WATCH_CAMERA_KIND;
+    const broadcast = nextWatchCameraKind(first);
+    expect(broadcast).toBe(WATCH_CAMERA_KIND.BROADCAST);
+    expect(nextWatchCameraKind(broadcast)).toBe(WATCH_CAMERA_KIND.CHASE);
   });
 
   it('walks down the order without wrapping past last or leader', () => {
@@ -52,9 +54,10 @@ describe('WatchCamera', () => {
     expect(stepWatchPlace(0, -1, 15)).toBe(0);
   });
 
-  it('pulls chase zoom 30% farther than the player band', () => {
+  it('pulls chase zoom 25% farther than the player band', () => {
     const farther = scaleCameraPresetFarther(PRESET, CAMERA_WATCH_CHASE_FARTHER);
-    expect(farther.homeZoom).toBeCloseTo(CAMERA_HOME_ZOOM / 1.3, 5);
-    expect(farther.triggers[0]?.targetZoom).toBeCloseTo(2.2 / 1.3, 5);
+    expect(CAMERA_WATCH_CHASE_FARTHER).toBe(1.25);
+    expect(farther.homeZoom).toBeCloseTo(CAMERA_HOME_ZOOM / 1.25, 5);
+    expect(farther.triggers[0]?.targetZoom).toBeCloseTo(2.2 / 1.25, 5);
   });
 });

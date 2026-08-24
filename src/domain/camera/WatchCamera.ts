@@ -1,6 +1,7 @@
 /**
- * Watch filming: broadcast (aerial, fights) vs chase (player-like, a bit farther).
- * Left/right step race place; they do not wrap past the leader or last car.
+ * Watch filming: chase (player-like, a bit farther) is the default.
+ * F still toggles the old aerial broadcast. Left/right step race place;
+ * they do not wrap past the leader or last car.
  */
 
 import type { CameraPreset } from './CameraPreset.ts';
@@ -12,11 +13,13 @@ export const WATCH_CAMERA_KIND = {
 
 export type WatchCameraKind = (typeof WATCH_CAMERA_KIND)[keyof typeof WATCH_CAMERA_KIND];
 
+export const DEFAULT_WATCH_CAMERA_KIND = WATCH_CAMERA_KIND.CHASE;
+
 /** Half the circuit fills the view — 50% closer than a full-map fit. */
 export const CAMERA_WATCH_BROADCAST_MAP_FRACTION = 0.5;
 
-/** Chase sits 30% farther than the player racing frame. */
-export const CAMERA_WATCH_CHASE_FARTHER = 1.3;
+/** Chase sits 25% farther than the player racing frame. */
+export const CAMERA_WATCH_CHASE_FARTHER = 1.25;
 
 export function nextWatchCameraKind(kind: WatchCameraKind): WatchCameraKind {
   return kind === WATCH_CAMERA_KIND.BROADCAST

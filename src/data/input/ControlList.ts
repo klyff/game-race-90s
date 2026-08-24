@@ -31,11 +31,10 @@ export const RACE_SYSTEM_CONTROLS: readonly ControlRow[] = [
 ];
 
 export const WATCH_CONTROLS: readonly ControlRow[] = [
-  { keys: 'F', action: 'CAMERA  ·  BROADCAST / CHASE' },
+  { keys: 'F', action: 'CAMERA  ·  CHASE / BROADCAST' },
   { keys: 'LEFT / RIGHT', action: 'NEXT PLACE  ·  BACK TO LEADER' },
   { keys: ', / .', action: 'PREVIOUS TRACK  ·  NEXT TRACK' },
   { keys: '[ / ] / 0', action: 'ZOOM IN  ·  ZOOM OUT  ·  RESET' },
-  { keys: 'SPACE', action: 'JUMP TO A CRASH CLUSTER' },
   { keys: 'L', action: 'BACK TO THE LEADER' },
 ];
 

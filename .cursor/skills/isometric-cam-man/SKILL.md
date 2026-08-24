@@ -15,7 +15,7 @@ The race camera is chase-isometric. The **angle never changes** (`ISO_X=1`, `ISO
 ## Non-negotiable
 
 1. Player is racing → camera centre is **always** the player.
-2. `quitedTheRace=true` → centre is the **leader**, or a 2+ car accident, then back to the leader. The quit car parks on the inner wall; engine is silent.
+2. `quitedTheRace=true` or watch → centre is the **leader** (same chase-iso as the player, 25% farther). Arrows cycle place; `[` `]` `0` zoom. Do not follow crashes. The quit car parks on the inner wall; engine is silent.
 3. Do not edit `ISO_X` / `ISO_Y`.
 
 ## After changing a track or line
