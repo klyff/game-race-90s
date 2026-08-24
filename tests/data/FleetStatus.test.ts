@@ -24,6 +24,8 @@ describe('FleetStatus', () => {
     expect(isLiveSpinnerCarId('2-sportivo-blue-combat')).toBe(true);
     expect(isLiveSpinnerCarId('1-muscle-car-gray-number9')).toBe(true);
     expect(isLiveSpinnerCarId('3-red-oh-red')).toBe(true);
+    expect(isLiveSpinnerCarId('4-pickup-army-green-wasteland')).toBe(false);
+    expect(isLiveSpinnerCarId('5-all-pink-fury')).toBe(true);
     expect(isLiveSpinnerCarId('4-wasteland-pickup-sand-mg')).toBe(false);
     expect(isLiveSpinnerCarId('5-raider-sedan-cream-cannon')).toBe(false);
     expect(isLiveSpinnerCarId('6-war-muscle-red-bomber')).toBe(false);
@@ -57,6 +59,7 @@ describe('FleetStatus', () => {
       '2-sportivo-blue-combat',
     ]);
     expect(sanitizeCarId('6-war-muscle-red-bomber')).toBe(FLEET_DEFAULT_CAR_ID);
+    expect(sanitizeCarId('4-pickup-army-green-wasteland')).toBe(FLEET_DEFAULT_CAR_ID);
     const career = parseCareer({
       activeSlotIndex: 0,
       slots: [

@@ -13,6 +13,7 @@ export const RETIRED_CAR_IDS = [
   '5-raider-sedan-cream-cannon',
   '6-war-muscle-red-bomber',
   '7-scav-wagon-olive-cannon',
+  '4-pickup-army-green-wasteland',
 ] as const;
 
 /** @deprecated Matrix leftover. Treated as out of service with every non-spinner id. */
