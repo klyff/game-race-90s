@@ -21,15 +21,15 @@ function lengthOf(track: typeof thunderBasin): number {
 }
 
 describe('CrowdSlots', () => {
-  it('places 6× the original pack, dense at the start, one flasher per 26, same seed same layout', () => {
+  it('places ~300 people, dense at the start, one flasher per 26, same seed same layout', () => {
     const length = lengthOf(thunderBasin);
     const seed = crowdSeed(1, thunderBasin.id);
     const a = pickTrackCrowd(thunderBasin, seed, length);
     const b = pickTrackCrowd(thunderBasin, seed, length);
     expect(a).toHaveLength(CROWD_COUNT);
-    expect(CROWD_COUNT).toBe(156);
-    expect(CROWD_START_COUNT).toBe(52);
-    expect(CROWD_LAP_COUNT).toBe(104);
+    expect(CROWD_COUNT).toBe(300);
+    expect(CROWD_START_COUNT).toBe(90);
+    expect(CROWD_LAP_COUNT).toBe(210);
     expect(a.filter(slot => slot.kind === CROWD_KIND.FLASHER).length).toBeGreaterThanOrEqual(5);
     expect(a).toEqual(b);
     expect(a.some(slot => slot.kind === CROWD_KIND.ROCK)).toBe(true);
@@ -37,8 +37,8 @@ describe('CrowdSlots', () => {
     expect(a.some(slot => slot.kind === CROWD_KIND.CHEER)).toBe(true);
     const left = a.filter(slot => slot.lateral > 0);
     const right = a.filter(slot => slot.lateral < 0);
-    expect(left.length).toBeGreaterThan(40);
-    expect(right.length).toBeGreaterThan(40);
+    expect(left.length).toBeGreaterThan(80);
+    expect(right.length).toBeGreaterThan(80);
   });
 
   it('packs the start/finish and still rings the rest of the lap', () => {

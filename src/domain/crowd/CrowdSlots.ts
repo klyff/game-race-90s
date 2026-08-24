@@ -13,12 +13,12 @@ export const CROWD_KIND = {
 
 export type CrowdKind = (typeof CROWD_KIND)[keyof typeof CROWD_KIND];
 
-/** Original start-line pack. Live races spawn this times `CROWD_COUNT_SCALE`. */
+/** Original start-line pack size, kept as the flasher cadence seed. */
 export const CROWD_BASE_COUNT = 26;
-export const CROWD_COUNT_SCALE = 6;
-export const CROWD_COUNT = CROWD_BASE_COUNT * CROWD_COUNT_SCALE;
-/** Denser pack on both shoulders of start/finish (2× the original 26). */
-export const CROWD_START_COUNT = CROWD_BASE_COUNT * 2;
+/** Whole circuit: start pack plus the ring around the lap. */
+export const CROWD_COUNT = 300;
+/** Dense pack on both shoulders of start/finish. */
+export const CROWD_START_COUNT = 90;
 export const CROWD_LAP_COUNT = CROWD_COUNT - CROWD_START_COUNT;
 export const CROWD_FLASHER_EVERY = 26;
 /** How close the leader must be (arc units) before cheer / flasher swap frame. */
@@ -114,7 +114,7 @@ function crowdLateral(index: number, wall: number): number {
 }
 
 /**
- * ~156 adults: a dense pack on both shoulders of start/finish, the rest
+ * ~300 adults: a dense pack on both shoulders of start/finish, the rest
  * ringing the lap. Always face the camera at runtime. One slot in 26 is
  * the flasher; the rest cycle rock / punk / piriguete / cheer.
  */

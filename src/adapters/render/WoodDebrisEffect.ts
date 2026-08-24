@@ -5,13 +5,13 @@ import { CRATE_WOOD_LIFE_SECONDS } from '../../domain/traps/TrapRules.ts';
 import { crateSmashTextureKey } from '../../scenes/sceneKeys.ts';
 import { IsoProjection } from './IsoProjection.ts';
 
-const MAX_CHIPS = 220;
-const GRAVITY = 22;
-const BOUNCE = 0.28;
-const THROW_SPEED = 15;
-const UPWARD = 12;
-const SIZE_UNITS = 1.45;
-const CHIP_COUNT = 16;
+const MAX_CHIPS = 420;
+const GRAVITY = 20;
+const BOUNCE = 0.32;
+const THROW_SPEED = 19;
+const UPWARD = 14;
+const SIZE_UNITS = 2.7;
+const CHIP_COUNT = 32;
 const SMASH_FRAME_SECONDS = 0.07;
 const SMASH_FRAMES = 4;
 const FALLBACK_COLORS = [0xc48a48, 0x8a5a28, 0x6a3e18, 0xd4a06a, 0xe8c078, 0x5a3010];
@@ -56,7 +56,7 @@ export class WoodDebrisEffect {
     this.projection = projection;
   }
 
-  burst(position: Vec2, crateSizeUnits = 2.4): void {
+  burst(position: Vec2, crateSizeUnits = 3.4): void {
     const burstId = this.nextBurstId;
     this.nextBurstId += 1;
     this.spawnSmash(position, crateSizeUnits);
@@ -64,19 +64,20 @@ export class WoodDebrisEffect {
       while (this.chips.length >= MAX_CHIPS) {
         this.destroyChip(this.chips.shift()!);
       }
-      const angle = (i / CHIP_COUNT) * Math.PI * 2 + burstId * 0.37;
-      const speedJitter = 0.65 + (i % 5) * 0.12;
-      const sprite = this.makeSprite(i);
+      const angle = (i / CHIP_COUNT) * Math.PI * 2 + burstId * 0.37 + (i % 3) * 0.11;
+      const speedJitter = 0.55 + (i % 7) * 0.14;
+      const plank = i % 4 === 0;
+      const sprite = this.makeSprite(i, plank);
       this.chips.push({
         positionWorld: { x: position.x, y: position.y },
         velocityWorldPerSec: scale(fromAngle(angle), THROW_SPEED * speedJitter),
-        height: 0.55 + (i % 3) * 0.12,
-        verticalVelocity: UPWARD * (0.85 + (i % 4) * 0.18),
+        height: 0.7 + (i % 4) * 0.18,
+        verticalVelocity: UPWARD * (0.8 + (i % 5) * 0.22),
         rotationRadians: angle,
-        spinRadiansPerSec: (i % 2 === 0 ? 1 : -1) * (8 + (i % 7)),
+        spinRadiansPerSec: (i % 2 === 0 ? 1 : -1) * (6 + (i % 9)),
         lifetimeSeconds: CRATE_WOOD_LIFE_SECONDS,
         ageSeconds: 0,
-        sizeUnits: SIZE_UNITS * (0.7 + (i % 5) * 0.12),
+        sizeUnits: SIZE_UNITS * (plank ? 1.35 + (i % 3) * 0.18 : 0.85 + (i % 5) * 0.16),
         sprite,
       });
     }
@@ -176,13 +177,16 @@ export class WoodDebrisEffect {
     this.flashes = next;
   }
 
-  private makeSprite(index: number): Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle {
+  private makeSprite(
+    index: number,
+    plank: boolean,
+  ): Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle {
     const key = chipKey(index);
     if (this.scene.textures.exists(key)) {
       return this.scene.add.image(0, 0, key);
     }
     const color = FALLBACK_COLORS[index % FALLBACK_COLORS.length]!;
-    return this.scene.add.rectangle(0, 0, 12, 7, color);
+    return this.scene.add.rectangle(0, 0, plank ? 22 : 14, plank ? 9 : 6, color);
   }
 
   private syncSprite(chip: FlyingChip): void {
@@ -195,7 +199,7 @@ export class WoodDebrisEffect {
     chip.sprite.setAlpha(Math.max(0, alpha));
     chip.sprite.setVisible(true);
     chip.sprite.setDepth(this.projection.depthOf(chip.positionWorld) + 2);
-    chip.sprite.setDisplaySize(pixelSize, pixelSize * 0.55);
+    chip.sprite.setDisplaySize(pixelSize, pixelSize * (chip.sizeUnits > SIZE_UNITS ? 0.42 : 0.55));
   }
 
   private destroyChip(chip: FlyingChip): void {
