@@ -157,6 +157,7 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
       '2-sportivo-blue-combat': { min: 27.81, max: 46.35 },
       '3-red-oh-red': { min: 27.81, max: 50 },
       '5-all-pink-fury': { min: 27.81, max: 50 },
+      '6-suv-black-noir': { min: 27.81, max: 52 },
     };
 
     const results: Array<{ id: string; lapSeconds: number }> = [];

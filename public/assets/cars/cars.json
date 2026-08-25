@@ -151,6 +151,42 @@
       "frameCount": 32,
       "clock": "counter_clockwise",
       "framesJson": "assets/cars/5-all-pink-fury/car_strip_64x64.json"
+    },
+    {
+      "id": "6-suv-black-noir",
+      "displayName": "SUV Black Noir",
+      "archetype": "Short black Renegade SUV — mid-roof machine gun, red tow hooks",
+      "image": "assets/cars/6-suv-black-noir/car_strip_64x64.png",
+      "shadow": {
+        "width": 45,
+        "height": 22
+      },
+      "stats": {
+        "mass": 1080,
+        "enginePower": 28,
+        "brakeForce": 46,
+        "maxSpeed": 62,
+        "grip": 30,
+        "steerRate": 2.35,
+        "steerSpeedFalloff": 0.46,
+        "armor": 0.44,
+        "ammoCapacity": 14,
+        "collisionRadius": 1.8,
+        "aimRadius": 3.7,
+        "collisionAlong": 1.8,
+        "collisionAcross": 1.296,
+        "collisionSquareMin": 1.296,
+        "collisionSquareMax": 1.8,
+        "collisionSquare": 1.548
+      },
+      "perk": "arsenal",
+      "homePlanetId": "thunder-basin",
+      "worldAdvantage": 0.7,
+      "frameWidth": 72,
+      "frameHeight": 72,
+      "frameCount": 32,
+      "clock": "counter_clockwise",
+      "framesJson": "assets/cars/6-suv-black-noir/car_strip_64x64.json"
     }
   ]
 }

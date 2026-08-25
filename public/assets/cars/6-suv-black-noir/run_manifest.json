@@ -1,0 +1,528 @@
+{
+  "run_id": "2026-08-24_SUV-Black-Noir",
+  "name": "SUV Black Noir",
+  "spec": "SUV M\u00e9dia, named: Black Noir, Pixel art, Black Noir SUV Medium, not long, like a Jeep Renegade, with light gray details, mounted machine Gun on top, arcade combat-racer, do not copy details from base car that is just for positioning and validate frames, background HEX: #00B140",
+  "save_dir": "car-sprites/2026-08-24_SUV-Black-Noir",
+  "background_mode": "chroma_key",
+  "started_at": "2026-08-24T16:03:22+0000",
+  "config": {
+    "status": "VALIDATED",
+    "validated_on": "2026-08-22",
+    "fixed_output_px": [
+      1024,
+      1024
+    ],
+    "max_retries_per_frame": 2
+  },
+  "status": "AWAITING_HUMAN_STRIP_CHECK",
+  "frames": {
+    "0": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_00.png",
+      "status": "APPROVED",
+      "chosen": "r11",
+      "note": "Human accepted r11 as style lock (2026-08-24). Axis FAIL kept (y 85.5 vs 138); scale+yaw PASS; gun forward. Continue belt 1\u201316.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r0.png",
+          "diff": "axis (0.0, 40.0) vs (-4.3, 138.0); yaw aspect 0.902 vs 1.175 (23.2%)",
+          "chosen": false
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r1.png",
+          "diff": "axis (0.0, 79.0) vs (-4.3, 138.0); yaw/scale PASS",
+          "chosen": false
+        },
+        {
+          "id": "r2",
+          "result": "PASS",
+          "path": "attempts/out_frame_00_r2.png",
+          "human": "REJECTED \u2014 too eye-level / not 2:1 isometric camera",
+          "chosen": false
+        },
+        {
+          "id": "r3",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r3.png",
+          "diff": "scale 806 vs 742 (8.7%); axis (-0.5, -6.5) vs (-4.3, 138); aspect 0.841 vs 1.175 (28.4%)",
+          "chosen": false
+        },
+        {
+          "id": "r4",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r4.png",
+          "diff": "scale 669 vs 742 (9.8%); axis PASS; yaw/aspect PASS; gun aimed sideways (human reject)",
+          "chosen": false
+        },
+        {
+          "id": "r5",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r5.png",
+          "diff": "scale 979 vs 742 (32%); axis (-1.5, -4.0); aspect 0.876 vs 1.175 (25.4%)",
+          "chosen": false
+        },
+        {
+          "id": "r6",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r6.png",
+          "human": "PICKED as style look",
+          "diff": "scale 968 vs 742 (30.6%); axis (-0.5, 7.0); yaw/aspect PASS; gun FORWARD",
+          "chosen": false
+        },
+        {
+          "id": "r7",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r7.png",
+          "diff": "scale 524 vs 742 (29.4%); axis (-2.5, 177.0); aspect 0.992 vs 1.175 (15.6%)",
+          "chosen": false
+        },
+        {
+          "id": "r8",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r8.png",
+          "diff": "scale PASS; axis (0.0, 46.0); aspect 0.828 vs 1.175 (29.5%); gun FORWARD",
+          "chosen": false
+        },
+        {
+          "id": "r9",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r9.png",
+          "diff": "scale 614 vs 742 (17.3%); axis (-2.5, 91.0); yaw/aspect PASS; gun FORWARD",
+          "chosen": false
+        },
+        {
+          "id": "r10",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r10.png",
+          "diff": "scale 692 vs 742 (6.7%); axis (1.0, 78.0); yaw/aspect PASS",
+          "chosen": false
+        },
+        {
+          "id": "r11",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r11.png",
+          "chosen": true,
+          "diff": "scale PASS; yaw/aspect PASS; axis (-0.5, 85.5) vs (-4.3, 138) (tol \u00b131); gun FORWARD; human look"
+        }
+      ],
+      "human_approved": true
+    },
+    "1": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_01.png",
+      "status": "CHOSEN_YAW_OK",
+      "chosen": "r2",
+      "note": "Max 3. All yaw OK. r2 closest scale (+20.3%); axis x miss. r1 axis PASS but 37% small. Keep r2 to continue belt.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r0.png",
+          "diff": "scale 1006 vs 769 (30.8%); axis (-8.5, 33.0) vs (47.1, 139.4); yaw OK"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_r1.png",
+          "diff": "scale 483 vs 769 (37.3%); axis PASS; yaw OK"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_01_r2.png",
+          "chosen": true,
+          "diff": "scale 926 vs 769 (20.3%); axis (7.5, 120.0) vs (47.1, 139.4); yaw OK"
+        }
+      ]
+    },
+    "2": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_02.png",
+      "status": "CHOSEN_YAW_OK",
+      "chosen": "r2",
+      "note": "Max 3. r2 scale+yaw PASS; axis fail (more centered). r1 scale 6.3% miss. Keep r2.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r0.png",
+          "diff": "scale 1018 vs 847 (20.2%); axis (4.0, 91.0)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_02_r1.png",
+          "diff": "scale 794 vs 847 (6.3%); axis (11.5, 114.5)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_02_r2.png",
+          "chosen": true,
+          "diff": "scale PASS; yaw OK; axis (-0.5, 65.5) vs (52.8, 140.8)"
+        }
+      ]
+    },
+    "3": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_03.png",
+      "status": "CHOSEN_YAW_OK",
+      "chosen": "r2",
+      "note": "Max 3. r2 yaw+axis PASS, scale 8.7% small. r1 scale+yaw PASS axis fail. Keep r2.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r0.png",
+          "diff": "scale 1033 vs 916; axis; yaw closer to f16"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_03_r1.png",
+          "diff": "scale PASS; yaw OK; axis (-8.0, 94.5)"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_03_r2.png",
+          "chosen": true,
+          "diff": "yaw+axis PASS; scale 836 vs 916 (8.7%)"
+        }
+      ]
+    },
+    "4": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_04.png",
+      "status": "CHOSEN_CONTINUE",
+      "note": "Human: continue to end. Keep r2 (closest 45\u00b0 box). Distant-slot FAIL accepted.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r0.png",
+          "diff": "aspect 1.546 closer to f14 than slot 4 (1.809); scale+axis OK",
+          "chosen": false
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r1.png",
+          "diff": "aspect 1.693 closer to f14; axis (1.5, 28.0)",
+          "chosen": false
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r2.png",
+          "diff": "aspect 1.733 closer to f14 (1.719) than slot 4 (1.809); axis (8.0, 70.0)",
+          "chosen": true
+        },
+        {
+          "id": "r3",
+          "result": "FAIL",
+          "path": "attempts/out_frame_04_r3.png",
+          "human_extra": true,
+          "diff": "aspect 1.743 closer to f14 (1.719) than slot 4 (1.809); scale 1081 vs 976 (10.8%); axis (1.0, 82.0)",
+          "chosen": false
+        }
+      ],
+      "chosen": "r2"
+    },
+    "5": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_05.png",
+      "status": "CHOSEN_YAW_OK",
+      "chosen": "r2",
+      "note": "Max 3. r2 scale+yaw PASS; axis fail. Continue to end.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r0.png",
+          "diff": "scale 1161; aspect 1.69 vs 1.98"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_05_r1.png",
+          "diff": "aspect 1.754 vs 1.98; axis y 87.5"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_05_r2.png",
+          "chosen": true,
+          "diff": "scale+yaw PASS; axis (4.0, 92.0) vs (32.8, 134.4)"
+        }
+      ]
+    },
+    "6": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_06.png",
+      "status": "APPROVED",
+      "chosen": "r4",
+      "note": "Human approved r4 as chain lock (2026-08-24). Short Renegade, mid-roof gun. Continue 7\u201316 watching CCW yaw.",
+      "attempts": [
+        {
+          "id": "r3",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r3.png",
+          "diff": "aspect 1.58 vs 2.15; Renegade+mid gun"
+        },
+        {
+          "id": "r4",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r4.png",
+          "chosen": true,
+          "diff": "aspect 1.63 vs 2.15; Renegade; gun B-pillar"
+        },
+        {
+          "id": "r5",
+          "result": "FAIL",
+          "path": "attempts/out_frame_06_r5.png",
+          "diff": "aspect 1.88 closer to f13; gun slightly rear"
+        }
+      ],
+      "human_approved": true
+    },
+    "7": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_07.png",
+      "chosen": "r4",
+      "status": "CHOSEN_IDENTITY_OK",
+      "note": "Hero. r3 rejected (green body). r4 black Renegade, mid-roof gun, more side (2.01 vs 2.56). Continue.",
+      "attempts": [
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "diff": "aspect 1.83 too frontal; identity OK"
+        },
+        {
+          "id": "r3",
+          "result": "FAIL",
+          "diff": "car painted green \u2014 reject"
+        },
+        {
+          "id": "r4",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "aspect 2.01 vs 2.56; black Renegade; mid gun"
+        }
+      ]
+    },
+    "8": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_08.png",
+      "chosen": "r1",
+      "note": "90\u00b0 side Renegade, mid-roof gun. Aspect 2.07 vs DeLorean 3.06. Continue.",
+      "attempts": [
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "aspect 2.07 vs 3.06; identity OK"
+        }
+      ]
+    },
+    "9": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_09.png",
+      "chosen": "r2",
+      "note": "101.25\u00b0 rear-sliver Renegade, mid gun. Continue CCW.",
+      "attempts": [
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "aspect 2.03 vs 2.77; identity OK"
+        }
+      ]
+    },
+    "10": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_10.png",
+      "chosen": "r1",
+      "note": "112.5 rear 3/4 matches gabarito direction. Renegade, gun on roof. Continue.",
+      "attempts": [
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "aspect 1.74 vs 2.46; visual CCW OK"
+        }
+      ]
+    },
+    "11": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_11.png",
+      "chosen": "r2",
+      "note": "123.75 rear 3/4 Renegade. Continue CCW.",
+      "attempts": [
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "diff": "possible side flip"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "aspect 1.71 vs 2.23"
+        }
+      ]
+    },
+    "12": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_12.png",
+      "chosen": "r1",
+      "note": "135 rear 3/4 Renegade. Continue.",
+      "attempts": [
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "aspect 1.57 vs 2.07"
+        }
+      ]
+    },
+    "13": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_13.png",
+      "chosen": "r0",
+      "note": "146 rear 3/4 Renegade. r1 too small. Continue.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "scale 1397 vs 903"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "diff": "scale 495"
+        }
+      ]
+    },
+    "14": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_14.png",
+      "chosen": "r1",
+      "note": "157.5 rear 3/4 Renegade. Scale fills canvas. Continue.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "diff": "teal bg; full canvas"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "diag 1447 vs 840"
+        }
+      ]
+    },
+    "15": {
+      "result": "FAIL_ACCEPTED",
+      "path": "out_frame_15.png",
+      "chosen": "r1",
+      "note": "168.75 almost-rear Renegade. Continue to 16.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "diff": "too small; gun sideways"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL_ACCEPTED",
+          "chosen": true,
+          "diff": "scale 599 vs 767; rear view"
+        }
+      ]
+    },
+    "16": {
+      "result": "FAIL_ACCEPTED",
+      "retries": 2,
+      "path": "out_frame_16.png",
+      "chosen": "r2",
+      "status": "CHOSEN_IDENTITY_OK",
+      "note": "180\u00b0 rear pole. r2 axis PASS, short Renegade, mid-roof gun pointing away. Aspect 0.89 vs DeLorean 1.36 (same SUV-vs-gabarito miss as rest of belt). r0 too high; r1 too big + Jeep lettering. Continue to mirror.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r0.png",
+          "diff": "scale 622 vs 691; axis y 82 vs 178; aspect 0.892 vs 1.358"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_16_r1.png",
+          "diff": "scale 766 vs 691; axis y 113 vs 178; aspect 0.927; Jeep text on hatch"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL_ACCEPTED",
+          "path": "attempts/out_frame_16_r2.png",
+          "chosen": true,
+          "diff": "scale 608 vs 691; axis PASS; aspect 0.888 vs 1.358; visual dead rear OK"
+        }
+      ]
+    }
+  },
+  "style_anchor": "style_anchor.json",
+  "rewind": {
+    "keep_through": 5,
+    "discard_from": 6,
+    "reason": "Human rewind to frame 5 (2026-08-24). 6\u201312 discarded: Compass-long body + gun slid too far forward; f10 wrong yaw. Resume from out_frame_05."
+  },
+  "pipeline": {
+    "mirror": "done (15 flips; poles 0/16 untouched)",
+    "chroma": "done; frames 12-15/17-20 re-keyed from sampled backdrop (spec #00B140 hue miss)",
+    "assemble": "car_strip.png + contact_sheet.png",
+    "normalize": "widest=frame 5 (921px); scale 0.06949; car_strip_64x64.png",
+    "export": "blocked until human contact-sheet OK"
+  },
+  "notes_for_human": [
+    "Frame 06 r4 remains the CCW/identity lock.",
+    "Frame 16 chosen r2: dead rear, axis PASS, gun pointing away.",
+    "Validator SEQUENCE FAIL is SUV-vs-DeLorean aspect (short boxy vs wide coupe), not a flipped hemisphere.",
+    "Frames 14/15 (and mirrors 18/17) are smaller than neighbors \u2014 likely pulse in a spin preview."
+  ],
+  "scale_fix": {
+    "human": "3, 14, 15, 16, 17, 18, 27, 29 too small",
+    "regenerated": {
+      "3": "r4 (fixes 29)",
+      "5": "r4 (fixes 27); scale+yaw PASS",
+      "14": "r3 (fixes 18)",
+      "15": "r2 (fixes 17)",
+      "16": "r4 pole"
+    },
+    "diag_before_after": {
+      "3": "839 -> 980",
+      "5": "1039 -> 1021",
+      "14": "576 -> 1026",
+      "15": "600 -> 885",
+      "16": "611 -> 813"
+    }
+  },
+  "redo_3_to_6": {
+    "3": "r5 (fixes 29)",
+    "4": "r4 (fixes 28)",
+    "5": "r5 (fixes 27)",
+    "6": "r7 (fixes 26); more side, aspect 2.03 vs 2.15"
+  }
+}

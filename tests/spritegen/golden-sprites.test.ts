@@ -27,6 +27,7 @@ describe('imported fleet sheets', () => {
       '2-sportivo-blue-combat',
       '3-red-oh-red',
       '5-all-pink-fury',
+      '6-suv-black-noir',
     ]);
     for (const car of manifest.cars) {
       expect(isBBoxSheet(car)).toBe(true);
@@ -47,6 +48,7 @@ describe('imported fleet sheets', () => {
       '2-sportivo-blue-combat',
       '3-red-oh-red',
       '5-all-pink-fury',
+      '6-suv-black-noir',
     ]);
   });
 });

@@ -1,0 +1,16 @@
+{
+  "body_type": "SHORT boxy Jeep Renegade: compact crossover, tall cabin, short wheelbase, short overhangs, stubby nose and tail. NOT a Jeep Compass (Compass is longer, softer, more sedan-crossover).",
+  "forbidden": "DeLorean / wedge coupe / gull-wing / stainless; Jeep Compass / long stretched crossover / wagon; gun slid onto the hood or hanging past the windshield",
+  "base_color": "Black Noir: matte black / charcoal body with light-gray edge highlights",
+  "wheels": "chunky off-road tires, blocky tread, dark rims, wide stance, readable at 64px",
+  "mirrors": "large rectangular black side mirrors",
+  "grille": "Jeep-style seven-slot vertical grille, light-gray outline",
+  "lights": "two large round white headlights; small orange markers on the outer fenders; two small round fog lights in the lower bumper",
+  "bumper": "heavy black bumper, light-gray license-plate rectangle, two bright red tow hooks / D-rings",
+  "hood": "short hood, subtle central scoop, no DeLorean vents",
+  "roof_rails": "two light-gray / silver longitudinal roof rails",
+  "windows": "dark teal / cyan tint; two-box Renegade greenhouse (short, upright), not a long Compass cabin",
+  "paint_finish": "arcade pixel art, limited black/gray/red palette, visible pixels, no chrome / PBR / photoreal",
+  "weapon": "LOCKED: machine-gun TURRET sits in the CENTER of the roof (mid-cabin, between the rails), never over the windshield or hood. Barrel points FORWARD along the nose but the mount stays mid-roof. Short enough that the muzzle does not hang past the front bumper.",
+  "name": "SUV Black Noir"
+}

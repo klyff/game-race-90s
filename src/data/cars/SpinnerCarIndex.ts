@@ -169,11 +169,44 @@ const ALL_PINK_FURY = spinnerCar({
   },
 });
 
+/**
+ * SUV Black Noir — compact Renegade, mid-roof MG. Medium++.
+ * Arcade consult: planted COM, high grip, heavier than the coupes.
+ * Teaching speed ~62 u/s — under Blue Combat 68, not the old 78 Marauder.
+ * Roof turret → arsenal.
+ */
+const SUV_BLACK_NOIR = spinnerCar({
+  id: 'suv-black-noir',
+  displayName: 'SUV Black Noir',
+  callName: 'Black Noir',
+  archetype: 'Short black Renegade SUV — mid-roof machine gun, red tow hooks',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'thunder-basin',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.MEDIUM,
+  unlockPlanet: 1,
+  price: 200_000,
+  stats: {
+    mass: 1080,
+    enginePower: 28,
+    brakeForce: 46,
+    maxSpeed: 62,
+    grip: 30,
+    steerRate: 2.35,
+    steerSpeedFalloff: 0.46,
+    armor: 0.44,
+    ammoCapacity: 14,
+    collisionRadius: 1.8,
+    aimRadius: 3.7,
+  },
+});
+
 export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
   GRAY_MUSCLE,
   BLUE_COMBAT,
   RED_OH_RED,
   ALL_PINK_FURY,
+  SUV_BLACK_NOIR,
 ];
 
 export function spinnerCarIds(): readonly string[] {

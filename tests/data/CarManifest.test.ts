@@ -99,8 +99,9 @@ describe('parseCarSetManifest', () => {
       '2-sportivo-blue-combat',
       '3-red-oh-red',
       '5-all-pink-fury',
+      '6-suv-black-noir',
     ]);
-    expect(manifest.cars.length).toBe(4);
+    expect(manifest.cars.length).toBe(5);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -478,7 +479,7 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(4);
+    expect(manifest.cars.length).toBe(5);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
@@ -563,6 +564,7 @@ describe('spinner strip atlas', () => {
       '2-sportivo-blue-combat',
       '3-red-oh-red',
       '5-all-pink-fury',
+      '6-suv-black-noir',
     ]);
   });
 

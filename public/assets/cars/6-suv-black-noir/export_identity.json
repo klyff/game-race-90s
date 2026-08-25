@@ -1,0 +1,17 @@
+{
+  "id": "6-suv-black-noir",
+  "inventory_n": 6,
+  "slug": "suv-black-noir",
+  "displayName": "SUV Black Noir",
+  "spec": "SUV M\u00e9dia, named: Black Noir, Pixel art, Black Noir SUV Medium, not long, like a Jeep Renegade, with light gray details, mounted machine Gun on top, arcade combat-racer, do not copy details from base car that is just for positioning and validate frames, background HEX: #00B140",
+  "source_run_dir": "/Users/klyff/git/game-race-90s/car-sprites/2026-08-24_SUV-Black-Noir",
+  "hero_frame": 7,
+  "hero_role": "shop / garage / results still \u2014 always strip frame 7",
+  "hero_source": "keyed/out_frame_07.png",
+  "hero_file": "car_hero.png",
+  "frame_count": 32,
+  "direction": "counter_clockwise",
+  "index0": "6 o'clock facing camera",
+  "clock": "counter_clockwise",
+  "exported_at": "2026-08-25T20:31:23.481633+00:00"
+}
