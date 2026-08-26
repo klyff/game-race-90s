@@ -37,7 +37,6 @@ import {
   setNarratorLocale,
 } from '../adapters/audio/AudioPrefs.ts';
 import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
-import type { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import {
   NARRATOR_LOCALE_VALUES,
   localeFromMenuValue,
@@ -107,7 +106,6 @@ export class GarageScene extends Phaser.Scene {
   private nameDraft = '';
   private shopIndex = 0;
   private status = '';
-  private audio!: TitleAudio;
 
   private art!: Phaser.GameObjects.Image;
   private titleBox!: Phaser.GameObjects.Rectangle;
@@ -269,7 +267,7 @@ export class GarageScene extends Phaser.Scene {
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
-    this.audio = attachMenuAudio(this, { allowMute: () => this.mode !== 'name' });
+    attachMenuAudio(this, { allowMute: () => this.mode !== 'name' });
   }
 
   /** Workshop plate, car on the floor, then every menu in front. */
