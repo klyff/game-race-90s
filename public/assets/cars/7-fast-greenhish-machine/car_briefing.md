@@ -24,4 +24,4 @@ Mesmo corpo e canhão do Red Oh Red; um degrau acima em velocidade e controle, a
 | armor | 0.38 | 0.40 |
 | ammoCapacity | 12 | 13 |
 | collisionRadius | 1.68 | 1.68 |
-| price | $62k | $78k |
+| price | $62k | $320k |

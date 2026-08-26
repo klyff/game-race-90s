@@ -185,7 +185,7 @@ const FAST_GREENHISH_MACHINE = spinnerCar({
   worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
   tier: SPINNER_TIER.MEDIUM,
   unlockPlanet: 2,
-  price: 78_000,
+  price: 320_000,
   stats: {
     mass: 960,
     enginePower: 31,

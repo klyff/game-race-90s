@@ -33,7 +33,7 @@ export const GARAGE_CATALOG: readonly CatalogEntry[] = [
   { carId: '3-red-oh-red', price: 62_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
   { carId: '5-all-pink-fury', price: 87_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
   { carId: '6-suv-black-noir', price: 200_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
-  { carId: '7-fast-greenhish-machine', price: 78_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
+  { carId: '7-fast-greenhish-machine', price: 320_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
   { carId: '1-muscle-car-gray-number9', price: 98_000, unlockPlanet: 2, tier: CAR_TIER.HEAVY },
 ];
 
