@@ -3,9 +3,14 @@
  *
  * Procedural `MusicPlayer` scores stay as the fallback until these files land
  * in `public/assets/audio/music/beds/`. When a bed is loaded, it plays at
- * `MUSIC_BED_VOLUME` and the mute key turns it off.
+ * Menus play at {@link MUSIC_BED_VOLUME}. Splash is louder. The race bed
+ * stays quieter so engine, tyres and the narrator stay readable.
  */
-export const MUSIC_BED_VOLUME = 0.5;
+export const MUSIC_BED_VOLUME = 0.6;
+/** Attract screen only — the rest of the menus stay at {@link MUSIC_BED_VOLUME}. */
+export const MUSIC_SPLASH_BED_VOLUME = 0.9;
+/** Race bed only — 15–20%. Menus keep {@link MUSIC_BED_VOLUME}. */
+export const MUSIC_RACE_BED_VOLUME = 0.18;
 export const MUSIC_BED_DIRECTORY = 'assets/audio/music/beds';
 
 export interface MusicBed {

@@ -337,6 +337,16 @@ describe('formatTuningOverlay', () => {
       );
       expect(lines[5]).toContain('[M] unmute');
     });
+
+    it('offers "music off" while the race bed is playing', () => {
+      const lines = formatTuningOverlay(readout({ musicMuted: false }));
+      expect(lines[5]).toContain('[N] music off');
+    });
+
+    it('offers "music on" when the race bed is silenced', () => {
+      const lines = formatTuningOverlay(readout({ musicMuted: true }));
+      expect(lines[5]).toContain('[N] music on');
+    });
   });
 
   describe('NaN and Infinity handling', () => {

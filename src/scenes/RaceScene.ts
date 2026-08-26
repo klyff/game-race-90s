@@ -1497,6 +1497,9 @@ export class RaceScene extends Phaser.Scene {
       keyboard.addKey(code).on('down', unlessPaused(() => this.togglePaintLayer(layer.id)));
     });
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N).on('down', unlessPaused(() => {
+      this.audio.toggleMusicMuted();
+    }));
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I).on('down', unlessPaused(() => {
       this.aiFocusIndex += 1;
       this.watchPinned = true;
       if (!this.overlay.isVisible) {
@@ -1584,6 +1587,8 @@ export class RaceScene extends Phaser.Scene {
       carId: this.carId,
       muted: this.audio.isMuted,
       setMuted: muted => this.audio.setMuted(muted),
+      musicMuted: this.audio.isMusicMuted,
+      setMusicMuted: muted => this.audio.setMusicMuted(muted),
       onQuitRace: this.watch || this.quitedTheRace ? undefined : () => this.quitTheRace(),
     } satisfies PauseSceneData);
     this.scene.pause(SCENE_KEY.HUD);
@@ -1780,6 +1785,7 @@ export class RaceScene extends Phaser.Scene {
       // for most of a lap, and the number worth reading is the one on screen.
       zoom: this.cameras.main.zoom,
       muted: this.audio.isMuted,
+      musicMuted: this.audio.isMusicMuted,
       spriteFrame: this.playerView()?.sprite.frame.name ?? '0',
       clockLines: this.clockYawLines(player),
       aiLines: this.aiOverlayLines(),

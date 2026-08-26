@@ -9,6 +9,7 @@ import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
 import { MENU_KIND, MENU_PROMPT_LIST, MenuController } from '../adapters/input/MenuController.ts';
 import type { MenuResult } from '../adapters/input/MenuController.ts';
 import type { TrackSelectData } from './selectData.ts';
+import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 /**
@@ -67,6 +68,7 @@ export class TrackSelectScene extends Phaser.Scene {
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
+    attachMenuAudio(this);
   }
 
   private bindKeys(): void {

@@ -6,6 +6,7 @@ import {
   type NarratorVoice,
 } from '../../data/audio/NarratorBank.ts';
 import { isAudioMuted } from './AudioPrefs.ts';
+import { registerScreenAudio } from './AudioSession.ts';
 import { ExplosionVoice } from './ExplosionVoice.ts';
 import { NoiseSource } from './NoiseSource.ts';
 
@@ -22,12 +23,36 @@ const SHOUT_VOLUME = 0.86;
  * Space on the splash: car explosion plus the narrator yelling BOOOOM.
  * Own graph and HTMLAudio so the title bed can die without killing the kick.
  */
+let activeContext: AudioContext | null = null;
+let shout: HTMLAudioElement | null = null;
+let unregisterKick: (() => void) | undefined;
+
+export function stopSplashKick(): void {
+  unregisterKick?.();
+  unregisterKick = undefined;
+  if (shout !== null) {
+    shout.pause();
+    shout.src = '';
+    shout = null;
+  }
+  if (activeContext === null) {
+    return;
+  }
+  const context = activeContext;
+  activeContext = null;
+  void context.close().catch(() => {
+    /* Already closed. */
+  });
+}
+
 export function playSplashKick(): number {
+  stopSplashKick();
   if (isAudioMuted()) {
     return 0;
   }
   playExplosion();
   playShout();
+  unregisterKick = registerScreenAudio(stopSplashKick);
   return SPLASH_KICK_DURATION_SECONDS;
 }
 
@@ -36,6 +61,7 @@ function playExplosion(): void {
   if (context === null) {
     return;
   }
+  activeContext = context;
   if (context.state === 'suspended') {
     void context.resume().catch(() => {
       /* Gesture already happened; stay silent if the device refuses. */
@@ -64,6 +90,7 @@ function playShout(): void {
     return;
   }
   const element = new Audio();
+  shout = element;
   element.preload = 'auto';
   element.volume = SHOUT_VOLUME;
   element.src = narratorClipUrl(clip, narratorStashDirectory());

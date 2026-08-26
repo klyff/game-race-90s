@@ -1,4 +1,5 @@
 import { isAudioMuted } from './AudioPrefs.ts';
+import { registerScreenAudio } from './AudioSession.ts';
 import { noteFrequency } from './MusicScore.ts';
 
 /** How long the transition solo rings, seconds. Owner: ~3s guitar shred. */
@@ -49,7 +50,24 @@ function createContext(): AudioContext | null {
  * Must be called from a user gesture. Returns how long the caller should wait
  * before changing scene; 0 when Web Audio is missing.
  */
+let activeContext: AudioContext | null = null;
+let unregisterSolo: (() => void) | undefined;
+
+export function stopGuitarSolo(): void {
+  unregisterSolo?.();
+  unregisterSolo = undefined;
+  if (activeContext === null) {
+    return;
+  }
+  const context = activeContext;
+  activeContext = null;
+  void context.close().catch(() => {
+    /* Already closed. */
+  });
+}
+
 export function playGuitarSolo(): number {
+  stopGuitarSolo();
   if (isAudioMuted()) {
     return 0;
   }
@@ -57,6 +75,8 @@ export function playGuitarSolo(): number {
   if (context === null) {
     return 0;
   }
+  activeContext = context;
+  unregisterSolo = registerScreenAudio(stopGuitarSolo);
   if (context.state === 'suspended') {
     void context.resume().catch(() => {
       /* Autoplay policy: stay silent rather than break the transition. */

@@ -1,19 +1,19 @@
 import { MUSIC_BED_VOLUME } from '../../data/audio/MusicBeds.ts';
 
 /**
- * Loops one recorded bed at half volume. Mute silences it without stopping
- * the element, so unmuting continues in place.
+ * Loops one recorded bed. Mute silences it without stopping the element,
+ * so unmuting continues in place.
  */
 export class BedPlayer {
   private readonly element: HTMLAudioElement;
   private started = false;
   private stopped = false;
 
-  constructor(url: string) {
+  constructor(url: string, volume: number = MUSIC_BED_VOLUME) {
     this.element = new Audio(url);
     this.element.loop = true;
     this.element.preload = 'auto';
-    this.element.volume = MUSIC_BED_VOLUME;
+    this.element.volume = volume;
   }
 
   start(): void {

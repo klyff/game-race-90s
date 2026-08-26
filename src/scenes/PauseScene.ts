@@ -24,17 +24,20 @@ export interface PauseSceneData {
   readonly carId: string;
   readonly muted: boolean;
   readonly setMuted: (muted: boolean) => void;
+  /** Race bed only. Independent of {@link muted}. */
+  readonly musicMuted: boolean;
+  readonly setMusicMuted: (muted: boolean) => void;
   /** Mid-race retire: keep watching; omit on watch mode. */
   readonly onQuitRace?: () => void;
 }
 
-const AUDIO_VALUES = ['ON', 'OFF'] as const;
+const ON_OFF = ['ON', 'OFF'] as const;
 
 /**
  * The pause menu, launched OVER a paused `RaceScene` (owner: Esc pauses the game).
  *
- * Return resumes, Save writes progress, Audio is a left/right option (Enter
- * saves, Esc discards), Main Menu abandons the race. Shared `MenuController`
+ * Return resumes, Save writes progress, Audio / Music / Narration are
+ * left/right options (Enter saves, Esc discards). Shared `MenuController`
  * so this screen uses the same pad as every other menu.
  */
 export class PauseScene extends Phaser.Scene {
@@ -61,8 +64,15 @@ export class PauseScene extends Phaser.Scene {
           id: 'audio',
           kind: MENU_KIND.OPTION,
           label: 'AUDIO',
-          values: AUDIO_VALUES,
+          values: ON_OFF,
           valueIndex: data.muted ? 1 : 0,
+        },
+        {
+          id: 'music',
+          kind: MENU_KIND.OPTION,
+          label: 'MUSIC',
+          values: ON_OFF,
+          valueIndex: data.musicMuted ? 1 : 0,
         },
         {
           id: 'narration',
@@ -82,6 +92,9 @@ export class PauseScene extends Phaser.Scene {
         onPreview: (id, _index, value) => {
           if (id === 'audio') {
             this.payload.setMuted(value === 'OFF');
+          }
+          if (id === 'music') {
+            this.payload.setMusicMuted(value === 'OFF');
           }
           if (id === 'narration') {
             setNarratorLocale(localeFromMenuValue(value));
@@ -117,6 +130,7 @@ export class PauseScene extends Phaser.Scene {
       onCycled: () => this.refreshHighlight(),
     });
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.toggleMuteKey());
+    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N).on('down', () => this.toggleMusicKey());
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H).on('down', () => this.openHelp());
   }
 
@@ -166,6 +180,13 @@ export class PauseScene extends Phaser.Scene {
     const nextMuted = this.menu.valueIndex('audio') === 0;
     this.payload.setMuted(nextMuted);
     this.menu.setOption('audio', nextMuted ? 1 : 0, true);
+    this.refreshHighlight();
+  }
+
+  private toggleMusicKey(): void {
+    const nextMuted = this.menu.valueIndex('music') === 0;
+    this.payload.setMusicMuted(nextMuted);
+    this.menu.setOption('music', nextMuted ? 1 : 0, true);
     this.refreshHighlight();
   }
 
@@ -230,8 +251,8 @@ export class PauseScene extends Phaser.Scene {
     this.backdrop.setSize(width, height);
     this.titleText.setPosition(centreX, height * 0.18);
     this.optionTexts.forEach((text, index) => {
-      const step = this.optionTexts.length > 7 ? 0.055 : 0.07;
-      text.setPosition(centreX, height * (0.26 + index * step));
+      const step = this.optionTexts.length > 7 ? 0.05 : 0.07;
+      text.setPosition(centreX, height * (0.25 + index * step));
     });
     this.statusText.setPosition(centreX, height * 0.8);
     this.promptText.setPosition(centreX, height * 0.9);

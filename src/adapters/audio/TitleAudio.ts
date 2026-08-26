@@ -1,7 +1,8 @@
 import { isAudioMuted, isUserAudioMuted, onAudioMuteChange, setAudioMuted } from './AudioPrefs.ts';
+import { registerScreenAudio } from './AudioSession.ts';
 import { BedPlayer } from './BedPlayer.ts';
 import { pickLoadedMusicBed } from './BedRegistry.ts';
-import { musicBedUrl } from '../../data/audio/MusicBeds.ts';
+import { MUSIC_BED_VOLUME, musicBedUrl } from '../../data/audio/MusicBeds.ts';
 import { NoiseSource } from './NoiseSource.ts';
 import { TitleMusic } from './TitleMusic.ts';
 
@@ -30,9 +31,9 @@ const CLOSE_DELAY_MILLISECONDS = 600;
  * one, so a `start()` from `create()` produces no sound and no error. The splash calls
  * this on the first key press, which is the earliest honest opportunity.
  *
- * **Recorded beds play at half volume when present.** Otherwise the procedural
- * title riff still connects straight to `context.destination` — `TitleMusic`
- * already holds its own master gain.
+ * **Recorded beds play at the given volume when present.** Otherwise the
+ * procedural title riff still connects straight to `context.destination` —
+ * `TitleMusic` already holds its own master gain.
  */
 export class TitleAudio {
   private readonly context: AudioContext | null;
@@ -40,16 +41,19 @@ export class TitleAudio {
   private readonly music: TitleMusic | null = null;
   private readonly bed: BedPlayer | null = null;
   private muted = isAudioMuted();
+  private destroyed = false;
   private readonly unmuteFocus: () => void;
+  private readonly unregister: () => void;
 
-  constructor() {
+  constructor(volume: number = MUSIC_BED_VOLUME) {
     this.context = createAudioContext();
     this.unmuteFocus = onAudioMuteChange(muted => {
       this.applyMute(muted);
     });
+    this.unregister = registerScreenAudio(() => this.destroy());
     const bed = pickLoadedMusicBed();
     if (bed !== undefined) {
-      this.bed = new BedPlayer(musicBedUrl(bed));
+      this.bed = new BedPlayer(musicBedUrl(bed), volume);
       this.bed.setMuted(this.muted);
     }
     if (this.context === null) {
@@ -113,6 +117,11 @@ export class TitleAudio {
    * Phaser scene ends, so without it the title riff plays straight over the race.
    */
   destroy(): void {
+    if (this.destroyed) {
+      return;
+    }
+    this.destroyed = true;
+    this.unregister();
     this.unmuteFocus();
     this.bed?.stop();
     this.music?.stop();

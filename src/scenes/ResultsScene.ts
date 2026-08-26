@@ -14,6 +14,7 @@ import {
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
 import { pickPubBackground, PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/PubBackgrounds.ts';
 import { worldPassForFinish } from '../data/ui/WorldPassBackgrounds.ts';
+import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
 import { playRadioJingle, RADIO_JINGLE_DURATION_SECONDS } from '../adapters/audio/RadioJingle.ts';
@@ -213,15 +214,13 @@ export class ResultsScene extends Phaser.Scene {
       .sort((a, b) => a.position - b.position)
       .map(entry => this.makePodium(entry));
 
-    this.audio = new TitleAudio();
-    this.audio.start();
+    this.audio = attachMenuAudio(this);
     this.layout();
     this.slamTitle();
     playRadioJingle();
     this.playWinnerPhoto();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.audio.destroy());
   }
 
   private paintPlate(
@@ -409,7 +408,6 @@ export class ResultsScene extends Phaser.Scene {
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', leave);
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER).on('down', leave);
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', leave);
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.audio.toggleMute());
   }
 
   private leaveToGarage(): void {

@@ -3,6 +3,7 @@ import { ORIGIN_PANELS } from '../data/cards/OriginComic.ts';
 import { SPLASH_CARDS } from '../data/cards/SplashCards.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
+import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 interface OriginComicData {
@@ -34,6 +35,7 @@ export class OriginComicScene extends Phaser.Scene {
     this.drawPage();
     this.bindKeys();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.drawPage());
+    attachMenuAudio(this);
   }
 
   private bindKeys(): void {

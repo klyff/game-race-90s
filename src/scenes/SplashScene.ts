@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { playSplashKick } from '../adapters/audio/SplashKick.ts';
+import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
+import { MUSIC_SPLASH_BED_VOLUME } from '../data/audio/MusicBeds.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import { BlinkClock } from '../adapters/render/BlinkClock.ts';
 import { coverRect, promptAnchor, voidRect } from '../adapters/render/SplashLayout.ts';
@@ -62,7 +64,7 @@ export class SplashScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setVisible(isTourModeOn());
 
-    this.audio = new TitleAudio();
+    this.audio = attachMenuAudio(this, { volume: MUSIC_SPLASH_BED_VOLUME });
     this.attract = new SplashAttractShow(this);
     this.layout();
     this.attract.start();
@@ -88,13 +90,10 @@ export class SplashScene extends Phaser.Scene {
       return;
     }
     keyboard.on('keydown', (event: KeyboardEvent) => {
-      this.audio.start();
       this.considerTourCode(event.key);
     });
-    this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.audio.start());
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => this.leaveToOrigin());
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P).on('down', () => this.leaveToWatch());
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.audio.toggleMute());
   }
 
   private layout(): void {

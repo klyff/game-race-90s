@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { formatHelpBody } from '../data/input/ControlList.ts';
+import { formatHelpColumns } from '../data/input/ControlList.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 export interface HelpSceneData {
@@ -14,7 +14,8 @@ export class HelpScene extends Phaser.Scene {
   private payload!: HelpSceneData;
   private backdrop!: Phaser.GameObjects.Rectangle;
   private titleText!: Phaser.GameObjects.Text;
-  private bodyText!: Phaser.GameObjects.Text;
+  private leftText!: Phaser.GameObjects.Text;
+  private rightText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
 
   constructor() {
@@ -26,13 +27,16 @@ export class HelpScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.82).setOrigin(0, 0);
+    this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.94).setOrigin(0, 0);
+    const [left, right] = formatHelpColumns();
     this.titleText = this.add.text(0, 0, 'HELP  ·  COMMANDS', this.titleStyle()).setOrigin(0.5, 0.5);
-    this.bodyText = this.add.text(0, 0, this.body(), this.bodyStyle()).setOrigin(0.5, 0);
+    this.leftText = this.add.text(0, 0, left, this.bodyStyle()).setOrigin(0.5, 0);
+    this.rightText = this.add.text(0, 0, right, this.bodyStyle()).setOrigin(0.5, 0);
     this.promptText = this.add
       .text(0, 0, 'ENTER / ESC  CLOSE', this.promptStyle())
       .setOrigin(0.5, 0.5);
 
+    this.scene.setVisible(false, this.payload.resumeScene);
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
@@ -51,12 +55,9 @@ export class HelpScene extends Phaser.Scene {
   }
 
   private close(): void {
+    this.scene.setVisible(true, this.payload.resumeScene);
     this.scene.resume(this.payload.resumeScene);
     this.scene.stop();
-  }
-
-  private body(): string {
-    return formatHelpBody();
   }
 
   private layout(): void {
@@ -64,7 +65,8 @@ export class HelpScene extends Phaser.Scene {
     const height = this.scale.height;
     this.backdrop.setSize(width, height);
     this.titleText.setPosition(width / 2, height * 0.1);
-    this.bodyText.setPosition(width / 2, height * 0.16);
+    this.leftText.setPosition(width * 0.3, height * 0.18);
+    this.rightText.setPosition(width * 0.7, height * 0.18);
     this.promptText.setPosition(width / 2, height * 0.92);
   }
 

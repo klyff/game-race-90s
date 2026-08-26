@@ -18,6 +18,7 @@ import {
   type CharacterSelectPanes,
 } from '../adapters/render/CharacterSelectLayout.ts';
 import { paintRoundedPlaque } from '../adapters/render/UiPlaque.ts';
+import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
 interface CharacterSelectData {
@@ -92,6 +93,7 @@ export class CharacterSelectScene extends Phaser.Scene {
       this.onPointer(pointer.x, pointer.y);
     });
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.draw());
+    attachMenuAudio(this);
   }
 
   private bindKeys(): void {

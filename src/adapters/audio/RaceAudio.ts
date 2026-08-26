@@ -1,7 +1,15 @@
-import { isAudioMuted, onAudioMuteChange, setAudioMuted } from './AudioPrefs.ts';
+import {
+  isAudioMuted,
+  isMusicMuted,
+  onAudioMuteChange,
+  onMusicMuteChange,
+  setAudioMuted,
+  setMusicMuted,
+} from './AudioPrefs.ts';
+import { registerScreenAudio, stopAllScreenAudio } from './AudioSession.ts';
 import { BedPlayer } from './BedPlayer.ts';
 import { pickLoadedMusicBed } from './BedRegistry.ts';
-import { musicBedUrl } from '../../data/audio/MusicBeds.ts';
+import { MUSIC_RACE_BED_VOLUME, musicBedUrl } from '../../data/audio/MusicBeds.ts';
 import type { PlannedClip } from '../../data/audio/NarratorBank.ts';
 import type { NarratorPriority } from '../../domain/audio/NarratorQueue.ts';
 import { BrakeVoice } from './BrakeVoice.ts';
@@ -30,7 +38,7 @@ const DEFAULT_MASTER_VOLUME = 0.35;
 
 /** Music send level, quieter than the title screen's since it now shares the
  * mix with engine, tyres and impacts. */
-const MUSIC_VOLUME = 0.4;
+const MUSIC_VOLUME = MUSIC_RACE_BED_VOLUME;
 
 /**
  * Lateral speed, as a multiple of the car's drift threshold, at which the skid is
@@ -72,8 +80,11 @@ export class RaceAudio {
   private engineSilenced = false;
   private idleShutoff: EngineIdleShutoffState = ENGINE_IDLE_SHUTOFF_INITIAL;
   private muted = isAudioMuted();
+  private destroyed = false;
   private lastRpmFraction = 0.15;
   private readonly unmuteFocus: () => void;
+  private readonly unmuteMusic: () => void;
+  private readonly unregister: () => void;
 
   /**
    * `score` is the current world's theme (T-040) — optional so tests and any
@@ -88,10 +99,11 @@ export class RaceAudio {
     this.driftLimit = driftThreshold(stats, TARMAC);
     this.baseMasterVolume = masterVolume;
 
+    stopAllScreenAudio();
     this.context = createAudioContext();
-    this.unmuteFocus = onAudioMuteChange(muted => {
-      this.applyMute(muted);
-    });
+    this.unmuteFocus = onAudioMuteChange(() => this.applyMute());
+    this.unmuteMusic = onMusicMuteChange(() => this.applyMute());
+    this.unregister = registerScreenAudio(() => this.destroy());
     if (this.context === null) return;
 
     this.master = this.context.createGain();
@@ -107,16 +119,14 @@ export class RaceAudio {
 
     const bed = pickLoadedMusicBed();
     if (bed !== undefined) {
-      this.bed = new BedPlayer(musicBedUrl(bed));
-      this.bed.setMuted(this.muted);
+      this.bed = new BedPlayer(musicBedUrl(bed), MUSIC_RACE_BED_VOLUME);
     } else if (score !== undefined) {
       this.musicGain = this.context.createGain();
       this.musicGain.gain.value = MUSIC_VOLUME;
       this.musicGain.connect(this.context.destination);
       this.music = new MusicPlayer(this.context, this.noise, this.musicGain, score);
-      this.music.setMuted(this.muted);
     }
-    this.narrator.setMuted(this.muted);
+    this.applyMute();
   }
 
   /** Preload the clips this race already rolled so GO does not hitch. */
@@ -248,15 +258,26 @@ export class RaceAudio {
   /** Player mute (M / pause). Focus mute is applied separately. */
   setMuted(muted: boolean): void {
     setAudioMuted(muted);
-    this.applyMute(isAudioMuted());
+    this.applyMute();
   }
 
-  private applyMute(muted: boolean): void {
-    this.muted = muted;
-    this.bed?.setMuted(muted);
-    this.music?.setMuted(muted);
-    this.narrator.setMuted(muted);
-    if (!muted) return;
+  /** Race bed only. Engine, tyres and narrator keep playing. */
+  setMusicMuted(muted: boolean): void {
+    setMusicMuted(muted);
+    this.applyMute();
+  }
+
+  toggleMusicMuted(): void {
+    this.setMusicMuted(!isMusicMuted());
+  }
+
+  private applyMute(): void {
+    this.muted = isAudioMuted();
+    const bedMuted = this.muted || isMusicMuted();
+    this.bed?.setMuted(bedMuted);
+    this.music?.setMuted(bedMuted);
+    this.narrator.setMuted(this.muted);
+    if (!this.muted) return;
     this.engine?.silence();
     this.skid?.update(0);
     this.brake?.update(0, 0);
@@ -264,6 +285,10 @@ export class RaceAudio {
 
   get isMuted(): boolean {
     return this.muted;
+  }
+
+  get isMusicMuted(): boolean {
+    return isMusicMuted();
   }
 
   /** True once the idle timer has cut the motor; clears on throttle or {@link clearIdleShutoff}. */
@@ -298,7 +323,13 @@ export class RaceAudio {
   }
 
   destroy(): void {
+    if (this.destroyed) {
+      return;
+    }
+    this.destroyed = true;
+    this.unregister();
     this.unmuteFocus();
+    this.unmuteMusic();
     this.engine?.stop();
     this.skid?.stop();
     this.brake?.stop();

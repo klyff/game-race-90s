@@ -36,6 +36,8 @@ import {
   getNarratorLocale,
   setNarratorLocale,
 } from '../adapters/audio/AudioPrefs.ts';
+import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
+import type { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import {
   NARRATOR_LOCALE_VALUES,
   localeFromMenuValue,
@@ -58,7 +60,7 @@ import {
 } from '../adapters/progress/ProgressStore.ts';
 import { MENU_KIND, MenuController } from '../adapters/input/MenuController.ts';
 import type { MenuItemSpec, MenuResult } from '../adapters/input/MenuController.ts';
-import { formatHelpBody } from '../data/input/ControlList.ts';
+import { formatHelpColumns } from '../data/input/ControlList.ts';
 import {
   GARAGE_ART_KEY,
   HUD_MINE_KEY,
@@ -105,6 +107,7 @@ export class GarageScene extends Phaser.Scene {
   private nameDraft = '';
   private shopIndex = 0;
   private status = '';
+  private audio!: TitleAudio;
 
   private art!: Phaser.GameObjects.Image;
   private titleBox!: Phaser.GameObjects.Rectangle;
@@ -150,7 +153,8 @@ export class GarageScene extends Phaser.Scene {
   private narrationBox!: Phaser.GameObjects.Rectangle;
   private narrationCaption!: Phaser.GameObjects.Text;
   private narrationText!: Phaser.GameObjects.Text;
-  private helpText!: Phaser.GameObjects.Text;
+  private helpLeftText!: Phaser.GameObjects.Text;
+  private helpRightText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
   private hintPlate!: Phaser.GameObjects.Rectangle;
@@ -233,7 +237,9 @@ export class GarageScene extends Phaser.Scene {
     this.narrationBox = this.plaque(180, 56);
     this.narrationCaption = this.add.text(0, 0, 'NARRATION', this.captionStyle()).setOrigin(0.5, 0.5);
     this.narrationText = this.add.text(0, 0, 'EN', this.statStyle(GOLD)).setOrigin(0.5, 0.5);
-    this.helpText = this.add.text(0, 0, formatHelpBody(), this.helpStyle()).setOrigin(0.5, 0).setVisible(false);
+    const [helpLeft, helpRight] = formatHelpColumns();
+    this.helpLeftText = this.add.text(0, 0, helpLeft, this.helpStyle()).setOrigin(0.5, 0).setVisible(false);
+    this.helpRightText = this.add.text(0, 0, helpRight, this.helpStyle()).setOrigin(0.5, 0).setVisible(false);
     this.statusText = this.add.text(0, 0, '', this.statusStyle()).setOrigin(0.5, 0.5);
     this.nameField = this.add.text(0, 0, '', this.nameFieldStyle()).setOrigin(0.5, 0.5);
     this.hintPlate = this.plaque(420, 56);
@@ -263,6 +269,7 @@ export class GarageScene extends Phaser.Scene {
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
+    this.audio = attachMenuAudio(this, { allowMute: () => this.mode !== 'name' });
   }
 
   /** Workshop plate, car on the floor, then every menu in front. */
@@ -738,7 +745,8 @@ export class GarageScene extends Phaser.Scene {
     const name = loadActiveName();
 
     this.nameField.setVisible(this.mode === 'name');
-    this.helpText.setVisible(this.mode === 'help');
+    this.helpLeftText.setVisible(this.mode === 'help');
+    this.helpRightText.setVisible(this.mode === 'help');
     if (this.mode === 'slots') {
       this.titleText.setText('SELECT SAVE');
       this.hintText.setText(
@@ -752,7 +760,9 @@ export class GarageScene extends Phaser.Scene {
       );
     } else if (this.mode === 'help') {
       this.titleText.setText('CONTROLS');
-      this.helpText.setText(formatHelpBody());
+      const [helpLeft, helpRight] = formatHelpColumns();
+      this.helpLeftText.setText(helpLeft);
+      this.helpRightText.setText(helpRight);
       this.hintText.setText('Esc or Enter to get back');
     } else {
       this.titleText.setText(
@@ -1162,7 +1172,8 @@ export class GarageScene extends Phaser.Scene {
     this.valueText.setPosition(hero.x, nameY + 26);
     this.statusText.setPosition(width / 2, height * 0.775);
     this.nameField.setPosition(width / 2, height * 0.44);
-    this.helpText.setPosition(width / 2, height * 0.2);
+    this.helpLeftText.setPosition(width * 0.3, height * 0.2);
+    this.helpRightText.setPosition(width * 0.7, height * 0.2);
     this.layoutHint(width, height);
 
     this.overlayTexts.forEach((text, index) => {
@@ -1223,8 +1234,8 @@ export class GarageScene extends Phaser.Scene {
       paintRoundedPlaque(this.menuPlate, {
         x: width / 2,
         y: height * 0.52,
-        width: Math.min(720, width * 0.62),
-        height: height * 0.64,
+        width: Math.min(980, width * 0.86),
+        height: height * 0.68,
         radius: 18,
         alpha: 0.72,
       });
@@ -1355,12 +1366,12 @@ export class GarageScene extends Phaser.Scene {
   private helpStyle(): Phaser.Types.GameObjects.Text.TextStyle {
     return {
       fontFamily: 'monospace',
-      fontSize: '18px',
+      fontSize: '16px',
       color: IVORY,
       align: 'left',
       stroke: '#05060a',
       strokeThickness: 4,
-      lineSpacing: 5,
+      lineSpacing: 4,
     };
   }
 

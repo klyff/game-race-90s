@@ -17,7 +17,9 @@ const LOCALE_KEY = 'race90s.narratorLocale';
 
 let userMuted = false;
 let focusMuted = false;
+let musicMuted = false;
 const listeners = new Set<(muted: boolean) => void>();
+const musicListeners = new Set<(muted: boolean) => void>();
 
 let locale: NarratorLocale = readStoredLocale();
 
@@ -52,9 +54,37 @@ export function onAudioMuteChange(callback: (muted: boolean) => void): () => voi
   };
 }
 
+/** Race bed only. Menus ignore this. M still mutes everything. */
+export function isMusicMuted(): boolean {
+  return musicMuted;
+}
+
+export function setMusicMuted(next: boolean): void {
+  musicMuted = next === true;
+  notifyMusicMute();
+}
+
+export function toggleMusicMuted(): void {
+  setMusicMuted(!musicMuted);
+}
+
+export function onMusicMuteChange(callback: (muted: boolean) => void): () => void {
+  musicListeners.add(callback);
+  return () => {
+    musicListeners.delete(callback);
+  };
+}
+
 function notifyMute(): void {
   const muted = isAudioMuted();
   for (const listener of listeners) {
+    listener(muted);
+  }
+}
+
+function notifyMusicMute(): void {
+  const muted = musicMuted;
+  for (const listener of musicListeners) {
     listener(muted);
   }
 }

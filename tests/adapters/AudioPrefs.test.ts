@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   isAudioMuted,
   isFocusAudioMuted,
+  isMusicMuted,
   isUserAudioMuted,
   setAudioMuted,
   setFocusMuted,
+  setMusicMuted,
+  toggleMusicMuted,
 } from '../../src/adapters/audio/AudioPrefs.ts';
 
 describe('AudioPrefs focus mute', () => {
@@ -28,5 +31,20 @@ describe('AudioPrefs focus mute', () => {
 
     setAudioMuted(false);
     expect(isAudioMuted()).toBe(false);
+  });
+});
+
+describe('AudioPrefs music mute', () => {
+  it('turns the race bed off without muting the master mix', () => {
+    setAudioMuted(false);
+    setMusicMuted(false);
+    expect(isMusicMuted()).toBe(false);
+
+    toggleMusicMuted();
+    expect(isMusicMuted()).toBe(true);
+    expect(isAudioMuted()).toBe(false);
+
+    setMusicMuted(false);
+    expect(isMusicMuted()).toBe(false);
   });
 });

@@ -34,6 +34,8 @@ export interface TuningOverlayReadout {
   readonly zoom: number;
   /** True if audio is muted. */
   readonly muted: boolean;
+  /** True if the race bed is off (N). Master mute is {@link muted}. */
+  readonly musicMuted?: boolean;
   /** Current sprite frame name or index, e.g. "marauder_0" or 0. */
   readonly spriteFrame: string | number;
   /** Optional Racing AI debug block, appended under the handling readout. */
@@ -97,6 +99,7 @@ export function formatTuningOverlay(readout: TuningOverlayReadout): readonly str
   // muted the useful thing to offer is "unmute". Labelling it with the state instead
   // reads as "audio is muted" right when the player wants to know how to undo it.
   const muteLabel = readout.muted ? 'unmute' : 'mute';
+  const musicLabel = readout.musicMuted === true ? 'music on' : 'music off';
 
   // Line 1: CAR NAME and track name.
   const line1 = `${readout.carName.toUpperCase()}  ${readout.trackName}`;
@@ -127,7 +130,7 @@ export function formatTuningOverlay(readout: TuningOverlayReadout): readonly str
     `frame ${readout.spriteFrame}`;
 
   // Line 6: key legend with mute label.
-  const line6 = `[T] overlay  [C] car  [R] respawn  [M] ${muteLabel}`;
+  const line6 = `[T] overlay  [C] car  [R] respawn  [M] ${muteLabel}  [N] ${musicLabel}`;
 
   const lines = [line1, line2, line3, line4, line5, line6];
   if (readout.clockLines !== undefined && readout.clockLines.length > 0) {

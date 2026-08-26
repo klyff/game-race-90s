@@ -22,11 +22,15 @@ export const RACE_WEAPON_CONTROLS: readonly ControlRow[] = [
   { keys: 'Z', action: 'DROP OIL' },
 ];
 
+export const AUDIO_CONTROLS: readonly ControlRow[] = [
+  { keys: 'M', action: 'MUTE ALL  ·  SFX + MUSIC' },
+  { keys: 'N', action: 'RACE MUSIC  ·  ON / OFF' },
+];
+
 export const RACE_SYSTEM_CONTROLS: readonly ControlRow[] = [
   { keys: 'ESC', action: 'PAUSE' },
   { keys: '[ / ]', action: 'ZOOM IN  ·  ZOOM OUT' },
   { keys: '0', action: 'RESET CAMERA' },
-  { keys: 'M', action: 'MUTE / UNMUTE' },
   { keys: 'H', action: 'CONTROLS' },
 ];
 
@@ -45,7 +49,7 @@ export const MENU_CONTROLS: readonly ControlRow[] = [
   { keys: 'ESC', action: 'BACK' },
   { keys: 'TAB', action: 'NEXT GARAGE BUTTON' },
   { keys: 'H', action: 'CONTROLS' },
-  { keys: 'M', action: 'MUTE / UNMUTE' },
+  { keys: 'M', action: 'MUTE ALL' },
   { keys: 'P', action: 'WATCH  ·  15 BOTS (SPLASH)' },
 ];
 
@@ -54,13 +58,23 @@ function controlBlock(title: string, rows: readonly ControlRow[]): string {
   return `${title}\n${lines.join('\n')}`;
 }
 
+/** Two-column pad card so Help fits a 16:9 safe zone. */
+export function formatHelpColumns(): readonly [string, string] {
+  return [
+    [
+      controlBlock('DRIVE', RACE_DRIVE_CONTROLS),
+      controlBlock('WEAPONS', RACE_WEAPON_CONTROLS),
+      controlBlock('AUDIO', AUDIO_CONTROLS),
+    ].join('\n\n'),
+    [
+      controlBlock('RACE', RACE_SYSTEM_CONTROLS),
+      controlBlock('WATCH', WATCH_CONTROLS),
+      controlBlock('MENUS', MENU_CONTROLS),
+    ].join('\n\n'),
+  ];
+}
+
 /** Full pad card for the garage Controls menu and the pause Help overlay. */
 export function formatHelpBody(): string {
-  return [
-    controlBlock('DRIVE', RACE_DRIVE_CONTROLS),
-    controlBlock('WEAPONS', RACE_WEAPON_CONTROLS),
-    controlBlock('RACE', RACE_SYSTEM_CONTROLS),
-    controlBlock('WATCH', WATCH_CONTROLS),
-    controlBlock('MENUS', MENU_CONTROLS),
-  ].join('\n\n');
+  return formatHelpColumns().join('\n\n');
 }

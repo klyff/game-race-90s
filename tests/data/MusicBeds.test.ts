@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   MUSIC_BED_VOLUME,
+  MUSIC_RACE_BED_VOLUME,
+  MUSIC_SPLASH_BED_VOLUME,
   MUSIC_BEDS,
   musicBedKey,
   musicBedUrl,
@@ -18,12 +20,23 @@ import {
   clearLoadedMusicBeds,
   loadedMusicBeds,
   markMusicBedLoaded,
+  markMusicBedsPresentInCache,
   pickLoadedMusicBed,
+  queueMusicBedLoads,
 } from '../../src/adapters/audio/BedRegistry.ts';
 
 describe('MusicBeds', () => {
-  it('plays recorded beds at half volume', () => {
-    expect(MUSIC_BED_VOLUME).toBe(0.5);
+  it('plays menu beds at 60% and splash at 90%', () => {
+    expect(MUSIC_BED_VOLUME).toBe(0.6);
+    expect(MUSIC_SPLASH_BED_VOLUME).toBe(0.9);
+    expect(MUSIC_BED_VOLUME).toBeLessThan(MUSIC_SPLASH_BED_VOLUME);
+  });
+
+  it('keeps the race bed at 15–20% so engine and narrator stay readable', () => {
+    expect(MUSIC_RACE_BED_VOLUME).toBe(0.18);
+    expect(MUSIC_RACE_BED_VOLUME).toBeGreaterThanOrEqual(0.15);
+    expect(MUSIC_RACE_BED_VOLUME).toBeLessThanOrEqual(0.2);
+    expect(MUSIC_RACE_BED_VOLUME).toBeLessThan(MUSIC_BED_VOLUME);
   });
 
   it('lists ten original beds with distinct ids', () => {
@@ -55,6 +68,34 @@ describe('BedRegistry', () => {
     markMusicBedLoaded('missing-id');
     expect(loadedMusicBeds().map(bed => bed.id)).toEqual(['green-flag']);
     expect(pickLoadedMusicBed(() => 0)?.id).toBe('green-flag');
+    clearLoadedMusicBeds();
+  });
+
+  it('does not repeat the last bed when another is loaded', () => {
+    clearLoadedMusicBeds();
+    markMusicBedLoaded('green-flag');
+    markMusicBedLoaded('night-rider');
+    expect(pickLoadedMusicBed(() => 0)?.id).toBe('green-flag');
+    expect(pickLoadedMusicBed(() => 0)?.id).toBe('night-rider');
+    expect(pickLoadedMusicBed(() => 0)?.id).toBe('green-flag');
+    clearLoadedMusicBeds();
+  });
+
+  it('queues every catalog bed with its public url', () => {
+    const queued: Array<{ key: string; url: string }> = [];
+    queueMusicBedLoads(MUSIC_BEDS, (key, url) => queued.push({ key, url }));
+    expect(queued).toHaveLength(10);
+    expect(queued[0]).toEqual({
+      key: 'music-bed:green-flag',
+      url: 'assets/audio/music/beds/green-flag.mp3',
+    });
+    expect(queued[9]?.key).toBe('music-bed:kiss-the-flag');
+  });
+
+  it('marks only beds whose cache key is present', () => {
+    clearLoadedMusicBeds();
+    markMusicBedsPresentInCache(key => key === 'music-bed:night-rider' || key === 'music-bed:missing');
+    expect(loadedMusicBeds().map(bed => bed.id)).toEqual(['night-rider']);
     clearLoadedMusicBeds();
   });
 });

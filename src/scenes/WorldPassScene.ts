@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
+import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
 import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
@@ -108,8 +109,7 @@ export class WorldPassScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setDepth(4);
 
-    this.audio = new TitleAudio();
-    this.audio.start();
+    this.audio = attachMenuAudio(this);
     this.layout();
     this.tweens.add({
       targets: [this.headlineText, this.issuedText, this.titleText],
@@ -119,7 +119,6 @@ export class WorldPassScene extends Phaser.Scene {
     });
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.audio.destroy());
   }
 
   private layout(): void {
@@ -163,7 +162,6 @@ export class WorldPassScene extends Phaser.Scene {
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', leave);
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER).on('down', leave);
     keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', leave);
-    keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => this.audio.toggleMute());
   }
 
   private playerCallsign(): string {

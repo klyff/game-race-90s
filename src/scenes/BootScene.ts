@@ -38,6 +38,8 @@ import { watchPlanetTwoTracks } from '../domain/race/WatchField.ts';
 import { DRIVER_CARDS, driverCardUrl } from '../data/cards/DriverCards.ts';
 import { SPLASH_CARDS, splashCardUrl } from '../data/cards/SplashCards.ts';
 import { SCRAP_SPRITES } from '../adapters/render/MetalScrapRoster.ts';
+import { MUSIC_BEDS } from '../data/audio/MusicBeds.ts';
+import { markMusicBedsPresentInCache, queueMusicBedLoads } from '../adapters/audio/BedRegistry.ts';
 import {
   CAR_ASSET_DIRECTORY,
   CAR_MANIFEST_KEY,
@@ -226,11 +228,16 @@ export class BootScene extends Phaser.Scene {
     for (const scrap of SCRAP_SPRITES) {
       this.load.image(scrap.key, `${DEBRIS_ASSET_DIRECTORY}/${scrap.file}`);
     }
+    queueMusicBedLoads(MUSIC_BEDS, (key, url) => {
+      this.optionalKeys.add(key);
+      this.load.audio(key, url);
+    });
 
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
       if (this.bootFailed) {
         return;
       }
+      markMusicBedsPresentInCache(key => this.cache.audio.exists(key));
       let liveManifest: CarSetManifest;
       try {
         liveManifest = this.installBBoxSheets(manifest);

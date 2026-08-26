@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatHelpBody } from '../../src/data/input/ControlList.ts';
+import { formatHelpBody, formatHelpColumns } from '../../src/data/input/ControlList.ts';
 
 describe('formatHelpBody', () => {
   it('lists drive, weapons, race and menu commands', () => {
@@ -20,5 +20,22 @@ describe('formatHelpBody', () => {
     expect(body).toContain('15 BOTS');
     expect(body).toContain('MENUS');
     expect(body).toContain('CONTROLS');
+    expect(body).toContain('AUDIO');
+    expect(body).toContain('MUTE ALL');
+    expect(body).toContain('SFX + MUSIC');
+    expect(body).toContain('RACE MUSIC');
+    expect(body).toContain('ON / OFF');
+  });
+
+  it('splits the pad into two columns so Help stays in the safe zone', () => {
+    const [left, right] = formatHelpColumns();
+    expect(left).toContain('DRIVE');
+    expect(left).toContain('AUDIO');
+    expect(left).toContain('MUTE ALL');
+    expect(right).toContain('RACE');
+    expect(right).toContain('WATCH');
+    expect(right).toContain('MENUS');
+    expect(left).not.toContain('WATCH');
+    expect(right).not.toContain('THROTTLE');
   });
 });
