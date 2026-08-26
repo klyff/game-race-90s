@@ -1,0 +1,15 @@
+{
+  "body_type": "low wide 80s/90s sports car, pixel-art \u2014 Red Oh Red / Greenhish silhouette, no center stripe",
+  "forbidden": "do not overwrite 3-red-oh-red or 7-fast-greenhish-machine; this is a recolor copy only",
+  "base_color": "vivid magenta-purple body, no dual racing stripe",
+  "stripes": "none \u2014 center hood/roof/trunk is solid purple",
+  "roof_weapon": "single dark-grey roof cannon; sensor glow follows body purple",
+  "hood": "two black rectangular vents, no center stripe between them",
+  "wheels": "dark deep-dish wheels with brighter silver lips under wider arches",
+  "fenders": "hint of Blue Combat-style wider arches (dark purple bolted flares)",
+  "mirrors": "small black rectangular side mirrors",
+  "windows": "dark-tinted windshield; faint seat shapes only",
+  "front_details": "rectangular headlights; dark front splitter; black lower grille",
+  "paint_finish": "clean high-fidelity pixel art, not photoreal",
+  "source": "pixel copy of 7-fast-greenhish-machine; green\u2192purple; original Red Oh Red white-stripe pixels filled with body paint"
+}

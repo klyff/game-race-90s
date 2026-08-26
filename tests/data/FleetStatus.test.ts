@@ -27,6 +27,7 @@ describe('FleetStatus', () => {
     expect(isLiveSpinnerCarId('4-pickup-army-green-wasteland')).toBe(false);
     expect(isLiveSpinnerCarId('5-all-pink-fury')).toBe(true);
     expect(isLiveSpinnerCarId('7-fast-greenhish-machine')).toBe(true);
+    expect(isLiveSpinnerCarId('8-purple-crazymania')).toBe(true);
     expect(isLiveSpinnerCarId('4-wasteland-pickup-sand-mg')).toBe(false);
     expect(isLiveSpinnerCarId('5-raider-sedan-cream-cannon')).toBe(false);
     expect(isLiveSpinnerCarId('6-war-muscle-red-bomber')).toBe(false);

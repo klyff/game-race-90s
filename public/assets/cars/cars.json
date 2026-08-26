@@ -223,6 +223,42 @@
       "frameCount": 32,
       "clock": "counter_clockwise",
       "framesJson": "assets/cars/7-fast-greenhish-machine/car_strip_64x64.json"
+    },
+    {
+      "id": "8-purple-crazymania",
+      "displayName": "Purple Crazymania",
+      "archetype": "Purple pixel sport \u2014 roof cannon, wide arches, no center stripe",
+      "image": "assets/cars/8-purple-crazymania/car_strip_64x64.png",
+      "shadow": {
+        "width": 44,
+        "height": 20
+      },
+      "stats": {
+        "mass": 930,
+        "enginePower": 33,
+        "brakeForce": 48,
+        "maxSpeed": 67,
+        "grip": 34,
+        "steerRate": 2.85,
+        "steerSpeedFalloff": 0.4,
+        "armor": 0.42,
+        "ammoCapacity": 14,
+        "collisionRadius": 1.72,
+        "aimRadius": 3.55,
+        "collisionAlong": 1.72,
+        "collisionAcross": 1.2384,
+        "collisionSquareMin": 1.2384,
+        "collisionSquareMax": 1.72,
+        "collisionSquare": 1.4792
+      },
+      "perk": "arsenal",
+      "homePlanetId": "thunder-basin",
+      "worldAdvantage": 0.7,
+      "frameWidth": 67,
+      "frameHeight": 67,
+      "frameCount": 32,
+      "clock": "counter_clockwise",
+      "framesJson": "assets/cars/8-purple-crazymania/car_strip_64x64.json"
     }
   ]
 }

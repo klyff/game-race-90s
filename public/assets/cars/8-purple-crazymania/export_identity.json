@@ -1,0 +1,17 @@
+{
+  "id": "8-purple-crazymania",
+  "inventory_n": 8,
+  "slug": "purple-crazymania",
+  "displayName": "Purple Crazymania",
+  "spec": "Copy of Fast Greenhish Machine; green body \u2192 vivid purple; no center stripe; wider arches + brighter rims. Pixel Art.",
+  "source_run_dir": "/Users/klyff/git/game-race-90s/car-sprites/2026-08-26_purple-crazymania",
+  "hero_frame": 7,
+  "hero_role": "shop / garage / results still \u2014 always strip frame 7",
+  "hero_source": "keyed/out_frame_07.png",
+  "hero_file": "car_hero.png",
+  "frame_count": 32,
+  "direction": "counter_clockwise",
+  "index0": "6 o'clock facing camera",
+  "clock": "counter_clockwise",
+  "exported_at": "2026-08-26T21:43:44.350676+00:00"
+}

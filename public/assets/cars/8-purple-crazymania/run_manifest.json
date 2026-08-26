@@ -1,0 +1,12 @@
+{
+  "run_id": "2026-08-26_purple-crazymania",
+  "name": "Purple Crazymania",
+  "spec": "Copy of Fast Greenhish Machine; green body \u2192 vivid purple; no center stripe; wider arches + brighter rims. Pixel Art.",
+  "save_dir": "car-sprites/2026-08-26_purple-crazymania",
+  "background_mode": "chroma_key",
+  "source_car": "7-fast-greenhish-machine",
+  "method": "copy_and_recolor",
+  "status": "ASSEMBLED",
+  "style_anchor": "style_anchor.json",
+  "note": "Geometry and 32-frame CCW clock copied from Fast Greenhish / Red Oh Red. No frames were regenerated. Source folders were not overwritten."
+}

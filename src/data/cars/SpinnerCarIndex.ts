@@ -234,6 +234,38 @@ const SUV_BLACK_NOIR = spinnerCar({
   },
 });
 
+/**
+ * Purple Crazymania — Greenhish silhouette, purple paint, no center stripe.
+ * World 2 shop flagship: more speed and a lot more grip / steer than Greenhish
+ * (wide-arch + deep-dish feel), still under Blue Combat 68 and far from Marauder 78.
+ * Arcade consult: fun > realism, high grip, planted COM, keep steer at speed for drift.
+ */
+const PURPLE_CRAZYMANIA = spinnerCar({
+  id: 'purple-crazymania',
+  displayName: 'Purple Crazymania',
+  callName: 'Crazymania',
+  archetype: 'Purple pixel sport — roof cannon, wide arches, no center stripe',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'thunder-basin',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.MEDIUM,
+  unlockPlanet: 2,
+  price: 500_000,
+  stats: {
+    mass: 930,
+    enginePower: 33,
+    brakeForce: 48,
+    maxSpeed: 67,
+    grip: 34,
+    steerRate: 2.85,
+    steerSpeedFalloff: 0.4,
+    armor: 0.42,
+    ammoCapacity: 14,
+    collisionRadius: 1.72,
+    aimRadius: 3.55,
+  },
+});
+
 export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
   GRAY_MUSCLE,
   BLUE_COMBAT,
@@ -241,6 +273,7 @@ export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
   ALL_PINK_FURY,
   SUV_BLACK_NOIR,
   FAST_GREENHISH_MACHINE,
+  PURPLE_CRAZYMANIA,
 ];
 
 export function spinnerCarIds(): readonly string[] {
