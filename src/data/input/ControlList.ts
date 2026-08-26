@@ -24,7 +24,8 @@ export const RACE_WEAPON_CONTROLS: readonly ControlRow[] = [
 
 export const AUDIO_CONTROLS: readonly ControlRow[] = [
   { keys: 'M', action: 'MUTE ALL  ·  SFX + MUSIC' },
-  { keys: 'N', action: 'RACE MUSIC  ·  ON / OFF' },
+  { keys: 'N', action: 'MUSIC ON / OFF  ·  RACE' },
+  { keys: 'PAUSE ← →', action: 'AUDIO  ·  MUSIC  ·  NARRATION' },
 ];
 
 export const RACE_SYSTEM_CONTROLS: readonly ControlRow[] = [

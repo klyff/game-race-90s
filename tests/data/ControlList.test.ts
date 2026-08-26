@@ -23,8 +23,9 @@ describe('formatHelpBody', () => {
     expect(body).toContain('AUDIO');
     expect(body).toContain('MUTE ALL');
     expect(body).toContain('SFX + MUSIC');
-    expect(body).toContain('RACE MUSIC');
-    expect(body).toContain('ON / OFF');
+    expect(body).toContain('MUSIC ON / OFF');
+    expect(body).toContain('PAUSE ← →');
+    expect(body).toContain('NARRATION');
   });
 
   it('splits the pad into two columns so Help stays in the safe zone', () => {

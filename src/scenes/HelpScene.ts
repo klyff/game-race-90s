@@ -29,7 +29,7 @@ export class HelpScene extends Phaser.Scene {
   create(): void {
     this.backdrop = this.add.rectangle(0, 0, 10, 10, 0x05060a, 0.94).setOrigin(0, 0);
     const [left, right] = formatHelpColumns();
-    this.titleText = this.add.text(0, 0, 'HELP  ·  COMMANDS', this.titleStyle()).setOrigin(0.5, 0.5);
+    this.titleText = this.add.text(0, 0, 'HELP  ·  CONTROLS', this.titleStyle()).setOrigin(0.5, 0.5);
     this.leftText = this.add.text(0, 0, left, this.bodyStyle()).setOrigin(0.5, 0);
     this.rightText = this.add.text(0, 0, right, this.bodyStyle()).setOrigin(0.5, 0);
     this.promptText = this.add
