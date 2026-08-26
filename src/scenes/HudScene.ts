@@ -128,6 +128,8 @@ export class HudScene extends Phaser.Scene {
   private barFill!: Phaser.GameObjects.Rectangle;
   private gauge!: AnalogGauges;
   private minimap!: MinimapView;
+  private mapMargin = 0;
+  private mapStackBottom = 0;
 
   /** Last rendered values, so a pulse fires on CHANGE rather than every frame. */
   private lastPosition = '';
@@ -450,6 +452,7 @@ export class HudScene extends Phaser.Scene {
     }
     this.minimap.setVisible(true);
     this.minimap.update(snapshot);
+    this.placeMinimap();
   }
 
   /**
@@ -552,17 +555,18 @@ export class HudScene extends Phaser.Scene {
     this.timeText.setPosition(width - margin, margin).setOrigin(1, 0);
     this.standingsText.setPosition(width - margin, margin + 34).setOrigin(1, 0);
 
-    // Mid-left, below the cash/pts stack and above the loadout rail. Title-safe
-    // on the left; ~18% of the short side at 1080p (~200px), shrinks if the
-    // window would otherwise overlap the rail.
-    const stackBottom = margin + 112 + 22;
+    // Left column, under the position/lap stack. Sit below the PTS line by a
+    // fixed gap so the halo never eats the cash/pts (18px font + 5px stroke).
+    const stackBottom = this.minimapTop();
     const railHeight = ICON_SIZE + RAIL_PAD * 2;
     const loadoutTop = height - margin - BAR_HEIGHT - RAIL_PAD - railHeight;
     const budget = Math.max(96, loadoutTop - stackBottom - 12);
     const target = Math.round(Math.min(width, height) * 0.18);
     const mapSize = Math.max(96, Math.min(Math.max(target, 160), budget));
+    this.mapMargin = margin;
+    this.mapStackBottom = stackBottom;
     this.minimap.setSize(mapSize, mapSize);
-    this.minimap.setPosition(margin, stackBottom);
+    this.placeMinimap();
 
     const barY = height - margin - BAR_HEIGHT;
     this.barBackground.setPosition(margin, barY);
@@ -599,6 +603,27 @@ export class HudScene extends Phaser.Scene {
     this.podiumPlate.setPosition(width / 2, podiumY);
     this.podiumClockText.setPosition(width / 2, podiumY);
     this.podiumTimeoutLabel.setPosition(width / 2, podiumY + 44);
+  }
+
+  /** Top of the halo: just under PTS, with room for the stroke outline. */
+  private minimapTop(): number {
+    const textBottom = this.pointsText.y + Math.max(this.pointsText.height, 28);
+    return Math.round(textBottom + 20);
+  }
+
+  /** Centre the halo under the left text stack, never left of the title-safe margin. */
+  private placeMinimap(): void {
+    const stackWidth = Math.max(
+      this.positionText.width,
+      this.lapText.width,
+      this.cashText.width,
+      this.pointsText.width,
+    );
+    const mapWidth = this.minimap.contentSize.width;
+    const extra = Number.isFinite(mapWidth) && mapWidth > 0 ? stackWidth - mapWidth : 0;
+    const x = this.mapMargin + Math.round(Math.max(0, extra) / 2);
+    this.mapStackBottom = this.minimapTop();
+    this.minimap.setPosition(x, this.mapStackBottom);
   }
 
   /**

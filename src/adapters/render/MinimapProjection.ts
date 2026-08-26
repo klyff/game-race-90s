@@ -1,11 +1,14 @@
 /**
- * North-up world-to-minimap projection. Pure: no Phaser.
+ * Camera-aligned world-to-minimap projection. Pure: no Phaser.
  *
- * World +Y is up; screen +Y is down — the same flip as
- * `tools/trackgen/circuit-maps.ts`, so a circuit silhouette here matches the
- * offline top-down maps. The track letterboxes inside the target rectangle.
+ * The live chase camera is isometric, not cartographic north-up. World +X and
+ * +Y both grow screen-down (`IsoProjection`), so a north-up Y-flip made cars
+ * that race toward the bottom of the play view climb the HUD map. The minimap
+ * uses the same ground-plane basis as the camera, letterboxes that diamond,
+ * then the HUD nudges it top-left so the halo lines up with the text stack.
  */
 
+import { ISO_X, ISO_Y } from '../../domain/constants.ts';
 import type { Vec2 } from '../../domain/math/Vec2.ts';
 import { add, scale } from '../../domain/math/Vec2.ts';
 import type { TrackSpline } from '../../domain/track/TrackSpline.ts';
@@ -13,8 +16,11 @@ import type { TrackSpline } from '../../domain/track/TrackSpline.ts';
 /** Centreline samples for a HUD-sized outline. Enough for hairpins, cheap to stroke. */
 export const MINIMAP_OUTLINE_SAMPLES = 160;
 
-/** Inner padding so the road and car marks stay off the plate edge. */
+/** Inner padding so the road, halo and car marks stay inside the view. */
 export const MINIMAP_PADDING_PX = 14;
+
+/** Extra dark ribbon beyond the road stroke — the backing instead of a plate. */
+export const MINIMAP_HALO_PX = 10;
 
 export interface MinimapViewport {
   readonly width: number;
@@ -39,6 +45,14 @@ export interface MinimapSnapshot {
   /** World-space padding around the centreline (usually track halfWidth). */
   readonly worldMargin: number;
   readonly racers: readonly MinimapRacer[];
+}
+
+/** Flatten a world point onto the same iso ground plane the chase camera uses. */
+export function worldToIso(point: Vec2): Vec2 {
+  return {
+    x: (point.x - point.y) * ISO_X,
+    y: (point.x + point.y) * ISO_Y,
+  };
 }
 
 export function sampleCentreline(
@@ -98,35 +112,86 @@ export function createMinimapViewport(
     };
   }
 
+  let minIsoX = Number.POSITIVE_INFINITY;
+  let maxIsoX = Number.NEGATIVE_INFINITY;
+  let minIsoY = Number.POSITIVE_INFINITY;
+  let maxIsoY = Number.NEGATIVE_INFINITY;
+  const corners: readonly Vec2[] = [
+    { x: minX, y: minY },
+    { x: maxX, y: minY },
+    { x: maxX, y: maxY },
+    { x: minX, y: maxY },
+  ];
+  for (const corner of corners) {
+    const iso = worldToIso(corner);
+    minIsoX = Math.min(minIsoX, iso.x);
+    maxIsoX = Math.max(maxIsoX, iso.x);
+    minIsoY = Math.min(minIsoY, iso.y);
+    maxIsoY = Math.max(maxIsoY, iso.y);
+  }
+
   const innerW = Math.max(1, safeWidth - padding * 2);
   const innerH = Math.max(1, safeHeight - padding * 2);
-  const scale = Math.min(innerW / (maxX - minX), innerH / (maxY - minY));
-  const usedW = (maxX - minX) * scale;
-  const usedH = (maxY - minY) * scale;
+  const scale = Math.min(innerW / (maxIsoX - minIsoX), innerH / (maxIsoY - minIsoY));
+  const usedW = (maxIsoX - minIsoX) * scale;
+  const usedH = (maxIsoY - minIsoY) * scale;
   return {
     width: safeWidth,
     height: safeHeight,
     scale,
-    offsetX: (safeWidth - usedW) / 2 - minX * scale,
-    offsetY: (safeHeight + usedH) / 2 + minY * scale,
+    offsetX: (safeWidth - usedW) / 2 - minIsoX * scale,
+    offsetY: (safeHeight - usedH) / 2 - minIsoY * scale,
   };
 }
 
 export function worldToMinimap(view: MinimapViewport, point: Vec2): Vec2 {
+  const iso = worldToIso(point);
   return {
-    x: point.x * view.scale + view.offsetX,
-    y: view.offsetY - point.y * view.scale,
+    x: iso.x * view.scale + view.offsetX,
+    y: iso.y * view.scale + view.offsetY,
   };
 }
 
 /**
- * Phaser rotation: 0 = +X (right), clockwise-positive.
- * World heading: 0 = +X, counter-clockwise. Y is flipped on the map, so the
- * screen angle is simply `-heading`.
+ * Slide the letterboxed circuit so the outline hugs the top-left, leaving
+ * `inset` pixels for the halo. The HUD then parks the container on the same
+ * left edge as the position/lap stack.
+ */
+export function nudgeViewportToTopLeft(
+  view: MinimapViewport,
+  points: readonly Vec2[],
+  inset: number,
+): MinimapViewport {
+  if (points.length === 0 || !Number.isFinite(inset)) {
+    return view;
+  }
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  for (const point of points) {
+    const pixel = worldToMinimap(view, point);
+    minX = Math.min(minX, pixel.x);
+    minY = Math.min(minY, pixel.y);
+  }
+  if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
+    return view;
+  }
+  return {
+    ...view,
+    offsetX: view.offsetX + (inset - minX),
+    offsetY: view.offsetY + (inset - minY),
+  };
+}
+
+/**
+ * Phaser rotation of the focus mark: 0 = +X (right), clockwise-positive.
+ * World heading is CCW from +X; after the iso basis, travel that goes down
+ * the chase view also points down on the plate.
  */
 export function minimapHeading(worldHeading: number): number {
-  if (!Number.isFinite(worldHeading) || worldHeading === 0) {
+  if (!Number.isFinite(worldHeading)) {
     return 0;
   }
-  return -worldHeading;
+  const alongX = Math.cos(worldHeading);
+  const alongY = Math.sin(worldHeading);
+  return Math.atan2((alongX + alongY) * ISO_Y, (alongX - alongY) * ISO_X);
 }

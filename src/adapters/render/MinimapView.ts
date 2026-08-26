@@ -1,6 +1,7 @@
 /**
- * Race HUD minimap: north-up circuit silhouette, focus triangle, NPC squares.
+ * Race HUD minimap: camera-aligned circuit silhouette, focus triangle, NPC squares.
  *
+ * No rectangular plate — the backing is a thick halo that follows the road.
  * Pixel-hard like `AnalogGauges` — integer centres, 2 px strokes, no glow.
  * Title-safe placement is the caller's job (`HudScene`).
  */
@@ -9,15 +10,18 @@ import Phaser from 'phaser';
 import type { Vec2 } from '../../domain/math/Vec2.ts';
 import {
   createMinimapViewport,
+  MINIMAP_HALO_PX,
   minimapHeading,
+  nudgeViewportToTopLeft,
   worldToMinimap,
   type MinimapSnapshot,
   type MinimapViewport,
 } from './MinimapProjection.ts';
 
-const PLATE = 0x000000;
-const PLATE_ALPHA = 0.82;
-const BEZEL = 0x2a2a32;
+const HALO = 0x07070c;
+const HALO_ALPHA = 0.92;
+const HALO_EDGE = 0xc8ccd4;
+const HALO_EDGE_PX = 2;
 const ROAD = 0x8a8e96;
 const START_LIGHT = 0xffffff;
 const START_DARK = 0x000000;
@@ -35,7 +39,6 @@ export interface MinimapViewOptions {
 
 export class MinimapView {
   private readonly container: Phaser.GameObjects.Container;
-  private readonly plate: Phaser.GameObjects.Rectangle;
   private readonly trackGfx: Phaser.GameObjects.Graphics;
   private readonly racerGfx: Phaser.GameObjects.Graphics;
   private width: number;
@@ -44,24 +47,27 @@ export class MinimapView {
   private lastOutline: readonly Vec2[] = [];
   private lastStart: readonly [Vec2, Vec2] | null = null;
   private lastMargin = 0;
+  private contentWidth = 0;
+  private contentHeight = 0;
 
   constructor(scene: Phaser.Scene, options: MinimapViewOptions = {}) {
     const size = Math.max(64, Math.round(options.size ?? DEFAULT_SIZE));
     this.width = size;
     this.height = size;
     this.container = scene.add.container(0, 0);
-    this.plate = scene.add
-      .rectangle(0, 0, size, size, PLATE, PLATE_ALPHA)
-      .setOrigin(0, 0)
-      .setStrokeStyle(2, BEZEL, 0.9);
     this.trackGfx = scene.add.graphics();
     this.racerGfx = scene.add.graphics();
-    this.container.add([this.plate, this.trackGfx, this.racerGfx]);
+    this.container.add([this.trackGfx, this.racerGfx]);
     this.viewport = createMinimapViewport([], size, size);
   }
 
   get size(): { readonly width: number; readonly height: number } {
     return { width: this.width, height: this.height };
+  }
+
+  /** Pixel box of the halo after the top-left snap — used to sit under the text stack. */
+  get contentSize(): { readonly width: number; readonly height: number } {
+    return { width: this.contentWidth, height: this.contentHeight };
   }
 
   setPosition(x: number, y: number): void {
@@ -84,7 +90,6 @@ export class MinimapView {
     }
     this.width = nextW;
     this.height = nextH;
-    this.plate.setSize(nextW, nextH);
     this.rebuildViewport();
     this.drawTrack();
   }
@@ -108,10 +113,30 @@ export class MinimapView {
     this.container.destroy();
   }
 
+  private roadWidth(): number {
+    return Math.max(3, Math.round(Math.min(this.width, this.height) * 0.02));
+  }
+
   private rebuildViewport(): void {
-    this.viewport = createMinimapViewport(this.lastOutline, this.width, this.height, {
+    const fitted = createMinimapViewport(this.lastOutline, this.width, this.height, {
       worldMargin: this.lastMargin,
     });
+    const inset = MINIMAP_HALO_PX + HALO_EDGE_PX + this.roadWidth() / 2;
+    this.viewport = nudgeViewportToTopLeft(fitted, this.lastOutline, inset);
+    if (this.lastOutline.length === 0) {
+      this.contentWidth = 0;
+      this.contentHeight = 0;
+      return;
+    }
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    for (const point of this.lastOutline) {
+      const pixel = worldToMinimap(this.viewport, point);
+      maxX = Math.max(maxX, pixel.x);
+      maxY = Math.max(maxY, pixel.y);
+    }
+    this.contentWidth = Math.round(maxX + inset);
+    this.contentHeight = Math.round(maxY + inset);
   }
 
   private drawTrack(): void {
@@ -121,17 +146,15 @@ export class MinimapView {
       return;
     }
 
-    const roadWidth = Math.max(3, Math.round(Math.min(this.width, this.height) * 0.02));
-    this.trackGfx.lineStyle(roadWidth, ROAD, 1);
-    this.trackGfx.beginPath();
-    const first = worldToMinimap(this.viewport, outline[0]!);
-    this.trackGfx.moveTo(first.x, first.y);
-    for (let i = 1; i < outline.length; i += 1) {
-      const pixel = worldToMinimap(this.viewport, outline[i]!);
-      this.trackGfx.lineTo(pixel.x, pixel.y);
-    }
-    this.trackGfx.closePath();
-    this.trackGfx.strokePath();
+    const pixels = outline.map(point => worldToMinimap(this.viewport, point));
+    const roadWidth = this.roadWidth();
+    const roadHalf = roadWidth / 2;
+    const haloHalf = roadHalf + MINIMAP_HALO_PX;
+    const edgeHalf = haloHalf + HALO_EDGE_PX;
+
+    this.fillRibbon(pixels, edgeHalf, HALO_EDGE, 0.95);
+    this.fillRibbon(pixels, haloHalf, HALO, HALO_ALPHA);
+    this.fillRibbon(pixels, roadHalf, ROAD, 1);
 
     if (this.lastStart !== null) {
       const from = worldToMinimap(this.viewport, this.lastStart[0]);
@@ -168,6 +191,45 @@ export class MinimapView {
       base,
       focus.faded ? 0.45 : 1,
     );
+  }
+
+  /**
+   * Fat polyline as filled quads. Phaser WebGL `strokePath` ignores thickness
+   * under `pixelArt`, so a ribbon is the only way the 10 px halo actually reads.
+   */
+  private fillRibbon(
+    pixels: readonly Vec2[],
+    halfWidth: number,
+    color: number,
+    alpha: number,
+  ): void {
+    if (pixels.length < 2 || halfWidth <= 0) {
+      return;
+    }
+    this.trackGfx.fillStyle(color, alpha);
+    const last = pixels.length - 1;
+    for (let i = 0; i <= last; i += 1) {
+      const from = pixels[i]!;
+      const to = pixels[i === last ? 0 : i + 1]!;
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const length = Math.hypot(dx, dy);
+      if (length < 0.01) {
+        continue;
+      }
+      const nx = (-dy / length) * halfWidth;
+      const ny = (dx / length) * halfWidth;
+      this.trackGfx.fillPoints(
+        [
+          { x: from.x + nx, y: from.y + ny },
+          { x: from.x - nx, y: from.y - ny },
+          { x: to.x - nx, y: to.y - ny },
+          { x: to.x + nx, y: to.y + ny },
+        ],
+        true,
+      );
+      this.trackGfx.fillCircle(from.x, from.y, halfWidth);
+    }
   }
 
   private drawNpc(pixel: Vec2, half: number, alpha: number): void {
