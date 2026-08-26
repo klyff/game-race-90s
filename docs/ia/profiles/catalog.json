@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-18",
+  "generated": "2026-08-26",
   "source": "src/domain/ai/DriverProfile.ts + DriverRoster.ts",
   "catalogSize": 30,
   "tuningStillRequired": [
@@ -22,7 +22,7 @@
     "localSteering",
     "vehiclePhysics"
   ],
-  "note": "A profile is desire, not horsepower. vehiclePhysics/localSteering never mutate VehicleStats.",
+  "note": "A profile is desire, not horsepower. vehiclePhysics/localSteering never mutate VehicleStats. Elite ladder: KLYFF 3.0, ALINE 2.7 (90%), ENZO/CAROL 2.4 (80%).",
   "catalog": [
     {
       "id": "klyff",
@@ -51,23 +51,38 @@
       "block": 0.45,
       "opponentPrediction": 0.9,
       "opponentMemory": 0.4,
-      "localSteering": 0.95,
-      "vehiclePhysics": 0.98
+      "localSteering": 0.9,
+      "vehiclePhysics": 0.9
     },
     {
       "id": "enzo",
       "displayName": "ENZO",
       "tier": "signature",
       "attack": 0.85,
-      "defend": 0.35,
+      "defend": 0.42,
       "overtake": 0.9,
       "ram": 0.25,
       "weapon": 0.4,
-      "block": 0.3,
-      "opponentPrediction": 0.7,
-      "opponentMemory": 0.35,
-      "localSteering": 0.7,
-      "vehiclePhysics": 0.72
+      "block": 0.36,
+      "opponentPrediction": 0.8,
+      "opponentMemory": 0.5,
+      "localSteering": 0.8,
+      "vehiclePhysics": 0.8
+    },
+    {
+      "id": "nikki",
+      "displayName": "CAROL",
+      "tier": "signature",
+      "attack": 0.72,
+      "defend": 0.48,
+      "overtake": 0.82,
+      "ram": 0.38,
+      "weapon": 0.52,
+      "block": 0.42,
+      "opponentPrediction": 0.8,
+      "opponentMemory": 0.55,
+      "localSteering": 0.8,
+      "vehiclePhysics": 0.8
     },
     {
       "id": "emma",
@@ -165,14 +180,14 @@
       "tier": "medium",
       "attack": 0.6,
       "defend": 0.55,
-      "overtake": 0.95,
+      "overtake": 0.85,
       "ram": 0.1,
       "weapon": 0.45,
       "block": 0.45,
-      "opponentPrediction": 0.9,
+      "opponentPrediction": 0.75,
       "opponentMemory": 0.4,
-      "localSteering": 0.95,
-      "vehiclePhysics": 0.98
+      "localSteering": 0.8,
+      "vehiclePhysics": 0.78
     },
     {
       "id": "predator",
@@ -240,14 +255,14 @@
       "tier": "medium",
       "attack": 0.65,
       "defend": 0.6,
-      "overtake": 0.85,
+      "overtake": 0.75,
       "ram": 0.35,
       "weapon": 0.7,
       "block": 0.6,
-      "opponentPrediction": 0.9,
-      "opponentMemory": 0.7,
-      "localSteering": 0.85,
-      "vehiclePhysics": 0.85
+      "opponentPrediction": 0.72,
+      "opponentMemory": 0.55,
+      "localSteering": 0.7,
+      "vehiclePhysics": 0.68
     },
     {
       "id": "berserker",
@@ -285,14 +300,14 @@
       "tier": "medium",
       "attack": 0.45,
       "defend": 0.45,
-      "overtake": 1,
+      "overtake": 0.9,
       "ram": 0.1,
       "weapon": 0.35,
       "block": 0.35,
-      "opponentPrediction": 0.85,
+      "opponentPrediction": 0.72,
       "opponentMemory": 0.35,
-      "localSteering": 0.95,
-      "vehiclePhysics": 0.9
+      "localSteering": 0.78,
+      "vehiclePhysics": 0.72
     },
     {
       "id": "nemesis",
@@ -316,14 +331,14 @@
       "parentId": "apex",
       "attack": 0.5297905737036809,
       "defend": 0.555506644577184,
-      "overtake": 1,
+      "overtake": 0.9094011294484812,
       "ram": 0.08121201880049818,
       "weapon": 0.502421110416717,
       "block": 0.3796391969704149,
-      "opponentPrediction": 0.8948824259568707,
+      "opponentPrediction": 0.7448824259568707,
       "opponentMemory": 0.32424714113754877,
-      "localSteering": 0.9583980849026492,
-      "vehiclePhysics": 0.9659616221166624
+      "localSteering": 0.8083980849026493,
+      "vehiclePhysics": 0.7659616221166624
     },
     {
       "id": "razor",
@@ -340,22 +355,6 @@
       "opponentMemory": 0.6812543780359255,
       "localSteering": 0.7781599677896481,
       "vehiclePhysics": 0.8038193383109176
-    },
-    {
-      "id": "nikki",
-      "displayName": "NIKKI",
-      "tier": "derived",
-      "parentId": "berserker",
-      "attack": 1,
-      "defend": 0.27078767721579533,
-      "overtake": 0.6127927930827614,
-      "ram": 1,
-      "weapon": 0.8745968946574267,
-      "block": 0.6110829789091932,
-      "opponentPrediction": 0.39451394525253447,
-      "opponentMemory": 1,
-      "localSteering": 0.46132739778324355,
-      "vehiclePhysics": 0.4233314524490507
     },
     {
       "id": "diego",
@@ -396,14 +395,14 @@
       "parentId": "opportunist",
       "attack": 0.6403802627551712,
       "defend": 0.5244957831201424,
-      "overtake": 0.8108841348221382,
+      "overtake": 0.7108841348221382,
       "ram": 0.33285355942568534,
       "weapon": 0.7027841998806118,
       "block": 0.5572135375269376,
-      "opponentPrediction": 0.9252469125537225,
-      "opponentMemory": 0.7482224540843042,
-      "localSteering": 0.8632804766464517,
-      "vehiclePhysics": 0.8507033722819908
+      "opponentPrediction": 0.7452469125537224,
+      "opponentMemory": 0.5982224540843043,
+      "localSteering": 0.7132804766464517,
+      "vehiclePhysics": 0.6807033722819908
     },
     {
       "id": "kira",
@@ -412,14 +411,14 @@
       "parentId": "slipstreamer",
       "attack": 0.37707044643583576,
       "defend": 0.45420583273207144,
-      "overtake": 1,
+      "overtake": 0.9186354219100131,
       "ram": 0.1268293825882305,
       "weapon": 0.42277757601604316,
       "block": 0.4052083286767202,
-      "opponentPrediction": 0.800425083066528,
+      "opponentPrediction": 0.670425083066528,
       "opponentMemory": 0.2758756068870787,
-      "localSteering": 0.9718361369273744,
-      "vehiclePhysics": 0.8774650085845594
+      "localSteering": 0.8018361369273744,
+      "vehiclePhysics": 0.6974650085845594
     },
     {
       "id": "snake",
@@ -476,143 +475,79 @@
       "parentId": "opportunist",
       "attack": 0.675537163349221,
       "defend": 0.5817254293993371,
-      "overtake": 0.9055640015342237,
+      "overtake": 0.8055640015342237,
       "ram": 0.29271945135113303,
       "weapon": 0.7519605143046685,
       "block": 0.5803373086653536,
-      "opponentPrediction": 0.8670110062963371,
-      "opponentMemory": 0.6417047799649703,
-      "localSteering": 0.8292492517977507,
-      "vehiclePhysics": 0.8767143797108161
+      "opponentPrediction": 0.687011006296337,
+      "opponentMemory": 0.49170477996497036,
+      "localSteering": 0.6792492517977506,
+      "vehiclePhysics": 0.7067143797108162
     }
   ],
-  "resolvedAliases": {
-    "CRUZ": {
-      "id": "cruz",
+  "aliases": [
+    {
+      "alias": "CRUZ",
       "displayName": "CRUZ",
+      "id": "cruz",
       "tier": "derived",
-      "parentId": "guardian",
-      "attack": 0.3908833098938054,
-      "defend": 0.9030348970314799,
-      "overtake": 0.6220200980913697,
-      "ram": 0.2775574432347681,
-      "weapon": 0.4270426527883204,
-      "block": 0.8991999166727016,
-      "opponentPrediction": 0.8265765062914197,
-      "opponentMemory": 0.6231622346140286,
-      "localSteering": 0.8416279003398359,
-      "vehiclePhysics": 0.8765165113518543
+      "parent": "guardian"
     },
-    "ASH": {
-      "id": "ash",
+    {
+      "alias": "ASH",
       "displayName": "ASH",
+      "id": "ash",
       "tier": "derived",
-      "parentId": "opportunist",
-      "attack": 0.6148936203058732,
-      "defend": 0.5435668482522278,
-      "overtake": 0.8339540233584656,
-      "ram": 0.28421433533515544,
-      "weapon": 0.7449009492934315,
-      "block": 0.6634755506202906,
-      "opponentPrediction": 0.947666414240981,
-      "opponentMemory": 0.6713215095592444,
-      "localSteering": 0.8627034039916637,
-      "vehiclePhysics": 0.8720319491643875
+      "parent": "opportunist"
     },
-    "ZARA": {
-      "id": "zara",
+    {
+      "alias": "ZARA",
       "displayName": "ZARA",
+      "id": "zara",
       "tier": "derived",
-      "parentId": "predator",
-      "attack": 0.8970159004340112,
-      "defend": 0.38810362923762975,
-      "overtake": 0.7527733917697306,
-      "ram": 0.4978877179555725,
-      "weapon": 0.9161901465767709,
-      "block": 0.6148075190071773,
-      "opponentPrediction": 0.898438525106819,
-      "opponentMemory": 0.7670815239597275,
-      "localSteering": 0.8255118354267976,
-      "vehiclePhysics": 0.7927903001779497
+      "parent": "predator"
     },
-    "VINCE": {
-      "id": "vince",
+    {
+      "alias": "VINCE",
       "displayName": "VINCE",
+      "id": "vince",
       "tier": "derived",
-      "parentId": "enforcer",
-      "attack": 0.935525843830457,
-      "defend": 0.7673300067979101,
-      "overtake": 0.5240482136039861,
-      "ram": 0.9277805821764816,
-      "weapon": 0.48576934908445774,
-      "block": 0.7770620731748386,
-      "opponentPrediction": 0.591852567306314,
-      "opponentMemory": 0.7840922232921257,
-      "localSteering": 0.5175123227544023,
-      "vehiclePhysics": 0.7323102132266887
+      "parent": "enforcer"
     },
-    "RUBY": {
-      "id": "ruby",
+    {
+      "alias": "RUBY",
       "displayName": "RUBY",
+      "id": "ruby",
       "tier": "derived",
-      "parentId": "slipstreamer",
-      "attack": 0.4454010150075564,
-      "defend": 0.44453010049641734,
-      "overtake": 0.9231935503002137,
-      "ram": 0.08651693740588054,
-      "weapon": 0.35185416709507505,
-      "block": 0.33600346004983545,
-      "opponentPrediction": 0.9278876017265082,
-      "opponentMemory": 0.33944158967981275,
-      "localSteering": 0.9646865269354895,
-      "vehiclePhysics": 0.9145438934888777
+      "parent": "slipstreamer"
     },
-    "HEX": {
-      "id": "hex",
+    {
+      "alias": "HEX",
       "displayName": "HEX",
+      "id": "hex",
       "tier": "derived",
-      "parentId": "technician",
-      "attack": 0.5703837359180294,
-      "defend": 0.8291581344102701,
-      "overtake": 0.8672121898658389,
-      "ram": 0.14605616724825904,
-      "weapon": 0.5861276093797451,
-      "block": 0.5925884546392235,
-      "opponentPrediction": 0.9592179703246337,
-      "opponentMemory": 0.7574439738657459,
-      "localSteering": 1,
-      "vehiclePhysics": 1
+      "parent": "technician"
     },
-    "FLUFE": {
-      "id": "emma",
+    {
+      "alias": "FLUFE",
       "displayName": "EMMA",
+      "id": "emma",
       "tier": "signature",
-      "attack": 0.8,
-      "defend": 0.2,
-      "overtake": 0.7,
-      "ram": 0.35,
-      "weapon": 0.95,
-      "block": 0.25,
-      "opponentPrediction": 0.55,
-      "opponentMemory": 0.5,
-      "localSteering": 0.5,
-      "vehiclePhysics": 0.48
+      "parent": "—"
     },
-    "UNKNOWN": {
-      "id": "unknown",
+    {
+      "alias": "NIKKI",
+      "displayName": "CAROL",
+      "id": "nikki",
+      "tier": "signature",
+      "parent": "—"
+    },
+    {
+      "alias": "UNKNOWN",
       "displayName": "UNKNOWN",
+      "id": "unknown",
       "tier": "derived",
-      "parentId": "opportunist",
-      "attack": 0.6105460572568212,
-      "defend": 0.647425840343585,
-      "overtake": 0.8922189117800541,
-      "ram": 0.3937632729866071,
-      "weapon": 0.6623441626038648,
-      "block": 0.564010374785088,
-      "opponentPrediction": 0.821805896866673,
-      "opponentMemory": 0.7597486388533495,
-      "localSteering": 0.8656920707042259,
-      "vehiclePhysics": 0.8705108261412874
+      "parent": "opportunist"
     }
-  }
+  ]
 }

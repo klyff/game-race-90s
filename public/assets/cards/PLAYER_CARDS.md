@@ -44,9 +44,9 @@ Make it in 16-bit like the card that is in public/assets/cards/klyff.png
 The prodigy. At 7 he was already driving and stealing his father's car. Now a teenager, nobody can hold him. Skinny Italian-Brazilian kid, messy black hair, braces, huge wild grin, tongue almost out, oversized racing jacket, scuffed sneakers. Hollywood Hills night behind him, a stolen muscle car with the door open.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png
 
-### 3. FLUFE (Emma / Chimbeler)
-**Race name:** FLUFE
-Also known as Emma, also known as Chimbeler. Secret Keeper of every side in RunnersCity. Looks harmless. She is a Pomeranian who drives like a lunatic on wheels. If you need to know something, find her. Small East-Asian woman, huge curly blonde-tinted hair, tiny frame, innocent doll eyes, pink choker, too many rings, a fluffy coat. She is giggling. Santa Monica pier carousel lights behind her.
+### 3. CAROL
+**Race name:** CAROL
+Fire-haired rock girl, Irish-American, freckles, red lipstick, leather mini and a torn band tee. She is sticking her tongue out with a wild laugh. Hollywood guitar-shop neon and a pink convertible behind her.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png
 
 ### 4. DAVE BOWN
@@ -59,9 +59,9 @@ Make it in 16-bit like the card that is in public/assets/cards/klyff.png
 Black punk from South Central who turned a switchblade into a steering wheel. Towering, dark skin, tall green liberty-spike mohawk, septum ring, scar through the eyebrow, leather vest, no shirt, tattoos up the neck. He is laughing with all his teeth. Graffiti wall and a chopped Harley behind him.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png
 
-### 6. NIKKI
-**Race name:** NIKKI
-Fire-haired rock girl, Irish-American, freckles, red lipstick, leather mini and a torn band tee. She is sticking her tongue out with a wild laugh. Hollywood guitar-shop neon and a pink convertible behind her.
+### 6. FLUFE (Emma / Chimbeler)
+**Race name:** FLUFE
+Also known as Emma, also known as Chimbeler. Secret Keeper of every side in RunnersCity. Looks harmless. She is a Pomeranian who drives like a lunatic on wheels. If you need to know something, find her. Small East-Asian woman, huge curly blonde-tinted hair, tiny frame, innocent doll eyes, pink choker, too many rings, a fluffy coat. She is giggling. Santa Monica pier carousel lights behind her.
 Make it in 16-bit like the card that is in public/assets/cards/klyff.png
 
 ### 7. DIEGO

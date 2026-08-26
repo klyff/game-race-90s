@@ -100,13 +100,22 @@ export function npcPilotNamesForPlanet(
   take('mediumSmart', mix.mediumSmart);
   take(SKILL_BAND.EXPERT, mix.experts);
 
+  let expertsTaken = picked.filter(name => careerSkillLane(name) === SKILL_BAND.EXPERT).length;
   for (const name of pickDistinctProfiles(pool, wanted)) {
     if (picked.length >= wanted) {
       break;
     }
-    if (!picked.includes(name)) {
-      usedProfiles.add(profileFor(name).id);
-      picked.push(name);
+    if (picked.includes(name)) {
+      continue;
+    }
+    const expert = careerSkillLane(name) === SKILL_BAND.EXPERT;
+    if (expert && expertsTaken >= mix.experts) {
+      continue;
+    }
+    usedProfiles.add(profileFor(name).id);
+    picked.push(name);
+    if (expert) {
+      expertsTaken += 1;
     }
   }
 

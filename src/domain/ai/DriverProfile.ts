@@ -4,7 +4,9 @@
  * `vehiclePhysics` and `localSteering` never mutate VehicleStats. They only
  * change how close the driver is willing/able to operate to the car's limits.
  *
- * Thirty rows: 9 signatures, 10 medium templates (derivation reserve), 11 derived.
+ * Thirty rows: 10 signatures, 10 medium templates (derivation reserve), 10 derived.
+ * Elite ladder (driverSkill = phys + steer + pred, max 3): KLYFF 3.0, ALINE 2.7
+ * (90%), ENZO and CAROL 2.4 (80%). vehiclePhysics never mutates VehicleStats.
  * GAMEPLAY TUNING STILL REQUIRED — these weights are a readable starting point.
  */
 
@@ -96,20 +98,32 @@ export const SIGNATURE_PROFILES: readonly DriverProfile[] = [
     block: 0.45,
     opponentPrediction: 0.9,
     opponentMemory: 0.4,
-    localSteering: 0.95,
-    vehiclePhysics: 0.98,
+    localSteering: 0.9,
+    vehiclePhysics: 0.9,
   }),
   row('enzo', 'ENZO', DRIVER_PROFILE_TIER.SIGNATURE, {
     attack: 0.85,
-    defend: 0.35,
+    defend: 0.42,
     overtake: 0.9,
     ram: 0.25,
     weapon: 0.4,
-    block: 0.3,
-    opponentPrediction: 0.7,
-    opponentMemory: 0.35,
-    localSteering: 0.7,
-    vehiclePhysics: 0.72,
+    block: 0.36,
+    opponentPrediction: 0.8,
+    opponentMemory: 0.5,
+    localSteering: 0.8,
+    vehiclePhysics: 0.8,
+  }),
+  row('nikki', 'CAROL', DRIVER_PROFILE_TIER.SIGNATURE, {
+    attack: 0.72,
+    defend: 0.48,
+    overtake: 0.82,
+    ram: 0.38,
+    weapon: 0.52,
+    block: 0.42,
+    opponentPrediction: 0.8,
+    opponentMemory: 0.55,
+    localSteering: 0.8,
+    vehiclePhysics: 0.8,
   }),
   row('emma', 'EMMA', DRIVER_PROFILE_TIER.SIGNATURE, {
     attack: 0.8,
@@ -315,7 +329,6 @@ export const MEDIUM_PROFILES: readonly DriverProfile[] = [
 export const DERIVED_SPECS = [
   { id: 'dave', displayName: 'DAVE', parentId: 'apex' },
   { id: 'razor', displayName: 'RAZOR', parentId: 'predator' },
-  { id: 'nikki', displayName: 'NIKKI', parentId: 'berserker' },
   { id: 'diego', displayName: 'DIEGO', parentId: 'guardian' },
   { id: 'luna', displayName: 'LUNA', parentId: 'technician' },
   { id: 'blaze', displayName: 'BLAZE', parentId: 'opportunist' },

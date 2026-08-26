@@ -31,10 +31,10 @@ describe('CareerGrid', () => {
     const rivals = [
       'ALINE',
       'ENZO',
-      'FLUFE',
+      'CAROL',
       'DAVE',
       'RAZOR',
-      'NIKKI',
+      'FLUFE',
       'DIEGO',
       'LUNA',
       'BLAZE',

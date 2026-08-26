@@ -15,6 +15,8 @@ describe('PilotRoster', () => {
     expect(a).toHaveLength(RIVALS_PER_SAVE);
     expect(REGULAR_PILOTS).toHaveLength(21);
     expect(REGULAR_PILOTS[0]).toBe('KLYFF');
+    expect(REGULAR_PILOTS[3]).toBe('CAROL');
+    expect(REGULAR_PILOTS[6]).toBe('FLUFE');
     expect(RIVALS_PER_SAVE).toBe(21);
     expect(new Set(a).size).toBe(RIVALS_PER_SAVE);
     expect(a.every(name => (REGULAR_PILOTS as readonly string[]).includes(name))).toBe(true);

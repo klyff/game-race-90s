@@ -49,6 +49,7 @@ const NAME_TO_PROFILE_ID: Readonly<Record<string, string>> = {
   ZOR9: 'zor9',
   DAVE: 'dave',
   RAZOR: 'razor',
+  CAROL: 'nikki',
   NIKKI: 'nikki',
   DIEGO: 'diego',
   LUNA: 'luna',

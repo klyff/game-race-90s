@@ -126,7 +126,7 @@ papel: `regular`
 | laneRegister | -0.412 |
 | aggression | 0.581 |
 
-### NIKKI
+### CAROL
 
 papel: `regular`
 

@@ -7,12 +7,13 @@ import {
   SIGNATURE_PROFILES,
 } from '../../../src/domain/ai/DriverProfile.ts';
 import { deriveProfile } from '../../../src/domain/ai/deriveProfile.ts';
+import { driverSkill } from '../../../src/domain/race/WatchField.ts';
 
 describe('driver profiles', () => {
   it('ships exactly 30 catalog rows', () => {
     expect(catalogSize()).toBe(30);
     expect(ALL_PROFILES).toHaveLength(30);
-    expect(SIGNATURE_PROFILES).toHaveLength(9);
+    expect(SIGNATURE_PROFILES).toHaveLength(10);
     expect(MEDIUM_PROFILES).toHaveLength(10);
   });
 
@@ -20,6 +21,10 @@ describe('driver profiles', () => {
     expect(profileFor('ALINE').id).toBe('aline');
     expect(profileFor('FLUFE').id).toBe('emma');
     expect(profileFor('EMMA').id).toBe('emma');
+    expect(profileFor('CAROL').id).toBe('nikki');
+    expect(profileFor('CAROL').displayName).toBe('CAROL');
+    expect(profileFor('CAROL').tier).toBe(DRIVER_PROFILE_TIER.SIGNATURE);
+    expect(profileFor('NIKKI').id).toBe('nikki');
     expect(profileFor('NEGAO').tier).toBe(DRIVER_PROFILE_TIER.SIGNATURE);
     expect(profileFor('KLYFF').vehiclePhysics).toBe(1);
     expect(profileFor('ALINE')).toEqual(profileFor('aline'));
@@ -43,6 +48,18 @@ describe('driver profiles', () => {
     const derived = deriveProfile(parent, 'VINCE');
     expect(Math.abs(derived.vehiclePhysics - parent.vehiclePhysics)).toBeLessThanOrEqual(0.08 * 0.35 + 1e-9);
     expect(derived.ram).toBeGreaterThan(0.8);
+  });
+
+  it('keeps the elite skill ladder: Klyff 100, Aline 90, Enzo and Carol 80', () => {
+    const klyff = driverSkill(profileFor('KLYFF'));
+    expect(klyff).toBeCloseTo(3, 5);
+    expect(driverSkill(profileFor('ALINE')) / klyff).toBeCloseTo(0.9, 5);
+    expect(driverSkill(profileFor('ENZO')) / klyff).toBeCloseTo(0.8, 5);
+    expect(driverSkill(profileFor('CAROL')) / klyff).toBeCloseTo(0.8, 5);
+    expect(profileFor('KLYFF').vehiclePhysics).toBe(1);
+    expect(profileFor('ALINE').vehiclePhysics).toBeCloseTo(0.9, 5);
+    expect(profileFor('ENZO').vehiclePhysics).toBeCloseTo(0.8, 5);
+    expect(profileFor('CAROL').vehiclePhysics).toBeCloseTo(0.8, 5);
   });
 
   it('never special-cases a name: every weight is 0..1', () => {

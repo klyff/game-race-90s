@@ -21,10 +21,10 @@ function card(name: string, file: string): DriverCard {
 export const DRIVER_CARDS: readonly DriverCard[] = [
   card('ALINE', 'Aline.png'),
   card('ENZO', 'enzo.png'),
-  card('FLUFE', 'flufe.png'),
+  card('CAROL', 'carol.png'),
   card('DAVE', 'dave.png'),
   card('RAZOR', 'razor.png'),
-  card('NIKKI', 'nikki.png'),
+  card('FLUFE', 'flufe.png'),
   card('DIEGO', 'diego.png'),
   card('LUNA', 'luna.png'),
   card('BLAZE', 'blaze.png'),
