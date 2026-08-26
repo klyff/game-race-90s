@@ -1,0 +1,14 @@
+{
+  "body_type": "low wide 80s/90s sports car, pixel-art with black outlines and dithered shading — exact silhouette of Red Oh Red",
+  "forbidden": "do not overwrite 3-red-oh-red; this is a recolor copy only",
+  "base_color": "vibrant racing green (hue-shifted from Red Oh Red red), darker than chroma #00B140",
+  "stripes": "two thick parallel black racing stripes, centered, running bumper-hood-roof-trunk with a thin green gap between them",
+  "roof_weapon": "single dark-grey roof cannon, barrel pointing forward; rectangular side modules (sensor glow follows body green)",
+  "hood": "two black rectangular vents flanking the black stripes",
+  "wheels": "dark wheels under flared arches",
+  "mirrors": "small black rectangular side mirrors",
+  "windows": "dark-tinted windshield; faint seat shapes only, no busy interior",
+  "front_details": "rectangular headlights as 2x2 pixel grids; thin amber turn signals below; dark grey/black front splitter; black lower grille",
+  "paint_finish": "clean high-fidelity pixel art, light pixel detailing, not photoreal",
+  "source": "pixel-identical copy of 3-red-oh-red, then red→green and stripe-white→black"
+}

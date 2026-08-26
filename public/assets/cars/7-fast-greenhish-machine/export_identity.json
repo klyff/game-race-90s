@@ -1,0 +1,17 @@
+{
+  "id": "7-fast-greenhish-machine",
+  "inventory_n": 7,
+  "slug": "fast-greenhish-machine",
+  "displayName": "Fast Greenhish Machine",
+  "spec": "Exact copy of Red Oh Red; red body \u2192 racing green; dual white stripes \u2192 black. Pixel Art, background HEX: #00B140",
+  "source_run_dir": "/Users/klyff/git/game-race-90s/car-sprites/2026-08-26_fast-greenhish-machine",
+  "hero_frame": 7,
+  "hero_role": "shop / garage / results still \u2014 always strip frame 7",
+  "hero_source": "keyed/out_frame_07.png",
+  "hero_file": "car_hero.png",
+  "frame_count": 32,
+  "direction": "counter_clockwise",
+  "index0": "6 o'clock facing camera",
+  "clock": "counter_clockwise",
+  "exported_at": "2026-08-26T14:49:58.769752+00:00"
+}

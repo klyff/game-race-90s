@@ -18,6 +18,7 @@ describe('GarageCatalog', () => {
       '3-red-oh-red',
       '5-all-pink-fury',
       '6-suv-black-noir',
+      '7-fast-greenhish-machine',
       '1-muscle-car-gray-number9',
     ]);
     expect(shopCarIds()).toEqual([
@@ -25,6 +26,7 @@ describe('GarageCatalog', () => {
       '3-red-oh-red',
       '5-all-pink-fury',
       '6-suv-black-noir',
+      '7-fast-greenhish-machine',
       '1-muscle-car-gray-number9',
     ]);
     expect(shopCarIds()).not.toContain('car_21');
@@ -42,6 +44,7 @@ describe('GarageCatalog', () => {
     expect(listPrice('3-red-oh-red')).toBe(62_000);
     expect(listPrice('5-all-pink-fury')).toBe(87_000);
     expect(listPrice('6-suv-black-noir')).toBe(200_000);
+    expect(listPrice('7-fast-greenhish-machine')).toBe(78_000);
     expect(listPrice('1-muscle-car-gray-number9')).toBe(98_000);
     expect(listPrice('car-18')).toBe(0);
     expect(listPrice('car_21')).toBe(0);
@@ -58,11 +61,16 @@ describe('GarageCatalog', () => {
     expect(isCarUnlocked('3-red-oh-red', 1, 0)).toBe(true);
     expect(isCarUnlocked('5-all-pink-fury', 1, 0)).toBe(true);
     expect(isCarUnlocked('6-suv-black-noir', 1, 0)).toBe(true);
+    expect(isCarUnlocked('7-fast-greenhish-machine', 1, 0)).toBe(false);
     expect(isStarterCar('1-muscle-car-gray-number9')).toBe(false);
     expect(isStarterCar('car-18')).toBe(false);
   });
 
-  it('locks Gray Muscle until world 2', () => {
+  it('locks Fast Greenhish Machine and Gray Muscle until world 2', () => {
+    expect(isCarUnlocked('7-fast-greenhish-machine', 1, 0)).toBe(false);
+    expect(carUnlockHint('7-fast-greenhish-machine', 1, 0)).toBe('UNLOCKS IN WORLD 2');
+    expect(isCarUnlocked('7-fast-greenhish-machine', 2, 0)).toBe(true);
+    expect(carUnlockHint('7-fast-greenhish-machine', 2, 0)).toBeNull();
     expect(isCarUnlocked('1-muscle-car-gray-number9', 1, 0)).toBe(false);
     expect(carUnlockHint('1-muscle-car-gray-number9', 1, 0)).toBe('UNLOCKS IN WORLD 2');
     expect(isCarUnlocked('1-muscle-car-gray-number9', 2, 0)).toBe(true);
@@ -95,6 +103,7 @@ describe('GarageCatalog', () => {
       '3-red-oh-red',
       '5-all-pink-fury',
       '6-suv-black-noir',
+      '7-fast-greenhish-machine',
       '1-muscle-car-gray-number9',
     ]);
     expect(npcRosterForPlanet(8)).not.toContain('delorean');

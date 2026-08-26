@@ -1,0 +1,12 @@
+{
+  "run_id": "2026-08-26_fast-greenhish-machine",
+  "name": "Fast Greenhish Machine",
+  "spec": "Exact copy of Red Oh Red; red body → racing green; dual white stripes → black. Pixel Art, background HEX: #00B140",
+  "save_dir": "car-sprites/2026-08-26_fast-greenhish-machine",
+  "background_mode": "chroma_key",
+  "source_car": "3-red-oh-red",
+  "method": "copy_and_recolor",
+  "status": "ASSEMBLED",
+  "style_anchor": "style_anchor.json",
+  "note": "Geometry and 32-frame CCW clock copied from Red Oh Red. No frames were regenerated. Red Oh Red files were not overwritten."
+}

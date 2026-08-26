@@ -187,6 +187,42 @@
       "frameCount": 32,
       "clock": "counter_clockwise",
       "framesJson": "assets/cars/6-suv-black-noir/car_strip_64x64.json"
+    },
+    {
+      "id": "7-fast-greenhish-machine",
+      "displayName": "Fast Greenhish Machine",
+      "archetype": "Green pixel sport \u2014 roof cannon, dual black stripes (Red Oh Red recolor)",
+      "image": "assets/cars/7-fast-greenhish-machine/car_strip_64x64.png",
+      "shadow": {
+        "width": 42,
+        "height": 20
+      },
+      "stats": {
+        "mass": 960,
+        "enginePower": 31,
+        "brakeForce": 46,
+        "maxSpeed": 66,
+        "grip": 30,
+        "steerRate": 2.65,
+        "steerSpeedFalloff": 0.46,
+        "armor": 0.4,
+        "ammoCapacity": 13,
+        "collisionRadius": 1.68,
+        "aimRadius": 3.5,
+        "collisionAlong": 1.68,
+        "collisionAcross": 1.2096,
+        "collisionSquareMin": 1.2096,
+        "collisionSquareMax": 1.68,
+        "collisionSquare": 1.4448
+      },
+      "perk": "arsenal",
+      "homePlanetId": "thunder-basin",
+      "worldAdvantage": 0.7,
+      "frameWidth": 67,
+      "frameHeight": 67,
+      "frameCount": 32,
+      "clock": "counter_clockwise",
+      "framesJson": "assets/cars/7-fast-greenhish-machine/car_strip_64x64.json"
     }
   ]
 }

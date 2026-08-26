@@ -170,9 +170,41 @@ const ALL_PINK_FURY = spinnerCar({
 });
 
 /**
+ * Fast Greenhish Machine — Red Oh Red silhouette, green paint, black stripes.
+ * World 2 step-up: same roof-cannon arsenal, a little more speed / grip / steer
+ * than Red Oh Red, still under Blue Combat 68 and far from the old Marauder 78.
+ * Arcade consult: fun > realism, planted COM (lighter + higher grip), no ice-skate.
+ */
+const FAST_GREENHISH_MACHINE = spinnerCar({
+  id: 'fast-greenhish-machine',
+  displayName: 'Fast Greenhish Machine',
+  callName: 'Greenhish Machine',
+  archetype: 'Green pixel sport — roof cannon, dual black stripes (Red Oh Red recolor)',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'thunder-basin',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.MEDIUM,
+  unlockPlanet: 2,
+  price: 78_000,
+  stats: {
+    mass: 960,
+    enginePower: 31,
+    brakeForce: 46,
+    maxSpeed: 66,
+    grip: 30,
+    steerRate: 2.65,
+    steerSpeedFalloff: 0.46,
+    armor: 0.4,
+    ammoCapacity: 13,
+    collisionRadius: 1.68,
+    aimRadius: 3.5,
+  },
+});
+
+/**
  * SUV Black Noir — compact Renegade, mid-roof MG. Medium++.
  * Arcade consult: planted COM, high grip, heavier than the coupes.
- * Teaching speed ~62 u/s — under Blue Combat 68, not the old 78 Marauder.
+ * Teaching speed ~62 u/s — under Blue Combat 68, not the old Marauder 78.
  * Roof turret → arsenal.
  */
 const SUV_BLACK_NOIR = spinnerCar({
@@ -207,6 +239,7 @@ export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
   RED_OH_RED,
   ALL_PINK_FURY,
   SUV_BLACK_NOIR,
+  FAST_GREENHISH_MACHINE,
 ];
 
 export function spinnerCarIds(): readonly string[] {
