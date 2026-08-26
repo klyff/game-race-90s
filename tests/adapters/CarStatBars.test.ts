@@ -74,23 +74,32 @@ describe('CarStatBars — real roster', () => {
     }
   });
 
-  it('Gray Muscle has the highest GRIP and ARMOR fractions', () => {
-    const grip = statBars(manifest, '1-muscle-car-gray-number9').find(b => b.label === 'GRIP')!.fraction;
+  it('Pink Fury has the highest GRIP fraction — planted convertible, not ice-skate', () => {
+    const grip = statBars(manifest, '5-all-pink-fury').find(b => b.label === 'GRIP')!;
+    expect(grip.fraction).toBe(1);
+    expect(grip.value).toBe(34);
+
+    for (const carId of carIds) {
+      expect(statBars(manifest, carId).find(b => b.label === 'GRIP')!.fraction).toBeLessThanOrEqual(grip.fraction);
+    }
+  });
+
+  it('Gray Muscle has the highest ARMOR fraction', () => {
     const armor = statBars(manifest, '1-muscle-car-gray-number9').find(b => b.label === 'ARMOR')!.fraction;
 
     for (const carId of carIds) {
-      expect(statBars(manifest, carId).find(b => b.label === 'GRIP')!.fraction).toBeLessThanOrEqual(grip);
       expect(statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction).toBeLessThanOrEqual(armor);
     }
   });
 
-  it('Blue Combat has the lowest ARMOR fraction, exactly MINIMUM_BAR_FRACTION', () => {
-    const lightArmor = statBars(manifest, '2-sportivo-blue-combat').find(b => b.label === 'ARMOR')!.fraction;
-    expect(lightArmor).toBe(MINIMUM_BAR_FRACTION);
+  it('Pink Fury has the lowest ARMOR fraction, exactly MINIMUM_BAR_FRACTION', () => {
+    const lightArmor = statBars(manifest, '5-all-pink-fury').find(b => b.label === 'ARMOR')!;
+    expect(lightArmor.fraction).toBe(MINIMUM_BAR_FRACTION);
+    expect(lightArmor.value).toBe(0.28);
 
     for (const carId of carIds) {
       const otherArmor = statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction;
-      expect(lightArmor).toBeLessThanOrEqual(otherArmor);
+      expect(lightArmor.fraction).toBeLessThanOrEqual(otherArmor);
     }
   });
 

@@ -60,3 +60,10 @@ Playable cars are **32-frame CCW** spinner exports. Shop, garage, and results sh
 - Do not add HUD chrome for the clock (no 6h / 32-slot labels on the garage). Every element must earn its screen space.
 - Garage carousel lists only spinner cars. Keep left/right arrows; do not pad empty matrix bays.
 - Safe zone / title-safe still apply. No new type under 14px.
+
+## This game — live fleet spec story
+
+Garage and in-race identity come from `statBars` (roster-normalised SPEED / ACCEL / STEER / GRIP / BRAKE / ARMOR) plus the raw number. That glance layer is enough — do not add a FRAGILE badge, grip icon, or extra HUD chrome when a car's handling changes.
+
+- **All Pink Fury** (`5-all-pink-fury`): SPEED stays high (64). GRIP is the planted-street identity (highest live bar, value 34). ARMOR is the glass-convertible identity (lowest live bar, value 0.28). Authored in `SpinnerCarIndex`, shipped in `cars.json`. Encode with bar length + number, never color alone.
+- Spec labels stay ≥14px with stroke. Do not invent a second specs panel for race HUD.
