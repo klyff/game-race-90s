@@ -3,6 +3,7 @@ import {
   NITRO_STOCK_CAPACITY,
   NITRO_STOCK_FILL_SECONDS,
   TURBO_SPEED_BONUS,
+  awardLapTurbo,
   createNitroTank,
   nitroCapacityForTier,
   nitroFillSecondsForTier,
@@ -38,6 +39,12 @@ describe('Nitro gauge', () => {
 
   it('caps refill at capacity', () => {
     expect(stepNitro(10, 10, 2, false, 5).tank).toBe(10);
+  });
+
+  it('adds ten turbo on a lap and raises the tank so they can be used', () => {
+    const next = awardLapTurbo(4, 10, 10);
+    expect(next.tank).toBe(14);
+    expect(next.capacity).toBe(14);
   });
 
   it('locks shop tiers: extra tank and faster fill, price doubles', () => {

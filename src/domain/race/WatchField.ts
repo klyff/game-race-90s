@@ -1,13 +1,15 @@
 /**
- * Watch-mode grid: ten medium-tier (level 2) drivers, skill-sorted,
- * and the leftover cars parked as the reserve pack.
+ * Watch-mode grid: ten championship faces on the HUD (the selectable
+ * regulars, plus last-world jokers from planet 10), leftover cars parked
+ * as the reserve pack.
  *
  * Planet-II tracks alternate the two packs so the leftover cars still race
  * on the next circuit instead of sitting unused.
  */
 
 import { isSpinnerCarId } from '../../data/cars/CarManifest.ts';
-import { MEDIUM_PROFILES, type DriverProfile } from '../ai/DriverProfile.ts';
+import { JOKER_PILOTS, REGULAR_PILOTS } from '../../data/pilots/PilotRoster.ts';
+import type { DriverProfile } from '../ai/DriverProfile.ts';
 import { PLANETS, TRACKS_PER_PLANET, planetTrackId } from '../../data/tracks/planets.ts';
 
 export const WATCH_RACER_COUNT = 10;
@@ -18,11 +20,14 @@ export function driverSkill(profile: DriverProfile): number {
   return profile.vehiclePhysics + profile.localSteering + profile.opponentPrediction;
 }
 
-/** All ten medium archetypes, smartest first. */
-export function watchPilots(): readonly string[] {
-  return [...MEDIUM_PROFILES]
-    .sort((left, right) => driverSkill(right) - driverSkill(left) || left.id.localeCompare(right.id))
-    .map(profile => profile.displayName);
+/**
+ * HUD / grid names. Worlds 1–9: first ten selectable regulars (KLYFF first).
+ * World 10: the five jokers, then regulars, so the last-planet cast actually races.
+ */
+export function watchPilots(planetIndex: number = 1): readonly string[] {
+  const late = Number.isFinite(planetIndex) && planetIndex >= 10;
+  const pool = late ? [...JOKER_PILOTS, ...REGULAR_PILOTS] : [...REGULAR_PILOTS];
+  return pool.slice(0, WATCH_RACER_COUNT);
 }
 
 /** Track II of every planet, campaign order. */

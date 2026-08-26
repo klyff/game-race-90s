@@ -6,8 +6,8 @@
 import { isWarTankPerk } from '../constants.ts';
 
 /**
- * Missiles on the grid for EVERY car (owner, 2026-08-16). Refill at the finish
- * line goes up to that car's own `ammoCapacity` (battle-trak 15, air-blade 4).
+ * Missiles on the grid for EVERY car (owner, 2026-08-16). Each finish-line
+ * crossing adds `LAP_ITEM_BONUS` missiles, oil, mines, and turbo.
  */
 export const MISSILE_START_COUNT = 6;
 
@@ -16,6 +16,9 @@ export const OIL_START_COUNT = 4;
 
 /** Landmines each car may carry. */
 export const MINE_START_COUNT = 4;
+
+/** Extra stock granted when a car completes a lap. Same count for every item. */
+export const LAP_ITEM_BONUS = 10;
 
 /**
  * Missile travel speed as a multiple of the firing car's authored `maxSpeed`.

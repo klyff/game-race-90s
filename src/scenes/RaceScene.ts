@@ -105,7 +105,6 @@ import {
   watchPilots,
   WATCH_RACER_COUNT,
 } from '../domain/race/WatchField.ts';
-import { profileFor } from '../domain/ai/DriverRoster.ts';
 import {
   DEBUG_IA_CAMERA_MAP_FRACTION,
   DEBUG_IA_RACER_COUNT,
@@ -1279,8 +1278,8 @@ export class RaceScene extends Phaser.Scene {
     const rawPilot = this.watchPinPilot?.trim();
     const pilot =
       rawPilot !== undefined && rawPilot.length > 0
-        ? profileFor(rawPilot).displayName
-        : watchPilots()[0] ?? 'TECHNICIAN';
+        ? rawPilot.toUpperCase()
+        : watchPilots(this.planetIndex)[0] ?? 'KLYFF';
     return { carId, pilot };
   }
 
@@ -1305,7 +1304,7 @@ export class RaceScene extends Phaser.Scene {
     const planetTwoIndex = Math.max(0, this.planetIndex - 1);
     const { field, reserve } = splitWatchRoster(allIds, planetTwoIndex);
     const pin = this.watchPin();
-    const pinned = applyWatchPin(field, watchPilots(), pin);
+    const pinned = applyWatchPin(field, watchPilots(this.planetIndex), pin);
     this.sittingRivals = reserve.map(carId => findCarSheet(this.manifest, carId).displayName);
     this.pilotNames = {};
     const ids = pinned.field.slice(0, WATCH_RACER_COUNT);

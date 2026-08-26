@@ -21,6 +21,7 @@ import {
   DROP_BEHIND_PIXELS_PER_UNIT,
   DROP_BEHIND_SCREEN_PX,
   GASOLINE_BURST_SCALE,
+  LAP_ITEM_BONUS,
   MINE_RAW_DAMAGE,
   MISSILE_RAW_DAMAGE,
   MISSILE_START_COUNT,
@@ -100,13 +101,19 @@ describe('WeaponInventory', () => {
     expect(inv.oil).toBe(OIL_START_COUNT);
   });
 
-  it('Arsenal raises the missile refill ceiling by reloadMultiplier', () => {
+  it('Arsenal raises the missile ceiling by reloadMultiplier', () => {
     const battle = manifest.cars.find(car => car.id === '2-sportivo-blue-combat')!;
     const arsenal = CAR_PERKS[CAR_PERK.ARSENAL];
     expect(missileCapacity(battle.stats, NEUTRAL_PERK)).toBe(battle.stats.ammoCapacity);
     expect(missileCapacity(battle.stats, arsenal)).toBe(battle.stats.ammoCapacity * 3);
-    const refilled = refillWeaponInventory(createWeaponInventory(), battle.stats, arsenal);
-    expect(refilled.missiles).toBe(battle.stats.ammoCapacity * 3);
+  });
+
+  it('adds ten missiles, oil and mines on a lap bonus', () => {
+    const start = createWeaponInventory();
+    const next = refillWeaponInventory(start);
+    expect(next.missiles).toBe(start.missiles + LAP_ITEM_BONUS);
+    expect(next.oil).toBe(start.oil + LAP_ITEM_BONUS);
+    expect(next.mines).toBe(start.mines + LAP_ITEM_BONUS);
   });
 
   it('shortens NPC cooldown by reloadMultiplier', () => {

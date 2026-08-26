@@ -1,6 +1,7 @@
 import type { CarPerkProfile } from '../vehicle/CarPerk.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 import {
+  LAP_ITEM_BONUS,
   MINE_START_COUNT,
   MISSILE_START_COUNT,
   OIL_START_COUNT,
@@ -9,8 +10,8 @@ import {
 /**
  * What one car is carrying right now.
  *
- * Missiles refill to `ammoCapacity` (Arsenal raises that ceiling via
- * `reloadMultiplier`). Oil and mines refill to their start counts.
+ * A lap crossing adds `LAP_ITEM_BONUS` to missiles, oil, and mines. Starting
+ * stock is still the authored start counts (Arsenal only doubles missiles).
  */
 export interface WeaponInventory {
   readonly missiles: number;
@@ -46,19 +47,19 @@ export function createWeaponInventory(perk?: CarPerkProfile): WeaponInventory {
 }
 
 /**
- * Finish-line refill. Missiles go up to the car's (possibly Arsenal-boosted)
- * capacity; oil and mines return to their start counts. Never reduces a stock
- * that is already somehow above the ceiling.
+ * Finish-line bonus. Every item gets the same +10 — missiles, oil, mines.
+ * Never reduces a stock. `stats` / `perk` stay on the signature so callers
+ * that already pass them keep compiling.
  */
 export function refillWeaponInventory(
   current: WeaponInventory,
-  stats: VehicleStats,
-  perk: CarPerkProfile,
+  _stats?: VehicleStats,
+  _perk?: CarPerkProfile,
 ): WeaponInventory {
   return {
-    missiles: Math.max(current.missiles, missileCapacity(stats, perk)),
-    oil: Math.max(current.oil, OIL_START_COUNT),
-    mines: Math.max(current.mines, MINE_START_COUNT),
+    missiles: current.missiles + LAP_ITEM_BONUS,
+    oil: current.oil + LAP_ITEM_BONUS,
+    mines: current.mines + LAP_ITEM_BONUS,
   };
 }
 

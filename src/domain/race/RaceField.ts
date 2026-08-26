@@ -59,6 +59,7 @@ import { innerWallParkPose } from '../camera/innerWallPark.ts';
 import { createVehicleState, isAirborne } from '../vehicle/Vehicle.ts';
 import type { VehicleState, VehicleTelemetry } from '../vehicle/Vehicle.ts';
 import {
+  awardLapTurbo,
   createNitroTank,
   nitroCapacityForTier,
   nitroFillSecondsForTier,
@@ -68,6 +69,7 @@ import { collisionBoxFromStats } from '../vehicle/CollisionMap.ts';
 import type { VehicleStats } from '../vehicle/VehicleStats.ts';
 import { decideMissileAim } from '../weapons/WeaponAim.ts';
 import {
+  LAP_ITEM_BONUS,
   MINE_RAW_DAMAGE,
   MISSILE_HIT_RADIUS_SCALE,
   MISSILE_RAW_DAMAGE,
@@ -177,10 +179,9 @@ export interface RacerRuntime {
   integrity: CarIntegrity;
   /** Missiles, oil and mines this car is carrying (T-046). */
   inventory: WeaponInventory;
-  /** Turbo charges remaining this lap. */
-  /** Nitro tank fill, 0..turboCapacity. */
+  /** Nitro tank fill. Capacity grows when a lap bonus lands. */
   turbos: number;
-  readonly turboCapacity: number;
+  turboCapacity: number;
   readonly turboFillSeconds: number;
   /** True this step while hold + tank > 0. */
   turboBurning: boolean;
@@ -264,7 +265,8 @@ const DEFAULT_GRID_SETBACK_UNITS = 14;
  *  3. any car a contact moved is re-checked against the wall;
  *  4. damage is applied from the hardest contact of the step, then weapon hits
  *     and hazard overlaps resolve (oil ? yawSpin, mine/missile ? scaled weapon damage);
- *  5. lap progress and standings advance last; a finish-line crossing refills ammo.
+ *  5. lap progress and standings advance last; a finish-line crossing adds +10
+     missiles, oil, mines, and turbo.
  *
  * Steps 1 and 2 must not interleave. Resolving contact inside the per-car loop
  * would let the first car in the list collide with cars that had already moved this
@@ -979,12 +981,15 @@ export class RaceField {
     // 5. Lap progress and standings, from the final positions of the step.
     this.raceState = advanceRace(this.raceState, stepped, this.track, this.spline, stepSeconds);
 
-    // Finish-line refill: missiles up to (Arsenal-boosted) ammoCapacity; oil/mines to start.
+    // Finish-line bonus: +10 missiles, oil, mines, and turbo.
     this.racers.forEach((racer, index) => {
       const before = previousLaps[index] ?? 0;
       const after = this.standingOf(racer.carId, index)?.lapsCompleted ?? 0;
       if (after > before) {
         racer.inventory = refillWeaponInventory(racer.inventory, racer.stats, racer.perk);
+        const nitro = awardLapTurbo(racer.turbos, racer.turboCapacity, LAP_ITEM_BONUS);
+        racer.turbos = nitro.tank;
+        racer.turboCapacity = nitro.capacity;
       }
     });
   }

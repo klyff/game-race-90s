@@ -51,6 +51,18 @@ export function createNitroTank(tier = 0): number {
   return nitroCapacityForTier(tier);
 }
 
+/** Lap bonus: +count on the tank, and raise the cap so the extra is usable. */
+export function awardLapTurbo(
+  tank: number,
+  capacity: number,
+  bonus: number,
+): { readonly tank: number; readonly capacity: number } {
+  const extra = Number.isFinite(bonus) && bonus > 0 ? bonus : 0;
+  const next = (Number.isFinite(tank) ? tank : 0) + extra;
+  const cap = Number.isFinite(capacity) && capacity > 0 ? capacity : NITRO_STOCK_CAPACITY;
+  return { tank: next, capacity: Math.max(cap, next) };
+}
+
 export function stepNitro(
   tank: number,
   capacity: number,

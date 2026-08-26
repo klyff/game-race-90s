@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MEDIUM_PROFILES } from '../../src/domain/ai/DriverProfile.ts';
+import { JOKER_PILOTS, REGULAR_PILOTS } from '../../src/data/pilots/PilotRoster.ts';
 import {
   applyWatchPin,
   nextWatchTrack,
@@ -16,11 +16,20 @@ import {
 const SPINNER = ['2-sportivo-blue-combat', '1-muscle-car-gray-number9'] as const;
 
 describe('WatchField', () => {
-  it('lists all ten medium drivers, technician first', () => {
+  it('lists the first ten selectable regulars, KLYFF first', () => {
     const pilots = watchPilots();
     expect(pilots).toHaveLength(WATCH_RACER_COUNT);
-    expect(pilots[0]).toBe('TECHNICIAN');
-    expect(new Set(pilots).size).toBe(MEDIUM_PROFILES.length);
+    expect(pilots[0]).toBe('KLYFF');
+    expect(pilots).toEqual([...REGULAR_PILOTS].slice(0, WATCH_RACER_COUNT));
+  });
+
+  it('puts last-world jokers at the front on planet 10', () => {
+    const pilots = watchPilots(10);
+    expect(pilots).toHaveLength(WATCH_RACER_COUNT);
+    expect(pilots.slice(0, JOKER_PILOTS.length)).toEqual([...JOKER_PILOTS]);
+    expect(pilots.slice(JOKER_PILOTS.length)).toEqual(
+      [...REGULAR_PILOTS].slice(0, WATCH_RACER_COUNT - JOKER_PILOTS.length),
+    );
   });
 
   it('lists every planet II', () => {
