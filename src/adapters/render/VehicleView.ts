@@ -9,6 +9,7 @@ import {
 } from '../../data/cars/CarManifest.ts';
 import { add, fromAngle, scale } from '../../domain/math/Vec2.ts';
 import type { VehicleState } from '../../domain/vehicle/Vehicle.ts';
+import { contactShadowPose } from './ContactShadow.ts';
 import { IsoProjection } from './IsoProjection.ts';
 
 /**
@@ -58,6 +59,13 @@ export class VehicleView {
   private readonly frameCount: number;
   private readonly clock: ClockDirection;
   private readonly farLod: boolean;
+  private readonly origin: { readonly x: number; readonly y: number };
+  private readonly cellWidth: number;
+  private readonly cellHeight: number;
+  private readonly displayScale: number;
+  private readonly collisionAlong: number | undefined;
+  private readonly collisionAcross: number | undefined;
+  private readonly collisionRadius: number;
   private exhaustPulse = 0;
 
   constructor(
@@ -75,10 +83,17 @@ export class VehicleView {
     this.clock = sheetClock(sheet, manifest);
     const cell = sheetCellSize(sheet, manifest);
     const displayScale = manifest.frameWidth / cell.width;
+    this.origin = manifest.origin;
+    this.cellWidth = cell.width;
+    this.cellHeight = cell.height;
+    this.displayScale = displayScale;
+    this.collisionAlong = sheet.stats.collisionAlong;
+    this.collisionAcross = sheet.stats.collisionAcross;
+    this.collisionRadius = sheet.stats.collisionRadius;
 
-    this.shadow = scene.add.ellipse(0, 0, sheet.shadow.width, sheet.shadow.height, 0x000000);
+    this.shadow = scene.add.ellipse(0, 0, 1, 1, 0x000000);
+    this.shadow.setOrigin(0.5, 0.5);
     this.shadow.setAlpha(SHADOW_ALPHA);
-    this.shadow.setScale(displayScale);
 
     this.sprite = scene.add.sprite(0, 0, sheet.id);
     // Never flipX / flipY. Yaw is a real strip frame (32 CCW or 30 CW).
@@ -99,13 +114,32 @@ export class VehicleView {
 
   /** Moves sprite and shadow to match `state`. Called once per rendered frame. */
   sync(state: VehicleState, extras: VehicleViewExtras = {}): void {
-    const ground = this.projection.toScreen(state.position);
     const air = this.projection.toScreen(state.position, state.height);
 
     this.sprite.setPosition(air.x, air.y);
     this.sprite.setFrame(frameIndexForHeading(state.heading, this.frameCount, this.clock));
+    // BBox frames carry customPivot (often 0.5, 0.5). setFrame reapplies that
+    // and would undo the measured ground pin, so the painted car sits off the
+    // blob. Re-pin every frame — same origin for every yaw, no wobble.
+    this.sprite.setOrigin(this.origin.x, this.origin.y);
 
-    this.shadow.setPosition(ground.x, ground.y);
+    const pose = contactShadowPose({
+      projection: this.projection,
+      position: state.position,
+      heading: state.heading,
+      collisionAlong: this.collisionAlong,
+      collisionAcross: this.collisionAcross,
+      collisionRadius: this.collisionRadius,
+      origin: this.origin,
+      cellWidth: this.cellWidth,
+      cellHeight: this.cellHeight,
+      displayScale: this.displayScale,
+      height: state.height,
+    });
+    this.shadow.setOrigin(0.5, 0.5);
+    this.shadow.setPosition(pose.x, pose.y);
+    this.shadow.setSize(pose.width, pose.height);
+    this.shadow.setRotation(pose.rotation);
 
     const depth = this.projection.depthOf(state.position);
     this.sprite.setDepth(depth);
