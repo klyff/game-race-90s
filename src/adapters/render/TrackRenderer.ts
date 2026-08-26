@@ -63,6 +63,8 @@ const ASPHALT_GRAIN_PER_SAMPLE = 11;
  * world units. Short on purpose: it is a marker, not a runway.
  */
 const START_LINE_LENGTH_UNITS = 3;
+const CHEQUER_BLACK = 0x000000;
+const CHEQUER_WHITE = 0xffffff;
 
 /**
  * Arc-length spacing between trackside boulders (T-048), world units. Tight
@@ -283,7 +285,7 @@ export class TrackRenderer {
       this.fillJaggedBand(frames, -(track.halfWidth - 0.6), -(track.halfWidth + 1.2), shade(this.theme.wall, 0.65), 32);
     }
 
-    this.drawStoneThreshold(track, spline);
+    this.drawChequeredLine(track, spline);
     this.drawRockRamps(track, spline);
     if (!this.lowDetail) {
       this.drawBorderProps(spline, wallOuter);
@@ -573,33 +575,35 @@ export class TrackRenderer {
   }
 
   /**
-   * Start/finish as a row of pale threshold stones — a carved step, not a
-   * painted chequer. Still spans the full racing width so the line is obvious.
+   * Grand Prix start/finish: painted black/white chequer on the asphalt.
+   * Two rows along travel, full racing width. Not a raised slab.
    */
-  private drawStoneThreshold(track: TrackDefinition, spline: TrackSpline): void {
+  private drawChequeredLine(track: TrackDefinition, spline: TrackSpline): void {
     const halfLength = START_LINE_LENGTH_UNITS / 2;
-    const backFrame = spline.frameAt(track.startLineDistance - halfLength);
-    const frontFrame = spline.frameAt(track.startLineDistance + halfLength);
-
+    const rows = 2;
+    const rowLength = START_LINE_LENGTH_UNITS / rows;
     const fullWidth = track.halfWidth * 2;
-    const columns = Math.max(3, Math.round(fullWidth / 4.2));
+    const columns = Math.max(6, Math.round(fullWidth / 3.2));
     const cellWidth = fullWidth / columns;
 
-    for (let column = 0; column < columns; column += 1) {
-      const outer = track.halfWidth - column * cellWidth;
-      const inner = outer - cellWidth;
-      const pale = propHash(column, 90) > 0.45;
-      this.graphics.fillStyle(pale ? shade(this.theme.tarmac, 1.25) : shade(this.theme.wall, 0.85), 1);
-      const inset = 0.15 + propHash(column, 91) * 0.25;
-      this.graphics.fillPoints(
-        [
-          this.edgeScreen(backFrame, outer - inset),
-          this.edgeScreen(frontFrame, outer - inset * 0.4),
-          this.edgeScreen(frontFrame, inner + inset * 0.4),
-          this.edgeScreen(backFrame, inner + inset),
-        ],
-        true,
-      );
+    for (let row = 0; row < rows; row += 1) {
+      const backFrame = spline.frameAt(track.startLineDistance - halfLength + row * rowLength);
+      const frontFrame = spline.frameAt(track.startLineDistance - halfLength + (row + 1) * rowLength);
+      for (let column = 0; column < columns; column += 1) {
+        const outer = track.halfWidth - column * cellWidth;
+        const inner = outer - cellWidth;
+        const dark = (row + column) % 2 === 0;
+        this.graphics.fillStyle(dark ? CHEQUER_BLACK : CHEQUER_WHITE, 1);
+        this.graphics.fillPoints(
+          [
+            this.edgeScreen(backFrame, outer),
+            this.edgeScreen(frontFrame, outer),
+            this.edgeScreen(frontFrame, inner),
+            this.edgeScreen(backFrame, inner),
+          ],
+          true,
+        );
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { add, fromAngle, scale } from '../../domain/math/Vec2.ts';
 import type { Vec2 } from '../../domain/math/Vec2.ts';
 import { IsoProjection } from './IsoProjection.ts';
+import { celebrationIntensity } from './VictoryIntensity.ts';
 
 /**
  * Player-win burst at the finish line: world fireworks plus screen confetti.
@@ -10,9 +11,7 @@ import { IsoProjection } from './IsoProjection.ts';
  * Pixel rules: hard-edged dots and rects, short palette, no soft glow.
  */
 
-const CONFETTI_COUNT = 110;
 const CONFETTI_LIFE = 3.4;
-const FIREWORK_COUNT = 8;
 const SPARKS_PER_BURST = 18;
 const MAX_DEPTH = 12_000;
 const PALETTE = [0xffe066, 0xff3d6e, 0x3de0ff, 0xfff4d8, 0x7dff6a, 0xff7a18, 0xe848ff];
@@ -79,9 +78,10 @@ export class VictoryCelebration {
   }
 
   /**
-   * Big win at `worldPosition` (the car crossing the line). Safe to call once.
+   * Podium burst at `worldPosition` (the car crossing the line). P1–P3.
+   * Safe to call once.
    */
-  play(worldPosition: Vec2): void {
+  play(worldPosition: Vec2, place = 1): void {
     if (this.playing) {
       return;
     }
@@ -89,11 +89,12 @@ export class VictoryCelebration {
     this.confetti = [];
     this.sparks = [];
     this.rockets = [];
+    const intensity = celebrationIntensity(place);
 
     const cam = this.scene.cameras.main;
     const width = cam.width;
     const height = cam.height;
-    for (let i = 0; i < CONFETTI_COUNT; i += 1) {
+    for (let i = 0; i < intensity.confetti; i += 1) {
       const fromTop = i % 3 !== 2;
       this.confetti.push({
         x: 24 + ((i * 97) % Math.max(8, width - 48)),
@@ -110,15 +111,15 @@ export class VictoryCelebration {
       });
     }
 
-    for (let i = 0; i < FIREWORK_COUNT; i += 1) {
+    for (let i = 0; i < intensity.fireworks; i += 1) {
       this.rockets.push({
         positionWorld: add(worldPosition, {
-          x: ((i % 4) - 1.5) * 4.2,
-          y: (Math.floor(i / 4) - 0.5) * 3.4,
+          x: ((i % 5) - 2) * 3.6,
+          y: (Math.floor(i / 5) - 1) * 3.0,
         }),
         height: 0.4,
         verticalVelocity: 16 + (i % 4) * 2.2,
-        delay: i * 0.16,
+        delay: i * 0.12,
         age: 0,
         exploded: false,
         color: PALETTE[(i + 2) % PALETTE.length]!,

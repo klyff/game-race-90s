@@ -19,7 +19,8 @@ const PLATE = 0x000000;
 const PLATE_ALPHA = 0.82;
 const BEZEL = 0x2a2a32;
 const ROAD = 0x8a8e96;
-const START = 0xf6f6fa;
+const START_LIGHT = 0xffffff;
+const START_DARK = 0x000000;
 const NPC = 0xe0523c;
 const NPC_STROKE = 0x1a0e10;
 const FOCUS = 0x4ec8ff;
@@ -135,8 +136,11 @@ export class MinimapView {
     if (this.lastStart !== null) {
       const from = worldToMinimap(this.viewport, this.lastStart[0]);
       const to = worldToMinimap(this.viewport, this.lastStart[1]);
-      this.trackGfx.lineStyle(2, START, 1);
-      this.trackGfx.lineBetween(from.x, from.y, to.x, to.y);
+      const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+      this.trackGfx.lineStyle(2, START_DARK, 1);
+      this.trackGfx.lineBetween(from.x, from.y, mid.x, mid.y);
+      this.trackGfx.lineStyle(2, START_LIGHT, 1);
+      this.trackGfx.lineBetween(mid.x, mid.y, to.x, to.y);
     }
   }
 

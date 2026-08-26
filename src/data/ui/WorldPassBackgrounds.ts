@@ -1,10 +1,11 @@
 /**
- * Destination tickets after a planet unlock. Results routes here only when
- * the player just took 1st on a world's last track.
+ * Destination tickets after a planet unlock. Results routes here when
+ * this finish just completed the world (1st on the last track, or the
+ * podium path that opens the next planet).
  */
 
-import { campaignSlotForTrackId } from '../tracks/campaign.ts';
-import { PLANETS, TRACKS_PER_PLANET } from '../tracks/planets.ts';
+import { campaignSlotForTrackId, planetIsComplete } from '../tracks/campaign.ts';
+import { PLANETS } from '../tracks/planets.ts';
 
 export const WORLD_PASS_DIRECTORY = 'assets/ui/ticketpass';
 
@@ -107,25 +108,37 @@ export function worldPassById(id: string): WorldPassBackground | undefined {
 
 /**
  * Ticket for this finish, or undefined when the AfterTrack should go
- * straight to the garage. `wonTrackIds` is the set from BEFORE this race
- * was recorded, so a re-win of an already-opened last track stays quiet.
+ * straight to the garage. `wonTrackIds` / `clearedTrackIds` are the sets
+ * from BEFORE this race was recorded, so a re-win stays quiet.
  */
 export function worldPassForFinish(
   trackId: string,
   playerPosition: number,
   wonTrackIds: readonly string[],
+  clearedTrackIds: readonly string[] = [],
 ): WorldPassBackground | undefined {
-  if (playerPosition !== 1) {
+  if (playerPosition < 1 || playerPosition > 3) {
     return undefined;
   }
   const slot = campaignSlotForTrackId(trackId);
-  if (slot === null || slot.trackN !== TRACKS_PER_PLANET) {
+  if (slot === null) {
     return undefined;
   }
-  if (wonTrackIds.includes(trackId)) {
+  const planet = PLANETS.find(entry => entry.index === slot.planetIndex);
+  if (planet === undefined) {
     return undefined;
   }
-  const next = PLANETS.find(planet => planet.index === slot.planetIndex + 1);
+  if (planetIsComplete(planet, wonTrackIds, clearedTrackIds)) {
+    return undefined;
+  }
+  const afterWon =
+    playerPosition === 1 && !wonTrackIds.includes(trackId) ? [...wonTrackIds, trackId] : wonTrackIds;
+  const afterCleared =
+    !clearedTrackIds.includes(trackId) ? [...clearedTrackIds, trackId] : clearedTrackIds;
+  if (!planetIsComplete(planet, afterWon, afterCleared)) {
+    return undefined;
+  }
+  const next = PLANETS.find(entry => entry.index === slot.planetIndex + 1);
   if (next !== undefined) {
     return worldPassById(next.id);
   }

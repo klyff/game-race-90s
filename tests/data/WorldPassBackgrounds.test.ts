@@ -23,7 +23,7 @@ describe('WorldPassBackgrounds', () => {
     expect(worldPassKey(pass)).toBe('world-pass:chrome-verge');
   });
 
-  it('stays quiet off the last track or off first place', () => {
+  it('stays quiet off a completing finish', () => {
     expect(worldPassForFinish(planetTrackId(planet1, 1), 1, [])).toBeUndefined();
     expect(worldPassForFinish(planetTrackId(planet1, TRACKS_PER_PLANET), 2, [])).toBeUndefined();
   });
@@ -45,5 +45,20 @@ describe('WorldPassBackgrounds', () => {
     const pass = worldPassForFinish(last, 1, []);
     expect(pass?.id).toBe('championship');
     expect(pass?.kind).toBe('championship');
+  });
+
+  it('opens the next world after a first plus two other podiums', () => {
+    const t1 = planetTrackId(planet1, 1);
+    const t2 = planetTrackId(planet1, 2);
+    const t3 = planetTrackId(planet1, 3);
+    const pass = worldPassForFinish(t3, 3, [t1], [t1, t2]);
+    expect(pass?.id).toBe(planet2.id);
+  });
+
+  it('stays quiet after three podiums with no first', () => {
+    const t1 = planetTrackId(planet1, 1);
+    const t2 = planetTrackId(planet1, 2);
+    const t3 = planetTrackId(planet1, 3);
+    expect(worldPassForFinish(t3, 2, [], [t1, t2])).toBeUndefined();
   });
 });

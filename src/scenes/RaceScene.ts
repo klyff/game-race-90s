@@ -639,7 +639,7 @@ export class RaceScene extends Phaser.Scene {
       isPlayer: this.field.racers[entry.racerIndex]?.isPlayer === true,
     }));
     const playerPosition =
-      this.field.standingOf(this.carId)?.position ?? this.field.racers.length;
+      this.field.standingOf(this.carId, this.player.gridIndex)?.position ?? this.field.racers.length;
     const parSeconds =
       this.trackLines?.parTime !== undefined
         ? this.trackLines.parTime * this.track.laps
@@ -1716,8 +1716,11 @@ export class RaceScene extends Phaser.Scene {
       this.wrongWayHold = 0;
     }
 
-    if (!spectator && humanFinished && !this.lastPlayerFinished && position === 1) {
-      this.victory.play(this.player.state.position);
+    if (!spectator && humanFinished && !this.lastPlayerFinished) {
+      if (position <= 3) {
+        this.victory.play(this.player.state.position, position);
+      }
+      this.audio.hushNarrator();
     }
 
     const offer = this.narrator.update({

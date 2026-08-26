@@ -22,7 +22,10 @@ describe('NarratorPlan', () => {
     expect(narratorLine(plan.raceStart.lineId)?.category).toBe(NARRATOR_CATEGORY.RACE_START);
     expect(plan.finalLapStart.lineId).not.toBe(plan.finalLapMid.lineId);
     expect(narratorLine(plan.victory.lineId)?.category).toBe(NARRATOR_CATEGORY.VICTORY);
-    expect(narratorLine(plan.second.lineId)?.category).toBe(NARRATOR_CATEGORY.SECOND);
+    expect(narratorLine(plan.second.lineId)?.category).toBe(NARRATOR_CATEGORY.VICTORY);
+    expect(['we-got-a-winner', 'you-got-it']).toContain(plan.victory.lineId);
+    expect(['we-got-a-winner', 'you-got-it']).toContain(plan.second.lineId);
+    expect(plan.victory.lineId).not.toBe(plan.second.lineId);
     expect(narratorLine(plan.last.lineId)?.category).toBe(NARRATOR_CATEGORY.LAST);
   });
 

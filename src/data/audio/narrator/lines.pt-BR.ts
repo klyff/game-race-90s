@@ -66,6 +66,8 @@ export const PT_BR_NARRATOR_LINES: readonly NarratorLine[] = [
   line('final-lap-no-holding', 'ULTIMA VOLTA! SEM FREIO, PORRA!', 'ULTIMA VOLTA—SEM FREIO, PORRAA!', C.FINAL_LAP),
 
   // --- vitoria ---
+  line('we-got-a-winner', 'TEMOS UM VENCEDOR!', 'TEMOS UM VENCEDORRR!', C.VICTORY),
+  line('you-got-it', 'VOCE CONSEGUIU!!!!!', 'VOCE CONSEGUIUUUU!', C.VICTORY),
   line('burns-across', 'QUEIMA A LINHA DE CHEGADA!', 'QUEIMA A LINHA DE CHEGADAA!', C.VICTORY),
   line('takes-the-crown', 'LEVA A COROA! QUE CORRIDA!', 'LEVA A COROA—QUE CORRIDAA!', C.VICTORY),
   line('thats-how-you-win', 'GANHOU, PORRA! QUE ARRANCADA!', 'GANHOU, PORRAA—QUE ARRANCADAA!', C.VICTORY),

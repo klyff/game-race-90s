@@ -5,7 +5,9 @@ export interface RacerProgress {
   /** Grid seat. Required when two racers share a car model. */
   readonly racerIndex?: number;
   readonly progress: LapProgress;
-  /** Arc length at which this car finished, for ordering the cars that already finished. */
+  /** Elapsed race seconds when this car crossed the line. Earlier wins. */
+  readonly finishedAtSeconds?: number;
+  /** totalProgress at the finish step. Same-second tie: higher (the leader) wins. */
   readonly finishedAtProgress?: number;
 }
 
@@ -22,11 +24,11 @@ export interface RacerStanding {
  * Pure. Returns standings ordered 1st..last.
  *
  * Ranking logic:
- * - Primary: totalProgress descending (encodes both laps and distance within lap)
  * - Finished cars always rank ahead of unfinished
- * - Among finished cars: ordered by finishedAtProgress ascending (first to finish ranks first)
- * - Among unfinished cars: ordered by totalProgress descending
- * - Ties broken by carId for determinism
+ * - Among finished cars: finishedAtSeconds ascending (who crossed earlier), then
+ *   finishedAtProgress descending (same-step leader has more overshoot)
+ * - Among unfinished cars: totalProgress descending
+ * - Ties broken by carId, then racerIndex
  */
 export function rankRacers(racers: readonly RacerProgress[]): readonly RacerStanding[] {
   if (racers.length === 0) {
@@ -50,36 +52,7 @@ export function rankRacers(racers: readonly RacerProgress[]): readonly RacerStan
     }
   }
 
-  // Sort finished cars: by finishedAtProgress ascending (first to finish first).
-  // When finishedAtProgress is absent, fall back to totalProgress.
-  // If both cars lack finishedAtProgress, sort by totalProgress descending (highest first).
-  // If at least one has finishedAtProgress, sort by effective value ascending.
-  finished.sort((a, b) => {
-    const aHasFinished = a.finishedAtProgress !== undefined;
-    const bHasFinished = b.finishedAtProgress !== undefined;
-
-    const aValue = aHasFinished ? a.finishedAtProgress : a.progress.totalProgress;
-    const bValue = bHasFinished ? b.finishedAtProgress : b.progress.totalProgress;
-
-    // If both lack finishedAtProgress, sort by totalProgress descending (highest first).
-    if (!aHasFinished && !bHasFinished) {
-      if (aValue !== bValue) {
-        return bValue - aValue;
-      }
-    }
-    // Otherwise (if at least one has finishedAtProgress), sort ascending.
-    else {
-      if (aValue !== bValue) {
-        return aValue - bValue;
-      }
-    }
-
-    const byId = a.carId.localeCompare(b.carId);
-    if (byId !== 0) {
-      return byId;
-    }
-    return (a.racerIndex ?? 0) - (b.racerIndex ?? 0);
-  });
+  finished.sort((a, b) => compareFinished(a, b));
 
   // Sort unfinished cars: by totalProgress descending, then by carId for determinism.
   unfinished.sort((a, b) => {
@@ -123,4 +96,27 @@ export function standingForSeat(
     }
   }
   return standings.find(standing => standing.carId === carId);
+}
+
+function compareFinished(a: RacerProgress, b: RacerProgress): number {
+  const aHasSeconds = a.finishedAtSeconds !== undefined;
+  const bHasSeconds = b.finishedAtSeconds !== undefined;
+  if (aHasSeconds && bHasSeconds && a.finishedAtSeconds !== b.finishedAtSeconds) {
+    return a.finishedAtSeconds! - b.finishedAtSeconds!;
+  }
+  if (aHasSeconds !== bHasSeconds) {
+    return aHasSeconds ? -1 : 1;
+  }
+
+  const aProgress = a.finishedAtProgress ?? a.progress.totalProgress;
+  const bProgress = b.finishedAtProgress ?? b.progress.totalProgress;
+  if (aProgress !== bProgress) {
+    return bProgress - aProgress;
+  }
+
+  const byId = a.carId.localeCompare(b.carId);
+  if (byId !== 0) {
+    return byId;
+  }
+  return (a.racerIndex ?? 0) - (b.racerIndex ?? 0);
 }

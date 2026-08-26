@@ -1,6 +1,7 @@
 import {
   BANTER_EXTRA_IDS,
   NARRATOR_CATEGORY,
+  PODIUM_LINE_IDS,
   banterLines,
   linesInCategory,
   pickNarratorVoice,
@@ -71,8 +72,15 @@ export function planNarratorRace(options: PlanNarratorOptions): NarratorPlan {
 
   const raceStart = pickClip(linesInCategory(NARRATOR_CATEGORY.RACE_START), random);
   const finalPair = pickTwoDistinct(linesInCategory(NARRATOR_CATEGORY.FINAL_LAP), random);
-  const victory = pickClip(linesInCategory(NARRATOR_CATEGORY.VICTORY), random);
-  const second = pickClip(linesInCategory(NARRATOR_CATEGORY.SECOND), random);
+  const podiumLines = linesInCategory(NARRATOR_CATEGORY.VICTORY).filter(line =>
+    (PODIUM_LINE_IDS as readonly string[]).includes(line.id),
+  );
+  const podiumPair =
+    podiumLines.length >= 2
+      ? pickTwoDistinct(podiumLines, random)
+      : pickTwoDistinct(linesInCategory(NARRATOR_CATEGORY.VICTORY), random);
+  const victory = podiumPair[0];
+  const second = podiumPair[1];
   const last = pickClip(linesInCategory(NARRATOR_CATEGORY.LAST), random);
 
   const wrongWayLine = linesInCategory(NARRATOR_CATEGORY.BANTER).find(line => line.id === 'wrong-way');

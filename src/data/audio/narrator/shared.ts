@@ -48,7 +48,11 @@ export const NARRATOR_LOCKED_IDS = [
   'eita-porrada',
 ] as const;
 
+/** Podium shout ids — 1st / 2nd / 3rd pick from this pair. */
+export const PODIUM_LINE_IDS = ['we-got-a-winner', 'you-got-it'] as const;
+
 /** EN clips whose spoken text changed (rename + new lines). Regen with --force. */
+
 export const NARRATOR_EN_REGEN_IDS = [
   'lok-thant-enzo',
   'holy-chimbeler',

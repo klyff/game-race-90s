@@ -192,6 +192,7 @@ export function advanceRace(
       carId: racer.carId,
       racerIndex: racer.racerIndex,
       progress: racer.progress,
+      finishedAtSeconds: racer.finishedAtSeconds,
       finishedAtProgress: racer.finishedAtProgress,
     })),
   );

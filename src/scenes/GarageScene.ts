@@ -541,7 +541,7 @@ export class GarageScene extends Phaser.Scene {
     const career = loadActiveCareer();
     const won = loadWonTracks();
     const cleared = loadCleared();
-    const planet = highestUnlockedPlanetIndex(won, isTourModeOn());
+    const planet = highestUnlockedPlanetIndex(won, isTourModeOn(), cleared);
     if (!isCarUnlocked(carId, planet, cleared.length)) {
       this.status = carUnlockHint(carId, planet, cleared.length) ?? 'LOCKED';
       this.refresh();
@@ -908,7 +908,7 @@ export class GarageScene extends Phaser.Scene {
   private unlockHint(carId: string): string | null {
     return carUnlockHint(
       carId,
-      highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn()),
+      highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn(), loadCleared()),
       loadCleared().length,
     );
   }
@@ -994,11 +994,15 @@ export class GarageScene extends Phaser.Scene {
   }
 
   private carUnlocked(carId: string): boolean {
-    return isCarUnlocked(carId, highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn()), loadCleared().length);
+    return isCarUnlocked(
+      carId,
+      highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn(), loadCleared()),
+      loadCleared().length,
+    );
   }
 
   private garageTextureKey(): string {
-    const key = garageArtKey(highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn()));
+    const key = garageArtKey(highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn(), loadCleared()));
     if (this.textures.exists(key)) {
       return key;
     }
@@ -1007,6 +1011,7 @@ export class GarageScene extends Phaser.Scene {
 
   private worldLine(planetId: string | undefined): string {
     const won = loadWonTracks();
+    const cleared = loadCleared();
     const planet = PLANETS.find(entry => entry.id === planetId) ?? PLANETS[0];
     if (planet === undefined) {
       return 'WORLD  1';
@@ -1016,7 +1021,7 @@ export class GarageScene extends Phaser.Scene {
     if (next === undefined) {
       return `${current}\nNEXT  FINAL WORLD`;
     }
-    const unlocked = next.index <= highestUnlockedPlanetIndex(won, isTourModeOn());
+    const unlocked = next.index <= highestUnlockedPlanetIndex(won, isTourModeOn(), cleared);
     return `${current}\nNEXT W${next.index} ${next.displayName.toUpperCase()}${unlocked ? '' : '  LOCKED'}`;
   }
 

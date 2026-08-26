@@ -63,6 +63,8 @@ export const EN_NARRATOR_LINES: readonly NarratorLine[] = [
   line('final-lap-no-holding', 'FINAL LAP! NO HOLDING BACK!', 'FINAL LAP—NO HOLDING BACKKK!', C.FINAL_LAP),
 
   // --- victory ---
+  line('we-got-a-winner', 'WE GOT A WINNER!', 'WE GOT A WINNERRR!', C.VICTORY),
+  line('you-got-it', 'YOU GOT IT!!!!!', 'YOU GOT ITTTT!', C.VICTORY),
   line('burns-across', 'BURNS ACROSS THE LINE!', 'BURNS ACROSS THE LINNNE!', C.VICTORY),
   line('takes-the-crown', 'TAKES THE CROWN! WHAT A RUN!', 'TAKES THE CROWN—WHAT A RUNNN!', C.VICTORY),
   line('thats-how-you-win', "THAT'S HOW YOU WIN A RACE!", "THAT'S HOW YOU WIN A RACEEE!", C.VICTORY),

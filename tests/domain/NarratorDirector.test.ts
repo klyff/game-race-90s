@@ -80,9 +80,12 @@ describe('NarratorDirector', () => {
     expect(last.update(snapshot({ playerFinished: true, playerPosition: 7, totalRacers: 7 }))?.clip).toEqual(
       plan.last,
     );
+
+    const bronze = new NarratorDirector(plan);
+    expect(bronze.update(snapshot({ playerFinished: true, playerPosition: 3 }))?.clip).toEqual(plan.victory);
   });
 
-  it('keeps calling crashes after the flag, so the field can still talk', () => {
+  it('goes silent after the flag — no banter, weapons, or crashes', () => {
     const plan = planNarratorRace({ lapCount: 3, parSeconds: 50, random: () => 0.15 });
     const director = new NarratorDirector(plan);
     director.update(snapshot({ phase: RACE_PHASE.COUNTDOWN, countdownRemaining: 0.4 }));
@@ -90,8 +93,9 @@ describe('NarratorDirector', () => {
       plan.victory,
     );
 
-    const crash = director.update(snapshot({ impactJustHappened: true, elapsedSeconds: 80 }));
-    expect(crash?.clip).toEqual(plan.damagePool[0]);
+    expect(director.update(snapshot({ impactJustHappened: true, elapsedSeconds: 80 }))).toBeUndefined();
+    expect(director.update(snapshot({ weaponJustHappened: true, elapsedSeconds: 81 }))).toBeUndefined();
+    expect(director.update(snapshot({ becameLeader: true, elapsedSeconds: 82 }))).toBeUndefined();
   });
 
   it('releases a scheduled banter line when the race clock reaches it', () => {

@@ -128,6 +128,11 @@ export class RaceAudio {
     this.narrator.enqueue(clip, priority);
   }
 
+  /** Stop the current shout and drop waiting banter. Used at the flag. */
+  hushNarrator(): void {
+    this.narrator.reset();
+  }
+
   /** True when the browser gave us a working audio graph. */
   get available(): boolean {
     return this.context !== null;

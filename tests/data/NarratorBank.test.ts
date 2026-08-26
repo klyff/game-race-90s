@@ -28,8 +28,8 @@ describe('NarratorBank locales', () => {
     const pt = narratorLines('pt-BR');
     expect(en.map(line => line.id)).toEqual(pt.map(line => line.id));
     expect(en.map(line => line.category)).toEqual(pt.map(line => line.category));
-    expect(en).toHaveLength(51);
-    expect(new Set(en.map(line => line.id)).size).toBe(51);
+    expect(en).toHaveLength(53);
+    expect(new Set(en.map(line => line.id)).size).toBe(53);
   });
 
   it('records every line in both Echo and Verse', () => {

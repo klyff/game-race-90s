@@ -3,9 +3,11 @@ import {
   campaignSlotForTrackId,
   campaignTrackId,
   campaignTracks,
+  highestUnlockedPlanetIndex,
   isPlanetUnlocked,
   isTrackUnlocked,
   nextCampaignTrack,
+  planetIsComplete,
   planetTracks,
 } from '../../src/data/tracks/campaign.ts';
 import { PLANETS, TRACKS_PER_PLANET, planetTrackId } from '../../src/data/tracks/planets.ts';
@@ -37,6 +39,29 @@ describe('campaign — planet unlocks', () => {
     expect(isPlanetUnlocked(planet2, [])).toBe(false);
     const lastOfPlanet1 = planetTrackId(planet1, TRACKS_PER_PLANET);
     expect(isPlanetUnlocked(planet2, [lastOfPlanet1])).toBe(true);
+  });
+
+  it('opens the next planet after three firsts on the previous world', () => {
+    const won = planetTracks(planet1).map(track => track.id);
+    expect(planetIsComplete(planet1, won, won)).toBe(true);
+    expect(isPlanetUnlocked(planet2, won, false, won)).toBe(true);
+    expect(highestUnlockedPlanetIndex(won, false, won)).toBeGreaterThanOrEqual(2);
+  });
+
+  it('opens the next planet after one first and two other podiums', () => {
+    const t1 = planetTrackId(planet1, 1);
+    const t2 = planetTrackId(planet1, 2);
+    const t3 = planetTrackId(planet1, 3);
+    const won = [t1];
+    const cleared = [t1, t2, t3];
+    expect(planetIsComplete(planet1, won, cleared)).toBe(true);
+    expect(isPlanetUnlocked(planet2, won, false, cleared)).toBe(true);
+  });
+
+  it('stays locked after three podiums with no first', () => {
+    const cleared = planetTracks(planet1).map(track => track.id);
+    expect(planetIsComplete(planet1, [], cleared)).toBe(false);
+    expect(isPlanetUnlocked(planet2, [], false, cleared)).toBe(false);
   });
 });
 

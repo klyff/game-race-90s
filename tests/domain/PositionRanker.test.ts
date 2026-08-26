@@ -133,25 +133,51 @@ describe('PositionRanker', () => {
       expect(result[1].finished).toBe(false);
     });
 
-    it('orders finished cars by who finished first (smallest finishedAtProgress)', () => {
+    it('keeps the on-track leader first when two cars finish in the same step', () => {
       const racers: RacerProgress[] = [
         {
-          carId: 'car-1',
+          carId: 'leader',
           progress: progress(3, 0, 350, true),
-          finishedAtProgress: 350, // Finished later
+          finishedAtSeconds: 42,
+          finishedAtProgress: 350,
         },
         {
-          carId: 'car-2',
+          carId: 'trailer',
           progress: progress(3, 0, 300, true),
-          finishedAtProgress: 300, // Finished first
+          finishedAtSeconds: 42,
+          finishedAtProgress: 300,
         },
       ];
 
       const result = rankRacers(racers);
 
-      expect(result[0].carId).toBe('car-2');
+      expect(result[0].carId).toBe('leader');
       expect(result[0].position).toBe(1);
-      expect(result[1].carId).toBe('car-1');
+      expect(result[1].carId).toBe('trailer');
+      expect(result[1].position).toBe(2);
+    });
+
+    it('ranks the earlier finisher first even when the later car has less overshoot', () => {
+      const racers: RacerProgress[] = [
+        {
+          carId: 'sprinter',
+          progress: progress(3, 0, 350, true),
+          finishedAtSeconds: 40,
+          finishedAtProgress: 350,
+        },
+        {
+          carId: 'crawler',
+          progress: progress(3, 0, 300.2, true),
+          finishedAtSeconds: 42,
+          finishedAtProgress: 300.2,
+        },
+      ];
+
+      const result = rankRacers(racers);
+
+      expect(result[0].carId).toBe('sprinter');
+      expect(result[0].position).toBe(1);
+      expect(result[1].carId).toBe('crawler');
       expect(result[1].position).toBe(2);
     });
 
@@ -207,6 +233,7 @@ describe('PositionRanker', () => {
         {
           carId: 'car-1',
           progress: progress(2, 0, 300, true),
+          finishedAtSeconds: 40,
           finishedAtProgress: 300,
         },
         {
@@ -216,6 +243,7 @@ describe('PositionRanker', () => {
         {
           carId: 'car-2',
           progress: progress(2, 2, 280, true),
+          finishedAtSeconds: 38,
           finishedAtProgress: 280,
         },
         {
@@ -228,7 +256,7 @@ describe('PositionRanker', () => {
 
       expect(result).toHaveLength(5);
 
-      // Finished cars first, ordered by finishedAtProgress
+      // Finished cars first, ordered by finishedAtSeconds (car-2 crossed earlier)
       expect(result[0]).toEqual({
         carId: 'car-2',
         racerIndex: 3,
@@ -313,27 +341,43 @@ describe('PositionRanker', () => {
       expect(result[1].carId).toBe('car-2');
     });
 
-    it('correctly handles mix of finished cars with and without finishedAtProgress', () => {
+    it('uses recorded finish time ahead of a finisher missing the clock', () => {
       const racers: RacerProgress[] = [
         {
           carId: 'car-1',
           progress: progress(3, 0, 300, true),
-          finishedAtProgress: 320, // Explicit finish position
+          finishedAtSeconds: 41,
+          finishedAtProgress: 320,
         },
         {
           carId: 'car-2',
           progress: progress(3, 0, 310, true),
-          // No finishedAtProgress, falls back to totalProgress
         },
       ];
 
       const result = rankRacers(racers);
 
-      // car-1 has finishedAtProgress: 320
-      // car-2 should use totalProgress: 310
-      // 310 < 320, so car-2 finished first
-      expect(result[0].carId).toBe('car-2');
-      expect(result[1].carId).toBe('car-1');
+      expect(result[0].carId).toBe('car-1');
+      expect(result[1].carId).toBe('car-2');
+    });
+
+    it('falls back to higher progress when neither finisher has a clock', () => {
+      const racers: RacerProgress[] = [
+        {
+          carId: 'car-1',
+          progress: progress(3, 0, 300, true),
+          finishedAtProgress: 320,
+        },
+        {
+          carId: 'car-2',
+          progress: progress(3, 0, 310, true),
+        },
+      ];
+
+      const result = rankRacers(racers);
+
+      expect(result[0].carId).toBe('car-1');
+      expect(result[1].carId).toBe('car-2');
     });
   });
 

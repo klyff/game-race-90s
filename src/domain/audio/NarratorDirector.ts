@@ -65,6 +65,9 @@ export class NarratorDirector {
     if (finish !== undefined) {
       return finish;
     }
+    if (this.finishPlayed) {
+      return undefined;
+    }
     const start = this.offerRaceStart(snapshot);
     if (start !== undefined) {
       return start;
@@ -134,11 +137,9 @@ export class NarratorDirector {
       return undefined;
     }
     this.finishPlayed = true;
-    if (snapshot.playerPosition <= 1) {
-      return { clip: this.plan.victory, priority: NARRATOR_PRIORITY.HIGH };
-    }
-    if (snapshot.playerPosition === 2) {
-      return { clip: this.plan.second, priority: NARRATOR_PRIORITY.HIGH };
+    if (snapshot.playerPosition >= 1 && snapshot.playerPosition <= 3) {
+      const clip = snapshot.playerPosition === 2 ? this.plan.second : this.plan.victory;
+      return { clip, priority: NARRATOR_PRIORITY.HIGH };
     }
     if (snapshot.playerPosition >= snapshot.totalRacers) {
       return { clip: this.plan.last, priority: NARRATOR_PRIORITY.HIGH };

@@ -178,7 +178,7 @@ export function loadPoints(): number {
 export function buyCar(carId: string): CareerSlot | null {
   const price = listPrice(carId);
   const current = loadActiveCareer();
-  const planet = highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn());
+  const planet = highestUnlockedPlanetIndex(loadWonTracks(), isTourModeOn(), loadCleared());
   const cleared = current?.clearedTrackIds.length ?? 0;
   if (
     current === null ||

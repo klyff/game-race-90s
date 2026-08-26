@@ -4,7 +4,7 @@ import { PLANETS } from '../data/tracks/planets.ts';
 import { themeForPlanetId, PLANET_THEMES } from '../data/tracks/planetThemes.ts';
 import { isPlanetUnlocked } from '../data/tracks/campaign.ts';
 import { isTourModeOn } from '../adapters/progress/TourMode.ts';
-import { loadActiveCareer, loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
+import { loadActiveCareer, loadCleared, loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
 import { formatCash } from '../domain/progress/Wallet.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
@@ -15,15 +15,17 @@ import { PLANET_ART_DIRECTORY, SCENE_KEY } from './sceneKeys.ts';
 
 /**
  * Pick a planet. Ten worlds, each with a FEATURED car and three tracks. A planet
- * is locked until the previous planet's last track is won (owner rule), and a
- * locked row cannot be entered — unless tour mode is on (`?tour=1` or TOUR on
- * the splash). Enter opens the track select; Esc goes back to the garage.
+ * is locked until the previous planet is complete (1st on last, or 3 podiums
+ * with at least one first). A locked row cannot be entered — unless tour mode
+ * is on (`?tour=1` or TOUR on the splash). Enter opens the track select; Esc
+ * goes back to the garage.
  *
  * Drawn against the viewport with a plain dark backdrop so it reads at any size.
  */
 export class PlanetSelectScene extends Phaser.Scene {
   private payload!: PlanetSelectData;
   private wonTracks: readonly string[] = [];
+  private clearedTracks: readonly string[] = [];
   private menu!: MenuController;
 
   private backdrop!: Phaser.GameObjects.Rectangle;
@@ -41,12 +43,14 @@ export class PlanetSelectScene extends Phaser.Scene {
   init(data: PlanetSelectData): void {
     this.payload = data;
     this.wonTracks = loadWonTracks();
+    this.clearedTracks = loadCleared();
     // Tour starts at planet 1 so a terrain walk begins at the top. Otherwise
     // land on the last unlocked planet, where a returning player left off.
     const lastUnlocked = isTourModeOn()
       ? 0
       : PLANETS.reduce(
-          (acc, planet, index) => (isPlanetUnlocked(planet, this.wonTracks) ? index : acc),
+          (acc, planet, index) =>
+            isPlanetUnlocked(planet, this.wonTracks, false, this.clearedTracks) ? index : acc,
           0,
         );
     const remembered = PLANETS.findIndex(planet => planet.id === data.lastPlanetId);
@@ -112,7 +116,10 @@ export class PlanetSelectScene extends Phaser.Scene {
 
   private choose(): void {
     const planet = PLANETS[this.menu.selectedIndex];
-    if (planet === undefined || !isPlanetUnlocked(planet, this.wonTracks, isTourModeOn())) {
+    if (
+      planet === undefined ||
+      !isPlanetUnlocked(planet, this.wonTracks, isTourModeOn(), this.clearedTracks)
+    ) {
       return;
     }
     this.scene.start(SCENE_KEY.TRACK_SELECT, {
@@ -138,7 +145,7 @@ export class PlanetSelectScene extends Phaser.Scene {
       if (row === undefined) {
         return;
       }
-      const unlocked = isPlanetUnlocked(planet, this.wonTracks, isTourModeOn());
+      const unlocked = isPlanetUnlocked(planet, this.wonTracks, isTourModeOn(), this.clearedTracks);
       const featured = this.carName(planet.bestCarId);
       const selected = index === this.menu.selectedIndex;
       const marker = selected ? '>' : ' ';

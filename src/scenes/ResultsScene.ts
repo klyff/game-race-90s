@@ -7,6 +7,7 @@ import {
   creditWallet,
   loadActiveCareer,
   loadPoints,
+  loadCleared,
   loadWonTracks,
   recordProgress,
 } from '../adapters/progress/ProgressStore.ts';
@@ -89,6 +90,7 @@ export class ResultsScene extends Phaser.Scene {
   private balance = 0;
   private leaving = false;
   private wonBefore: readonly string[] = [];
+  private clearedBefore: readonly string[] = [];
   private audio!: TitleAudio;
   private rankRows: RankRow[] = [];
 
@@ -120,6 +122,7 @@ export class ResultsScene extends Phaser.Scene {
     this.payload = data;
     this.leaving = false;
     this.wonBefore = loadWonTracks();
+    this.clearedBefore = loadCleared();
     const slot = campaignSlotForTrackId(data.trackId);
     const planetIndex = slot?.planetIndex ?? 1;
     const trackN = slot?.trackN ?? 1;
@@ -421,6 +424,7 @@ export class ResultsScene extends Phaser.Scene {
         this.payload.trackId,
         this.payload.playerPosition,
         this.wonBefore,
+        this.clearedBefore,
       );
       if (pass !== undefined) {
         this.scene.start(SCENE_KEY.WORLD_PASS, {

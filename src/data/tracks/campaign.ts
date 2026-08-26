@@ -4,7 +4,8 @@
  *
  * Owner rules (RNRR style):
  *  - A top-3 finish CLEARS a track and unlocks the next track in its planet.
- *  - Winning (1st) a planet's LAST track unlocks the next planet.
+ *  - A planet is complete (opens the next) if its LAST track is won (1st),
+ *    OR all three tracks are cleared and at least one of them is won.
  *  - Planet 1, track 1 is always available.
  *
  * `clearedTrackIds` are tracks finished in the top 3; `wonTrackIds` are tracks
@@ -51,24 +52,46 @@ export function campaignTracks(): readonly CampaignTrack[] {
 export function highestUnlockedPlanetIndex(
   wonTrackIds: readonly string[],
   unlockAll = false,
+  clearedTrackIds: readonly string[] = [],
 ): number {
   if (unlockAll) {
     return PLANETS.length;
   }
   let highest = 1;
   for (const planet of PLANETS) {
-    if (isPlanetUnlocked(planet, wonTrackIds, unlockAll)) {
+    if (isPlanetUnlocked(planet, wonTrackIds, unlockAll, clearedTrackIds)) {
       highest = planet.index;
     }
   }
   return highest;
 }
 
-/** A planet opens once the PREVIOUS planet's last track has been won. */
+/**
+ * Path A: 1st on the planet's last track.
+ * Path B: podium (top-3) on every track and at least one of those is a win.
+ * Firsts count as podiums — three firsts complete the planet.
+ */
+export function planetIsComplete(
+  planet: PlanetDefinition,
+  wonTrackIds: readonly string[],
+  clearedTrackIds: readonly string[] = [],
+): boolean {
+  const lastTrackId = planetTrackId(planet, TRACKS_PER_PLANET);
+  if (wonTrackIds.includes(lastTrackId)) {
+    return true;
+  }
+  const ids = planetTracks(planet).map(track => track.id);
+  const allPodiums = ids.every(id => clearedTrackIds.includes(id) || wonTrackIds.includes(id));
+  const wins = ids.filter(id => wonTrackIds.includes(id)).length;
+  return allPodiums && wins >= 1;
+}
+
+/** A planet opens once the PREVIOUS planet is complete. */
 export function isPlanetUnlocked(
   planet: PlanetDefinition,
   wonTrackIds: readonly string[],
   unlockAll = false,
+  clearedTrackIds: readonly string[] = [],
 ): boolean {
   if (unlockAll) {
     return true;
@@ -80,8 +103,7 @@ export function isPlanetUnlocked(
   if (previous === undefined) {
     return true;
   }
-  const lastTrackId = planetTrackId(previous, TRACKS_PER_PLANET);
-  return wonTrackIds.includes(lastTrackId);
+  return planetIsComplete(previous, wonTrackIds, clearedTrackIds);
 }
 
 /** A track opens if its planet is unlocked and the previous track was cleared (top-3). */
@@ -95,7 +117,7 @@ export function isTrackUnlocked(
   if (unlockAll) {
     return true;
   }
-  if (!isPlanetUnlocked(planet, wonTrackIds)) {
+  if (!isPlanetUnlocked(planet, wonTrackIds, unlockAll, clearedTrackIds)) {
     return false;
   }
   if (n <= 1) {
