@@ -1740,7 +1740,7 @@ export class RaceScene extends Phaser.Scene {
       becameLeader,
     });
     if (offer !== undefined) {
-      this.audio.enqueueNarrator(offer.clip, offer.priority);
+      this.audio.enqueueNarrator(offer.clip, offer.priority, offer.skipGap);
     }
 
     this.lastTurboCount = turboCount;

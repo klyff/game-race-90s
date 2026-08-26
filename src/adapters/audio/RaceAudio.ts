@@ -124,8 +124,8 @@ export class RaceAudio {
     this.narrator.preload(clips);
   }
 
-  enqueueNarrator(clip: PlannedClip, priority: NarratorPriority): void {
-    this.narrator.enqueue(clip, priority);
+  enqueueNarrator(clip: PlannedClip, priority: NarratorPriority, skipGap = false): void {
+    this.narrator.enqueue(clip, priority, skipGap);
   }
 
   /** Stop the current shout and drop waiting banter. Used at the flag. */

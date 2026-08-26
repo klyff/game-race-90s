@@ -31,6 +31,8 @@ export interface NarratorSnapshot {
 export interface NarratorOffer {
   readonly clip: PlannedClip;
   readonly priority: NarratorPriority;
+  /** Event shouts skip the 1s commentary gap. Banter does not. */
+  readonly skipGap: boolean;
 }
 
 /**
@@ -84,6 +86,7 @@ export class NarratorDirector {
         this.lastWeaponsAt,
         WEAPONS_COOLDOWN_SECONDS,
         NARRATOR_PRIORITY.LOW,
+        true,
       );
       if (weapons !== undefined) {
         this.lastWeaponsAt = snapshot.elapsedSeconds;
@@ -98,6 +101,7 @@ export class NarratorDirector {
         this.lastDamageAt,
         DAMAGE_COOLDOWN_SECONDS,
         NARRATOR_PRIORITY.LOW,
+        true,
       );
       if (damage !== undefined) {
         this.lastDamageAt = snapshot.elapsedSeconds;
@@ -107,15 +111,15 @@ export class NarratorDirector {
     if (snapshot.turboJustStarted) {
       const boost = this.nextFromPool(this.plan.boostPool, 'boostCursor');
       if (boost !== undefined) {
-        return { clip: boost, priority: NARRATOR_PRIORITY.LOW };
+        return this.cue(boost, NARRATOR_PRIORITY.LOW, true);
       }
     }
     if (snapshot.becameLeader) {
-      return { clip: this.plan.newLeader, priority: NARRATOR_PRIORITY.LOW };
+      return this.cue(this.plan.newLeader, NARRATOR_PRIORITY.LOW, true);
     }
     if (snapshot.wrongWay && snapshot.elapsedSeconds - this.lastWrongWayAt >= WRONG_WAY_COOLDOWN_SECONDS) {
       this.lastWrongWayAt = snapshot.elapsedSeconds;
-      return { clip: this.plan.wrongWay, priority: NARRATOR_PRIORITY.LOW };
+      return this.cue(this.plan.wrongWay, NARRATOR_PRIORITY.LOW, true);
     }
     if (
       snapshot.playerPosition > 3 &&
@@ -126,7 +130,7 @@ export class NarratorDirector {
       const behind = this.nextFromPool(this.plan.behindPool, 'behindCursor');
       if (behind !== undefined) {
         this.lastBehindAt = snapshot.elapsedSeconds;
-        return { clip: behind, priority: NARRATOR_PRIORITY.LOW };
+        return this.cue(behind, NARRATOR_PRIORITY.LOW, true);
       }
     }
     return this.offerBanter(snapshot);
@@ -139,10 +143,10 @@ export class NarratorDirector {
     this.finishPlayed = true;
     if (snapshot.playerPosition >= 1 && snapshot.playerPosition <= 3) {
       const clip = snapshot.playerPosition === 2 ? this.plan.second : this.plan.victory;
-      return { clip, priority: NARRATOR_PRIORITY.HIGH };
+      return this.cue(clip, NARRATOR_PRIORITY.HIGH, true);
     }
     if (snapshot.playerPosition >= snapshot.totalRacers) {
-      return { clip: this.plan.last, priority: NARRATOR_PRIORITY.HIGH };
+      return this.cue(this.plan.last, NARRATOR_PRIORITY.HIGH, true);
     }
     return undefined;
   }
@@ -158,7 +162,7 @@ export class NarratorDirector {
       return undefined;
     }
     this.raceStartPlayed = true;
-    return { clip: this.plan.raceStart, priority: NARRATOR_PRIORITY.HIGH };
+    return this.cue(this.plan.raceStart, NARRATOR_PRIORITY.HIGH, true);
   }
 
   private offerFinalLap(snapshot: NarratorSnapshot): NarratorOffer | undefined {
@@ -167,7 +171,7 @@ export class NarratorDirector {
     }
     if (!this.finalLapStartPlayed && snapshot.playerLap >= snapshot.totalLaps) {
       this.finalLapStartPlayed = true;
-      return { clip: this.plan.finalLapStart, priority: NARRATOR_PRIORITY.HIGH };
+      return this.cue(this.plan.finalLapStart, NARRATOR_PRIORITY.HIGH, true);
     }
     if (
       this.finalLapStartPlayed &&
@@ -176,7 +180,7 @@ export class NarratorDirector {
       snapshot.lapFraction >= FINAL_LAP_MID_FRACTION
     ) {
       this.finalLapMidPlayed = true;
-      return { clip: this.plan.finalLapMid, priority: NARRATOR_PRIORITY.HIGH };
+      return this.cue(this.plan.finalLapMid, NARRATOR_PRIORITY.HIGH, true);
     }
     return undefined;
   }
@@ -190,7 +194,11 @@ export class NarratorDirector {
       return undefined;
     }
     this.nextBanter += 1;
-    return { clip: cue.clip, priority: NARRATOR_PRIORITY.LOW };
+    return this.cue(cue.clip, NARRATOR_PRIORITY.LOW, false);
+  }
+
+  private cue(clip: PlannedClip, priority: NarratorPriority, skipGap: boolean): NarratorOffer {
+    return { clip, priority, skipGap };
   }
 
   private offerPool(
@@ -200,6 +208,7 @@ export class NarratorDirector {
     lastAt: number,
     cooldown: number,
     priority: NarratorPriority,
+    skipGap: boolean,
   ): NarratorOffer | undefined {
     if (elapsed - lastAt < cooldown) {
       return undefined;
@@ -208,7 +217,7 @@ export class NarratorDirector {
     if (clip === undefined) {
       return undefined;
     }
-    return { clip, priority };
+    return this.cue(clip, priority, skipGap);
   }
 
   private nextFromPool(pool: readonly PlannedClip[], cursor: CursorKey): PlannedClip | undefined {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NARRATOR_PRIORITY, NarratorQueue } from '../../src/domain/audio/NarratorQueue.ts';
+import { NARRATOR_PRIORITY, NarratorQueue, narratorDelayMs } from '../../src/domain/audio/NarratorQueue.ts';
 
 const A = { lineId: 'a', voice: 'echo' as const };
 const B = { lineId: 'b', voice: 'verse' as const };
@@ -38,5 +38,27 @@ describe('NarratorQueue', () => {
     expect(queue.take()).toEqual(B);
     queue.onEnded();
     expect(queue.take()).toEqual(D);
+  });
+
+  it('keeps skipGap on the waiting cue so events can jump the 1s pause', () => {
+    const queue = new NarratorQueue();
+    expect(queue.offer(A, NARRATOR_PRIORITY.LOW, false)).toBe(true);
+    expect(queue.peek()?.skipGap).toBe(false);
+    expect(queue.offer(B, NARRATOR_PRIORITY.LOW, true)).toBe(true);
+    expect(queue.peek()).toEqual({ clip: B, skipGap: true });
+  });
+});
+
+describe('narratorDelayMs', () => {
+  it('lets event shouts start as soon as the last line ends', () => {
+    expect(narratorDelayMs(true, 0)).toBe(0);
+    expect(narratorDelayMs(true, 400)).toBe(0);
+  });
+
+  it('holds banter for 1s after the previous clip', () => {
+    expect(narratorDelayMs(false, 0)).toBe(1000);
+    expect(narratorDelayMs(false, 350)).toBe(650);
+    expect(narratorDelayMs(false, 1000)).toBe(0);
+    expect(narratorDelayMs(false, 1400)).toBe(0);
   });
 });

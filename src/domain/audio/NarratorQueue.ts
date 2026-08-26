@@ -4,11 +4,35 @@ import type { PlannedClip } from '../../data/audio/NarratorBank.ts';
 export const NARRATOR_MAX_SEQUENCE = 3;
 const MAX_WAITING = NARRATOR_MAX_SEQUENCE - 1;
 
+/** Silence between scheduled commentary lines. Event shouts skip this. */
+export const NARRATOR_GAP_SECONDS = 1;
+
 export const NARRATOR_PRIORITY = {
   HIGH: 'high',
   LOW: 'low',
 } as const;
 export type NarratorPriority = (typeof NARRATOR_PRIORITY)[keyof typeof NARRATOR_PRIORITY];
+
+export interface NarratorCue {
+  readonly clip: PlannedClip;
+  /** Damage, weapons, start, finish — play as soon as the last line ends. */
+  readonly skipGap: boolean;
+}
+
+/**
+ * Banter waits `gapMs` after the previous clip. Event lines do not.
+ */
+export function narratorDelayMs(
+  skipGap: boolean,
+  msSinceEnded: number,
+  gapMs: number = NARRATOR_GAP_SECONDS * 1000,
+): number {
+  if (skipGap) {
+    return 0;
+  }
+  const remaining = gapMs - Math.max(0, msSinceEnded);
+  return remaining > 0 ? remaining : 0;
+}
 
 /**
  * One-at-a-time narrator line-up.
@@ -18,7 +42,7 @@ export type NarratorPriority = (typeof NARRATOR_PRIORITY)[keyof typeof NARRATOR_
  * line is already full. Low-priority cues drop on the floor.
  */
 export class NarratorQueue {
-  private waiting: PlannedClip[] = [];
+  private waiting: NarratorCue[] = [];
   private playing: PlannedClip | undefined;
 
   get isPlaying(): boolean {
@@ -33,17 +57,38 @@ export class NarratorQueue {
     return (this.playing === undefined ? 0 : 1) + this.waiting.length;
   }
 
-  offer(clip: PlannedClip, priority: NarratorPriority = NARRATOR_PRIORITY.LOW): boolean {
+  peek(): NarratorCue | undefined {
+    return this.waiting[0];
+  }
+
+  offer(
+    clip: PlannedClip,
+    priority: NarratorPriority = NARRATOR_PRIORITY.LOW,
+    skipGap = false,
+  ): boolean {
+    const cue: NarratorCue = { clip, skipGap };
     if (this.playing === undefined && this.waiting.length === 0) {
-      this.waiting.push(clip);
+      this.waiting.push(cue);
+      return true;
+    }
+    if (skipGap) {
+      const firstBanter = this.waiting.findIndex((item) => !item.skipGap);
+      if (firstBanter === -1) {
+        this.waiting.push(cue);
+      } else {
+        this.waiting.splice(firstBanter, 0, cue);
+      }
+      if (this.waiting.length > MAX_WAITING) {
+        this.waiting.pop();
+      }
       return true;
     }
     if (this.waiting.length < MAX_WAITING) {
-      this.waiting.push(clip);
+      this.waiting.push(cue);
       return true;
     }
     if (priority === NARRATOR_PRIORITY.HIGH) {
-      this.waiting[this.waiting.length - 1] = clip;
+      this.waiting[this.waiting.length - 1] = cue;
       return true;
     }
     return false;
@@ -58,8 +103,8 @@ export class NarratorQueue {
     if (next === undefined) {
       return undefined;
     }
-    this.playing = next;
-    return next;
+    this.playing = next.clip;
+    return next.clip;
   }
 
   onEnded(): void {

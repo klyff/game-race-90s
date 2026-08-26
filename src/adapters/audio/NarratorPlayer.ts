@@ -7,7 +7,7 @@ import {
   type NarratorClip,
   type PlannedClip,
 } from '../../data/audio/NarratorBank.ts';
-import { NarratorQueue, type NarratorPriority } from '../../domain/audio/NarratorQueue.ts';
+import { NarratorQueue, narratorDelayMs, type NarratorPriority } from '../../domain/audio/NarratorQueue.ts';
 
 /** Sit above the bed so a shout reads over the guitars. */
 const NARRATOR_VOLUME = 0.82;
@@ -25,6 +25,8 @@ export class NarratorPlayer {
   private current: HTMLAudioElement | null = null;
   private muted = false;
   private stopped = false;
+  private gapTimer: ReturnType<typeof setTimeout> | null = null;
+  private endedAtMs = 0;
 
   preload(planned: readonly PlannedClip[]): void {
     for (const item of planned) {
@@ -40,12 +42,12 @@ export class NarratorPlayer {
     }
   }
 
-  enqueue(clip: PlannedClip, priority: NarratorPriority): void {
+  enqueue(clip: PlannedClip, priority: NarratorPriority, skipGap = false): void {
     if (this.stopped) {
       return;
     }
-    this.queue.offer(clip, priority);
-    this.pump();
+    this.queue.offer(clip, priority, skipGap);
+    this.schedulePump();
   }
 
   setMuted(muted: boolean): void {
@@ -56,6 +58,8 @@ export class NarratorPlayer {
   }
 
   reset(): void {
+    this.clearGapTimer();
+    this.endedAtMs = 0;
     this.stopCurrent();
     this.queue.clear();
   }
@@ -69,7 +73,28 @@ export class NarratorPlayer {
     this.elements.clear();
   }
 
+  private schedulePump(): void {
+    if (this.stopped || this.queue.isPlaying) {
+      return;
+    }
+    const next = this.queue.peek();
+    if (next === undefined) {
+      return;
+    }
+    this.clearGapTimer();
+    const delay = narratorDelayMs(next.skipGap, performance.now() - this.endedAtMs);
+    if (delay <= 0) {
+      this.pump();
+      return;
+    }
+    this.gapTimer = setTimeout(() => {
+      this.gapTimer = null;
+      this.pump();
+    }, delay);
+  }
+
   private pump(): void {
+    this.clearGapTimer();
     if (this.stopped) {
       return;
     }
@@ -85,7 +110,7 @@ export class NarratorPlayer {
     const clip = resolveNarratorClip(planned);
     if (element === undefined || clip === undefined) {
       this.queue.onEnded();
-      this.pump();
+      this.schedulePump();
       return;
     }
     this.current = element;
@@ -98,7 +123,8 @@ export class NarratorPlayer {
         this.current = null;
       }
       this.queue.onEnded();
-      this.pump();
+      this.endedAtMs = performance.now();
+      this.schedulePump();
     };
     const onError = (): void => {
       if (!element.src.includes(narratorLabDirectory())) {
@@ -115,6 +141,14 @@ export class NarratorPlayer {
     void element.play().catch(() => {
       onError();
     });
+  }
+
+  private clearGapTimer(): void {
+    if (this.gapTimer === null) {
+      return;
+    }
+    clearTimeout(this.gapTimer);
+    this.gapTimer = null;
   }
 
   private stopCurrent(): void {

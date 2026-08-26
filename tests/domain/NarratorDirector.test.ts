@@ -65,7 +65,9 @@ describe('NarratorDirector', () => {
     const first = director.update(snapshot({ weaponJustHappened: true, elapsedSeconds: 20 }));
     const second = director.update(snapshot({ weaponJustHappened: true, elapsedSeconds: 30 }));
     expect(first?.clip).toEqual(plan.weaponsPool[0]);
+    expect(first?.skipGap).toBe(true);
     expect(second?.clip).toEqual(plan.weaponsPool[1] ?? plan.weaponsPool[0]);
+    expect(second?.skipGap).toBe(true);
   });
 
   it('picks victory / second / last from the plan when the player takes the flag', () => {
@@ -112,5 +114,6 @@ describe('NarratorDirector', () => {
 
     const due = director.update(snapshot({ elapsedSeconds: first.atSeconds + 0.05, playerPosition: 2 }));
     expect(due?.clip).toEqual(first.clip);
+    expect(due?.skipGap).toBe(false);
   });
 });
