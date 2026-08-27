@@ -73,6 +73,11 @@ export function createSlot(
   };
 }
 
+/** Game Over wipe: keep the pilot name, drop cars and circuit progress. */
+export function wipeSlotKeepName(slot: SlotProgress, nowMillis: number): SlotProgress {
+  return createSlot(slot.name, '', nowMillis);
+}
+
 /**
  * Write a slot into the save. Out-of-range index returns the save unchanged.
  */

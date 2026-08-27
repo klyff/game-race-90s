@@ -66,4 +66,5 @@ Playable cars are **32-frame CCW** spinner exports. Shop, garage, and results sh
 Garage and in-race identity come from `statBars` (roster-normalised SPEED / ACCEL / STEER / GRIP / BRAKE / ARMOR) plus the raw number. That glance layer is enough — do not add a FRAGILE badge, grip icon, or extra HUD chrome when a car's handling changes.
 
 - **All Pink Fury** (`5-all-pink-fury`): SPEED stays high (64). GRIP is the planted-street identity (highest live bar, value 34). ARMOR is the glass-convertible identity (lowest live bar, value 0.28). Authored in `SpinnerCarIndex`, shipped in `cars.json`. Encode with bar length + number, never color alone.
+- **Purple Crazymania** (`8-purple-crazymania`): world-2 shop, $500k. SPEED 67 (under Blue 68). GRIP 32 (above Greenhish 30, under Pink 34) so corners hold then drift. STEER is the shop glance (2.8). No extra HUD chrome.
 - Spec labels stay ≥14px with stroke. Do not invent a second specs panel for race HUD.

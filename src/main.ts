@@ -9,6 +9,7 @@ import { OriginComicScene } from './scenes/OriginComicScene.ts';
 import { PauseScene } from './scenes/PauseScene.ts';
 import { PlanetSelectScene } from './scenes/PlanetSelectScene.ts';
 import { RaceScene } from './scenes/RaceScene.ts';
+import { GameOverScene } from './scenes/GameOverScene.ts';
 import { ResultsScene } from './scenes/ResultsScene.ts';
 import { SplashScene } from './scenes/SplashScene.ts';
 import { TrackSelectScene } from './scenes/TrackSelectScene.ts';
@@ -48,6 +49,7 @@ const game = new Phaser.Game({
     RaceScene,
     HudScene,
     ResultsScene,
+    GameOverScene,
     WorldPassScene,
     PauseScene,
     HelpScene,

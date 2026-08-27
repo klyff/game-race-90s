@@ -1,5 +1,5 @@
 /**
- * Per-slot career sidecar: cash, points, garage, rivals, last track.
+ * Per-slot career sidecar: cash, points, garage, rivals, last track, losses.
  * Lives beside the cookie-budgeted SaveSlots blob.
  */
 
@@ -20,6 +20,8 @@ export interface CareerSlot {
   readonly rivalPoints: readonly number[];
   readonly trackPoints: Readonly<Record<string, number>>;
   readonly clearedTrackIds: readonly string[];
+  /** Off-podium finishes per track id. Only counted for upgraded cars. */
+  readonly trackLosses: Readonly<Record<string, number>>;
 }
 
 export interface CareerData {
@@ -47,6 +49,7 @@ export function createCareerSlot(nowMillis: number): CareerSlot {
     rivalPoints: rivals.map(() => 0),
     trackPoints: {},
     clearedTrackIds: [],
+    trackLosses: {},
   };
 }
 
@@ -122,6 +125,14 @@ function parseCareerSlot(raw: unknown): CareerSlot | null {
   const cleared = Array.isArray(s.clearedTrackIds)
     ? s.clearedTrackIds.filter((id): id is string => typeof id === 'string')
     : [];
+  const trackLosses: Record<string, number> = {};
+  if (typeof s.trackLosses === 'object' && s.trackLosses !== null) {
+    for (const [key, value] of Object.entries(s.trackLosses as Record<string, unknown>)) {
+      if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+        trackLosses[key] = Math.floor(value);
+      }
+    }
+  }
   return {
     cash: Math.max(0, Math.round(s.cash)),
     points: Math.max(0, Math.round(s.points)),
@@ -135,5 +146,6 @@ function parseCareerSlot(raw: unknown): CareerSlot | null {
     rivalPoints: rivalPoints.slice(0, s.rivalNames.length),
     trackPoints,
     clearedTrackIds: cleared,
+    trackLosses,
   };
 }

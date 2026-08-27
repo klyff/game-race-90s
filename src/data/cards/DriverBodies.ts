@@ -27,6 +27,30 @@ export function driverBodyUrl(name: string): string {
   return `${DRIVER_BODY_DIRECTORY}/${driverBodyFile(name)}`;
 }
 
+export function driverDefeatKey(name: string): string {
+  return `driver-defeat:${name.trim().toUpperCase()}`;
+}
+
+export function driverDefeatFile(name: string): string {
+  return `${slug(name)}-defeat.png`;
+}
+
+export function driverDefeatUrl(name: string): string {
+  return `${DRIVER_BODY_DIRECTORY}/${driverDefeatFile(name)}`;
+}
+
+export function driverVictoryKey(name: string): string {
+  return `driver-victory:${name.trim().toUpperCase()}`;
+}
+
+export function driverVictoryFile(name: string): string {
+  return `${slug(name)}-victory.png`;
+}
+
+export function driverVictoryUrl(name: string): string {
+  return `${DRIVER_BODY_DIRECTORY}/${driverVictoryFile(name)}`;
+}
+
 export function driverBodyForName(name: string): DriverBody {
   const race = name.trim().toUpperCase();
   return {

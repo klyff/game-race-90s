@@ -236,9 +236,10 @@ const SUV_BLACK_NOIR = spinnerCar({
 
 /**
  * Purple Crazymania — Greenhish silhouette, purple paint, no center stripe.
- * World 2 shop flagship: more speed and a lot more grip / steer than Greenhish
- * (wide-arch + deep-dish feel), still under Blue Combat 68 and far from Marauder 78.
- * Arcade consult: fun > realism, high grip, planted COM, keep steer at speed for drift.
+ * World 2 shop flagship: faster and grippier than Greenhish, built to hold a
+ * corner then break into a catchable slide. Does not steal Pink's grip crown
+ * (34) or Blue Combat's 68. Arcade consult: fun > realism, planted COM,
+ * high steer at speed so drift is a clamp, not ice-skate.
  */
 const PURPLE_CRAZYMANIA = spinnerCar({
   id: 'purple-crazymania',
@@ -252,14 +253,14 @@ const PURPLE_CRAZYMANIA = spinnerCar({
   unlockPlanet: 2,
   price: 500_000,
   stats: {
-    mass: 930,
-    enginePower: 33,
-    brakeForce: 48,
+    mass: 940,
+    enginePower: 32,
+    brakeForce: 47,
     maxSpeed: 67,
-    grip: 34,
-    steerRate: 2.85,
-    steerSpeedFalloff: 0.4,
-    armor: 0.42,
+    grip: 32,
+    steerRate: 2.8,
+    steerSpeedFalloff: 0.42,
+    armor: 0.41,
     ammoCapacity: 14,
     collisionRadius: 1.72,
     aimRadius: 3.55,

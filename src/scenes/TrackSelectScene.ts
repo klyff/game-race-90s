@@ -3,8 +3,23 @@ import { findPlanet } from '../data/tracks/planets.ts';
 import { planetTracks, isTrackUnlocked } from '../data/tracks/campaign.ts';
 import type { CampaignTrack } from '../data/tracks/campaign.ts';
 import { isTourModeOn } from '../adapters/progress/TourMode.ts';
-import { loadCleared, loadWallet, loadWonTracks } from '../adapters/progress/ProgressStore.ts';
+import {
+  chargeTrackRetry,
+  loadActiveCareer,
+  loadActiveName,
+  loadCleared,
+  loadWallet,
+  loadWonTracks,
+} from '../adapters/progress/ProgressStore.ts';
 import { firstPlacePrize, formatCash } from '../domain/progress/Wallet.ts';
+import {
+  RETRY_FEE_KIND,
+  retryFeeMark,
+  retryLevy,
+  retryWarningLine,
+  trackLossCount,
+} from '../domain/progress/TrackRetryFee.ts';
+import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
 import { bindMenuKeys } from '../adapters/input/bindMenuKeys.ts';
 import { MENU_KIND, MENU_PROMPT_LIST, MenuController } from '../adapters/input/MenuController.ts';
 import type { MenuResult } from '../adapters/input/MenuController.ts';
@@ -27,6 +42,8 @@ export class TrackSelectScene extends Phaser.Scene {
   private backdrop!: Phaser.GameObjects.Rectangle;
   private titleText!: Phaser.GameObjects.Text;
   private walletText!: Phaser.GameObjects.Text;
+  private warnPlate!: Phaser.GameObjects.Graphics;
+  private warnText!: Phaser.GameObjects.Text;
   private rows: Phaser.GameObjects.Text[] = [];
   private promptText!: Phaser.GameObjects.Text;
 
@@ -59,6 +76,8 @@ export class TrackSelectScene extends Phaser.Scene {
     this.walletText = this.add
       .text(0, 0, `BANK ${formatCash(loadWallet())}`, this.walletStyle())
       .setOrigin(0.5, 0.5);
+    this.warnPlate = this.add.graphics();
+    this.warnText = this.add.text(0, 0, '', this.warnStyle()).setOrigin(0.5, 0.5);
     this.rows = this.tracks.map(() => this.add.text(0, 0, '', this.rowStyle()).setOrigin(0.5, 0.5));
     this.promptText = this.add
       .text(0, 0, MENU_PROMPT_LIST, this.promptStyle())
@@ -78,7 +97,10 @@ export class TrackSelectScene extends Phaser.Scene {
     }
     bindMenuKeys(keyboard, this.menu, {
       onResult: result => this.handleResult(result),
-      onMoved: () => this.refresh(),
+      onMoved: () => {
+        this.refresh();
+        this.layout();
+      },
     });
   }
 
@@ -95,6 +117,15 @@ export class TrackSelectScene extends Phaser.Scene {
   private choose(): void {
     const track = this.tracks[this.menu.selectedIndex];
     if (track === undefined || !this.unlocked(track)) {
+      return;
+    }
+    const charged = chargeTrackRetry(track.id, this.payload.carId);
+    if (charged.kind === RETRY_FEE_KIND.GAME_OVER) {
+      this.scene.start(SCENE_KEY.GAME_OVER, {
+        manifest: this.payload.manifest,
+        linesByTrack: this.payload.linesByTrack,
+        playerName: loadActiveName(),
+      });
       return;
     }
     this.scene.start(SCENE_KEY.RACE, {
@@ -118,6 +149,14 @@ export class TrackSelectScene extends Phaser.Scene {
   }
 
   private refresh(): void {
+    const career = loadActiveCareer();
+    const cash = career?.cash ?? loadWallet();
+    const points = career?.points ?? 0;
+    const carId = this.payload.carId;
+    const tour = isTourModeOn();
+    this.walletText.setText(
+      cash <= 0 ? `BANK ${formatCash(0)}  ·  RESPECT ${points}` : `BANK ${formatCash(cash)}`,
+    );
     this.tracks.forEach((track, index) => {
       const row = this.rows[index];
       if (row === undefined) {
@@ -126,6 +165,7 @@ export class TrackSelectScene extends Phaser.Scene {
       const unlocked = this.unlocked(track);
       const selected = index === this.menu.selectedIndex;
       const marker = selected ? '>' : ' ';
+      const losses = tour ? 0 : trackLossCount(career?.trackLosses ?? {}, track.id);
       const status = this.won.includes(track.id)
         ? '  ★ WON'
         : this.cleared.includes(track.id)
@@ -133,10 +173,28 @@ export class TrackSelectScene extends Phaser.Scene {
           : unlocked
             ? ''
             : '  [LOCKED]';
+      const feeMark = tour ? '' : retryFeeMark(losses, cash, points, carId);
       const purse = formatCash(firstPlacePrize(track.planet.index, track.n));
-      row.setText(`${marker} ${track.name.toUpperCase()}  ${purse}${status}`);
+      row.setText(`${marker} ${track.name.toUpperCase()}  ${purse}${status}${feeMark}`);
       row.setColor(unlocked ? (selected ? '#ffd85c' : '#d8dae2') : '#6a6f7a');
     });
+    this.refreshWarning(career?.trackLosses ?? {}, cash, points, carId, tour);
+  }
+
+  private refreshWarning(
+    losses: Readonly<Record<string, number>>,
+    cash: number,
+    points: number,
+    carId: string,
+    tour: boolean,
+  ): void {
+    const track = this.tracks[this.menu.selectedIndex];
+    const count = track === undefined || tour ? 0 : trackLossCount(losses, track.id);
+    const line = tour ? null : retryWarningLine(count, cash, points, carId);
+    const levy = retryLevy(count, cash, points, carId);
+    this.warnText.setText(line ?? '').setVisible(line !== null);
+    this.warnText.setColor(levy.kind === RETRY_FEE_KIND.GAME_OVER ? '#ff8080' : '#ffd085');
+    this.warnPlate.setVisible(line !== null);
   }
 
   private layout(): void {
@@ -145,12 +203,29 @@ export class TrackSelectScene extends Phaser.Scene {
     const centreX = width / 2;
 
     this.backdrop.setSize(width, height);
-    this.titleText.setPosition(centreX, height * 0.18);
-    this.walletText.setPosition(centreX, height * 0.28);
+    this.titleText.setPosition(centreX, height * 0.16);
+    this.walletText.setPosition(centreX, height * 0.24);
+    const warnY = height * 0.325;
+    this.warnText.setPosition(centreX, warnY);
+    if (this.warnText.visible) {
+      const plateW = Math.min(width * 0.82, Math.max(420, this.warnText.width + 48));
+      const critical = this.warnText.text.includes('GAME OVER');
+      paintRoundedPlaque(this.warnPlate, {
+        x: centreX,
+        y: warnY,
+        width: plateW,
+        height: Math.max(44, this.warnText.height + 20),
+        fill: PLAQUE_INK,
+        alpha: 0.72,
+        edge: critical ? 0xff4a4a : 0xffb14a,
+      });
+    } else {
+      this.warnPlate.clear();
+    }
     this.rows.forEach((row, index) => {
-      row.setPosition(centreX, height * (0.42 + index * 0.1));
+      row.setPosition(centreX, height * (0.44 + index * 0.1));
     });
-    this.promptText.setPosition(centreX, height * 0.86);
+    this.promptText.setPosition(centreX, height * 0.88);
   }
 
   private titleStyle(): Phaser.Types.GameObjects.Text.TextStyle {
@@ -170,6 +245,16 @@ export class TrackSelectScene extends Phaser.Scene {
       color: '#8bff9b',
       stroke: '#101014',
       strokeThickness: 4,
+    };
+  }
+
+  private warnStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#ffd085',
+      stroke: '#1a0e05',
+      strokeThickness: 5,
     };
   }
 

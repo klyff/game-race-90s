@@ -21,6 +21,7 @@ import {
   PLAYER_NAME_MIN_LENGTH,
   recordRaceResult,
   serializeSave,
+  wipeSlotKeepName,
   writeSlot,
 } from '../../domain/progress/SaveSlots.ts';
 import type { SaveData } from '../../domain/progress/SaveSlots.ts';
@@ -29,6 +30,13 @@ import { highestUnlockedPlanetIndex } from '../../data/tracks/campaign.ts';
 import { isCarUnlocked, listPrice, sellPrice } from '../../domain/progress/GarageCatalog.ts';
 import { isOutOfServiceCarId, sanitizeCarId } from '../../data/cars/FleetStatus.ts';
 import { isTourModeOn } from './TourMode.ts';
+import {
+  nextTrackLosses,
+  RETRY_FEE_KIND,
+  retryLevy,
+  trackLossCount,
+  type RetryFeeKind,
+} from '../../domain/progress/TrackRetryFee.ts';
 
 const STORAGE_KEY = 'rockn90s.save';
 const CAREER_KEY = 'rockn90s.career';
@@ -175,6 +183,27 @@ export function loadPoints(): number {
   return loadActiveCareer()?.points ?? 0;
 }
 
+export function debitPoints(amount: number): number | null {
+  const take = Number.isFinite(amount) && amount > 0 ? Math.round(amount) : 0;
+  const current = loadActiveCareer();
+  if (current === null || current.points < take) {
+    return null;
+  }
+  const next = mutateActive(slot => ({ ...slot, points: slot.points - take }));
+  return next?.points ?? null;
+}
+
+/** Wipe career and circuit progress, keep the active slot's pilot name. */
+export function resetCareerKeepPilot(nowMillis: number): void {
+  const index = activeSlotIndex();
+  const save = loadSave();
+  const slot = save.slots[index];
+  if (slot !== null && slot !== undefined) {
+    persistSave(writeSlot(save, index, wipeSlotKeepName(slot, nowMillis)));
+  }
+  persistCareer(writeCareerSlot(setActiveSlot(loadCareer(), index), index, createCareerSlot(nowMillis)));
+}
+
 export function buyCar(carId: string): CareerSlot | null {
   const price = listPrice(carId);
   const current = loadActiveCareer();
@@ -266,6 +295,45 @@ export function loadWonTracks(): string[] {
   return slot === null || slot === undefined ? [] : [...slot.tracksWon];
 }
 
+export function loadTrackLosses(): Readonly<Record<string, number>> {
+  return { ...(loadActiveCareer()?.trackLosses ?? {}) };
+}
+
+export function loadTrackLossCount(trackId: string): number {
+  return trackLossCount(loadTrackLosses(), trackId);
+}
+
+export interface TrackRetryCharge {
+  readonly kind: RetryFeeKind;
+  readonly fee: number;
+  readonly cash: number;
+  readonly points: number;
+}
+
+/**
+ * Take 10% of the bank, or 10% of respect when the bank is empty.
+ * Empty bank and empty respect is Game Over — the caller shows that screen.
+ * Tour mode skips the tax.
+ */
+export function chargeTrackRetry(trackId: string, carId: string): TrackRetryCharge {
+  const career = loadActiveCareer();
+  const cash = career?.cash ?? 0;
+  const points = career?.points ?? 0;
+  if (isTourModeOn() || career === null) {
+    return { kind: RETRY_FEE_KIND.NONE, fee: 0, cash, points };
+  }
+  const levy = retryLevy(trackLossCount(career.trackLosses, trackId), cash, points, carId);
+  if (levy.kind === RETRY_FEE_KIND.NONE || levy.kind === RETRY_FEE_KIND.GAME_OVER) {
+    return { kind: levy.kind, fee: 0, cash, points };
+  }
+  if (levy.kind === RETRY_FEE_KIND.POINTS) {
+    const next = debitPoints(levy.amount);
+    return { kind: levy.kind, fee: levy.amount, cash, points: next ?? points };
+  }
+  const next = debitWallet(levy.amount);
+  return { kind: levy.kind, fee: levy.amount, cash: next ?? cash, points };
+}
+
 export interface ProgressUpdate {
   readonly save: SaveData;
   readonly cleared: readonly string[];
@@ -312,6 +380,7 @@ export function recordProgress(params: {
       clearedTrackIds: cleared,
       rivalPoints,
       trackPoints,
+      trackLosses: nextTrackLosses(slot.trackLosses ?? {}, params.trackId, params.position, params.carId),
       equippedCarId: sanitizeCarId(params.carId || slot.equippedCarId, slot.equippedCarId),
     };
   });

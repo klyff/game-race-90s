@@ -17,6 +17,7 @@ export const SCENE_KEY = {
   RACE: 'race',
   HUD: 'hud',
   RESULTS: 'results',
+  GAME_OVER: 'game-over',
   WORLD_PASS: 'world-pass',
   PAUSE: 'pause',
   HELP: 'help',

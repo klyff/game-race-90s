@@ -1,16 +1,22 @@
 import Phaser from 'phaser';
-import { cartPortraitKey } from '../data/cars/CarManifest.ts';
-import type { CarSetManifest } from '../data/cars/CarManifest.ts';
-import { DRIVER_CARDS, driverCardKey, driverCardUrl } from '../data/cards/DriverCards.ts';
+import { findCarSheet, type CarSetManifest } from '../data/cars/CarManifest.ts';
+import {
+  driverBodyKey,
+  driverBodyUrl,
+  driverVictoryKey,
+  driverVictoryUrl,
+} from '../data/cards/DriverBodies.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import {
   creditWallet,
   loadActiveCareer,
   loadPoints,
   loadCleared,
+  loadTrackLossCount,
   loadWonTracks,
   recordProgress,
 } from '../adapters/progress/ProgressStore.ts';
+import { retryPayoutLines } from '../domain/progress/TrackRetryFee.ts';
 import { campaignSlotForTrackId } from '../data/tracks/campaign.ts';
 import { pickPubBackground, PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl } from '../data/ui/PubBackgrounds.ts';
 import { worldPassForFinish } from '../data/ui/WorldPassBackgrounds.ts';
@@ -21,6 +27,14 @@ import { playRadioJingle, RADIO_JINGLE_DURATION_SECONDS } from '../adapters/audi
 import { formatRaceTime, positionOrdinal } from '../adapters/render/HudFormat.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
 import { containSize } from '../adapters/render/FitBox.ts';
+import {
+  PODIUM_BODY_GAP,
+  PODIUM_BODY_SCALE,
+  podiumBodyXs,
+  podiumFootY,
+  podiumNameY,
+  winnerFootY,
+} from '../adapters/render/PodiumLayout.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import {
   EMPTY_WEAPON_HITS,
@@ -56,11 +70,13 @@ export interface ResultsSceneData {
   readonly playerName?: string;
   readonly sittingRivals?: readonly string[];
   readonly rivalSeason?: readonly { readonly name: string; readonly points: number }[];
+  /** Preview / debug: skip wallet and career writes. */
+  readonly preview?: boolean;
 }
 
 export const ADVANCE_POSITION = 3;
-const WINNER_CARD = 280;
-const OTHER_CARD = 200;
+const WINNER_BODY = 320;
+const OTHER_BODY = 230;
 const PLAQUE_EDGE = 0xf4e6c4;
 const PLAQUE_GOLD = 0xffd85c;
 const GOLD = '#ffd85c';
@@ -71,8 +87,8 @@ const RANK_LINE = 21;
 
 interface PodiumStack {
   readonly entry: ResultsEntry;
-  readonly card: Phaser.GameObjects.Image;
-  readonly cardLetter: Phaser.GameObjects.Text;
+  readonly pose: Phaser.GameObjects.Image;
+  readonly poseLetter: Phaser.GameObjects.Text;
   readonly name: Phaser.GameObjects.Text;
 }
 
@@ -89,6 +105,7 @@ export class ResultsScene extends Phaser.Scene {
   private hitBonus = 0;
   private racePoints = 0;
   private balance = 0;
+  private retryLines: readonly string[] = [];
   private leaving = false;
   private wonBefore: readonly string[] = [];
   private clearedBefore: readonly string[] = [];
@@ -106,12 +123,14 @@ export class ResultsScene extends Phaser.Scene {
   private playerMark!: Phaser.GameObjects.Rectangle;
   private headerText!: Phaser.GameObjects.Text;
   private winnerText!: Phaser.GameObjects.Text;
+  private winnerCarText!: Phaser.GameObjects.Text;
   private youTag!: Phaser.GameObjects.Text;
   private youName!: Phaser.GameObjects.Text;
   private rankingHeader!: Phaser.GameObjects.Text;
   private rankingHeaderRight!: Phaser.GameObjects.Text;
   private rankLineTexts: Phaser.GameObjects.Text[] = [];
   private payoutText!: Phaser.GameObjects.Text;
+  private payoutBankText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
   private podium: PodiumStack[] = [];
 
@@ -141,11 +160,33 @@ export class ResultsScene extends Phaser.Scene {
         this.load.image(key, pubBackgroundUrl(pub));
       }
     }
-    for (const card of DRIVER_CARDS) {
-      if (!this.textures.exists(card.key)) {
-        this.load.image(card.key, driverCardUrl(card));
-      }
+    const names = new Set(
+      this.payload.standings.filter(entry => entry.position <= 3).map(entry => entry.name),
+    );
+    for (const name of names) {
+      this.queueBody(name, 'victory');
+      this.queueBody(name, 'profile');
     }
+  }
+
+  private queueBody(name: string, pose: 'victory' | 'profile'): void {
+    const key = pose === 'victory' ? driverVictoryKey(name) : driverBodyKey(name);
+    const url = pose === 'victory' ? driverVictoryUrl(name) : driverBodyUrl(name);
+    if (!this.textures.exists(key)) {
+      this.load.image(key, url);
+    }
+  }
+
+  private poseKey(name: string, preferVictory: boolean): string {
+    const victory = driverVictoryKey(name);
+    const profile = driverBodyKey(name);
+    if (preferVictory && this.textures.exists(victory)) {
+      return victory;
+    }
+    if (this.textures.exists(profile)) {
+      return profile;
+    }
+    return this.textures.exists(victory) ? victory : '';
   }
 
   create(): void {
@@ -159,16 +200,24 @@ export class ResultsScene extends Phaser.Scene {
         points: podiumPoints(entry.position, planetIndex, trackN),
       }));
 
-    recordProgress({
-      trackId: this.payload.trackId,
-      carId: this.payload.carId,
-      position: this.payload.playerPosition,
-      lapSeconds: this.payload.finishSeconds / Math.max(1, this.payload.laps),
-      nowMillis: Date.now(),
-      playerPoints: this.racePoints,
-      rivalResults,
-    });
-    this.balance = creditWallet(this.prize + this.hitBonus);
+    if (this.payload.preview !== true) {
+      recordProgress({
+        trackId: this.payload.trackId,
+        carId: this.payload.carId,
+        position: this.payload.playerPosition,
+        lapSeconds: this.payload.finishSeconds / Math.max(1, this.payload.laps),
+        nowMillis: Date.now(),
+        playerPoints: this.racePoints,
+        rivalResults,
+      });
+      this.balance = creditWallet(this.prize + this.hitBonus);
+    }
+    this.retryLines = retryPayoutLines(
+      loadTrackLossCount(this.payload.trackId),
+      this.balance,
+      loadPoints(),
+      this.payload.carId,
+    );
     this.rankRows = this.buildRankRows();
 
     this.art = this.add.image(0, 0, '').setOrigin(0, 0).setVisible(false).setDepth(0);
@@ -190,6 +239,12 @@ export class ResultsScene extends Phaser.Scene {
 
     this.headerText = this.add.text(0, 0, 'WINNER IS', this.headerStyle()).setOrigin(0.5, 0.5).setDepth(4);
     this.winnerText = this.add.text(0, 0, this.winnerName(), this.winnerStyle()).setOrigin(0.5, 0.5).setDepth(4);
+    const carLabel = this.winnerCarName();
+    this.winnerCarText = this.add
+      .text(0, 0, carLabel, this.winnerCarStyle())
+      .setOrigin(0.5, 0.5)
+      .setVisible(carLabel !== '')
+      .setDepth(4);
     this.youTag = this.add.text(0, 0, 'YOU', this.youTagStyle()).setOrigin(0.5, 0.5).setDepth(4);
     this.youName = this.add.text(0, 0, this.playerCallsign(), this.youNameStyle()).setOrigin(0.5, 0.5).setDepth(4);
     this.rankingHeader = this.add
@@ -203,7 +258,8 @@ export class ResultsScene extends Phaser.Scene {
     this.rankLineTexts = Array.from({ length: 10 }, () =>
       this.add.text(0, 0, '', this.rankStyle()).setOrigin(0, 0).setDepth(4),
     );
-    this.payoutText = this.add.text(0, 0, this.payoutBlock(), this.payoutStyle()).setOrigin(0, 0).setDepth(4);
+    this.payoutText = this.add.text(0, 0, this.payoutRaceBlock(), this.payoutStyle()).setOrigin(0, 0).setDepth(4);
+    this.payoutBankText = this.add.text(0, 0, this.payoutBankBlock(), this.payoutStyle()).setOrigin(0, 0).setDepth(4);
     this.promptText = this.add
       .text(0, 0, 'SPACE / ENTER   ·   GARAGE', this.promptStyle())
       .setOrigin(0.5, 0.5)
@@ -244,14 +300,14 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   private makePodium(entry: ResultsEntry): PodiumStack {
-    const cardKey = driverCardKey(entry.name);
+    const poseKey = this.poseKey(entry.name, entry.position === 1);
     const gold = entry.position === 1;
-    const card = this.add
-      .image(0, 0, cardKey)
-      .setOrigin(0.5, 0)
-      .setVisible(this.textures.exists(cardKey))
-      .setDepth(4);
-    const cardLetter = this.add
+    const pose = this.add
+      .image(0, 0, poseKey)
+      .setOrigin(0.5, 1)
+      .setVisible(poseKey !== '')
+      .setDepth(gold ? 6 : 5);
+    const poseLetter = this.add
       .text(0, 0, entry.name.slice(0, 1).toUpperCase(), {
         fontFamily: 'monospace',
         fontSize: '36px',
@@ -260,7 +316,7 @@ export class ResultsScene extends Phaser.Scene {
         strokeThickness: 6,
       })
       .setOrigin(0.5, 0.5)
-      .setVisible(!card.visible)
+      .setVisible(!pose.visible)
       .setDepth(5);
     const name = this.add
       .text(0, 0, `${entry.position}. ${entry.name.toUpperCase()}`, {
@@ -270,14 +326,24 @@ export class ResultsScene extends Phaser.Scene {
         stroke: '#101014',
         strokeThickness: 4,
       })
-      .setOrigin(0.5, 0)
+      .setOrigin(0.5, 1)
       .setDepth(4);
-    return { entry, card, cardLetter, name };
+    return { entry, pose, poseLetter, name };
   }
 
   private winnerName(): string {
     const winner = this.payload.standings.find(entry => entry.position === 1);
     return (winner?.name ?? '???').toUpperCase();
+  }
+
+  private winnerCarName(): string {
+    const winner = this.payload.standings.find(entry => entry.position === 1);
+    const carId = winner?.carId ?? this.payload.carId;
+    try {
+      return findCarSheet(this.payload.manifest, carId).displayName.toUpperCase();
+    } catch {
+      return '';
+    }
   }
 
   private playerCallsign(): string {
@@ -334,10 +400,7 @@ export class ResultsScene extends Phaser.Scene {
 
   private rankSplit(): number {
     const n = this.visibleRankRows().length;
-    if (n <= 4) {
-      return n;
-    }
-    return n - 3;
+    return Math.max(1, n - 3);
   }
 
   private formatRankLine(row: RankRow, index: number): string {
@@ -370,8 +433,8 @@ export class ResultsScene extends Phaser.Scene {
     return IVORY;
   }
 
-  private payoutBlock(): string {
-    const row = (label: string, value: string): string => `${label.padEnd(8)}${value.padStart(10)}`;
+  private payoutRaceBlock(): string {
+    const row = (label: string, value: string): string => `${label.padEnd(8)}${value.padStart(8)}`;
     const lines = [
       this.payload.trackName.toUpperCase(),
       `PLACE    ${positionOrdinal(this.payload.playerPosition).toUpperCase()}`,
@@ -384,9 +447,16 @@ export class ResultsScene extends Phaser.Scene {
       lines.push(row('HITS', formatCash(this.hitBonus)));
     }
     lines.push(row('PTS', `+${this.racePoints}`));
-    lines.push('');
-    lines.push(row('BANK', formatCash(this.balance)));
-    lines.push(row('RESPECT', String(loadPoints())));
+    return lines.join('\n');
+  }
+
+  private payoutBankBlock(): string {
+    const row = (label: string, value: string): string => `${label.padEnd(8)}${value.padStart(8)}`;
+    const lines = [row('BANK', formatCash(this.balance)), row('RESPECT', String(loadPoints()))];
+    if (this.retryLines.length > 0) {
+      lines.push('');
+      lines.push(...this.retryLines);
+    }
     return lines.join('\n');
   }
 
@@ -442,7 +512,7 @@ export class ResultsScene extends Phaser.Scene {
 
   private slamTitle(): void {
     this.tweens.add({
-      targets: [this.headerText, this.winnerText],
+      targets: [this.headerText, this.winnerText, this.winnerCarText],
       scale: { from: 1.18, to: 1 },
       duration: 260,
       ease: 'Back.easeOut',
@@ -474,18 +544,31 @@ export class ResultsScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0.5)
       .setDepth(31);
-    const cardKey = winner !== undefined ? driverCardKey(winner.name) : '';
-    const portraitKey = winner !== undefined ? cartPortraitKey(winner.carId) : '';
-    const face = Math.min(width, height) * 0.52;
-    const thumb = face * 0.22;
     const extras: Phaser.GameObjects.GameObject[] = [];
-    if (cardKey !== '' && this.textures.exists(cardKey)) {
-      extras.push(this.add.image(width / 2, height * 0.5, cardKey).setDisplaySize(face, face).setDepth(31));
-    }
-    if (portraitKey !== '' && this.textures.exists(portraitKey)) {
+    const carLabel = this.winnerCarName();
+    if (carLabel !== '') {
       extras.push(
-        this.add.image(width / 2, height * 0.86, portraitKey).setDisplaySize(thumb, thumb).setDepth(31),
+        this.add
+          .text(width / 2, height * 0.22, carLabel, {
+            fontFamily: 'monospace',
+            fontSize: '16px',
+            color: GOLD,
+            stroke: '#101014',
+            strokeThickness: 4,
+          })
+          .setOrigin(0.5, 0.5)
+          .setDepth(31),
       );
+    }
+    const poseKey = winner !== undefined ? this.poseKey(winner.name, true) : '';
+    if (poseKey !== '') {
+      const pose = this.add.image(width / 2, height * 0.52, poseKey).setOrigin(0.5, 0.5).setDepth(31);
+      const fit = containSize(
+        { width: pose.frame.width, height: pose.frame.height },
+        { width: width * 0.5, height: height * 0.58 },
+      );
+      pose.setDisplaySize(fit.width, fit.height);
+      extras.push(pose);
     }
     const shot = [cover, label, name, ...extras];
     this.tweens.add({
@@ -504,17 +587,21 @@ export class ResultsScene extends Phaser.Scene {
   private layout(): void {
     const width = this.scale.width;
     const height = this.scale.height;
-    if (this.art.visible) {
-      const rect = coverRect({ width, height }, { width: this.art.width, height: this.art.height });
-      this.art.setPosition(rect.x, rect.y).setDisplaySize(rect.width, rect.height);
+    const artRect = this.art.visible
+      ? coverRect({ width, height }, { width: this.art.width, height: this.art.height })
+      : undefined;
+    if (artRect !== undefined) {
+      this.art.setPosition(artRect.x, artRect.y).setDisplaySize(artRect.width, artRect.height);
     }
     this.dim.setSize(width, height);
     this.floorDim.setPosition(0, height).setSize(width, height * 0.28);
 
     const titleY = height * 0.08;
-    this.paintPlate(this.titleBox, width / 2, titleY, Math.min(520, width * 0.56), 78, PLAQUE_GOLD);
-    this.headerText.setPosition(width / 2, titleY - 18);
-    this.winnerText.setPosition(width / 2, titleY + 16);
+    const showCar = this.winnerCarText.visible;
+    this.paintPlate(this.titleBox, width / 2, titleY, Math.min(560, width * 0.62), showCar ? 96 : 78, PLAQUE_GOLD);
+    this.headerText.setPosition(width / 2, titleY - (showCar ? 26 : 18));
+    this.winnerText.setPosition(width / 2, titleY + (showCar ? 2 : 16));
+    this.winnerCarText.setPosition(width / 2, titleY + 28);
 
     const youW = Math.min(200, width * 0.22);
     const youX = width * 0.08 + youW / 2;
@@ -522,13 +609,23 @@ export class ResultsScene extends Phaser.Scene {
     this.youTag.setPosition(youX, titleY - 14);
     this.youName.setPosition(youX, titleY + 14);
 
-    const podiumBottom = this.placePodium(width, height);
+    const board = this.placeBottomBoards(width, height);
+    this.placePodium(width, height, board.top);
+    this.paintPlate(this.promptBox, width / 2, height * 0.96, Math.min(420, width * 0.5), 34);
+    this.promptText.setPosition(width / 2, height * 0.96);
+  }
+
+  private placeBottomBoards(width: number, height: number): { readonly top: number } {
     const gap = 16;
     const boxW = Math.min(420, Math.max(360, (width - 56 - gap) / 2));
     const rankNeed = (1 + this.rankSplit()) * RANK_LINE + 28;
-    const payNeed = (this.payoutText.text.split('\n').length + 1) * 22 + 20;
+    const payLines = Math.max(
+      this.payoutText.text.split('\n').length,
+      this.payoutBankText.text.split('\n').length,
+    );
+    const payNeed = (payLines + 1) * 22 + 20;
     const boardH = Math.max(rankNeed, payNeed);
-    const boardTop = Math.min(height * 0.9 - boardH, Math.max(height * 0.68, podiumBottom + 12));
+    const boardTop = Math.min(height * 0.9 - boardH, height * 0.68);
     const boardCy = boardTop + boardH / 2;
     const total = boxW * 2 + gap;
     const left = width / 2 - total / 2 + boxW / 2;
@@ -540,14 +637,15 @@ export class ResultsScene extends Phaser.Scene {
     const rankLeft = left - boxW / 2 + 16;
     const rankTop = boardCy - boardH / 2 + 12;
     const colW = (boxW - 40) / 2;
-    this.rankingHeader.setPosition(rankLeft, rankTop);
-    this.rankingHeaderRight.setPosition(rankLeft + colW + 8, rankTop);
+    this.rankingHeader.setVisible(true).setPosition(rankLeft, rankTop);
+    this.rankingHeaderRight.setVisible(true).setPosition(rankLeft + colW + 8, rankTop);
     this.placeRankLines(colW, rankLeft, rankTop);
-    this.payoutText.setPosition(right - boxW / 2 + 16, rankTop);
-
+    const payLeft = right - boxW / 2 + 16;
+    const payCol = (boxW - 40) / 2;
+    this.payoutText.setPosition(payLeft, rankTop);
+    this.payoutBankText.setPosition(payLeft + payCol + 8, rankTop);
     this.placePlayerMark(colW, rankLeft, rankTop);
-    this.paintPlate(this.promptBox, width / 2, height * 0.96, Math.min(420, width * 0.5), 34);
-    this.promptText.setPosition(width / 2, height * 0.96);
+    return { top: boardTop };
   }
 
   private placeRankLines(colW: number, rankLeft: number, rankTop: number): void {
@@ -583,39 +681,54 @@ export class ResultsScene extends Phaser.Scene {
     this.playerMark.setVisible(true).setPosition(x, y).setSize(colW - 4, RANK_LINE);
   }
 
-  private placePodium(width: number, height: number): number {
+  private placePodium(width: number, height: number, boardTop: number): void {
     const headerBottom = height * 0.08 + 42;
-    const boardTop = height * 0.7;
-    const avail = Math.max(180, boardTop - headerBottom - 10);
-    const natural = WINNER_CARD + 8 + 20 + 12;
-    const scale = Phaser.Math.Clamp(Math.min(height / 820, avail / natural), 0.62, 1.05);
+    const footY = podiumFootY(boardTop);
+    const firstFootY = winnerFootY(boardTop);
+    const avail = Math.max(170, firstFootY - headerBottom - 24);
+    const scale = Phaser.Math.Clamp(avail / WINNER_BODY, 0.55, 1.12);
     const first = this.podium.find(stack => stack.entry.position === 1);
     const second = this.podium.find(stack => stack.entry.position === 2);
     const third = this.podium.find(stack => stack.entry.position === 3);
-    let bottom = height * 0.2;
+    const firstBox =
+      first !== undefined ? this.stackBox(first, WINNER_BODY * scale * PODIUM_BODY_SCALE) : { width: 0, height: 0 };
+    const secondBox =
+      second !== undefined ? this.stackBox(second, OTHER_BODY * scale * PODIUM_BODY_SCALE) : { width: 0, height: 0 };
+    const thirdBox =
+      third !== undefined ? this.stackBox(third, OTHER_BODY * scale * PODIUM_BODY_SCALE) : { width: 0, height: 0 };
+    const xs = podiumBodyXs({
+      screenW: width,
+      firstW: firstBox.width,
+      secondW: secondBox.width,
+      thirdW: thirdBox.width,
+      gap: PODIUM_BODY_GAP,
+    });
     if (first !== undefined) {
-      bottom = Math.max(bottom, this.placeStack(first, width * 0.5, headerBottom + 6, WINNER_CARD * scale));
+      this.placeStack(first, xs.first, firstFootY, firstBox);
     }
     if (second !== undefined) {
-      bottom = Math.max(bottom, this.placeStack(second, width * 0.28, headerBottom + 36, OTHER_CARD * scale));
+      this.placeStack(second, xs.second, footY, secondBox);
     }
     if (third !== undefined) {
-      bottom = Math.max(bottom, this.placeStack(third, width * 0.72, headerBottom + 36, OTHER_CARD * scale));
+      this.placeStack(third, xs.third, footY, thirdBox);
     }
-    return bottom;
   }
 
-  private placeStack(stack: PodiumStack, x: number, top: number, cardMax: number): number {
-    const nameH = 20;
-    const gap = 8;
-    const pad = 12;
-    const card = stack.card.visible
-      ? this.fitPhoto(stack.card, cardMax, cardMax)
-      : { width: cardMax, height: cardMax };
-    stack.card.setPosition(x, top + pad);
-    stack.cardLetter.setPosition(x, top + pad + card.height / 2);
-    stack.name.setPosition(x, top + pad + card.height + gap);
-    return top + pad + card.height + gap + nameH;
+  private stackBox(stack: PodiumStack, bodyMax: number): { readonly width: number; readonly height: number } {
+    return stack.pose.visible
+      ? this.fitPhoto(stack.pose, bodyMax * 0.48, bodyMax)
+      : { width: bodyMax * 0.48, height: bodyMax };
+  }
+
+  private placeStack(
+    stack: PodiumStack,
+    x: number,
+    footY: number,
+    pose: { readonly width: number; readonly height: number },
+  ): void {
+    stack.pose.setPosition(x, footY);
+    stack.poseLetter.setPosition(x, footY - pose.height / 2);
+    stack.name.setPosition(x, podiumNameY(footY, pose.height));
   }
 
   private fitPhoto(
@@ -642,6 +755,10 @@ export class ResultsScene extends Phaser.Scene {
 
   private winnerStyle(): Phaser.Types.GameObjects.Text.TextStyle {
     return { fontFamily: 'monospace', fontSize: '36px', color: GOLD, stroke: '#3a0d05', strokeThickness: 8 };
+  }
+
+  private winnerCarStyle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return { fontFamily: 'monospace', fontSize: '16px', color: IVORY, stroke: '#1a0e05', strokeThickness: 4 };
   }
 
   private rankStyle(): Phaser.Types.GameObjects.Text.TextStyle {

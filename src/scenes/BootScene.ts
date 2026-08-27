@@ -35,6 +35,7 @@ import {
   enableDebugIaModeFromSearch,
 } from '../adapters/progress/DebugIaMode.ts';
 import { watchPlanetTwoTracks } from '../domain/race/WatchField.ts';
+import { loadActiveName } from '../adapters/progress/ProgressStore.ts';
 import { DRIVER_CARDS, driverCardUrl } from '../data/cards/DriverCards.ts';
 import { SPLASH_CARDS, splashCardUrl } from '../data/cards/SplashCards.ts';
 import { SCRAP_SPRITES } from '../adapters/render/MetalScrapRoster.ts';
@@ -78,6 +79,8 @@ import {
   MISSILE_SHEET,
   MISSILE_SPRITE_KEY,
   MISSILE_STRIP_FILE,
+  PLAYER_CAR_ID,
+  DEFAULT_TRACK_ID,
 } from './sceneKeys.ts';
 
 /**
@@ -268,6 +271,37 @@ export class BootScene extends Phaser.Scene {
           });
           return;
         }
+        const winnerPilot = winnerPreviewPilot(location.search);
+        if (winnerPilot !== undefined) {
+          this.scene.start(SCENE_KEY.RESULTS, {
+            manifest: liveManifest,
+            linesByTrack,
+            carId: PLAYER_CAR_ID,
+            trackId: DEFAULT_TRACK_ID,
+            trackName: 'PREVIEW',
+            laps: 3,
+            standings: [
+              { position: 1, carId: PLAYER_CAR_ID, name: winnerPilot, isPlayer: true },
+              { position: 2, carId: PLAYER_CAR_ID, name: 'ALINE', isPlayer: false },
+              { position: 3, carId: PLAYER_CAR_ID, name: 'ENZO', isPlayer: false },
+            ],
+            playerPosition: 1,
+            totalRacers: 3,
+            finishSeconds: 90,
+            preview: true,
+          });
+          return;
+        }
+        const gameOverPilot = gameOverPreviewPilot(location.search);
+        if (gameOverPilot !== undefined) {
+          this.scene.start(SCENE_KEY.GAME_OVER, {
+            manifest: liveManifest,
+            linesByTrack,
+            playerName: gameOverPilot,
+            skipReset: true,
+          });
+          return;
+        }
         if (enableWatchModeFromSearch(location.search)) {
           enableTourMode();
           const trackId = watchTrackFromSearch(location.search) ?? watchPlanetTwoTracks()[0];
@@ -415,4 +449,38 @@ export class BootScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(2000);
   }
+}
+
+/** `?winner=1` or `?winner=RAZOR` — results preview, does not write progress. */
+function winnerPreviewPilot(search: string): string | undefined {
+  return previewPilotFromSearch(search, 'winner');
+}
+
+/** `?gameover=1` or `?gameover=ALINE` — preview only, does not wipe the slot. */
+function gameOverPreviewPilot(search: string): string | undefined {
+  return previewPilotFromSearch(search, 'gameover');
+}
+
+function previewPilotFromSearch(search: string, key: string): string | undefined {
+  const raw = typeof search === 'string' ? search : '';
+  const query = raw.startsWith('?') ? raw.slice(1) : raw;
+  let params: URLSearchParams;
+  try {
+    params = new URLSearchParams(query);
+  } catch {
+    return undefined;
+  }
+  const value = params.get(key);
+  if (value === null || value.trim() === '' || value.trim() === '0') {
+    return undefined;
+  }
+  if (value.trim() === '1' || value.trim().toLowerCase() === 'true') {
+    const saved = loadActiveName().trim();
+    return saved.length > 0 ? saved.toUpperCase() : 'KLYFF';
+  }
+  const name = value
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .slice(0, 5);
+  return name.length > 0 ? name : 'KLYFF';
 }

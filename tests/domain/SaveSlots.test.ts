@@ -5,6 +5,7 @@ import {
   SAVE_BYTE_BUDGET,
   createEmptySave,
   createSlot,
+  wipeSlotKeepName,
   writeSlot,
   clearSlot,
   recordRaceResult,
@@ -19,6 +20,18 @@ describe('SaveSlots', () => {
       const save = createEmptySave();
       expect(save.slots).toHaveLength(SLOT_COUNT);
       expect(save.slots).toEqual([null, null, null]);
+    });
+  });
+
+  describe('wipeSlotKeepName', () => {
+    it('keeps the pilot and drops cars and circuit progress', () => {
+      const hot = recordRaceResult(writeSlot(createEmptySave(), 0, createSlot('KLYFF', '3-red-oh-red', 1000)), 0, 'thunder-basin', 32, true, 2000);
+      const wiped = wipeSlotKeepName(hot.slots[0] as SlotProgress, 3000);
+      expect(wiped.name).toBe('KLYFF');
+      expect(wiped.carId).toBe('');
+      expect(wiped.tracksWon).toEqual([]);
+      expect(wiped.bestLaps).toEqual({});
+      expect(wiped.updatedAt).toBe(3000);
     });
   });
 
