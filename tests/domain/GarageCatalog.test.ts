@@ -21,6 +21,7 @@ describe('GarageCatalog', () => {
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
       '1-muscle-car-gray-number9',
+      '9-muscle-orange-bomber-combat',
     ]);
     expect(shopCarIds()).toEqual([
       '2-sportivo-blue-combat',
@@ -30,6 +31,7 @@ describe('GarageCatalog', () => {
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
       '1-muscle-car-gray-number9',
+      '9-muscle-orange-bomber-combat',
     ]);
     expect(shopCarIds()).not.toContain('car_21');
     expect(shopCarIds()).not.toContain('delorean');
@@ -49,6 +51,7 @@ describe('GarageCatalog', () => {
     expect(listPrice('7-fast-greenhish-machine')).toBe(320_000);
     expect(listPrice('8-purple-crazymania')).toBe(500_000);
     expect(listPrice('1-muscle-car-gray-number9')).toBe(98_000);
+    expect(listPrice('9-muscle-orange-bomber-combat')).toBe(570_000);
     expect(listPrice('car-18')).toBe(0);
     expect(listPrice('car_21')).toBe(0);
   });
@@ -84,6 +87,13 @@ describe('GarageCatalog', () => {
     expect(carUnlockHint('1-muscle-car-gray-number9', 2, 0)).toBeNull();
   });
 
+  it('locks Orange Bomber until world 3', () => {
+    expect(isCarUnlocked('9-muscle-orange-bomber-combat', 2, 0)).toBe(false);
+    expect(carUnlockHint('9-muscle-orange-bomber-combat', 2, 0)).toBe('UNLOCKS IN WORLD 3');
+    expect(isCarUnlocked('9-muscle-orange-bomber-combat', 3, 0)).toBe(true);
+    expect(carUnlockHint('9-muscle-orange-bomber-combat', 3, 0)).toBeNull();
+  });
+
   it('treats obsolete matrix ids as retired', () => {
     expect(isCarUnlocked('car-18', 8, 99)).toBe(false);
     expect(isCarUnlocked('delorean', 8, 99)).toBe(false);
@@ -113,6 +123,16 @@ describe('GarageCatalog', () => {
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
       '1-muscle-car-gray-number9',
+    ]);
+    expect(npcRosterForPlanet(3)).toEqual([
+      '2-sportivo-blue-combat',
+      '3-red-oh-red',
+      '5-all-pink-fury',
+      '6-suv-black-noir',
+      '7-fast-greenhish-machine',
+      '8-purple-crazymania',
+      '1-muscle-car-gray-number9',
+      '9-muscle-orange-bomber-combat',
     ]);
     expect(npcRosterForPlanet(8)).not.toContain('delorean');
     expect(npcRosterForPlanet(8)).not.toContain('car-20');

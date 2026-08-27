@@ -36,6 +36,7 @@ export const GARAGE_CATALOG: readonly CatalogEntry[] = [
   { carId: '7-fast-greenhish-machine', price: 320_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
   { carId: '8-purple-crazymania', price: 500_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
   { carId: '1-muscle-car-gray-number9', price: 98_000, unlockPlanet: 2, tier: CAR_TIER.HEAVY },
+  { carId: '9-muscle-orange-bomber-combat', price: 570_000, unlockPlanet: 3, tier: CAR_TIER.HEAVY },
 ];
 
 export function catalogEntry(carId: string): CatalogEntry | undefined {

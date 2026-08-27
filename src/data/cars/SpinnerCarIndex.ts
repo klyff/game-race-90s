@@ -267,6 +267,38 @@ const PURPLE_CRAZYMANIA = spinnerCar({
   },
 });
 
+/**
+ * Orange Bomber — wide-body combat muscle, twin hood gatlings.
+ * World 3 shop ($570k): beats Blue Combat (68) and Fast Greenhish (66) on
+ * speed / armor / planted grip, still under the old Marauder 78 u/s.
+ * Arcade consult: fun > realism, COM down (mass + grip), no ice-skate.
+ */
+const ORANGE_BOMBER = spinnerCar({
+  id: 'muscle-orange-bomber-combat',
+  displayName: 'Orange Bomber',
+  callName: 'Orange Bomber',
+  archetype: 'Orange combat muscle — twin hood gatlings, black center stripe',
+  perk: CAR_PERK.ARSENAL,
+  homePlanetId: 'bogmire-deep',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.HEAVY,
+  unlockPlanet: 3,
+  price: 570_000,
+  stats: {
+    mass: 1100,
+    enginePower: 35,
+    brakeForce: 50,
+    maxSpeed: 73,
+    grip: 33,
+    steerRate: 2.55,
+    steerSpeedFalloff: 0.4,
+    armor: 0.5,
+    ammoCapacity: 16,
+    collisionRadius: 1.78,
+    aimRadius: 3.75,
+  },
+});
+
 export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
   GRAY_MUSCLE,
   BLUE_COMBAT,
@@ -275,6 +307,7 @@ export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
   SUV_BLACK_NOIR,
   FAST_GREENHISH_MACHINE,
   PURPLE_CRAZYMANIA,
+  ORANGE_BOMBER,
 ];
 
 export function spinnerCarIds(): readonly string[] {

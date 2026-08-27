@@ -1,0 +1,17 @@
+{
+  "id": "9-muscle-orange-bomber-combat",
+  "inventory_n": 9,
+  "slug": "muscle-orange-bomber-combat",
+  "displayName": "Orange Bomber",
+  "spec": "wide-body muscle coupe, vibrant metallic orange, one black center stripe, twin hood gatling guns, Combat",
+  "source_run_dir": "/Users/klyff/git/game-race-90s/car-sprites/2026-08-26_muscle-orange-bomber-combat",
+  "hero_frame": 7,
+  "hero_role": "shop / garage / results still \u2014 always strip frame 7",
+  "hero_source": "keyed/out_frame_07.png",
+  "hero_file": "car_hero.png",
+  "frame_count": 32,
+  "direction": "counter_clockwise",
+  "index0": "6 o'clock facing camera",
+  "clock": "counter_clockwise",
+  "exported_at": "2026-08-27T23:39:10.728479+00:00"
+}

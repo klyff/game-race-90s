@@ -11,7 +11,7 @@
     {
       "id": "1-muscle-car-gray-number9",
       "displayName": "Gray Muscle",
-      "archetype": "Charcoal war coupe \u2014 roof turret, black hood stripe",
+      "archetype": "Charcoal war coupe — roof turret, black hood stripe",
       "image": "assets/cars/1-muscle-car-gray-number9/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -47,7 +47,7 @@
     {
       "id": "2-sportivo-blue-combat",
       "displayName": "Blue Combat Sport",
-      "archetype": "Blue sports coupe \u2014 hood gun, chunky combat kit",
+      "archetype": "Blue sports coupe — hood gun, chunky combat kit",
       "image": "assets/cars/2-sportivo-blue-combat/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -83,7 +83,7 @@
     {
       "id": "3-red-oh-red",
       "displayName": "Red Oh Red",
-      "archetype": "Red pixel sport \u2014 roof cannon, dual white stripes",
+      "archetype": "Red pixel sport — roof cannon, dual white stripes",
       "image": "assets/cars/3-red-oh-red/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -119,7 +119,7 @@
     {
       "id": "5-all-pink-fury",
       "displayName": "All Pink Fury",
-      "archetype": "Candy-pink convertible coupe \u2014 hood laser, open cabin",
+      "archetype": "Candy-pink convertible coupe — hood laser, open cabin",
       "image": "assets/cars/5-all-pink-fury/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -191,7 +191,7 @@
     {
       "id": "7-fast-greenhish-machine",
       "displayName": "Fast Greenhish Machine",
-      "archetype": "Green pixel sport \u2014 roof cannon, dual black stripes (Red Oh Red recolor)",
+      "archetype": "Green pixel sport — roof cannon, dual black stripes (Red Oh Red recolor)",
       "image": "assets/cars/7-fast-greenhish-machine/car_strip_64x64.png",
       "shadow": {
         "width": 42,
@@ -227,7 +227,7 @@
     {
       "id": "8-purple-crazymania",
       "displayName": "Purple Crazymania",
-      "archetype": "Purple pixel sport \u2014 roof cannon, wide arches, no center stripe",
+      "archetype": "Purple pixel sport — roof cannon, wide arches, no center stripe",
       "image": "assets/cars/8-purple-crazymania/car_strip_64x64.png",
       "shadow": {
         "width": 44,
@@ -259,6 +259,42 @@
       "frameCount": 32,
       "clock": "counter_clockwise",
       "framesJson": "assets/cars/8-purple-crazymania/car_strip_64x64.json"
+    },
+    {
+      "id": "9-muscle-orange-bomber-combat",
+      "displayName": "Orange Bomber",
+      "archetype": "Orange combat muscle — twin hood gatlings, black center stripe",
+      "image": "assets/cars/9-muscle-orange-bomber-combat/car_strip_64x64.png",
+      "shadow": {
+        "width": 42,
+        "height": 20
+      },
+      "stats": {
+        "mass": 1100,
+        "enginePower": 35,
+        "brakeForce": 50,
+        "maxSpeed": 73,
+        "grip": 33,
+        "steerRate": 2.55,
+        "steerSpeedFalloff": 0.4,
+        "armor": 0.5,
+        "ammoCapacity": 16,
+        "collisionRadius": 1.78,
+        "aimRadius": 3.75,
+        "collisionAlong": 1.78,
+        "collisionAcross": 1.2816,
+        "collisionSquareMin": 1.2816,
+        "collisionSquareMax": 1.78,
+        "collisionSquare": 1.5308
+      },
+      "perk": "arsenal",
+      "homePlanetId": "bogmire-deep",
+      "worldAdvantage": 0.7,
+      "frameWidth": 68,
+      "frameHeight": 68,
+      "frameCount": 32,
+      "clock": "counter_clockwise",
+      "framesJson": "assets/cars/9-muscle-orange-bomber-combat/car_strip_64x64.json"
     }
   ]
 }

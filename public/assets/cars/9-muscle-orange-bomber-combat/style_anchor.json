@@ -1,0 +1,14 @@
+{
+  "body_type": "wide-body muscle coupe, conventional hinged doors, long hood, short deck, not a wedge",
+  "forbidden": "DeLorean / wedge sports coupe / gull-wing / stainless unibody / lime-green pose car / roof cannon / dual racing stripes / bird's-eye roof plan",
+  "base_color": "vibrant metallic orange",
+  "stripes": "ONE matte black center racing stripe, hood-roof-trunk, flanked by the hood guns",
+  "hood_weapons": "twin black gatling guns mounted on the HOOD, one each side of the center stripe, barrels pointing forward",
+  "aero": "black front splitter, black side skirts, large black rear spoiler",
+  "wheels": "black five-spoke wheels with thin orange rims, under flared arches",
+  "mirrors": "small orange body-color side mirrors",
+  "windows": "blue-tinted windshield, simple pixel reflection, no busy interior",
+  "front_details": "quad rectangular white-blue headlights; thin orange markers below; dark grille; orange tow-hook accents on the splitter",
+  "paint_finish": "clean high-fidelity pixel art, black outlines, dithered metallic orange, not photoreal",
+  "locked_from": "attempts/out_frame_00_gz1.png (Klyff lock, 2026-08-27)"
+}

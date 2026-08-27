@@ -388,9 +388,6 @@ export interface MatrixManifestWrite {
 /** Writes every on-disk sheet. Runtime shop/race hide retired Marauder and parked Delorean. */
 export function writeMatrixManifest(): MatrixManifestWrite {
   const folders = discoverMatrixHeroNumbers();
-  if (folders.length === 0) {
-    throw new Error(`no public/matrix_car/{N}_hero folders under ${MATRIX_ROOT}`);
-  }
   const previous = readPreviousSheets();
   const playable: number[] = [];
   const cars: CarSheetManifest[] = folders.map(n => {
@@ -399,12 +396,19 @@ export function writeMatrixManifest(): MatrixManifestWrite {
     }
     return sheetForFolder(n, previous);
   });
-  cars.push(deloreanSheet(previous));
+  if (deloreanHasStrip() || existsSync(join(REPO_ROOT, 'public', deloreanHero300Url()))) {
+    cars.push(deloreanSheet(previous));
+  }
   const spinnerSlugs = discoverSpinnerSlugs();
   for (const slug of spinnerSlugs) {
     cars.push(sheetForSpinner(slug, previous));
   }
   const deloreanPlayable = deloreanHasStrip();
+  if (cars.length === 0) {
+    throw new Error(
+      `no car sheets found (matrix under ${MATRIX_ROOT} or spinner under ${SPINNER_ROOT})`,
+    );
+  }
 
   const manifest: CarSetManifest = {
     frameWidth: CAR_FRAME_WIDTH,

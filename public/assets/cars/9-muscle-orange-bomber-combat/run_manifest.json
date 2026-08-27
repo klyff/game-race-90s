@@ -1,0 +1,214 @@
+{
+  "run_id": "2026-08-26_muscle-orange-bomber-combat",
+  "spec": {
+    "body_type": "wide-body muscle coupe, conventional hinged doors, long hood, short deck, not a wedge",
+    "base_color": "vibrant metallic orange",
+    "livery": "matte black center racing stripe hood-roof-trunk; twin hood gatling guns flanking the stripe; black spoiler, splitter and side skirts; blue-tinted windshield; glowing white-blue headlights; black five-spoke wheels with thin orange rims",
+    "style_tag": "Combat",
+    "background_hex": "#00B140",
+    "display_name": "Orange Bomber"
+  },
+  "style_source": "owner painting posed at ~4 o'clock / 300\u00b0 (style only, not yaw)",
+  "frames": {
+    "0": {
+      "result": "LOCKED",
+      "retries": 2,
+      "status": "HUMAN_LOCKED_GZ1",
+      "path": "out_frame_00.png",
+      "note": "Klyff locked gz1 as grau zero. Proceed 1-16 CCW then mirror 17-31.",
+      "attempts": [
+        {
+          "id": "r0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r0.png",
+          "diff": "scale 970 vs 742 (30.9%); axis (23.5, -6.5) vs (-4.3, 138.0); aspect closer to frame 4 (4 o'clock leak)"
+        },
+        {
+          "id": "r1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r1.png",
+          "diff": "scale 872 vs 742 (17.6%); axis (-1.5, -7.5) vs (-4.3, 138.0); aspect 0.452 vs 1.175 (too top-down); yaw reads 6h"
+        },
+        {
+          "id": "r2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_r2.png",
+          "diff": "scale 820 vs 742 (10.5%); axis (3.0, 101.5) vs (-4.3, 138.0); aspect closer to frame 14 (yaw drift)"
+        },
+        {
+          "id": "gz0",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_gz0.png",
+          "yaw": "6h iso 2:1 OK",
+          "diff": "scale 1014 vs 742 (36.8%); axis too high; aspect 1.226 OK",
+          "metrics": {
+            "bbox": [
+              786,
+              641
+            ],
+            "aspect": 1.226,
+            "diag": 1014.2,
+            "center": [
+              507.0,
+              535.5
+            ]
+          }
+        },
+        {
+          "id": "gz1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_gz1.png",
+          "yaw": "6h front OK",
+          "diff": "scale/axis OK; aspect 1.410 vs 1.175 (too flat)",
+          "metrics": {
+            "bbox": [
+              578,
+              410
+            ],
+            "aspect": 1.41,
+            "diag": 708.6,
+            "center": [
+              508.0,
+              673.0
+            ]
+          }
+        },
+        {
+          "id": "gz2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_00_gz2.png",
+          "yaw": "6h iso 2:1 OK",
+          "diff": "scale 850 vs 742 (14.6%); axis too high; aspect OK",
+          "metrics": {
+            "bbox": [
+              659,
+              537
+            ],
+            "aspect": 1.227,
+            "diag": 850.1,
+            "center": [
+              509.5,
+              557.5
+            ]
+          }
+        }
+      ],
+      "locked_from": "attempts/out_frame_00_gz1.png"
+    },
+    "1": {
+      "result": "LOCKED",
+      "retries": 2,
+      "status": "HUMAN_LOCKED_T0",
+      "path": "out_frame_01.png",
+      "note": "Klyff locked t0. Fleet-clock CCW 5:37. Proceed 2-16.",
+      "attempts": [
+        {
+          "id": "t0",
+          "result": "FAIL_ASPECT_ONLY",
+          "path": "attempts/out_frame_01_t0.png",
+          "diff": "aspect 1.474 vs 1.226; scale 748 OK; center y 663 OK; cyan CCW"
+        },
+        {
+          "id": "t1",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_t1.png",
+          "diff": "scale 891; axis high; aspect 1.40 slot confusion"
+        },
+        {
+          "id": "t2",
+          "result": "FAIL",
+          "path": "attempts/out_frame_01_t2.png",
+          "diff": "axis high (y22 vs 139); aspect 1.443; cyan CCW; palette soft"
+        }
+      ],
+      "locked_from": "attempts/out_frame_01_t0.png"
+    },
+    "2": {
+      "result": "LOCKED",
+      "status": "HUMAN_LOCKED_R0",
+      "path": "out_frame_02.png",
+      "locked_from": "attempts/out_frame_02_r0.png",
+      "note": "Klyff locked r0. Fleet CCW 22.5\u00b0. Proceed 3-16."
+    },
+    "3": {
+      "result": "ACCEPT_FLEET",
+      "path": "out_frame_03.png",
+      "note": "Fleet yaw OK first try; DeLorean gates may soft-fail"
+    },
+    "4": {
+      "result": "ACCEPT_FLEET",
+      "path": "out_frame_04.png"
+    },
+    "5": {
+      "result": "ACCEPT_FLEET",
+      "path": "out_frame_05.png"
+    },
+    "6": {
+      "result": "ACCEPT_FLEET",
+      "path": "out_frame_06.png"
+    },
+    "7": {
+      "result": "ACCEPT_FLEET",
+      "path": "out_frame_07.png",
+      "locked_from": "attempts/out_frame_07_r2.png",
+      "note": "HERO \u2014 r2 best match to fleet iso side",
+      "attempts": [
+        "r0 under-rotated",
+        "r1 flat side",
+        "r2 iso hero"
+      ]
+    },
+    "8": {
+      "result": "ACCEPT_SOFT",
+      "retries": 0,
+      "status": "CONTINUE_CCW",
+      "path": "out_frame_08.png"
+    },
+    "9": {
+      "result": "ACCEPT_SOFT",
+      "retries": 0,
+      "status": "CONTINUE_CCW",
+      "path": "out_frame_09.png"
+    },
+    "10": {
+      "result": "ACCEPT_SOFT",
+      "retries": 0,
+      "status": "CONTINUE_CCW",
+      "path": "out_frame_10.png"
+    },
+    "11": {
+      "result": "ACCEPT_SOFT",
+      "retries": 0,
+      "status": "CONTINUE_CCW",
+      "path": "out_frame_11.png"
+    },
+    "12": {
+      "result": "ACCEPT_SOFT",
+      "retries": 0,
+      "status": "CONTINUE_CCW",
+      "path": "out_frame_12.png"
+    },
+    "13": {
+      "result": "ACCEPT_SOFT",
+      "retries": 0,
+      "status": "CONTINUE_CCW",
+      "path": "out_frame_13.png"
+    },
+    "14": {
+      "result": "ACCEPT_FLEET",
+      "path": "out_frame_14.png",
+      "status": "CONTINUE_CCW"
+    },
+    "15": {
+      "result": "ACCEPT_FLEET",
+      "path": "out_frame_15.png",
+      "status": "CONTINUE_CCW"
+    },
+    "16": {
+      "result": "ACCEPT_FLEET",
+      "path": "out_frame_16.png",
+      "status": "POLE_REAR_12H",
+      "note": "Symmetric rear 180\u00b0; axis slightly high but yaw OK"
+    }
+  }
+}
