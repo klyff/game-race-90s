@@ -9,7 +9,6 @@ import { isSpinnerCarId } from '../../data/cars/CarManifest.ts';
 import {
   isNpcAllowedCarId,
   isOutOfServiceCarId,
-  isPlayerOnlyCarId,
   isRetiredCarId,
   isUnavailableCarId,
 } from '../../data/cars/FleetStatus.ts';
