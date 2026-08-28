@@ -22,6 +22,12 @@ import { TRACKS } from '../data/tracks/registry.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { enableTourMode, enableTourModeFromSearch } from '../adapters/progress/TourMode.ts';
 import {
+  enableMcflyCheatFromSearch,
+  MCFLY_CAR_ID,
+  MCFLY_PILOT,
+  mcflyTrackFromSearch,
+} from '../adapters/progress/McflyCheat.ts';
+import {
   enableWatchModeFromSearch,
   watchCarFromSearch,
   watchPilotFromSearch,
@@ -253,6 +259,24 @@ export class BootScene extends Phaser.Scene {
       }
       if (typeof location !== 'undefined') {
         enableTourModeFromSearch(location.search);
+        if (enableMcflyCheatFromSearch(location.search)) {
+          const trackId = mcflyTrackFromSearch(location.search);
+          if (trackId !== undefined) {
+            this.scene.start(SCENE_KEY.RACE, {
+              manifest: liveManifest,
+              linesByTrack,
+              carId: MCFLY_CAR_ID,
+              trackId,
+            });
+            return;
+          }
+          this.scene.start(SCENE_KEY.GARAGE, {
+            manifest: liveManifest,
+            linesByTrack,
+            selectedPilot: MCFLY_PILOT,
+          });
+          return;
+        }
         if (enableDebugIaModeFromSearch(location.search)) {
           enableTourMode();
           const trackId =
