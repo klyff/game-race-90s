@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 import { ORIGIN_PANELS } from '../data/cards/OriginComic.ts';
+import {
+  rollOriginEntryStrips,
+  type OriginStripPanel,
+} from '../data/cards/OriginComicStrips.ts';
 import { SPLASH_CARDS } from '../data/cards/SplashCards.ts';
 import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
@@ -14,11 +18,13 @@ interface OriginComicData {
 /**
  * Four HQ panels: how street racing went global. Space/Enter advances.
  * Esc returns to splash. Last page opens character select.
+ * Left column: cartoon comic strips rolled once per entry.
  */
 export class OriginComicScene extends Phaser.Scene {
   private payload!: OriginComicData;
   private page = 0;
   private leaving = false;
+  private entryStrips: readonly (readonly OriginStripPanel[])[] = [];
 
   constructor() {
     super(SCENE_KEY.ORIGIN_COMIC);
@@ -28,6 +34,7 @@ export class OriginComicScene extends Phaser.Scene {
     this.payload = data;
     this.page = 0;
     this.leaving = false;
+    this.entryStrips = rollOriginEntryStrips((Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0);
   }
 
   create(): void {
@@ -79,6 +86,7 @@ export class OriginComicScene extends Phaser.Scene {
     this.children.removeAll(true);
     const width = this.scale.width;
     const height = this.scale.height;
+    // Title-safe ~6% margins (game-ui-design safe zone).
     const padX = width * 0.06;
     const padY = height * 0.07;
     this.add.rectangle(0, 0, width, height, 0x0c0a10, 1).setOrigin(0, 0);
@@ -115,6 +123,10 @@ export class OriginComicScene extends Phaser.Scene {
         .setDisplaySize(faceSize, faceSize);
     }
 
+    const stripColW = boxW * 0.58;
+    const strips = this.entryStrips[this.page] ?? [];
+    this.drawComicStrips(padX + 18, padY + 100, stripColW, boxH - 240, strips);
+
     this.add
       .text(padX + 18, padY + boxH - 120, panel.caption, {
         fontFamily: 'monospace',
@@ -134,5 +146,47 @@ export class OriginComicScene extends Phaser.Scene {
         strokeThickness: 4,
       })
       .setOrigin(0.5, 0.5);
+  }
+
+  /** Stacked comic panels — one job: voice beats for this page's face. */
+  private drawComicStrips(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    strips: readonly OriginStripPanel[],
+  ): void {
+    if (strips.length === 0 || height < 48) {
+      return;
+    }
+    const gap = 10;
+    const panelH = Math.min(110, (height - gap * (strips.length - 1)) / strips.length);
+    for (let i = 0; i < strips.length; i += 1) {
+      const strip = strips[i];
+      if (strip === undefined) {
+        continue;
+      }
+      const top = y + i * (panelH + gap);
+      const jog = (i % 2) * 8;
+      this.add
+        .rectangle(x + jog, top, width - jog, panelH, 0xfff8e8, 1)
+        .setOrigin(0, 0)
+        .setStrokeStyle(3, 0x1a1210);
+      this.add
+        .text(x + jog + 12, top + 8, strip.badge, {
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          color: '#8b1e1e',
+        })
+        .setOrigin(0, 0);
+      this.add
+        .text(x + jog + 12, top + 28, strip.line, {
+          fontFamily: 'monospace',
+          fontSize: '16px',
+          color: '#1a1210',
+          wordWrap: { width: width - jog - 28 },
+        })
+        .setOrigin(0, 0);
+    }
   }
 }
