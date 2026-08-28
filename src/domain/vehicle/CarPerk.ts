@@ -171,10 +171,15 @@ export const CAR_PERKS: Readonly<Record<CarPerkId, CarPerkProfile>> = Object.fre
   [CAR_PERK.FLUX]: profile({
     id: CAR_PERK.FLUX,
     displayName: 'Flux',
-    description: 'Sticks on every world. Cuts dirt, bites under braking, and hums a little extra on the straight.',
-    offroadRecovery: 0.8,
-    brakingGripMultiplier: 1.25,
-    turboSpeedBonus: 0.08,
+    description: 'Best of everything. Sticks on every world, bites under braking, and pulls away on the straight.',
+    contactMassMultiplier: 1.45,
+    impactDamageMultiplier: 0.45,
+    dealtImpactDamageMultiplier: 1.35,
+    offroadRecovery: 0.9,
+    brakingGripMultiplier: 1.35,
+    turboSpeedBonus: 0.12,
+    reloadMultiplier: 1.15,
+    missileStockMultiplier: 1.25,
   }),
 });
 

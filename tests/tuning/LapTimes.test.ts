@@ -184,7 +184,7 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
     }
   });
 
-  it('Blue Combat has the highest authored top speed in the live fleet', () => {
+  it('DeLorean has the highest authored top speed in the live fleet', () => {
     const results: Array<{ id: string; result: LapResult; maxSpeed: number }> = [];
 
     for (const carId of carIds) {
@@ -193,11 +193,12 @@ describe('LapTimes — full-lap simulation with PaceDriver', () => {
       results.push({ id: carId, result, maxSpeed: sheet.stats.maxSpeed });
     }
 
-    const sportivo = results.find(r => r.id === '2-sportivo-blue-combat')!;
-    expect(sportivo.maxSpeed).toBeGreaterThan(
-      Math.max(...results.filter(r => r.id !== sportivo.id).map(r => r.maxSpeed)),
+    const delorean = results.find(r => r.id === '10-delorean-steel-flux')!;
+    expect(delorean.maxSpeed).toBe(136);
+    expect(delorean.maxSpeed).toBeGreaterThan(
+      Math.max(...results.filter(r => r.id !== delorean.id).map(r => r.maxSpeed)),
     );
-    expect(sportivo.result.completed).toBe(true);
+    expect(delorean.result.completed).toBe(true);
   });
 
   it('projection stays sane: maxAbsLateralOffset within wall clamp', () => {

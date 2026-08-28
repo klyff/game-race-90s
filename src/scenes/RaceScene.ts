@@ -55,6 +55,9 @@ import { TuningOverlay } from '../adapters/render/TuningOverlay.ts';
 import { formatAiOverlay } from '../adapters/render/AiOverlayFormat.ts';
 import { formatClockYawLines } from '../adapters/render/TuningOverlayFormat.ts';
 import { TyreMarks } from '../adapters/render/TyreMarks.ts';
+import { FluxLightningEffect } from '../adapters/render/FluxLightningEffect.ts';
+import { isFluxOverdriveActive } from '../adapters/render/FluxOverdrive.ts';
+import { FluxTrailEffect } from '../adapters/render/FluxTrailEffect.ts';
 import { CrowdView } from '../adapters/render/CrowdView.ts';
 import { VehicleView } from '../adapters/render/VehicleView.ts';
 import {
@@ -277,6 +280,8 @@ export class RaceScene extends Phaser.Scene {
   private projection!: IsoProjection;
   private trackRenderer!: TrackRenderer;
   private tyreMarks!: TyreMarks;
+  private fluxTrail!: FluxTrailEffect;
+  private fluxLightning!: FluxLightningEffect;
   private explosions!: ExplosionEffect;
   private scraps!: MetalScrapEffect;
   private wood!: WoodDebrisEffect;
@@ -422,6 +427,8 @@ export class RaceScene extends Phaser.Scene {
       disableGroundTile: this.debugIa,
     });
     this.tyreMarks = new TyreMarks(this, this.projection);
+    this.fluxTrail = new FluxTrailEffect(this, this.projection);
+    this.fluxLightning = new FluxLightningEffect(this, this.projection);
     this.hitRewards = new HitRewardEffect(this, this.projection);
     this.scraps = new MetalScrapEffect(this, this.projection);
     this.wood = new WoodDebrisEffect(this, this.projection);
@@ -520,6 +527,8 @@ export class RaceScene extends Phaser.Scene {
     // passing. Calling it per car aged them five times too fast.
     if (!this.debugIa) {
       this.tyreMarks.update(deltaSeconds);
+      this.fluxTrail.update(deltaSeconds);
+      this.fluxLightning.update(deltaSeconds);
     }
     this.presentExplosions();
     this.presentScraps();
@@ -862,11 +871,24 @@ export class RaceScene extends Phaser.Scene {
         return;
       }
 
-      view.sync(racer.state, { turboActive: racer.turboBurning });
+      const forward = racer.telemetry?.forwardSpeed ?? 0;
+      const flux =
+        racer.telemetry !== null && isFluxOverdriveActive(racer.carId, forward);
+      view.sync(racer.state, {
+        turboActive: racer.turboBurning || flux,
+        fluxOverdrive: flux,
+      });
       if (racer.telemetry !== null) {
-        // Per-car index: `TyreMarks` keeps a wheel trail per car, and sharing one
-        // would join two cars' wheels with a streak across the track.
-        this.tyreMarks.record(index, racer.state, racer.telemetry);
+        // Per-car index: trails must not share a previous-point latch across cars.
+        if (flux) {
+          const intensity = Math.min(1, Math.abs(forward) / Math.max(1, racer.stats.maxSpeed));
+          this.tyreMarks.release(index);
+          this.fluxTrail.record(index, racer.state, intensity);
+          this.fluxLightning.pulse(racer.state, intensity);
+        } else {
+          this.fluxTrail.release(index);
+          this.tyreMarks.record(index, racer.state, racer.telemetry);
+        }
       }
     });
     const leader = this.field.standings[0];
@@ -1657,6 +1679,8 @@ export class RaceScene extends Phaser.Scene {
     this.pendingScraps = [];
     this.loop.reset();
     this.tyreMarks.clear();
+    this.fluxTrail.clear();
+    this.fluxLightning.clear();
     this.explosions.clear();
     this.scraps.clear();
     this.wood.clear();
@@ -1898,6 +1922,8 @@ export class RaceScene extends Phaser.Scene {
     }
     const fxOn = !this.paintHidden.has('fx');
     this.explosions.setVisible(fxOn);
+    this.fluxLightning.setVisible(fxOn);
+    this.fluxTrail.setVisible(fxOn && !this.paintHidden.has('tyres'));
     this.wood.setVisible(fxOn);
     this.victory.setVisible(fxOn);
   }
@@ -2011,6 +2037,8 @@ export class RaceScene extends Phaser.Scene {
     }
     this.hazardSprites = [];
     this.tyreMarks.destroy();
+    this.fluxTrail.destroy();
+    this.fluxLightning.destroy();
     this.hitRewards.destroy();
     this.scraps.destroy();
     this.wood.destroy();

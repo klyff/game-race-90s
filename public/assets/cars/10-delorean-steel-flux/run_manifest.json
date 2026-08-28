@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-08-27_delorean-steel-flux",
+  "spec": {
+    "body_type": "DeLorean DMC-12 wide-body steel wedge, gull-wing doors, brushed stainless unibody, louvred rear deck",
+    "base_color": "brushed stainless steel silver",
+    "livery": "no racing stripes; black louvres and trim; blue-tinted glass; rectangular white-yellow headlights; red-orange taillights; black wheels",
+    "style_tag": "Flux",
+    "background_hex": "#00B140",
+    "display_name": "DeLorean"
+  },
+  "status": "FRAME0",
+  "frames": {
+    "0": {
+      "result": "LOCKED",
+      "path": "out_frame_00.png"
+    }
+  }
+}

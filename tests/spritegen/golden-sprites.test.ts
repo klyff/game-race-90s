@@ -30,6 +30,8 @@ describe('imported fleet sheets', () => {
       '6-suv-black-noir',
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
+      '9-muscle-orange-bomber-combat',
+      '10-delorean-steel-flux',
     ]);
     for (const car of manifest.cars) {
       expect(isBBoxSheet(car)).toBe(true);
@@ -53,6 +55,8 @@ describe('imported fleet sheets', () => {
       '6-suv-black-noir',
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
+      '9-muscle-orange-bomber-combat',
+      '10-delorean-steel-flux',
     ]);
   });
 });

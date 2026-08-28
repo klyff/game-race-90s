@@ -8,6 +8,7 @@
  */
 
 import { isSpinnerCarId } from '../../data/cars/CarManifest.ts';
+import { isNpcAllowedCarId } from '../../data/cars/FleetStatus.ts';
 import { JOKER_PILOTS, REGULAR_PILOTS } from '../../data/pilots/PilotRoster.ts';
 import type { DriverProfile } from '../ai/DriverProfile.ts';
 import { PLANETS, TRACKS_PER_PLANET, planetTrackId } from '../../data/tracks/planets.ts';
@@ -87,7 +88,7 @@ function repeatToCount(ids: readonly string[], count: number): readonly string[]
 }
 
 export function watchCarIds(carIds: readonly string[]): readonly string[] {
-  const spinner = carIds.filter(isSpinnerCarId);
+  const spinner = carIds.filter(id => isSpinnerCarId(id) && isNpcAllowedCarId(id));
   if (spinner.length >= WATCH_RACER_COUNT) {
     return spinner;
   }

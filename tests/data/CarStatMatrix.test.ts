@@ -68,6 +68,8 @@ describe('cars.json is the live spinner fleet', () => {
       '6-suv-black-noir',
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
+      '9-muscle-orange-bomber-combat',
+      '10-delorean-steel-flux',
     ]);
     expect(manifest.cars.some(car => car.id === 'car_18' || car.id === 'delorean')).toBe(false);
   });

@@ -21,6 +21,7 @@ import {
   catalogEntry,
   carUnlockHint,
   isCarUnlocked,
+  isPlayerOnlyCarId,
   listPrice,
   sellPrice,
   shopCarIds,
@@ -787,12 +788,13 @@ export class GarageScene extends Phaser.Scene {
       const tour = isTourModeOn();
       this.carNameText.setText(this.carName(carId));
       this.valueText.setColor(owned ? GO : unlocked || tour ? GOLD : LOCKED);
+      const exclusive = isPlayerOnlyCarId(carId) ? '  ·  PLAYER ONLY' : '';
       const statusBit = owned
         ? equipped
-          ? 'OWNED  ·  EQUIPPED'
-          : 'OWNED'
+          ? `OWNED  ·  EQUIPPED${exclusive}`
+          : `OWNED${exclusive}`
         : unlocked
-          ? `BUY FOR  ${formatCash(listPrice(carId))}`
+          ? `BUY FOR  ${formatCash(listPrice(carId))}${exclusive}`
           : hint ?? 'LOCKED';
       this.valueText.setText(statusBit);
       this.btnBuy.setText(

@@ -87,6 +87,26 @@ describe('assignNpcCars', () => {
     expect(new Set(field.npcIds)).toEqual(new Set(['1-muscle-car-gray-number9']));
   });
 
+  it('never hands NPCs the player-only DeLorean, even when it is in the fleet', () => {
+    const fleet = [
+      '2-sportivo-blue-combat',
+      '10-delorean-steel-flux',
+      '1-muscle-car-gray-number9',
+    ];
+    const field = resolveCareerField(
+      fleet,
+      fleet,
+      '2-sportivo-blue-combat',
+      4,
+      '2-sportivo-blue-combat',
+    );
+    expect(field.npcIds).not.toContain('10-delorean-steel-flux');
+    expect(new Set(field.npcIds)).toEqual(new Set(['1-muscle-car-gray-number9']));
+    expect(assignNpcCars(fleet, '2-sportivo-blue-combat', 3)).not.toContain(
+      '10-delorean-steel-flux',
+    );
+  });
+
   it('tags reused models with a seat so finish state cannot leak across twins', () => {
     const npcs = assignNpcCars(['a', 'b', 'c'], 'a', 5);
     const seats = npcs.map((id, index) => seatCarId(id, index));

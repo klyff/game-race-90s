@@ -43,6 +43,8 @@ const SHADOW_ALPHA = 0.35;
 export interface VehicleViewExtras {
   /** Consumable turbo is burning: tint the body and throw exhaust. */
   readonly turboActive?: boolean;
+  /** DeLorean Flux overdrive (≥160 MPH): electric body tint + hotter exhaust. */
+  readonly fluxOverdrive?: boolean;
 }
 
 export interface VehicleViewOptions {
@@ -146,14 +148,17 @@ export class VehicleView {
     this.shadow.setDepth(depth - OWN_SHADOW_DEPTH_OFFSET);
 
     const turbo = extras.turboActive === true;
-    if (turbo) {
+    const flux = extras.fluxOverdrive === true;
+    if (flux) {
+      this.sprite.setTint(0xa8e8ff);
+    } else if (turbo) {
       this.sprite.setTint(0xffd080);
     } else {
       this.sprite.clearTint();
     }
 
     if (!this.farLod) {
-      this.placeExhaust(state, depth, turbo);
+      this.placeExhaust(state, depth, turbo || flux, flux);
     }
   }
 
@@ -175,7 +180,12 @@ export class VehicleView {
     }
   }
 
-  private placeExhaust(state: VehicleState, depth: number, turbo: boolean): void {
+  private placeExhaust(
+    state: VehicleState,
+    depth: number,
+    turbo: boolean,
+    flux: boolean = false,
+  ): void {
     if (!turbo) {
       for (const flame of this.exhaust) {
         flame.setVisible(false);
@@ -184,6 +194,7 @@ export class VehicleView {
     }
     this.exhaustPulse += 1;
     const forward = fromAngle(state.heading);
+    const colors = flux ? [0xfff1a8, 0xff6a1a, 0x3ad0ff] : [0xff9a2a, 0xff9a2a, 0xff9a2a];
     for (let i = 0; i < this.exhaust.length; i += 1) {
       const flame = this.exhaust[i];
       if (flame === undefined) {
@@ -195,8 +206,9 @@ export class VehicleView {
       flame
         .setVisible(true)
         .setPosition(screen.x, screen.y)
-        .setScale(flicker, flicker * 0.7)
-        .setAlpha(0.75 - i * 0.18)
+        .setFillStyle(colors[i] ?? colors[0]!, 1)
+        .setScale(flicker * (flux ? 1.25 : 1), flicker * (flux ? 0.85 : 0.7))
+        .setAlpha(0.8 - i * 0.16)
         .setDepth(depth + 0.03);
     }
   }

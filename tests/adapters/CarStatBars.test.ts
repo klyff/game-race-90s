@@ -63,10 +63,11 @@ describe('CarStatBars — real roster', () => {
     }
   });
 
-  it('Blue Combat has the highest SPEED fraction, exactly 1', () => {
-    const bars = statBars(manifest, '2-sportivo-blue-combat');
+  it('DeLorean has the highest SPEED fraction, exactly 1', () => {
+    const bars = statBars(manifest, '10-delorean-steel-flux');
     const speedBar = bars.find(b => b.label === 'SPEED')!;
     expect(speedBar.fraction).toBe(1);
+    expect(speedBar.value).toBe(136);
 
     for (const carId of carIds) {
       const otherSpeed = statBars(manifest, carId).find(b => b.label === 'SPEED')!.fraction;
@@ -74,21 +75,28 @@ describe('CarStatBars — real roster', () => {
     }
   });
 
-  it('Pink Fury has the highest GRIP fraction — planted convertible, not ice-skate', () => {
-    const grip = statBars(manifest, '5-all-pink-fury').find(b => b.label === 'GRIP')!;
+  it('DeLorean has the highest GRIP fraction — planted Flux flagship', () => {
+    const grip = statBars(manifest, '10-delorean-steel-flux').find(b => b.label === 'GRIP')!;
     expect(grip.fraction).toBe(1);
-    expect(grip.value).toBe(34);
+    expect(grip.value).toBe(42);
 
     for (const carId of carIds) {
       expect(statBars(manifest, carId).find(b => b.label === 'GRIP')!.fraction).toBeLessThanOrEqual(grip.fraction);
     }
   });
 
-  it('Gray Muscle has the highest ARMOR fraction', () => {
-    const armor = statBars(manifest, '1-muscle-car-gray-number9').find(b => b.label === 'ARMOR')!.fraction;
+  it('DeLorean has the highest ARMOR fraction', () => {
+    const armor = statBars(manifest, '10-delorean-steel-flux').find(b => b.label === 'ARMOR')!.fraction;
+    expect(armor).toBe(1);
 
     for (const carId of carIds) {
       expect(statBars(manifest, carId).find(b => b.label === 'ARMOR')!.fraction).toBeLessThanOrEqual(armor);
+    }
+  });
+
+  it('DeLorean fills every comparative bar to max', () => {
+    for (const bar of statBars(manifest, '10-delorean-steel-flux')) {
+      expect(bar.fraction).toBe(1);
     }
   });
 

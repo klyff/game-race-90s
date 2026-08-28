@@ -299,6 +299,40 @@ const ORANGE_BOMBER = spinnerCar({
   },
 });
 
+/**
+ * DeLorean — brushed-steel time machine. Best car in the live roster.
+ * World 1 shop flagship at $3M. Player-only: NPCs never drive it.
+ * Pixel strip from the pose-gabarito DeLorean (32 CCW). maxSpeed 136 unlocks
+ * the fire/lightning FX band at 140 MPH. Arcade: planted COM, FLUX perk
+ * dominates every bar vs Orange Bomber; armored so high speed does not equal
+ * glass cannon.
+ */
+const DELOREAN = spinnerCar({
+  id: 'delorean-steel-flux',
+  displayName: 'DeLorean',
+  callName: 'DeLorean',
+  archetype: 'Brushed-steel DeLorean wedge — gull-wing, louvres, flux core',
+  perk: CAR_PERK.FLUX,
+  homePlanetId: 'chrome-verge',
+  worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
+  tier: SPINNER_TIER.HEAVY,
+  unlockPlanet: 1,
+  price: 3_000_000,
+  stats: {
+    mass: 1120,
+    enginePower: 48,
+    brakeForce: 58,
+    maxSpeed: 136,
+    grip: 42,
+    steerRate: 3.05,
+    steerSpeedFalloff: 0.3,
+    armor: 0.82,
+    ammoCapacity: 24,
+    collisionRadius: 1.75,
+    aimRadius: 4.2,
+  },
+});
+
 export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
   GRAY_MUSCLE,
   BLUE_COMBAT,
@@ -308,6 +342,7 @@ export const SPINNER_CAR_INDEX: readonly SpinnerCarIdentity[] = [
   FAST_GREENHISH_MACHINE,
   PURPLE_CRAZYMANIA,
   ORANGE_BOMBER,
+  DELOREAN,
 ];
 
 export function spinnerCarIds(): readonly string[] {

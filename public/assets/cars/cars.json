@@ -295,6 +295,42 @@
       "frameCount": 32,
       "clock": "counter_clockwise",
       "framesJson": "assets/cars/9-muscle-orange-bomber-combat/car_strip_64x64.json"
+    },
+    {
+      "id": "10-delorean-steel-flux",
+      "displayName": "DeLorean",
+      "archetype": "Brushed-steel DeLorean wedge — gull-wing, louvres, flux core",
+      "image": "assets/cars/10-delorean-steel-flux/car_strip_64x64.png",
+      "shadow": {
+        "width": 42,
+        "height": 20
+      },
+      "stats": {
+        "mass": 1120,
+        "enginePower": 48,
+        "brakeForce": 58,
+        "maxSpeed": 136,
+        "grip": 42,
+        "steerRate": 3.05,
+        "steerSpeedFalloff": 0.3,
+        "armor": 0.82,
+        "ammoCapacity": 24,
+        "collisionRadius": 1.75,
+        "aimRadius": 4.2,
+        "collisionAlong": 1.75,
+        "collisionAcross": 1.26,
+        "collisionSquareMin": 1.26,
+        "collisionSquareMax": 1.75,
+        "collisionSquare": 1.505
+      },
+      "perk": "flux",
+      "homePlanetId": "chrome-verge",
+      "worldAdvantage": 0.7,
+      "frameWidth": 68,
+      "frameHeight": 68,
+      "frameCount": 32,
+      "clock": "counter_clockwise",
+      "framesJson": "assets/cars/10-delorean-steel-flux/car_strip_64x64.json"
     }
   ]
 }

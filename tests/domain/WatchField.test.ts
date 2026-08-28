@@ -39,6 +39,18 @@ describe('WatchField', () => {
     expect(tracks[1]).toBe('chrome-verge-2');
   });
 
+  it('never fields the player-only DeLorean on a watch grid', () => {
+    const mixed = [
+      'car-1',
+      '10-delorean-steel-flux',
+      '2-sportivo-blue-combat',
+      '1-muscle-car-gray-number9',
+    ];
+    const field = watchCarIds(mixed);
+    expect(field).not.toContain('10-delorean-steel-flux');
+    expect(new Set(field)).toEqual(new Set(SPINNER));
+  });
+
   it('never falls back to matrix ids and repeats spinner models to fill the grid', () => {
     const mixed = ['car-1', 'car_21', 'delorean', 'nogo-99', ...SPINNER];
     const field = watchCarIds(mixed);

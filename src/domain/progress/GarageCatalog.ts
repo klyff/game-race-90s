@@ -6,7 +6,15 @@
  */
 
 import { isSpinnerCarId } from '../../data/cars/CarManifest.ts';
-import { isOutOfServiceCarId, isRetiredCarId, isUnavailableCarId } from '../../data/cars/FleetStatus.ts';
+import {
+  isNpcAllowedCarId,
+  isOutOfServiceCarId,
+  isPlayerOnlyCarId,
+  isRetiredCarId,
+  isUnavailableCarId,
+} from '../../data/cars/FleetStatus.ts';
+
+export { isPlayerOnlyCarId, isNpcAllowedCarId, PLAYER_ONLY_CAR_IDS } from '../../data/cars/FleetStatus.ts';
 
 export const STARTER_PRICE = 50_000;
 export const SELL_FRACTION = 0.8;
@@ -27,12 +35,13 @@ export interface CatalogEntry {
   readonly tier: CarTier;
 }
 
-/** Shop order. Matrix / Delorean are obsolete and not listed. */
+/** Shop order. Legacy matrix id `delorean` is obsolete; live car is `10-delorean-steel-flux`. */
 export const GARAGE_CATALOG: readonly CatalogEntry[] = [
   { carId: '2-sportivo-blue-combat', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
   { carId: '3-red-oh-red', price: 62_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
   { carId: '5-all-pink-fury', price: 87_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
   { carId: '6-suv-black-noir', price: 200_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: '10-delorean-steel-flux', price: 3_000_000, unlockPlanet: 1, tier: CAR_TIER.HEAVY },
   { carId: '7-fast-greenhish-machine', price: 320_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
   { carId: '8-purple-crazymania', price: 500_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
   { carId: '1-muscle-car-gray-number9', price: 98_000, unlockPlanet: 2, tier: CAR_TIER.HEAVY },
@@ -127,11 +136,14 @@ export function carUnlockHint(
   return 'WIN MORE RACES TO UNLOCK';
 }
 
-/** Cars NPCs may drive on this planet. Spinner-only. */
+/** Cars NPCs may drive on this planet. Spinner-only; never player-only flagships. */
 export function npcRosterForPlanet(planetIndex: number): readonly string[] {
   const planet = Number.isFinite(planetIndex) ? Math.max(1, Math.floor(planetIndex)) : 1;
   return GARAGE_CATALOG.filter(entry => {
     if (!isSpinnerCarId(entry.carId) || isOutOfServiceCarId(entry.carId)) {
+      return false;
+    }
+    if (!isNpcAllowedCarId(entry.carId)) {
       return false;
     }
     return entry.unlockPlanet <= planet;

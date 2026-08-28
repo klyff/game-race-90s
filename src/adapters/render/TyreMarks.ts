@@ -214,6 +214,16 @@ export class TyreMarks {
     this.graphics.clear();
   }
 
+  /** Drop the previous-point latch for one car (e.g. when Flux fire takes over). */
+  release(carIndex: number): void {
+    const trail = this.trails.get(carIndex);
+    if (trail === undefined) {
+      return;
+    }
+    trail.left.previousPoint = null;
+    trail.right.previousPoint = null;
+  }
+
   destroy(): void {
     this.graphics.destroy();
   }

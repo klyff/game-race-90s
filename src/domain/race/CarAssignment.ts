@@ -2,14 +2,18 @@
  * Chooses which cars the NPCs drive, given the player's pick.
  *
  * The rule the project owner asked for: an NPC never drives the car the player
- * chose, and no two NPCs drive the same car. The 20-car roster is larger than
+ * chose, and no two NPCs drive the same car. Player-only flagships (DeLorean)
+ * are stripped even when they sit in the fleet. The 20-car roster is larger than
  * the five-car career grid, so this is a walk down the list rather than "everyone
  * else" — a race should be reproducible, and a shuffle here would make every
  * bug report unrepeatable.
  */
 
+import { isNpcAllowedCarId, isPlayerOnlyCarId } from '../../data/cars/FleetStatus.ts';
+
 /**
- * Pure. Returns `npcCount` car ids drawn from `rosterIds`, skipping `playerCarId`.
+ * Pure. Returns `npcCount` car ids drawn from `rosterIds`, skipping `playerCarId`
+ * and every player-only flagship.
  *
  * Roster order is preserved, so the same inputs always produce the same field.
  *
@@ -30,7 +34,7 @@ export function assignNpcCars(
     return [];
   }
 
-  const available = rosterIds.filter(id => id !== playerCarId);
+  const available = rosterIds.filter(id => id !== playerCarId && !isPlayerOnlyCarId(id));
   if (available.length === 0) {
     return [];
   }
@@ -75,9 +79,9 @@ export function resolveCareerField(
     (fleet.includes(fallbackPlayerId) ? fallbackPlayerId : undefined) ??
     fleet[0] ??
     playerCarId;
-  const planetIds = planetRosterIds.filter(id => fleet.includes(id));
-  const extra = fleet.filter(id => !planetIds.includes(id));
-  const npcSource = planetIds.length > 0 ? [...planetIds, ...extra] : fleet;
+  const planetIds = planetRosterIds.filter(id => fleet.includes(id) && isNpcAllowedCarId(id));
+  const extra = fleet.filter(id => !planetIds.includes(id) && isNpcAllowedCarId(id));
+  const npcSource = planetIds.length > 0 ? [...planetIds, ...extra] : fleet.filter(isNpcAllowedCarId);
   return {
     playerCarId: player,
     npcIds: assignNpcCars(npcSource, player, npcCount),

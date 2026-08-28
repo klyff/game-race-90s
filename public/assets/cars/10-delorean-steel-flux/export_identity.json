@@ -1,0 +1,17 @@
+{
+  "id": "10-delorean-steel-flux",
+  "inventory_n": 10,
+  "slug": "delorean-steel-flux",
+  "displayName": "DeLorean",
+  "spec": "DeLorean DMC-12 brushed stainless steel wedge, gull-wing, louvres, Flux",
+  "source_run_dir": "/Users/klyff/git/game-race-90s/car-sprites/2026-08-27_delorean-steel-flux",
+  "hero_frame": 7,
+  "hero_role": "shop / garage / results still \u2014 always strip frame 7",
+  "hero_source": "keyed/out_frame_07.png",
+  "hero_file": "car_hero.png",
+  "frame_count": 32,
+  "direction": "counter_clockwise",
+  "index0": "6 o'clock facing camera",
+  "clock": "counter_clockwise",
+  "exported_at": "2026-08-28T00:07:29.139868+00:00"
+}

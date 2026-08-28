@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 import {
   FLEET_DEFAULT_CAR_ID,
   isLiveSpinnerCarId,
+  isNpcAllowedCarId,
   isOutOfServiceCarId,
+  isPlayerOnlyCarId,
   isRetiredCarId,
   isUnavailableCarId,
   sanitizeCarId,
@@ -28,6 +30,11 @@ describe('FleetStatus', () => {
     expect(isLiveSpinnerCarId('5-all-pink-fury')).toBe(true);
     expect(isLiveSpinnerCarId('7-fast-greenhish-machine')).toBe(true);
     expect(isLiveSpinnerCarId('8-purple-crazymania')).toBe(true);
+    expect(isLiveSpinnerCarId('10-delorean-steel-flux')).toBe(true);
+    expect(isPlayerOnlyCarId('10-delorean-steel-flux')).toBe(true);
+    expect(isPlayerOnlyCarId('10-delorean-steel-flux#3')).toBe(true);
+    expect(isNpcAllowedCarId('10-delorean-steel-flux')).toBe(false);
+    expect(isNpcAllowedCarId('2-sportivo-blue-combat')).toBe(true);
     expect(isLiveSpinnerCarId('4-wasteland-pickup-sand-mg')).toBe(false);
     expect(isLiveSpinnerCarId('5-raider-sedan-cream-cannon')).toBe(false);
     expect(isLiveSpinnerCarId('6-war-muscle-red-bomber')).toBe(false);

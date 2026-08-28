@@ -19,8 +19,34 @@ export const RETIRED_CAR_IDS = [
 /** @deprecated Matrix leftover. Treated as out of service with every non-spinner id. */
 export const UNAVAILABLE_CAR_IDS = ['delorean'] as const;
 
+/**
+ * Player-only flagships. Shop/career may own them; NPCs, watch packs, and
+ * debug-IA grids never drive them — rivals stay on the shared fleet.
+ */
+export const PLAYER_ONLY_CAR_IDS = ['10-delorean-steel-flux'] as const;
+
 /** World-1 stand-in for any retired / parked / matrix pick. */
 export const FLEET_DEFAULT_CAR_ID = '2-sportivo-blue-combat';
+
+/** Strip `carId#seat` so grid twins share the base inventory id. */
+export function baseCarId(carId: string): string {
+  const hash = carId.indexOf('#');
+  return hash >= 0 ? carId.slice(0, hash) : carId;
+}
+
+export function isPlayerOnlyCarId(carId: string): boolean {
+  return (PLAYER_ONLY_CAR_IDS as readonly string[]).includes(baseCarId(carId));
+}
+
+/**
+ * Live spinner id that NPCs may drive. Player-only flagships stay shop/player.
+ * Fake/debug ids (`car-1`) are not "npc allowed" here — callers that race
+ * synthetic fleets should filter with `isPlayerOnlyCarId` alone.
+ */
+export function isNpcAllowedCarId(carId: string): boolean {
+  const id = baseCarId(carId);
+  return isLiveSpinnerCarId(id) && !isPlayerOnlyCarId(id);
+}
 
 /**
  * Live inventory id (`1-muscle-car-gray-number9`). Local copy so this file

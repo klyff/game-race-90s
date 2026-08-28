@@ -18,6 +18,7 @@ describe('GarageCatalog', () => {
       '3-red-oh-red',
       '5-all-pink-fury',
       '6-suv-black-noir',
+      '10-delorean-steel-flux',
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
       '1-muscle-car-gray-number9',
@@ -28,6 +29,7 @@ describe('GarageCatalog', () => {
       '3-red-oh-red',
       '5-all-pink-fury',
       '6-suv-black-noir',
+      '10-delorean-steel-flux',
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
       '1-muscle-car-gray-number9',
@@ -48,6 +50,7 @@ describe('GarageCatalog', () => {
     expect(listPrice('3-red-oh-red')).toBe(62_000);
     expect(listPrice('5-all-pink-fury')).toBe(87_000);
     expect(listPrice('6-suv-black-noir')).toBe(200_000);
+    expect(listPrice('10-delorean-steel-flux')).toBe(3_000_000);
     expect(listPrice('7-fast-greenhish-machine')).toBe(320_000);
     expect(listPrice('8-purple-crazymania')).toBe(500_000);
     expect(listPrice('1-muscle-car-gray-number9')).toBe(98_000);
@@ -58,6 +61,7 @@ describe('GarageCatalog', () => {
 
   it('sells at 80% of list', () => {
     expect(sellPrice('2-sportivo-blue-combat')).toBe(40_000);
+    expect(sellPrice('10-delorean-steel-flux')).toBe(2_400_000);
   });
 
   it('treats Blue Combat as the only starter', () => {
@@ -67,6 +71,7 @@ describe('GarageCatalog', () => {
     expect(isCarUnlocked('3-red-oh-red', 1, 0)).toBe(true);
     expect(isCarUnlocked('5-all-pink-fury', 1, 0)).toBe(true);
     expect(isCarUnlocked('6-suv-black-noir', 1, 0)).toBe(true);
+    expect(isCarUnlocked('10-delorean-steel-flux', 1, 0)).toBe(true);
     expect(isCarUnlocked('7-fast-greenhish-machine', 1, 0)).toBe(false);
     expect(isStarterCar('1-muscle-car-gray-number9')).toBe(false);
     expect(isStarterCar('car-18')).toBe(false);
@@ -107,7 +112,7 @@ describe('GarageCatalog', () => {
     }
   });
 
-  it('keeps world 1 NPCs on Blue Combat and Red Oh Red, adds Gray Muscle on world 2', () => {
+  it('keeps world 1 NPCs off the DeLorean; never fields the player-only flagship', () => {
     const early = npcRosterForPlanet(1);
     expect(early).toEqual([
       '2-sportivo-blue-combat',
@@ -115,6 +120,7 @@ describe('GarageCatalog', () => {
       '5-all-pink-fury',
       '6-suv-black-noir',
     ]);
+    expect(early).not.toContain('10-delorean-steel-flux');
     expect(npcRosterForPlanet(2)).toEqual([
       '2-sportivo-blue-combat',
       '3-red-oh-red',
@@ -134,6 +140,7 @@ describe('GarageCatalog', () => {
       '1-muscle-car-gray-number9',
       '9-muscle-orange-bomber-combat',
     ]);
+    expect(npcRosterForPlanet(8)).not.toContain('10-delorean-steel-flux');
     expect(npcRosterForPlanet(8)).not.toContain('delorean');
     expect(npcRosterForPlanet(8)).not.toContain('car-20');
   });

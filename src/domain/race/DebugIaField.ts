@@ -11,7 +11,7 @@ import { JOKER_PILOTS } from '../../data/pilots/PilotRoster.ts';
 import { DERIVED_SPECS, DRIVER_PROFILE_TIER, MEDIUM_PROFILES, SIGNATURE_PROFILES } from '../ai/DriverProfile.ts';
 import { profileFor } from '../ai/DriverRoster.ts';
 import { driverSkill } from './WatchField.ts';
-import { FLEET_DEFAULT_CAR_ID } from '../../data/cars/FleetStatus.ts';
+import { FLEET_DEFAULT_CAR_ID, isPlayerOnlyCarId } from '../../data/cars/FleetStatus.ts';
 
 export const DEBUG_IA_RACER_COUNT = 15;
 export const DEBUG_IA_SIGNATURE_COUNT = 4;
@@ -116,7 +116,7 @@ export function drawDebugIaGrid(
   const lotteryCount = Math.max(0, wanted - signatures.length);
   const lottery = shuffle(lotteryPool(), rng).slice(0, lotteryCount);
   const names = [...signatures, ...lottery];
-  const uniqueCars = [...new Set(carIds.filter(id => id.length > 0))];
+  const uniqueCars = [...new Set(carIds.filter(id => id.length > 0 && !isPlayerOnlyCarId(id)))];
   const cars = uniqueCars.length > 0 ? shuffle(uniqueCars, rng) : [FLEET_DEFAULT_CAR_ID];
 
   const seats = names.map((name, index) => {
@@ -190,7 +190,7 @@ export function drawSkillMixGrid(
 
   const rng = mulberry32(Number.isFinite(seed) && seed > 0 ? seed : 1);
   const shuffledNames = shuffle(names, rng);
-  const uniqueCars = [...new Set(carIds.filter(id => id.length > 0))];
+  const uniqueCars = [...new Set(carIds.filter(id => id.length > 0 && !isPlayerOnlyCarId(id)))];
   const cars = uniqueCars.length > 0 ? shuffle(uniqueCars, rng) : [FLEET_DEFAULT_CAR_ID];
 
   const seats = shuffledNames.map((name, index) => {

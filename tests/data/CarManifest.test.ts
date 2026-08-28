@@ -102,8 +102,10 @@ describe('parseCarSetManifest', () => {
       '6-suv-black-noir',
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
+      '9-muscle-orange-bomber-combat',
+      '10-delorean-steel-flux',
     ]);
-    expect(manifest.cars.length).toBe(7);
+    expect(manifest.cars.length).toBe(9);
   });
 
   it('real manifest has frameCount 32', () => {
@@ -481,7 +483,7 @@ describe('parseCarSetManifest', () => {
     const rawJson = readFileSync(carsJsonPath, 'utf-8');
     const manifest = parseCarSetManifest(JSON.parse(rawJson));
     const knownPerks: readonly string[] = Object.values(CAR_PERK);
-    expect(manifest.cars.length).toBe(7);
+    expect(manifest.cars.length).toBe(9);
     for (const car of manifest.cars) {
       expect(car.perk).toBeDefined();
       expect(knownPerks).toContain(car.perk);
@@ -569,6 +571,8 @@ describe('spinner strip atlas', () => {
       '6-suv-black-noir',
       '7-fast-greenhish-machine',
       '8-purple-crazymania',
+      '9-muscle-orange-bomber-combat',
+      '10-delorean-steel-flux',
     ]);
   });
 
@@ -608,7 +612,9 @@ describe('findCarSheet', () => {
       if (error instanceof CarManifestError) {
         expect(error.message).toContain('2-sportivo-blue-combat');
         expect(error.message).toContain('5-all-pink-fury');
-        expect(error.message).not.toContain('delorean');
+        expect(error.message).toContain('10-delorean-steel-flux');
+        // Bare matrix id `delorean` is retired — must not appear as its own known id.
+        expect(error.message).not.toMatch(/(?:^|,\s)delorean(?=[,.]|$)/);
       } else {
         throw error;
       }
