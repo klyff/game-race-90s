@@ -27,6 +27,7 @@ describe('DriverCards', () => {
   it('looks up a pilot by race name', () => {
     expect(driverCardForName('aline')?.file).toBe('Aline.png');
     expect(driverCardForName('CAROL')?.file).toBe('carol.png');
+    expect(driverCardForName('NIKKI')).toBeUndefined();
     expect(driverCardForName('FLUFE')?.file).toBe('flufe.png');
     expect(driverCardKey('Enzo')).toBe('driver-card:ENZO');
     expect(driverCardForName('ZARA')?.file).toBe('zara.png');

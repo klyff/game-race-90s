@@ -113,7 +113,7 @@ export const SIGNATURE_PROFILES: readonly DriverProfile[] = [
     localSteering: 0.8,
     vehiclePhysics: 0.8,
   }),
-  row('nikki', 'CAROL', DRIVER_PROFILE_TIER.SIGNATURE, {
+  row('carol', 'CAROL', DRIVER_PROFILE_TIER.SIGNATURE, {
     attack: 0.72,
     defend: 0.48,
     overtake: 0.82,

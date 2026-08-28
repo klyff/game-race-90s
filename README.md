@@ -58,16 +58,18 @@ URLs estáveis:
 
 | Papel | URL |
 | --- | --- |
-| Produção | https://game-race-90s.vercel.app |
+| Produção (oficial) | https://game-race-90s.vercel.app |
 | Alias do projecto | https://game-race-90s-klyffs-projects.vercel.app |
 | Branch `main` | https://game-race-90s-git-main-klyffs-projects.vercel.app |
 | Dashboard | https://vercel.com/klyffs-projects/game-race-90s |
 
+Não uses hosts `-pied`, `-luure` ou previews antigos: o face grid e a Carol (`carol.png`) só estão garantidos no projecto **klyffs-projects/game-race-90s**.
+
 CLI (opcional; o fluxo normal é git push):
 
 ```bash
-npx vercel          # preview
-npx vercel --prod   # produção (equivalente a push em main)
+npx vercel --scope klyffs-projects          # preview
+npx vercel --prod --scope klyffs-projects   # produção (equivalente a push em main)
 ```
 
 Não há catch-all SPA extra: o `index.html` na raiz de `dist/` basta. Assets em `public/` saem em `/assets/…`.

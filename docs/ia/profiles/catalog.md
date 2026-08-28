@@ -1,7 +1,7 @@
 # Catálogo de perfis NPC
 
 Fonte: `src/domain/ai/DriverProfile.ts`. 30 linhas. Nome de corrida resolve em `profileFor(name)` (`DriverRoster.ts`).
-FLUFE → EMMA. NIKKI → CAROL. Nomes desconhecidos derivam de OPPORTUNIST.
+FLUFE → EMMA. NIKKI → CAROL (alias). Nomes desconhecidos derivam de OPPORTUNIST.
 
 Escada de skill (`vehiclePhysics + localSteering + opponentPrediction`, máx. 3): **KLYFF 3.00 (100%)**, **ALINE 2.70 (90%)**, **ENZO / CAROL 2.40 (80%)**.
 `vehiclePhysics` / `localSteering` **não** mudam o carro.
@@ -22,7 +22,7 @@ Os números são ponto de partida. `tuningStillRequired`:
 | KLYFF | klyff | — | 0.55 | 0.75 | 0.85 | 0.15 | 0.50 | 0.50 | 1.00 | 0.45 | 1.00 | 1.00 |
 | ALINE | aline | — | 0.60 | 0.55 | 0.95 | 0.10 | 0.45 | 0.45 | 0.90 | 0.40 | 0.90 | 0.90 |
 | ENZO | enzo | — | 0.85 | 0.42 | 0.90 | 0.25 | 0.40 | 0.36 | 0.80 | 0.50 | 0.80 | 0.80 |
-| CAROL | nikki | — | 0.72 | 0.48 | 0.82 | 0.38 | 0.52 | 0.42 | 0.80 | 0.55 | 0.80 | 0.80 |
+| CAROL | carol | — | 0.72 | 0.48 | 0.82 | 0.38 | 0.52 | 0.42 | 0.80 | 0.55 | 0.80 | 0.80 |
 | EMMA | emma | — | 0.80 | 0.20 | 0.70 | 0.35 | 0.95 | 0.25 | 0.55 | 0.50 | 0.50 | 0.48 |
 | VIKTOR | viktor | — | 0.70 | 0.95 | 0.40 | 0.55 | 0.50 | 0.95 | 0.75 | 0.80 | 0.70 | 0.78 |
 | SEAMUS | seamus | — | 1.00 | 0.20 | 0.60 | 1.00 | 0.90 | 0.60 | 0.40 | 0.95 | 0.45 | 0.45 |
@@ -71,5 +71,5 @@ Os números são ponto de partida. `tuningStillRequired`:
 | RUBY | RUBY | ruby | derived | slipstreamer |
 | HEX | HEX | hex | derived | technician |
 | FLUFE | EMMA | emma | signature | — |
-| NIKKI | CAROL | nikki | signature | — |
+| NIKKI | CAROL | carol | signature | — |
 | UNKNOWN | UNKNOWN | unknown | derived | opportunist |

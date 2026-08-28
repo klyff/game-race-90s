@@ -70,7 +70,7 @@
       "vehiclePhysics": 0.8
     },
     {
-      "id": "nikki",
+      "id": "carol",
       "displayName": "CAROL",
       "tier": "signature",
       "attack": 0.72,
@@ -538,7 +538,7 @@
     {
       "alias": "NIKKI",
       "displayName": "CAROL",
-      "id": "nikki",
+      "id": "carol",
       "tier": "signature",
       "parent": "—"
     },

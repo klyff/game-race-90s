@@ -49,8 +49,9 @@ const NAME_TO_PROFILE_ID: Readonly<Record<string, string>> = {
   ZOR9: 'zor9',
   DAVE: 'dave',
   RAZOR: 'razor',
-  CAROL: 'nikki',
-  NIKKI: 'nikki',
+  CAROL: 'carol',
+  /** Legacy race name — same rock girl, same art (carol.png / carol-profile). */
+  NIKKI: 'carol',
   DIEGO: 'diego',
   LUNA: 'luna',
   BLAZE: 'blaze',

@@ -21,10 +21,11 @@ describe('driver profiles', () => {
     expect(profileFor('ALINE').id).toBe('aline');
     expect(profileFor('FLUFE').id).toBe('emma');
     expect(profileFor('EMMA').id).toBe('emma');
-    expect(profileFor('CAROL').id).toBe('nikki');
+    expect(profileFor('CAROL').id).toBe('carol');
     expect(profileFor('CAROL').displayName).toBe('CAROL');
     expect(profileFor('CAROL').tier).toBe(DRIVER_PROFILE_TIER.SIGNATURE);
-    expect(profileFor('NIKKI').id).toBe('nikki');
+    expect(profileFor('NIKKI').id).toBe('carol');
+    expect(profileFor('NIKKI')).toEqual(profileFor('CAROL'));
     expect(profileFor('NEGAO').tier).toBe(DRIVER_PROFILE_TIER.SIGNATURE);
     expect(profileFor('KLYFF').vehiclePhysics).toBe(1);
     expect(profileFor('ALINE')).toEqual(profileFor('aline'));
