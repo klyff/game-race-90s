@@ -4,7 +4,7 @@
 - **displayName / como chamar:** Fast Greenhish Machine
 - **callName:** Greenhish Machine
 - **hero:** frame 07 → `car_hero.png` (loja, garagem, resultados)
-- **nível:** medium · world 2 · arsenal
+- **nível:** medium · world 2 · arsenal · loja $260k
 - **strip:** 32 frames · índice 0 = 6h · +11.25° anti-horário
 - **origem:** cópia pixel-a-pixel de `3-red-oh-red` (vermelho → verde, faixas brancas → pretas). Pasta do Red Oh Red não foi alterada.
 
@@ -24,4 +24,4 @@ Mesmo corpo e canhão do Red Oh Red; um degrau acima em velocidade e controle, a
 | armor | 0.38 | 0.40 |
 | ammoCapacity | 12 | 13 |
 | collisionRadius | 1.68 | 1.68 |
-| price | $62k | $320k |
+| price | $99k | $260k |

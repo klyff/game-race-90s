@@ -49,7 +49,9 @@ function spinnerCar(
 
 /**
  * Gray Muscle War Car — heavy combat coupe, roof turret.
- * Arcade: high mass / armor, modest top speed, planted grip (COM down).
+ * Arcade (fun > realism): planted COM via mass + grip. Top speed +20% off
+ * the old 61 → 73; engine/grip scaled with it so the car does not ice-skate
+ * or crawl to Vmax. Still slower-steering than Orange at the same ceiling.
  */
 const GRAY_MUSCLE = spinnerCar({
   id: 'muscle-car-gray-number9',
@@ -60,16 +62,16 @@ const GRAY_MUSCLE = spinnerCar({
   homePlanetId: 'thunder-basin',
   worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
   tier: SPINNER_TIER.HEAVY,
-  unlockPlanet: 2,
-  price: 98_000,
+  unlockPlanet: 1,
+  price: 129_000,
   stats: {
     mass: 1120,
-    enginePower: 28,
+    enginePower: 34,
     brakeForce: 48,
-    maxSpeed: 61,
-    grip: 29,
+    maxSpeed: 73,
+    grip: 31,
     steerRate: 2.25,
-    steerSpeedFalloff: 0.47,
+    steerSpeedFalloff: 0.43,
     armor: 0.52,
     ammoCapacity: 16,
     collisionRadius: 1.76,
@@ -122,7 +124,7 @@ const RED_OH_RED = spinnerCar({
   worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
   tier: SPINNER_TIER.MEDIUM,
   unlockPlanet: 1,
-  price: 62_000,
+  price: 99_000,
   stats: {
     mass: 980,
     enginePower: 29,
@@ -139,7 +141,7 @@ const RED_OH_RED = spinnerCar({
 });
 
 /**
- * All Pink Fury — candy-pink convertible, hood laser. Medium, shop ~$87k.
+ * All Pink Fury — candy-pink convertible, hood laser. Medium, shop $173k.
  * Arcade consult: keep the 64 u/s punch, plant the tyres so it stops
  * ice-skating mid-corner (high grip, low steer falloff). Open cabin stays
  * glass — lowest armor on the live roster. Hood laser → arsenal.
@@ -154,7 +156,7 @@ const ALL_PINK_FURY = spinnerCar({
   worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
   tier: SPINNER_TIER.MEDIUM,
   unlockPlanet: 1,
-  price: 87_000,
+  price: 173_000,
   stats: {
     mass: 950,
     enginePower: 30,
@@ -172,8 +174,9 @@ const ALL_PINK_FURY = spinnerCar({
 
 /**
  * Fast Greenhish Machine — Red Oh Red silhouette, green paint, black stripes.
- * World 2 step-up: same roof-cannon arsenal, a little more speed / grip / steer
- * than Red Oh Red, still under Blue Combat 68 and far from the old Marauder 78.
+ * World 2 shop ($260k) with Purple: same unlock wave.
+ * Same roof-cannon arsenal, a little more speed / grip / steer than Red Oh Red,
+ * still under Blue Combat 68 and far from the old Marauder 78.
  * Arcade consult: fun > realism, planted COM (lighter + higher grip), no ice-skate.
  */
 const FAST_GREENHISH_MACHINE = spinnerCar({
@@ -186,7 +189,7 @@ const FAST_GREENHISH_MACHINE = spinnerCar({
   worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
   tier: SPINNER_TIER.MEDIUM,
   unlockPlanet: 2,
-  price: 320_000,
+  price: 260_000,
   stats: {
     mass: 960,
     enginePower: 31,
@@ -204,9 +207,9 @@ const FAST_GREENHISH_MACHINE = spinnerCar({
 
 /**
  * SUV Black Noir — compact Renegade, mid-roof MG. Medium++.
- * Arcade consult: planted COM, high grip, heavier than the coupes.
- * Teaching speed ~62 u/s — under Blue Combat 68, not the old Marauder 78.
- * Roof turret → arsenal.
+ * World 2 shop ($250k) with Purple/Green. Arcade consult: planted COM,
+ * high grip, heavier than the coupes. Teaching speed ~62 u/s — under Blue
+ * Combat 68, not the old Marauder 78. Roof turret → arsenal.
  */
 const SUV_BLACK_NOIR = spinnerCar({
   id: 'suv-black-noir',
@@ -217,8 +220,8 @@ const SUV_BLACK_NOIR = spinnerCar({
   homePlanetId: 'thunder-basin',
   worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
   tier: SPINNER_TIER.MEDIUM,
-  unlockPlanet: 1,
-  price: 200_000,
+  unlockPlanet: 2,
+  price: 250_000,
   stats: {
     mass: 1080,
     enginePower: 28,
@@ -236,10 +239,10 @@ const SUV_BLACK_NOIR = spinnerCar({
 
 /**
  * Purple Crazymania — Greenhish silhouette, purple paint, no center stripe.
- * World 2 shop flagship: faster and grippier than Greenhish, built to hold a
- * corner then break into a catchable slide. Does not steal Pink's grip crown
- * (34) or Blue Combat's 68. Arcade consult: fun > realism, planted COM,
- * high steer at speed so drift is a clamp, not ice-skate.
+ * World 2 shop ($320k) with Greenhish: unlocks together. Faster and grippier
+ * than Greenhish, built to hold a corner then break into a catchable slide.
+ * Does not steal Pink's grip crown (34) or Blue Combat's 68. Arcade consult:
+ * fun > realism, planted COM, high steer at speed so drift is a clamp, not ice-skate.
  */
 const PURPLE_CRAZYMANIA = spinnerCar({
   id: 'purple-crazymania',
@@ -251,7 +254,7 @@ const PURPLE_CRAZYMANIA = spinnerCar({
   worldAdvantage: WORLD_ADVANTAGE.SECONDARY,
   tier: SPINNER_TIER.MEDIUM,
   unlockPlanet: 2,
-  price: 500_000,
+  price: 320_000,
   stats: {
     mass: 940,
     enginePower: 32,

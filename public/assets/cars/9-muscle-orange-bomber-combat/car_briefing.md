@@ -27,5 +27,5 @@ Fun > realism. COM baixo (massa + grip). Melhor que Azul (68) e Verde (66); aind
 | steerSpeedFalloff | 0.50 | 0.46 | **0.40** |
 | armor | 0.33 | 0.40 | **0.50** |
 | ammoCapacity | 10 | 13 | **16** |
-| price | $50k | $320k | **$570k** |
+| price | $50k | $260k | **$570k** |
 | unlock | world 1 | world 2 | **world 3** |

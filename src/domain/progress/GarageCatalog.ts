@@ -34,16 +34,17 @@ export interface CatalogEntry {
   readonly tier: CarTier;
 }
 
-/** Shop order. Legacy matrix id `delorean` is obsolete; live car is `10-delorean-steel-flux`. */
+/** Shop order by unlock wave, then list price (garage glance). */
 export const GARAGE_CATALOG: readonly CatalogEntry[] = [
   { carId: '2-sportivo-blue-combat', price: STARTER_PRICE, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
-  { carId: '3-red-oh-red', price: 62_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
-  { carId: '5-all-pink-fury', price: 87_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
-  { carId: '6-suv-black-noir', price: 200_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: '3-red-oh-red', price: 99_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
+  { carId: '1-muscle-car-gray-number9', price: 129_000, unlockPlanet: 1, tier: CAR_TIER.HEAVY },
+  { carId: '5-all-pink-fury', price: 173_000, unlockPlanet: 1, tier: CAR_TIER.MEDIUM },
   { carId: '10-delorean-steel-flux', price: 3_000_000, unlockPlanet: 1, tier: CAR_TIER.HEAVY },
-  { carId: '7-fast-greenhish-machine', price: 320_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
-  { carId: '8-purple-crazymania', price: 500_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
-  { carId: '1-muscle-car-gray-number9', price: 98_000, unlockPlanet: 2, tier: CAR_TIER.HEAVY },
+  /** World 2 wave: Black Noir, Greenhish, Purple unlock together. */
+  { carId: '6-suv-black-noir', price: 250_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
+  { carId: '7-fast-greenhish-machine', price: 260_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
+  { carId: '8-purple-crazymania', price: 320_000, unlockPlanet: 2, tier: CAR_TIER.MEDIUM },
   { carId: '9-muscle-orange-bomber-combat', price: 570_000, unlockPlanet: 3, tier: CAR_TIER.HEAVY },
 ];
 
