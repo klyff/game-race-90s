@@ -1,138 +1,95 @@
 import { isAudioMuted } from './AudioPrefs.ts';
-import { registerScreenAudio } from './AudioSession.ts';
-import { noteFrequency } from './MusicScore.ts';
+import {
+  GUITAR_SOLO_STING,
+  ROCK_SCREAM_STING,
+  screenStingUrl,
+  type ScreenSting,
+} from '../../data/audio/ScreenStings.ts';
 
-/** How long the transition solo rings, seconds. Owner: ~3s guitar shred. */
-export const GUITAR_SOLO_DURATION_SECONDS = 3;
+/** How long the transition solo rings, seconds. Matches the recorded MP3. */
+export const GUITAR_SOLO_DURATION_SECONDS = GUITAR_SOLO_STING.durationSeconds;
+
+/** Rock scream length — slot / face confirm and world-pass open. */
+export const ROCK_SCREAM_DURATION_SECONDS = ROCK_SCREAM_STING.durationSeconds;
 
 /**
- * E-minor pentatonic shred, timed in seconds from the downbeat.
- * A descending-then-climbing run with a couple of held scream notes so it
- * reads as a solo, not the four-note title lick.
+ * Wait before leaving splash after the guitar solo.
+ * Solo is longer than the scream.
  */
-export const SOLO_NOTES: readonly { readonly at: number; readonly note: string; readonly hold: number }[] = [
-  { at: 0.0, note: 'E5', hold: 0.1 },
-  { at: 0.1, note: 'G5', hold: 0.1 },
-  { at: 0.2, note: 'A5', hold: 0.1 },
-  { at: 0.3, note: 'B5', hold: 0.14 },
-  { at: 0.44, note: 'E6', hold: 0.22 },
-  { at: 0.68, note: 'D6', hold: 0.1 },
-  { at: 0.78, note: 'B5', hold: 0.1 },
-  { at: 0.88, note: 'A5', hold: 0.1 },
-  { at: 0.98, note: 'G5', hold: 0.1 },
-  { at: 1.08, note: 'E5', hold: 0.12 },
-  { at: 1.22, note: 'G5', hold: 0.1 },
-  { at: 1.32, note: 'B5', hold: 0.1 },
-  { at: 1.42, note: 'D6', hold: 0.12 },
-  { at: 1.56, note: 'E6', hold: 0.28 },
-  { at: 1.88, note: 'B5', hold: 0.12 },
-  { at: 2.02, note: 'G5', hold: 0.1 },
-  { at: 2.12, note: 'A5', hold: 0.1 },
-  { at: 2.22, note: 'B5', hold: 0.14 },
-  { at: 2.38, note: 'E6', hold: 0.42 },
-];
+export const TRANSITION_STING_DURATION_SECONDS = GUITAR_SOLO_DURATION_SECONDS;
 
-function createContext(): AudioContext | null {
-  try {
-    if (typeof AudioContext === 'undefined') {
-      return null;
-    }
-    return new AudioContext();
-  } catch {
-    return null;
+const STING_VOLUME = 0.62;
+const SCREAM_VOLUME = 0.7;
+
+/**
+ * Bridge stings are NOT tied to {@link stopAllScreenAudio}: they must finish
+ * across Splash → comic, Face → garage, Slot pick, and World Pass open.
+ */
+let activeElements: HTMLAudioElement[] = [];
+
+function stopElements(): void {
+  for (const element of activeElements) {
+    element.pause();
+    element.src = '';
   }
+  activeElements = [];
 }
-
-/**
- * Plays a one-shot ~3s lead-guitar solo on its own AudioContext so it survives
- * a Phaser scene swap (the title/results graphs are torn down on SHUTDOWN).
- *
- * Must be called from a user gesture. Returns how long the caller should wait
- * before changing scene; 0 when Web Audio is missing.
- */
-let activeContext: AudioContext | null = null;
-let unregisterSolo: (() => void) | undefined;
 
 export function stopGuitarSolo(): void {
-  unregisterSolo?.();
-  unregisterSolo = undefined;
-  if (activeContext === null) {
-    return;
-  }
-  const context = activeContext;
-  activeContext = null;
-  void context.close().catch(() => {
-    /* Already closed. */
-  });
+  stopElements();
 }
 
+function playSting(sting: ScreenSting, volume: number): HTMLAudioElement | null {
+  if (isAudioMuted()) {
+    return null;
+  }
+  const element = new Audio(screenStingUrl(sting));
+  element.preload = 'auto';
+  element.volume = volume;
+  activeElements.push(element);
+  element.addEventListener(
+    'ended',
+    () => {
+      activeElements = activeElements.filter(entry => entry !== element);
+      element.src = '';
+    },
+    { once: true },
+  );
+  void element.play().catch(() => {
+    /* Missing file or autoplay block: stay silent rather than break the transition. */
+  });
+  return element;
+}
+
+/**
+ * ~3s recorded lead-guitar solo. Call from the splash enter gesture
+ * (Space → origin comic).
+ */
 export function playGuitarSolo(): number {
   stopGuitarSolo();
   if (isAudioMuted()) {
     return 0;
   }
-  const context = createContext();
-  if (context === null) {
-    return 0;
-  }
-  activeContext = context;
-  unregisterSolo = registerScreenAudio(stopGuitarSolo);
-  if (context.state === 'suspended') {
-    void context.resume().catch(() => {
-      /* Autoplay policy: stay silent rather than break the transition. */
-    });
-  }
-
-  const master = context.createGain();
-  master.gain.value = 0.22;
-  master.connect(context.destination);
-
-  const osc = context.createOscillator();
-  osc.type = 'sawtooth';
-  const filter = context.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = 4200;
-  filter.Q.value = 0.9;
-  const shaper = context.createWaveShaper();
-  shaper.curve = distortionCurve(4) as Float32Array<ArrayBuffer>;
-  const gain = context.createGain();
-  gain.gain.value = 0.0001;
-
-  osc.connect(shaper);
-  shaper.connect(filter);
-  filter.connect(gain);
-  gain.connect(master);
-  osc.start();
-
-  const now = context.currentTime;
-  for (const note of SOLO_NOTES) {
-    const t = now + note.at;
-    const freq = noteFrequency(note.note);
-    osc.frequency.setValueAtTime(freq, t);
-    gain.gain.cancelScheduledValues(t);
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.55, t + 0.018);
-    gain.gain.setTargetAtTime(0.0001, t + note.hold * 0.45, 0.06);
-  }
-
-  const end = now + GUITAR_SOLO_DURATION_SECONDS;
-  master.gain.setTargetAtTime(0, end - 0.18, 0.05);
-  osc.stop(end + 0.2);
-  setTimeout(() => {
-    void context.close().catch(() => {
-      /* Already closed. */
-    });
-  }, (GUITAR_SOLO_DURATION_SECONDS + 0.4) * 1000);
-
+  playSting(GUITAR_SOLO_STING, STING_VOLUME);
   return GUITAR_SOLO_DURATION_SECONDS;
 }
 
-function distortionCurve(drive: number): Float32Array {
-  const length = 2048;
-  const curve = new Float32Array(length);
-  for (let i = 0; i < length; i += 1) {
-    const x = (i / (length - 1)) * 2 - 1;
-    curve[i] = Math.tanh(drive * x);
+/**
+ * AC/DC-style rock scream — face confirm, save-slot pick, world-pass open.
+ * Does not stop a bed already playing under the UI.
+ */
+export function playRockScream(): number {
+  if (isAudioMuted()) {
+    return 0;
   }
-  return curve;
+  playSting(ROCK_SCREAM_STING, SCREAM_VOLUME);
+  return ROCK_SCREAM_DURATION_SECONDS;
+}
+
+/**
+ * World-pass hit: scream over the random rock bed already started by
+ * {@link attachMenuAudio}. Returns scream length (bed keeps looping).
+ */
+export function playWorldPassFanfare(): number {
+  return playRockScream();
 }

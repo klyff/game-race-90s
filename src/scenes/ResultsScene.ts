@@ -22,8 +22,6 @@ import { pickPubBackground, PUB_BACKGROUNDS, pubBackgroundKey, pubBackgroundUrl 
 import { worldPassForFinish } from '../data/ui/WorldPassBackgrounds.ts';
 import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
-import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
-import { playRadioJingle, RADIO_JINGLE_DURATION_SECONDS } from '../adapters/audio/RadioJingle.ts';
 import { formatRaceTime, positionOrdinal } from '../adapters/render/HudFormat.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
 import { containSize } from '../adapters/render/FitBox.ts';
@@ -273,7 +271,6 @@ export class ResultsScene extends Phaser.Scene {
     this.audio = attachMenuAudio(this);
     this.layout();
     this.slamTitle();
-    playRadioJingle();
     this.playWinnerPhoto();
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.layout());
     this.bindKeys();
@@ -486,27 +483,24 @@ export class ResultsScene extends Phaser.Scene {
     }
     this.leaving = true;
     this.audio.destroy();
-    const wait = playGuitarSolo();
-    this.time.delayedCall(Math.max(0, wait) * 1000, () => {
-      const pass = worldPassForFinish(
-        this.payload.trackId,
-        this.payload.playerPosition,
-        this.wonBefore,
-        this.clearedBefore,
-      );
-      if (pass !== undefined) {
-        this.scene.start(SCENE_KEY.WORLD_PASS, {
-          manifest: this.payload.manifest,
-          linesByTrack: this.payload.linesByTrack,
-          passId: pass.id,
-          playerName: this.playerCallsign(),
-        });
-        return;
-      }
-      this.scene.start(SCENE_KEY.GARAGE, {
+    const pass = worldPassForFinish(
+      this.payload.trackId,
+      this.payload.playerPosition,
+      this.wonBefore,
+      this.clearedBefore,
+    );
+    if (pass !== undefined) {
+      this.scene.start(SCENE_KEY.WORLD_PASS, {
         manifest: this.payload.manifest,
         linesByTrack: this.payload.linesByTrack,
+        passId: pass.id,
+        playerName: this.playerCallsign(),
       });
+      return;
+    }
+    this.scene.start(SCENE_KEY.GARAGE, {
+      manifest: this.payload.manifest,
+      linesByTrack: this.payload.linesByTrack,
     });
   }
 

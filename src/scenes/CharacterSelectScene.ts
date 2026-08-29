@@ -18,6 +18,7 @@ import {
   type CharacterSelectPanes,
 } from '../adapters/render/CharacterSelectLayout.ts';
 import { paintRoundedPlaque } from '../adapters/render/UiPlaque.ts';
+import { playRockScream } from '../adapters/audio/GuitarSolo.ts';
 import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { SCENE_KEY } from './sceneKeys.ts';
 
@@ -146,6 +147,7 @@ export class CharacterSelectScene extends Phaser.Scene {
       return;
     }
     this.leaving = true;
+    playRockScream();
     this.scene.start(SCENE_KEY.GARAGE, {
       manifest: this.payload.manifest,
       linesByTrack: this.payload.linesByTrack,

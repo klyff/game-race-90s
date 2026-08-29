@@ -3,7 +3,7 @@ import type { CarSetManifest } from '../data/cars/CarManifest.ts';
 import type { TrackLinesManifest } from '../domain/race/RacingLine.ts';
 import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
-import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
+import { playWorldPassFanfare } from '../adapters/audio/GuitarSolo.ts';
 import { paintRoundedPlaque, PLAQUE_INK } from '../adapters/render/UiPlaque.ts';
 import { coverRect } from '../adapters/render/SplashLayout.ts';
 import {
@@ -110,6 +110,7 @@ export class WorldPassScene extends Phaser.Scene {
       .setDepth(4);
 
     this.audio = attachMenuAudio(this);
+    playWorldPassFanfare();
     this.layout();
     this.tweens.add({
       targets: [this.headlineText, this.issuedText, this.titleText],
@@ -179,12 +180,9 @@ export class WorldPassScene extends Phaser.Scene {
     }
     this.leaving = true;
     this.audio.destroy();
-    const wait = playGuitarSolo();
-    this.time.delayedCall(Math.max(0, wait) * 1000, () => {
-      this.scene.start(SCENE_KEY.GARAGE, {
-        manifest: this.payload.manifest,
-        linesByTrack: this.payload.linesByTrack,
-      });
+    this.scene.start(SCENE_KEY.GARAGE, {
+      manifest: this.payload.manifest,
+      linesByTrack: this.payload.linesByTrack,
     });
   }
 }

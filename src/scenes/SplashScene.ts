@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { playSplashKick } from '../adapters/audio/SplashKick.ts';
+import { playGuitarSolo } from '../adapters/audio/GuitarSolo.ts';
 import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
 import { MUSIC_SPLASH_BED_VOLUME } from '../data/audio/MusicBeds.ts';
 import { TitleAudio } from '../adapters/audio/TitleAudio.ts';
@@ -156,7 +156,7 @@ export class SplashScene extends Phaser.Scene {
     this.leaving = true;
     this.attract.destroy();
     this.audio.destroy();
-    const wait = playSplashKick();
+    const wait = playGuitarSolo();
     this.time.delayedCall(Math.max(0, wait) * 1000, () => {
       this.scene.start(SCENE_KEY.ORIGIN_COMIC, {
         manifest: this.manifest,

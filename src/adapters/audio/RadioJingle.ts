@@ -1,3 +1,8 @@
+/**
+ * @deprecated Live screens use recorded MP3 stings (`GuitarSolo.ts` +
+ * `ScreenStings.ts`). Kept so older imports still typecheck; do not call from
+ * live scenes.
+ */
 import { isAudioMuted } from './AudioPrefs.ts';
 import { registerScreenAudio } from './AudioSession.ts';
 import { noteFrequency } from './MusicScore.ts';

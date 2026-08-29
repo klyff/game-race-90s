@@ -38,6 +38,7 @@ import {
   setNarratorLocale,
 } from '../adapters/audio/AudioPrefs.ts';
 import { attachMenuAudio } from '../adapters/audio/MenuAudio.ts';
+import { playRockScream } from '../adapters/audio/GuitarSolo.ts';
 import {
   NARRATOR_LOCALE_VALUES,
   localeFromMenuValue,
@@ -425,6 +426,7 @@ export class GarageScene extends Phaser.Scene {
   }
 
   private pickSlot(index: number): void {
+    playRockScream();
     activateSlot(index);
     const save = loadSave().slots[index];
     const career = loadCareer().slots[index];

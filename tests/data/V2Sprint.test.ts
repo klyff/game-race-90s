@@ -5,7 +5,7 @@ import { findTrack } from '../../src/data/tracks/registry.ts';
 import { DEBUG_IA_CAMERA_MAP_FRACTION } from '../../src/domain/race/DebugIaField.ts';
 import { CAMERA_HOME_ZOOM } from '../../src/domain/camera/CameraPreset.ts';
 import { CAMERA_WATCH_BROADCAST_MAP_FRACTION } from '../../src/domain/camera/WatchCamera.ts';
-import { RADIO_JINGLE_DURATION_SECONDS } from '../../src/adapters/audio/RadioJingle.ts';
+import { TRANSITION_STING_DURATION_SECONDS } from '../../src/adapters/audio/GuitarSolo.ts';
 
 describe('V2 origin, camera, radio, bogmire', () => {
   it('has four comic panels', () => {
@@ -26,9 +26,9 @@ describe('V2 origin, camera, radio, bogmire', () => {
     expect(CAMERA_WATCH_BROADCAST_MAP_FRACTION).toBeLessThan(DEBUG_IA_CAMERA_MAP_FRACTION);
   });
 
-  it('keeps the radio sting under 3 seconds', () => {
-    expect(RADIO_JINGLE_DURATION_SECONDS).toBeGreaterThan(1);
-    expect(RADIO_JINGLE_DURATION_SECONDS).toBeLessThan(3);
+  it('keeps the transition sting under 4 seconds', () => {
+    expect(TRANSITION_STING_DURATION_SECONDS).toBeGreaterThan(1);
+    expect(TRANSITION_STING_DURATION_SECONDS).toBeLessThan(4);
   });
 
   it('authors Bogmire I with a teaching lip and a void 20°', () => {

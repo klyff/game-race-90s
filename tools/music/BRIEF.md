@@ -19,7 +19,9 @@ These are **background beds** for the title and the races.
 - The player can mute with **M** / pause **AUDIO OFF**
 - One track is picked at random per screen (title or race)
 
-Today the game only has two procedural entrance pieces (title riff + guitar sting). These 10 recorded beds become the random pool.
+Today the game plays recorded beds under menus and races. Short MP3 stings
+(`stings/guitar-solo.mp3`, `stings/rock-scream.mp3`) cover results / world-pass
+hits — see `STINGS.md`.
 
 ## Delivery
 
