@@ -568,7 +568,7 @@ export class ResultsScene extends Phaser.Scene {
     this.tweens.add({
       targets: shot,
       alpha: 0,
-      delay: RADIO_JINGLE_DURATION_SECONDS * 1000,
+      delay: 1500,
       duration: 280,
       onComplete: () => {
         for (const node of shot) {
